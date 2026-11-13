@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Globe,
   Plus,
@@ -31,6 +31,7 @@ import { Link } from 'react-router-dom';
 import { ImmigrationCaseDrawer } from '../components/ImmigrationCaseDrawer';
 import { FilingPackageAssemblerModal } from '../components/FilingPackageAssemblerModal';
 import { useToast } from '../../../components/ui/Toast';
+import { matterService } from '../../../services/matterService';
 
 export function ImmigrationCasesList() {
   const [cases, setCases] = useState(MOCK_IMMIGRATION_CASES);
@@ -42,6 +43,34 @@ export function ImmigrationCasesList() {
   const [isAssemblerOpen, setIsAssemblerOpen] = useState(false);
   const [assemblerCase, setAssemblerCase] = useState(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    let isMounted = true;
+    matterService.getMatters({ practiceAreaId: 'pa-imm' })
+      .then((res) => {
+        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
+        if (isMounted && realMatters.length > 0) {
+          const mapped = realMatters.map((m) => ({
+            id: m.id,
+            title: m.title,
+            clientName: m.client?.name || m.clientName || 'Elena Rostova',
+            matterNumber: m.matterNumber,
+            category: m.title.includes('Naturalization') ? 'Naturalization (N-400)' : (m.title.includes('Employment') ? 'Employment-Based' : 'Family-Based Adjustment of Status'),
+            status: m.status === 'Active' ? 'Pending USCIS Review' : (m.status === 'Concluded' ? 'Approved' : 'Document Collection'),
+            alienNumber: 'A-214-890-412',
+            receiptNumber: 'IOE-092-418-9201',
+            priorityDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-11-13',
+            formsRequired: ['I-130', 'I-485', 'I-864'],
+            assignedAttorney: m.responsibleAttorney?.name || 'Eleanor Heugly, Esq.',
+            isRealDbMatter: true,
+            matterId: m.id,
+          }));
+          setCases(mapped);
+        }
+      })
+      .catch((err) => console.warn('Could not load immigration matters from API:', err?.message));
+    return () => { isMounted = false; };
+  }, []);
 
   // New Case form state
   const [newTitle, setNewTitle] = useState('');

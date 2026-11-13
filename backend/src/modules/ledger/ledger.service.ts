@@ -1,7 +1,7 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
-import { CreateJournalInput } from './ledger.validation.js';
+import { CreateJournalInput, CreateAccountInput } from './ledger.validation.js';
 import { ChartOfAccountResponse, GeneralLedgerJournalResponse } from './ledger.types.js';
 
 export class LedgerService {
@@ -65,6 +65,45 @@ export class LedgerService {
       accountType: a.accountType,
       isActive: a.isActive,
     }));
+  }
+
+  static async createAccount(
+    input: CreateAccountInput,
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<ChartOfAccountResponse> {
+    const existing = await prisma.chartOfAccount.findUnique({
+      where: { accountNumber: input.accountNumber },
+    });
+    if (existing) {
+      throw AppError.conflict(`Chart of Account #${input.accountNumber} already exists.`, 'ACCOUNT_NUMBER_EXISTS');
+    }
+
+    const created = await prisma.chartOfAccount.create({
+      data: {
+        accountNumber: input.accountNumber,
+        accountName: input.accountName,
+        accountType: input.accountType,
+        isActive: input.isActive !== false,
+      },
+    });
+
+    await createAuditLog({
+      userId: context.userId,
+      userRole: context.userRole,
+      action: 'CHART_OF_ACCOUNT_CREATED',
+      resourceType: 'FINANCIAL',
+      resourceId: String(created.accountNumber),
+      details: { accountNumber: created.accountNumber, accountName: created.accountName, accountType: created.accountType },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return {
+      accountNumber: created.accountNumber,
+      accountName: created.accountName,
+      accountType: created.accountType,
+      isActive: created.isActive,
+    };
   }
 
   static async getJournals(): Promise<GeneralLedgerJournalResponse[]> {

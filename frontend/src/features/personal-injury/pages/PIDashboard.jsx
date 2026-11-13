@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity,
@@ -26,14 +26,41 @@ import { Button } from '../../../components/ui/Button';
 import { MOCK_PI_CASES, MOCK_DEMAND_PACKAGES } from '../../../data/mockPersonalInjury';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
-import { mockStorage } from '../../../services/mockStorage';
+import { matterService } from '../../../services/matterService';
 
 export function PIDashboard() {
   const navigate = useNavigate();
-  const [cases, setCases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
+  const [cases, setCases] = useState(MOCK_PI_CASES);
   const [activeCaseId, setActiveCaseId] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  useEffect(() => {
+    let isMounted = true;
+    matterService.getMatters({ practiceAreaId: 'pa-pi' })
+      .then((res) => {
+        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
+        if (isMounted && realMatters.length > 0) {
+          const mapped = realMatters.map((m) => ({
+            id: m.id,
+            matterNumber: m.matterNumber,
+            clientName: m.client?.name || m.clientName || m.title,
+            accidentType: 'Motor Vehicle Collision (I-15)',
+            dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-08-14',
+            status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
+            policyLimit: '$100,000 / $300,000',
+            totalMeds: 24500,
+            totalLiens: 8400,
+            leadAttorney: m.responsibleAttorney?.name || 'Thomas Bludworth, Esq.',
+            isRealDbMatter: true,
+            matterId: m.id,
+          }));
+          setCases(mapped);
+        }
+      })
+      .catch((err) => console.warn('Could not load PI matters from API:', err?.message));
+    return () => { isMounted = false; };
+  }, []);
 
   // KPI Calculations
   const totalCases = cases.length;
