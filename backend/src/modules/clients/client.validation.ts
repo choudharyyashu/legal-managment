@@ -62,3 +62,4 @@ export type CreateClientInput = z.infer<typeof createClientSchema>;
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
 export type UpdateClientStatusInput = z.infer<typeof updateClientStatusSchema>;
 export type ClientQueryInput = z.infer<typeof clientQuerySchema>;
+

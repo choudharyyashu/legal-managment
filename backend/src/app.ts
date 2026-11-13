@@ -7,6 +7,7 @@ import { testDirectMySqlConnection, testPrismaConnection } from './config/databa
 import { logger } from './utils/logger.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { userRouter } from './modules/users/user.routes.js';
+import { clientRouter } from './modules/clients/client.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -85,6 +86,7 @@ app.get('/api/v1/health', async (req: Request, res: Response) => {
 // Primary Domain API Routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/clients', clientRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

@@ -32,3 +32,4 @@ export interface ClientListQuery {
   page?: number;
   limit?: number;
 }
+

@@ -5,9 +5,8 @@ import {
   CreateClientInput,
   UpdateClientInput,
   ClientQueryInput,
-  ClientStatus,
 } from './client.validation.js';
-import { ClientResponse } from './client.types.js';
+import { ClientResponse, ClientStatus } from './client.types.js';
 
 export class ClientService {
   /**
