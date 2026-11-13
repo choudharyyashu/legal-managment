@@ -21,6 +21,7 @@ import { trustRouter } from './modules/trust/trust.routes.js';
 import { ledgerRouter } from './modules/ledger/ledger.routes.js';
 import { reconciliationRouter } from './modules/reconciliation/reconciliation.routes.js';
 import { reportRouter } from './modules/reports/report.routes.js';
+import { templateRouter } from './modules/templates/template.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -162,6 +163,7 @@ app.use('/api/v1/trust', trustRouter);
 app.use('/api/v1/ledger', ledgerRouter);
 app.use('/api/v1/reconciliation', reconciliationRouter);
 app.use('/api/v1/reports', reportRouter);
+app.use('/api/v1/templates', templateRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

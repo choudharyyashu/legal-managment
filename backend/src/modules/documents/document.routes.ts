@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { DocumentController } from './document.controller.js';
+import { draftRouter } from './drafts/draft.routes.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -11,6 +12,9 @@ import {
 export const documentRouter = Router();
 
 documentRouter.use(requireAuth);
+
+// Sub-router for automated document drafts and generation engine
+documentRouter.use('/drafts', draftRouter);
 
 documentRouter.get(
   '/',

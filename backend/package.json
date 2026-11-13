@@ -22,6 +22,8 @@
     "test:clients": "tsx src/tests/client-api-test-suite.ts",
     "test:matters": "tsx src/tests/matter-api-test-suite.ts",
     "test:business": "tsx src/tests/business-modules-test-suite.ts",
+    "test:templates": "tsx src/tests/template-registry-test-suite.ts",
+    "test:generation": "tsx src/tests/document-generation-test-suite.ts",
     "prisma:deploy": "prisma migrate deploy"
   },
   "prisma": {
@@ -42,12 +44,14 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "docxtemplater": "^3.71.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "express-rate-limit": "^8.7.4",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.11.4",
+    "pizzip": "^3.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
