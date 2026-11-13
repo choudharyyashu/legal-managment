@@ -13,9 +13,13 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed",
     "db:test": "tsx src/test-db.ts",
+    "db:backup": "tsx src/scripts/backup-db.ts",
+    "db:seed:stages": "tsx src/scripts/seed-workflow-stages.ts",
     "user:create-admin": "tsx src/scripts/create-admin.ts",
+    "test": "tsx src/tests/foundation-db-test-suite.ts && tsx src/tests/auth-rbac-test-suite.ts",
+    "test:foundation": "tsx src/tests/foundation-db-test-suite.ts",
     "test:auth": "tsx src/tests/auth-rbac-test-suite.ts",
-    "test:clients": "tsx src/tests/client-api-test-suite.ts"
+    "prisma:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
