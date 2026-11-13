@@ -391,6 +391,34 @@ async function runMatterTestSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // TEST 9B (SEC-02): Lead Attorney must have Attorney role (400 INVALID_ATTORNEY_ROLE)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          title: 'Invalid Attorney Role Matter',
+          clientId: activeClientUuid,
+          practiceAreaId: 'pa-civ',
+          responsibleAttorneyId: paralegalUserId, // Paralegal role
+          billingType: 'Hourly',
+          hourlyRate: 350,
+        }),
+      });
+      const data = (await res.json()) as any;
+      recordResult(
+        '9B. SEC-02: Non-attorney role (Paralegal) rejected as responsible attorney (400 INVALID_ATTORNEY_ROLE)',
+        res.status === 400 && data.error?.code === 'INVALID_ATTORNEY_ROLE',
+        res.status,
+        400
+      );
+    }
+
+    // -------------------------------------------------------------------------
     // TEST 10: Matter Number Sequencing & Uniqueness
     // Create second matter in same practice area to verify sequence increment
     // -------------------------------------------------------------------------
@@ -559,6 +587,196 @@ async function runMatterTestSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // TEST 16B (SEC-02): Matter Update rejects reassigning attorney to non-attorney (400)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${createdMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          responsibleAttorneyId: paralegalUserId, // Paralegal role
+        }),
+      });
+      const data = (await res.json()) as any;
+      recordResult(
+        '16B. SEC-02: Matter update rejects non-attorney role as responsible attorney (400 INVALID_ATTORNEY_ROLE)',
+        res.status === 400 && data.error?.code === 'INVALID_ATTORNEY_ROLE',
+        res.status,
+        400
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16C (SEC-04): Update switching to Hourly without rate rejected (400)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${secondMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          billingType: 'Hourly',
+          hourlyRate: 0, // Invalid zero rate
+        }),
+      });
+      const data = (await res.json()) as any;
+      recordResult(
+        '16C. SEC-04: Update switching to Hourly with zero/missing rate rejected (400 INVALID_BILLING_RATE)',
+        res.status === 400 && data.error?.code === 'INVALID_BILLING_RATE',
+        res.status,
+        400
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16D (SEC-04): Update switching to Hourly with valid rate succeeds (200 OK)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${secondMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          billingType: 'Hourly',
+          hourlyRate: 450,
+        }),
+      });
+      const data = (await res.json()) as any;
+      const ok =
+        res.status === 200 &&
+        data.data?.matter?.billingType === 'Hourly' &&
+        data.data?.matter?.hourlyRate === 450 &&
+        data.data?.matter?.flatFeeAmount === null;
+
+      recordResult(
+        '16D. SEC-04: Update switching to Hourly with valid rate succeeds and nulls flat fee (200 OK)',
+        ok,
+        res.status,
+        200
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16E (SEC-04): Update switching to Flat Fee without amount rejected (400)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${createdMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          billingType: 'Flat Fee',
+          flatFeeAmount: 0,
+        }),
+      });
+      const data = (await res.json()) as any;
+      recordResult(
+        '16E. SEC-04: Update switching to Flat Fee without amount rejected (400 INVALID_BILLING_FLAT_FEE)',
+        res.status === 400 && data.error?.code === 'INVALID_BILLING_FLAT_FEE',
+        res.status,
+        400
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16F (SEC-04): Update switching to Flat Fee with amount succeeds (200 OK)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${createdMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          billingType: 'Flat Fee',
+          flatFeeAmount: 18000,
+        }),
+      });
+      const data = (await res.json()) as any;
+      const ok =
+        res.status === 200 &&
+        data.data?.matter?.billingType === 'Flat Fee' &&
+        data.data?.matter?.flatFeeAmount === 18000 &&
+        data.data?.matter?.hourlyRate === null;
+
+      recordResult(
+        '16F. SEC-04: Update switching to Flat Fee with valid amount succeeds and nulls hourly rate (200 OK)',
+        ok,
+        res.status,
+        200
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16G (SEC-04): Partial update preserves existing valid billing rates (200 OK)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${createdMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          budget: 72000,
+        }),
+      });
+      const data = (await res.json()) as any;
+      const ok =
+        res.status === 200 &&
+        data.data?.matter?.budget === 72000 &&
+        data.data?.matter?.billingType === 'Flat Fee' &&
+        data.data?.matter?.flatFeeAmount === 18000;
+
+      recordResult(
+        '16G. SEC-04: Partial update preserves existing valid billing terms (200 OK)',
+        ok,
+        res.status,
+        200
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 16H (SEC-04): Update switching to Contingency with valid percentage (200 OK)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters/${createdMatterUuid}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          billingType: 'Contingency',
+          contingencyPercentage: 33.33,
+        }),
+      });
+      const data = (await res.json()) as any;
+      const ok =
+        res.status === 200 &&
+        data.data?.matter?.billingType === 'Contingency' &&
+        data.data?.matter?.contingencyPercentage === 33.33 &&
+        data.data?.matter?.flatFeeAmount === null;
+
+      recordResult(
+        '16H. SEC-04: Update switching to Contingency with valid percentage succeeds (200 OK)',
+        ok,
+        res.status,
+        200
+      );
+    }
+
+    // -------------------------------------------------------------------------
     // TEST 17: Matter Status Transition (PATCH /api/v1/matters/:id/status)
     // Transition to Concluded must populate closeDate
     // -------------------------------------------------------------------------
@@ -708,6 +926,45 @@ async function runMatterTestSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // TEST 21B (SEC-01): Client Matters Sub-resource filters out Ethical Wall matters for screened user
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/clients/${activeClientUuid}/matters`, {
+        headers: { Authorization: `Bearer ${paralegalToken}` },
+      });
+      const data = (await res.json()) as any;
+      const clientMatters = data.data?.matters || [];
+      const leaked = clientMatters.some((m: any) => m.id === ethicalMatterUuid);
+
+      recordResult(
+        '21B. SEC-01: Client matters sub-resource excludes Ethical Wall restricted matters for screened user (200 OK)',
+        res.status === 200 && !leaked,
+        res.status,
+        200,
+        `Leaked in client matters? ${leaked}`
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 21C (SEC-01): Client Matters Sub-resource permits Super Admin to see all client matters
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/clients/${activeClientUuid}/matters`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const data = (await res.json()) as any;
+      const clientMatters = data.data?.matters || [];
+      const includesEthicalMatter = clientMatters.some((m: any) => m.id === ethicalMatterUuid);
+
+      recordResult(
+        '21C. SEC-01: Client matters sub-resource returns all client matters for Super Admin (200 OK)',
+        res.status === 200 && includesEthicalMatter,
+        res.status,
+        200
+      );
+    }
+
+    // -------------------------------------------------------------------------
     // TEST 22: Ethical Wall Query-Level List Screening (No Data Leakage)
     // Paralegal queries GET /api/v1/matters.
     // The restricted ethical matter must NOT appear in results or total count
@@ -727,6 +984,29 @@ async function runMatterTestSuite() {
         res.status,
         200,
         `Leaked in list? ${leaked}`
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 22B (SEC-03): Pagination total count matches returned visible dataset (No count discrepancy)
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/matters?limit=50`, {
+        headers: { Authorization: `Bearer ${paralegalToken}` },
+      });
+      const data = (await res.json()) as any;
+      const returnedMatters = data.data || [];
+      const totalCount = data.pagination?.total;
+
+      // Because limit is 50 and total matters in test DB < 50, total must equal returnedMatters.length
+      const countsMatch = totalCount === returnedMatters.length;
+
+      recordResult(
+        '22B. SEC-03: Ethical Wall list total count matches exact length of visible matters (Zero discrepancy)',
+        res.status === 200 && countsMatch,
+        res.status,
+        200,
+        `Total Count: ${totalCount}, Returned: ${returnedMatters.length}`
       );
     }
 

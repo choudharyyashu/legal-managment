@@ -248,21 +248,39 @@ export class MatterService {
     // -------------------------------------------------------------------------
     // ETHICAL WALL LIST SCREENING (Utah RPC 1.10)
     // Non-super_admins must not see or count matters from which they are screened
+    // Applied uniformly to both total count and paginated findMany queries
     // -------------------------------------------------------------------------
     if (currentUser.role !== 'super_admin') {
-      where.AND = [
-        {
-          OR: [
-            // Matter does NOT have Ethical Wall enabled
-            { description: { not: { contains: '[ETHICAL_WALL:ENABLED' } } },
-            { description: null },
-            // OR user is the responsible attorney
-            { responsibleAttorneyId: currentUser.id },
-            // OR user is explicitly assigned
-            { staffAssignments: { some: { userId: currentUser.id } } },
-          ],
-        },
+      const ethicalWallConditions: any[] = [
+        // Matter does NOT have Ethical Wall enabled
+        { description: { not: { contains: '[ETHICAL_WALL:ENABLED' } } },
+        { description: null },
+        // OR user is the responsible attorney
+        { responsibleAttorneyId: currentUser.id },
       ];
+
+      // OR user is explicitly assigned, EXCEPT when their role is specifically excluded in the Ethical Wall header
+      if (currentUser.role === 'paralegal') {
+        ethicalWallConditions.push({
+          AND: [
+            { staffAssignments: { some: { userId: currentUser.id } } },
+            { description: { not: { contains: 'Excluded=Paralegal' } } },
+          ],
+        });
+      } else if (currentUser.role === 'attorney') {
+        ethicalWallConditions.push({
+          AND: [
+            { staffAssignments: { some: { userId: currentUser.id } } },
+            { description: { not: { contains: 'Excluded=Attorney' } } },
+          ],
+        });
+      } else {
+        ethicalWallConditions.push({
+          staffAssignments: { some: { userId: currentUser.id } },
+        });
+      }
+
+      where.AND = [{ OR: ethicalWallConditions }];
     }
 
     const orderBy: any = {};
@@ -388,7 +406,7 @@ export class MatterService {
       throw AppError.badRequest(`Practice Area '${input.practiceAreaId}' does not exist.`, 'INVALID_PRACTICE_AREA');
     }
 
-    // 3. Verify Responsible Attorney
+    // 3. Verify Responsible Attorney (Utah RPC 5.1 & Practice Rules)
     const attorney = await prisma.user.findUnique({
       where: { id: input.responsibleAttorneyId },
       select: { id: true, name: true, role: true, status: true },
@@ -396,6 +414,12 @@ export class MatterService {
 
     if (!attorney || attorney.status !== 'Active') {
       throw AppError.badRequest('Assigned lead attorney is invalid or inactive.', 'INVALID_ATTORNEY');
+    }
+    if (!['attorney', 'super_admin'].includes(attorney.role)) {
+      throw AppError.badRequest(
+        `Assigned responsible attorney must have an Attorney or Super Admin role. User '${attorney.name}' has role '${attorney.role}'.`,
+        'INVALID_ATTORNEY_ROLE'
+      );
     }
 
     // 4. Resolve secondary staff IDs if provided
@@ -541,6 +565,55 @@ export class MatterService {
     if (input.responsibleAttorneyId && input.responsibleAttorneyId !== existing.responsibleAttorneyId) {
       const att = await prisma.user.findUnique({ where: { id: input.responsibleAttorneyId } });
       if (!att || att.status !== 'Active') throw AppError.badRequest('Invalid or inactive lead attorney.', 'INVALID_ATTORNEY');
+      if (!['attorney', 'super_admin'].includes(att.role)) {
+        throw AppError.badRequest(
+          `Assigned responsible attorney must have an Attorney or Super Admin role. User '${att.name}' has role '${att.role}'.`,
+          'INVALID_ATTORNEY_ROLE'
+        );
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // SEC-04: Effective Billing Validation & Transition Handling
+    // -------------------------------------------------------------------------
+    const effectiveBillingType = input.billingType !== undefined ? input.billingType : existing.billingType;
+    const effectiveHourlyRate = input.hourlyRate !== undefined ? input.hourlyRate : existing.hourlyRate;
+    const effectiveFlatFeeAmount = input.flatFeeAmount !== undefined ? input.flatFeeAmount : existing.flatFeeAmount;
+    const effectiveContingency = input.contingencyPercentage !== undefined ? input.contingencyPercentage : existing.contingencyPercentage;
+
+    if (effectiveBillingType === 'Hourly') {
+      if (effectiveHourlyRate === null || effectiveHourlyRate === undefined || Number(effectiveHourlyRate) <= 0) {
+        throw AppError.badRequest('Hourly billing requires a positive hourly rate.', 'INVALID_BILLING_RATE');
+      }
+    } else if (effectiveBillingType === 'Flat Fee') {
+      if (effectiveFlatFeeAmount === null || effectiveFlatFeeAmount === undefined || Number(effectiveFlatFeeAmount) <= 0) {
+        throw AppError.badRequest('Flat Fee billing requires a positive flat fee amount.', 'INVALID_BILLING_FLAT_FEE');
+      }
+    } else if (effectiveBillingType === 'Contingency') {
+      if (effectiveContingency !== null && effectiveContingency !== undefined && (Number(effectiveContingency) < 0 || Number(effectiveContingency) > 100)) {
+        throw AppError.badRequest('Contingency percentage must be between 0 and 100.', 'INVALID_CONTINGENCY_PERCENTAGE');
+      }
+    }
+
+    // Clean rate assignments when billing type changes
+    let resolvedHourlyRate: number | null | undefined = input.hourlyRate;
+    let resolvedFlatFeeAmount: number | null | undefined = input.flatFeeAmount;
+    let resolvedContingency: number | null | undefined = input.contingencyPercentage;
+
+    if (input.billingType !== undefined && input.billingType !== existing.billingType) {
+      if (input.billingType === 'Hourly') {
+        resolvedHourlyRate = effectiveHourlyRate;
+        resolvedFlatFeeAmount = null;
+        resolvedContingency = null;
+      } else if (input.billingType === 'Flat Fee') {
+        resolvedFlatFeeAmount = effectiveFlatFeeAmount;
+        resolvedHourlyRate = null;
+        resolvedContingency = null;
+      } else if (input.billingType === 'Contingency') {
+        resolvedContingency = effectiveContingency;
+        resolvedHourlyRate = null;
+        resolvedFlatFeeAmount = null;
+      }
     }
 
     // Maintain or update ethical wall serialized tag
@@ -560,9 +633,9 @@ export class MatterService {
         ...(input.responsibleAttorneyId !== undefined ? { responsibleAttorneyId: input.responsibleAttorneyId } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.billingType !== undefined ? { billingType: input.billingType } : {}),
-        ...(input.hourlyRate !== undefined ? { hourlyRate: input.hourlyRate } : {}),
-        ...(input.flatFeeAmount !== undefined ? { flatFeeAmount: input.flatFeeAmount } : {}),
-        ...(input.contingencyPercentage !== undefined ? { contingencyPercentage: input.contingencyPercentage } : {}),
+        ...(resolvedHourlyRate !== undefined ? { hourlyRate: resolvedHourlyRate } : {}),
+        ...(resolvedFlatFeeAmount !== undefined ? { flatFeeAmount: resolvedFlatFeeAmount } : {}),
+        ...(resolvedContingency !== undefined ? { contingencyPercentage: resolvedContingency } : {}),
         ...(input.budget !== undefined ? { budget: input.budget } : {}),
         ...(input.courtName !== undefined ? { courtName: input.courtName?.trim() || null } : {}),
         ...(input.judge !== undefined ? { judge: input.judge?.trim() || null } : {}),

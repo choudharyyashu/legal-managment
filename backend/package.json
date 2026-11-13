@@ -19,12 +19,9 @@
     "test": "tsx src/tests/foundation-db-test-suite.ts && tsx src/tests/auth-rbac-test-suite.ts",
     "test:foundation": "tsx src/tests/foundation-db-test-suite.ts",
     "test:auth": "tsx src/tests/auth-rbac-test-suite.ts",
-<<<<<<< HEAD
     "test:clients": "tsx src/tests/client-api-test-suite.ts",
-    "test:matters": "tsx src/tests/matter-api-test-suite.ts"
-=======
+    "test:matters": "tsx src/tests/matter-api-test-suite.ts",
     "prisma:deploy": "prisma migrate deploy"
->>>>>>> de0c043b31f7602ff4cc426d152c382dae6341c4
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
