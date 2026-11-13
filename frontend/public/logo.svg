@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <!-- Crest Icon -->
+  <rect x="6" y="6" width="48" height="48" rx="8" fill="#06244B" />
+  <path d="M30 14L16 22V36L30 46L44 36V22L30 14Z" stroke="#F5F0E5" stroke-width="2" fill="#0B356D" />
+  <!-- Pillar / Scales motif -->
+  <path d="M30 20V38M22 26H38M20 32C20 34 24 34 24 32M36 32C36 34 40 34 40 32" stroke="#A4432B" stroke-width="2" stroke-linecap="round" />
+  <!-- Firm Monogram -->
+  <text x="64" y="28" font-family="'Playfair Display', Georgia, serif" font-size="16" font-weight="700" fill="#06244B" letter-spacing="1.5">HEUGLY &amp; BLUDWORTH</text>
+  <text x="64" y="44" font-family="'Inter', -apple-system, sans-serif" font-size="9" font-weight="600" fill="#A4432B" letter-spacing="2.5">ATTORNEYS AT LAW</text>
+</svg>
+

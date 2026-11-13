@@ -1,0 +1,16 @@
+:root {
+  --color-brand-navy: #06244B;
+  --color-brand-cream: #F5F0E5;
+  --color-brand-terracotta: #A4432B;
+  --color-brand-blue-grey: #B8C0C4;
+  --color-surface-white: #FFFFFF;
+  --color-text-primary: #202A35;
+  --color-text-secondary: #667085;
+  --color-border-default: #D9D6CF;
+  
+  --color-status-success: #287A55;
+  --color-status-warning: #A66A16;
+  --color-status-danger: #B42318;
+  --color-status-info: #315F8C;
+}
+
