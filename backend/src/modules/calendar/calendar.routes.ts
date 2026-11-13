@@ -44,3 +44,4 @@ calendarRouter.delete(
   requirePermission('calendar:delete'),
   CalendarController.deleteEvent
 );
+

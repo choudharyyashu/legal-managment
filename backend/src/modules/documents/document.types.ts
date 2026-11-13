@@ -43,3 +43,4 @@ export interface DocumentListQuery {
   isPrivileged?: boolean;
   search?: string;
 }
+

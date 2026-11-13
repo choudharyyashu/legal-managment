@@ -64,3 +64,4 @@ timeRouter.delete(
   requirePermission('billing:edit'),
   TimeController.deleteTimeEntry
 );
+

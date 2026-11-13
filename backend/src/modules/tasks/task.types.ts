@@ -36,3 +36,4 @@ export interface TaskListQuery {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
+

@@ -34,3 +34,4 @@ export interface IntakeListQuery {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
+

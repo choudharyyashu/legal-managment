@@ -30,3 +30,4 @@ reconciliationRouter.get(
   requirePermission('billing:view'),
   ReconciliationController.getHistory
 );
+

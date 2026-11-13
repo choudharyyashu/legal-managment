@@ -35,3 +35,4 @@ export const calendarQuerySchema = z.object({
 
 export type CreateCalendarEventInput = z.infer<typeof createCalendarEventSchema>;
 export type UpdateCalendarEventInput = z.infer<typeof updateCalendarEventSchema>;
+

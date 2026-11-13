@@ -58,3 +58,4 @@ export interface InvoiceListQuery {
   startDate?: string;
   endDate?: string;
 }
+

@@ -44,3 +44,4 @@ expenseRouter.delete(
   requirePermission('billing:edit'),
   ExpenseController.deleteExpense
 );
+

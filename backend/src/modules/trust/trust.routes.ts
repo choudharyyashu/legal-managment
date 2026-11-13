@@ -44,3 +44,4 @@ trustRouter.get(
   requirePermission('billing:view'),
   TrustController.getTransactions
 );
+

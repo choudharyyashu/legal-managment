@@ -50,3 +50,4 @@ documentRouter.delete(
   requirePermission('documents:delete'),
   DocumentController.deleteDocument
 );
+

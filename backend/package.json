@@ -16,11 +16,12 @@
     "db:backup": "tsx src/scripts/backup-db.ts",
     "db:seed:stages": "tsx src/scripts/seed-workflow-stages.ts",
     "user:create-admin": "tsx src/scripts/create-admin.ts",
-    "test": "tsx src/tests/foundation-db-test-suite.ts && tsx src/tests/auth-rbac-test-suite.ts",
+    "test": "tsx src/tests/foundation-db-test-suite.ts && tsx src/tests/auth-rbac-test-suite.ts && tsx src/tests/client-api-test-suite.ts && tsx src/tests/matter-api-test-suite.ts && tsx src/tests/business-modules-test-suite.ts",
     "test:foundation": "tsx src/tests/foundation-db-test-suite.ts",
     "test:auth": "tsx src/tests/auth-rbac-test-suite.ts",
     "test:clients": "tsx src/tests/client-api-test-suite.ts",
     "test:matters": "tsx src/tests/matter-api-test-suite.ts",
+    "test:business": "tsx src/tests/business-modules-test-suite.ts",
     "prisma:deploy": "prisma migrate deploy"
   },
   "prisma": {

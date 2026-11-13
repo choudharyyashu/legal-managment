@@ -50,3 +50,4 @@ export interface TimeEntryListQuery {
   startDate?: string;
   endDate?: string;
 }
+

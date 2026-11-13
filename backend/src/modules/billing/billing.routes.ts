@@ -52,3 +52,4 @@ billingRouter.get(
   requirePermission('billing:view'),
   BillingController.getPayments
 );
+

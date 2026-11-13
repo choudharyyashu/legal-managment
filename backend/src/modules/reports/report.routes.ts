@@ -17,3 +17,4 @@ reportRouter.get(
   requirePermission('billing:view'),
   ReportController.getArAging
 );
+

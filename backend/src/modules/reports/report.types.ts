@@ -39,3 +39,4 @@ export interface ArAgingResponse {
   daysOver90: number;
   totalOutstanding: number;
 }
+

@@ -27,3 +27,4 @@ export interface GeneralLedgerJournalResponse {
   totalCredit: number;
   entries?: GeneralLedgerEntryResponse[];
 }
+

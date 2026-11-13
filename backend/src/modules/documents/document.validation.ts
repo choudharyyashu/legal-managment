@@ -30,3 +30,4 @@ export const documentQuerySchema = z.object({
 
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;
 export type UploadVersionInput = z.infer<typeof uploadVersionSchema>;
+

@@ -24,3 +24,4 @@ export interface ExpenseListQuery {
   status?: string;
   category?: string;
 }
+

@@ -39,3 +39,4 @@ export const timeQuerySchema = z.object({
 export type CreateTimeEntryInput = z.infer<typeof createTimeEntrySchema>;
 export type UpdateTimeEntryInput = z.infer<typeof updateTimeEntrySchema>;
 export type ApproveTimeEntryInput = z.infer<typeof approveTimeEntrySchema>;
+

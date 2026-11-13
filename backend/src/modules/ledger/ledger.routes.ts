@@ -32,3 +32,4 @@ ledgerRouter.post(
   validateRequest({ body: createJournalSchema }),
   LedgerController.createJournal
 );
+

@@ -24,3 +24,4 @@ export const trustLedgerQuerySchema = z.object({
 
 export type CreateTrustDepositInput = z.infer<typeof createTrustDepositSchema>;
 export type CreateTrustDisbursementInput = z.infer<typeof createTrustDisbursementSchema>;
+

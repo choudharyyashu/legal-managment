@@ -44,3 +44,4 @@ export const invoiceQuerySchema = z.object({
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type UpdateInvoiceStatusInput = z.infer<typeof updateInvoiceStatusSchema>;
 export type RecordPaymentInput = z.infer<typeof recordPaymentSchema>;
+

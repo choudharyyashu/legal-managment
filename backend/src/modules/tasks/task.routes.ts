@@ -52,3 +52,4 @@ taskRouter.delete(
   requirePermission('tasks:delete'),
   TaskController.deleteTask
 );
+
