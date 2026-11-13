@@ -17,40 +17,40 @@ intakeRouter.use(requireAuth);
 
 intakeRouter.get(
   '/',
-  requirePermission('intakes:view'),
+  requirePermission('intake:view'),
   validateRequest({ query: intakeQuerySchema }),
   IntakeController.getIntakes
 );
 
 intakeRouter.get(
   '/:id',
-  requirePermission('intakes:view'),
+  requirePermission('intake:view'),
   IntakeController.getIntakeById
 );
 
 intakeRouter.post(
   '/',
-  requirePermission('intakes:create'),
+  requirePermission('intake:create'),
   validateRequest({ body: createIntakeSchema }),
   IntakeController.createIntake
 );
 
 intakeRouter.put(
   '/:id',
-  requirePermission('intakes:edit'),
+  requirePermission('intake:create'),
   validateRequest({ body: updateIntakeSchema }),
   IntakeController.updateIntake
 );
 
 intakeRouter.post(
   '/:id/conflict-check',
-  requirePermission('intakes:view'),
+  requirePermission('intake:conflict_review'),
   IntakeController.runConflictCheck
 );
 
 intakeRouter.post(
   '/:id/clear-conflict',
-  requirePermission('intakes:edit'),
+  requirePermission('intake:conflict_review'),
   validateRequest({ body: clearConflictSchema }),
   IntakeController.clearConflict
 );

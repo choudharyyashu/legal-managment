@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { TrustController } from './trust.controller.js';
-import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { requireAuth, requirePermission, requireAnyPermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
   createTrustDepositSchema,
@@ -14,34 +14,34 @@ trustRouter.use(requireAuth);
 
 trustRouter.get(
   '/ledgers',
-  requirePermission('billing:view'),
+  requirePermission('trust:view'),
   validateRequest({ query: trustLedgerQuerySchema }),
   TrustController.getLedgers
 );
 
 trustRouter.get(
   '/ledgers/:id',
-  requirePermission('billing:view'),
+  requirePermission('trust:view'),
   TrustController.getLedgerById
 );
 
 trustRouter.post(
   '/deposits',
-  requirePermission('billing:edit'),
+  requireAnyPermission(['payments:record', 'trust:view']),
   validateRequest({ body: createTrustDepositSchema }),
   TrustController.depositToTrust
 );
 
 trustRouter.post(
   '/disbursements',
-  requirePermission('billing:edit'),
+  requireAnyPermission(['invoices:manage', 'payments:record', 'trust:view']),
   validateRequest({ body: createTrustDisbursementSchema }),
   TrustController.disburseFromTrust
 );
 
 trustRouter.get(
   '/transactions',
-  requirePermission('billing:view'),
+  requirePermission('trust:view'),
   TrustController.getTransactions
 );
 

@@ -14,34 +14,34 @@ expenseRouter.use(requireAuth);
 
 expenseRouter.get(
   '/',
-  requirePermission('billing:view'),
+  requirePermission('expenses:view'),
   validateRequest({ query: expenseQuerySchema }),
   ExpenseController.getExpenses
 );
 
 expenseRouter.get(
   '/:id',
-  requirePermission('billing:view'),
+  requirePermission('expenses:view'),
   ExpenseController.getExpenseById
 );
 
 expenseRouter.post(
   '/',
-  requirePermission('billing:edit'),
+  requirePermission('expenses:create'),
   validateRequest({ body: createExpenseSchema }),
   ExpenseController.createExpense
 );
 
 expenseRouter.put(
   '/:id',
-  requirePermission('billing:edit'),
+  requirePermission('expenses:edit'),
   validateRequest({ body: updateExpenseSchema }),
   ExpenseController.updateExpense
 );
 
 expenseRouter.delete(
   '/:id',
-  requirePermission('billing:edit'),
+  requirePermission('expenses:edit'),
   ExpenseController.deleteExpense
 );
 

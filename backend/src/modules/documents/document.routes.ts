@@ -27,14 +27,14 @@ documentRouter.get(
 
 documentRouter.post(
   '/',
-  requirePermission('documents:create'),
+  requirePermission('documents:upload'),
   validateRequest({ body: createDocumentSchema }),
   DocumentController.createDocument
 );
 
 documentRouter.post(
   '/:id/upload',
-  requirePermission('documents:create'),
+  requirePermission('documents:upload'),
   validateRequest({ body: uploadVersionSchema }),
   DocumentController.uploadVersion
 );

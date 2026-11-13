@@ -8,13 +8,13 @@ reportRouter.use(requireAuth);
 
 reportRouter.get(
   '/dashboard',
-  requirePermission('users:view'),
+  requirePermission('dashboard:view'),
   ReportController.getDashboardSummary
 );
 
 reportRouter.get(
   '/ar-aging',
-  requirePermission('billing:view'),
+  requirePermission('reports:financial_view'),
   ReportController.getArAging
 );
 
