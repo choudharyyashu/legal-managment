@@ -60,3 +60,4 @@ export interface DraftListQuery {
   status?: string;
   search?: string;
 }
+

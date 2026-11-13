@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Landmark, Plus, Search, Filter, ArrowUpRight, ArrowDownLeft, FileSpreadsheet, ShieldAlert, CheckCircle } from 'lucide-react';
+import { ledgerService } from '../../../services/ledgerService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
@@ -48,26 +49,29 @@ export function ChartOfAccounts() {
     { code: '5200', name: 'Westlaw / LexisNexis Research Subscriptions', type: 'Expense', category: 'Practice Tools', balance: 9600.00, status: 'Active' },
   ]);
 
-  React.useEffect(() => {
-    let isMounted = true;
-    import('../../../services/ledgerService').then(({ ledgerService }) => {
-      ledgerService.getAccounts().then((res) => {
-        if (isMounted && Array.isArray(res) && res.length > 0) {
-          setAccounts(
-            res.map((a) => ({
-              code: String(a.accountNumber),
-              name: a.accountName,
-              type: a.accountType,
-              category: a.accountType === 'Asset' ? 'Current Assets' : a.accountType,
-              balance: Number(a.balance) || 0,
-              status: a.isActive ? 'Active' : 'Inactive',
-            }))
-          );
-        }
-      }).catch((err) => console.warn('Could not load accounts from API:', err?.message));
-    });
-    return () => { isMounted = false; };
+  const loadAccounts = useCallback(async () => {
+    try {
+      const res = await ledgerService.getAccounts();
+      if (Array.isArray(res) && res.length > 0) {
+        setAccounts(
+          res.map((a) => ({
+            code: String(a.accountNumber),
+            name: a.accountName,
+            type: a.accountType,
+            category: a.accountType === 'Asset' ? 'Current Assets' : a.accountType,
+            balance: Number(a.balance) || 0,
+            status: a.isActive ? 'Active' : 'Inactive',
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('Could not load accounts from API:', err?.message);
+    }
   }, []);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
 
   const [newCode, setNewCode] = useState('');
   const [newName, setNewName] = useState('');
@@ -75,25 +79,30 @@ export function ChartOfAccounts() {
   const [newCategory, setNewCategory] = useState('Operating Expense');
   const [newBalance, setNewBalance] = useState(0);
 
-  const handleAddAccount = (e) => {
+  const handleAddAccount = async (e) => {
     e.preventDefault();
-    if (!newCode.trim() || !newName.trim()) return;
+    const parsedCode = parseInt(newCode.trim(), 10);
+    if (isNaN(parsedCode) || !newName.trim()) {
+      addToast('Please enter a valid numeric account code and account title.', 'error');
+      return;
+    }
 
-    const newAcc = {
-      code: newCode.trim(),
-      name: newName.trim(),
-      type: newType,
-      category: newCategory,
-      balance: Number(newBalance),
-      status: 'Active'
-    };
-
-    setAccounts(prev => [newAcc, ...prev]);
-    addToast(`Account #${newAcc.code} (${newAcc.name}) added to Chart of Accounts.`, 'success');
-    setIsAddAccountOpen(false);
-    setNewCode('');
-    setNewName('');
-    setNewBalance(0);
+    try {
+      await ledgerService.createAccount({
+        accountNumber: parsedCode,
+        accountName: newName.trim(),
+        accountType: newType,
+        isActive: true,
+      });
+      addToast(`Account #${parsedCode} (${newName.trim()}) persisted to Chart of Accounts in MySQL.`, 'success');
+      setIsAddAccountOpen(false);
+      setNewCode('');
+      setNewName('');
+      setNewBalance(0);
+      await loadAccounts();
+    } catch (err) {
+      addToast(err?.message || 'Failed to create account in database.', 'error');
+    }
   };
 
   const filteredAccounts = accounts.filter(acc => {

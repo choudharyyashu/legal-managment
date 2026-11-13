@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Upload,
   FileText,
@@ -20,6 +20,7 @@ import {
   ArrowRight,
   RotateCcw
 } from 'lucide-react';
+import { documentService } from '../../../services/documentService';
 import { MOCK_DOCUMENTS } from '../../../data/mockDocuments';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
@@ -36,12 +37,11 @@ export function DocumentsList() {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
 
-  // Enriched documents with version history, privilege tags, and OCR text
   const [documents, setDocuments] = useState(() => {
     return MOCK_DOCUMENTS.map((doc, idx) => ({
       ...doc,
       version: idx === 0 ? 'v2.1' : (idx === 2 ? 'v3.0' : 'v1.0'),
-      isPrivileged: idx === 2 || idx === 3, // Hydrology report & Trust instrument are privileged
+      isPrivileged: idx === 2 || idx === 3,
       privilegeType: idx === 2
         ? 'Attorney Work Product (Rule 1.6)'
         : (idx === 3 ? 'Confidential Estate Client Communication' : null),
@@ -62,43 +62,56 @@ export function DocumentsList() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [privilegeFilter, setPrivilegeFilter] = useState('all'); // 'all', 'privileged', 'public'
+  const [privilegeFilter, setPrivilegeFilter] = useState('all');
   const [searchOCR, setSearchOCR] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const loadDocuments = useCallback(async () => {
+    try {
+      const res = await documentService.getDocuments({ limit: 100 });
+      if (Array.isArray(res) && res.length > 0) {
+        setDocuments(
+          res.map((d) => ({
+            ...d,
+            id: d.id,
+            title: d.title,
+            fileName: d.versions?.[0]?.fileName || `${d.title.replace(/\s+/g, '_')}.pdf`,
+            matterTitle: d.matterTitle || d.matter?.title || d.matterName || 'Matter Document',
+            clientName: d.clientName || d.client?.name || 'Firm Client',
+            category: d.category || 'Pleading',
+            version: d.currentVersion || (d.versions?.[0]?.versionLabel) || 'v1.0',
+            uploadedAt: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
+            uploadedByName: d.versions?.[0]?.uploadedByName || d.createdBy?.name || 'Firm Staff',
+            isPrivileged: Boolean(d.isPrivileged),
+            privilegeType: d.privilegeType || null,
+            ocrText: d.ocrContent || 'Document content indexed into firm full-text search engine.',
+            isDbRecord: true,
+            versionHistory: Array.isArray(d.versions) && d.versions.length > 0
+              ? d.versions.map((v) => ({
+                  version: v.versionLabel,
+                  date: v.uploadedAt ? new Date(v.uploadedAt).toISOString().split('T')[0] : '2026-11-13',
+                  author: v.uploadedByName || 'Firm Staff',
+                  note: v.revisionNotes || 'Uploaded version',
+                }))
+              : [
+                  {
+                    version: d.currentVersion || 'v1.0',
+                    date: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
+                    author: 'Firm Staff',
+                    note: 'Original filed instrument',
+                  },
+                ],
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('Could not load documents from API:', err?.message);
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    import('../../../services/documentService').then(({ documentService }) => {
-      documentService.getDocuments().then((res) => {
-        if (isMounted && Array.isArray(res) && res.length > 0) {
-          setDocuments(
-            res.map((d) => ({
-              ...d,
-              id: d.id,
-              title: d.title,
-              matterName: d.matter?.title || d.matterName || 'Matter Document',
-              clientName: d.client?.name || d.clientName || 'Firm Client',
-              category: d.category || 'Pleading',
-              version: d.currentVersion ? `v${d.currentVersion}.0` : 'v1.0',
-              uploadedAt: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
-              uploadedByName: d.createdBy?.name || 'Staff Member',
-              isPrivileged: Boolean(d.isPrivileged),
-              privilegeType: d.privilegeType || null,
-              ocrText: d.ocrText || 'Document content indexed for search.',
-              versionHistory: [
-                {
-                  version: d.currentVersion ? `v${d.currentVersion}.0` : 'v1.0',
-                  date: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
-                  author: d.createdBy?.name || 'Staff Member',
-                  note: 'Uploaded document version',
-                },
-              ],
-            }))
-          );
-        }
-      }).catch((err) => console.warn('Could not load documents from API:', err?.message));
-    });
-    return () => { isMounted = false; };
-  }, []);
+    loadDocuments();
+  }, [loadDocuments]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -106,10 +119,28 @@ export function DocumentsList() {
 
   // Upload Form State
   const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadCategory, setUploadCategory] = useState('Pleadings');
-  const [uploadMatterId, setUploadMatterId] = useState(matters[0]?.id || '');
+  const [uploadCategory, setUploadCategory] = useState('Pleading');
+  const [uploadMatterId, setUploadMatterId] = useState('');
   const [isNewDocPrivileged, setIsNewDocPrivileged] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState('');
+  const [selectedFileBase64, setSelectedFileBase64] = useState('');
+  const [fileSizeBytes, setFileSizeBytes] = useState(1024);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFileName(file.name);
+    setFileSizeBytes(file.size);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === 'string') {
+        const base64 = result.includes(',') ? result.split(',')[1] : result;
+        setSelectedFileBase64(base64);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const filteredDocs = useMemo(() => {
     return documents.filter((doc) => {
@@ -117,9 +148,9 @@ export function DocumentsList() {
       const matchesStandard =
         searchQuery === '' ||
         doc.title.toLowerCase().includes(q) ||
-        doc.fileName.toLowerCase().includes(q) ||
-        doc.matterTitle.toLowerCase().includes(q) ||
-        doc.clientName.toLowerCase().includes(q);
+        (doc.fileName && doc.fileName.toLowerCase().includes(q)) ||
+        (doc.matterTitle && doc.matterTitle.toLowerCase().includes(q)) ||
+        (doc.clientName && doc.clientName.toLowerCase().includes(q));
 
       const matchesOCR = searchOCR && doc.ocrText && doc.ocrText.toLowerCase().includes(q);
       const matchesSearch = matchesStandard || matchesOCR;
@@ -134,84 +165,127 @@ export function DocumentsList() {
     });
   }, [documents, searchQuery, categoryFilter, privilegeFilter, searchOCR]);
 
-  const handleUploadSubmit = (e) => {
+  const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!uploadTitle.trim() || !uploadMatterId) {
-      addToast('Please provide a document title and select a matter.', 'error');
+    const effectiveMatterId = uploadMatterId || matters[0]?.id;
+    if (!uploadTitle.trim() || !effectiveMatterId) {
+      addToast('Please provide a document title and select an active matter.', 'error');
       return;
     }
 
-    const matter = matters.find(m => m.id === uploadMatterId);
-    const newDoc = {
-      id: `DOC-${documents.length + 401}`,
-      title: uploadTitle,
-      fileName: selectedFileName || `${uploadTitle.replace(/\s+/g, '_')}.pdf`,
-      fileType: 'PDF',
-      fileSize: '1.4 MB',
-      category: uploadCategory,
-      clientId: matter?.clientId || 'CLI-1001',
-      clientName: matter?.clientName || 'Wasatch Mountain Logistics LLC',
-      matterId: matter?.id,
-      matterTitle: matter?.title,
-      uploadedById: currentUser.id,
-      uploadedByName: currentUser.name,
-      uploadedAt: new Date().toISOString(),
-      version: 'v1.0',
-      isPrivileged: isNewDocPrivileged,
-      privilegeType: isNewDocPrivileged ? 'Attorney Work Product (Utah RPC 1.6)' : null,
-      ocrText: `OCR extracted text for ${uploadTitle}... Indexed into firm full-text search engine.`,
-      versionHistory: [
-        { version: 'v1.0', date: new Date().toISOString().split('T')[0], author: currentUser.name, note: 'Initial upload' }
-      ]
-    };
+    const matter = matters.find((m) => m.id === effectiveMatterId || m.matterNumber === effectiveMatterId);
+    if (!matter?.id || !matter?.clientId) {
+      addToast('Selected matter must be associated with an active client.', 'error');
+      return;
+    }
 
-    setDocuments(prev => [newDoc, ...prev]);
-    addToast(`Document "${uploadTitle}" (v1.0) indexed to ${matter?.matterNumber}.`, 'success');
-    setIsUploadModalOpen(false);
-    setUploadTitle('');
-    setSelectedFileName('');
-    setIsNewDocPrivileged(false);
+    try {
+      setIsUploading(true);
+      const validCategory = ['Pleading', 'Motion', 'Discovery', 'Correspondence', 'Contract', 'Evidence', 'Court Order', 'Billing / Receipt', 'Other'].includes(uploadCategory)
+        ? uploadCategory
+        : 'Pleading';
+
+      // 1. Create document in backend database
+      const createdDoc = await documentService.createDocument({
+        matterId: matter.id,
+        clientId: matter.clientId,
+        title: uploadTitle.trim(),
+        category: validCategory,
+        isPrivileged: Boolean(isNewDocPrivileged),
+        privilegeType: isNewDocPrivileged ? 'Attorney Work Product (Utah RPC 1.6)' : undefined,
+      });
+
+      // 2. Upload initial document binary version to vault
+      const docId = createdDoc.id;
+      const fileName = selectedFileName || `${uploadTitle.replace(/\s+/g, '_')}.pdf`;
+      const base64Content = selectedFileBase64 || btoa(`Vault Document Content: ${uploadTitle}\nMatter: ${matter.matterNumber}\nUploaded By: ${currentUser.name}\nUtah Legal Professional Work Product.`);
+
+      await documentService.uploadVersion(docId, {
+        fileName,
+        fileType: fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
+        fileSizeBytes: Number(fileSizeBytes) || 1024,
+        fileContentBase64: base64Content,
+        revisionNotes: 'Initial document filing in firm vault.',
+      });
+
+      addToast(`Document "${uploadTitle}" (v1.0) securely archived to vault for matter ${matter.matterNumber}.`, 'success');
+      setIsUploadModalOpen(false);
+      setUploadTitle('');
+      setSelectedFileName('');
+      setSelectedFileBase64('');
+      setIsNewDocPrivileged(false);
+      await loadDocuments();
+    } catch (err) {
+      addToast(err?.message || 'Failed to upload document to vault.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleTogglePrivilege = (docId) => {
-    setDocuments(prev =>
-      prev.map(d => {
-        if (d.id === docId) {
-          const nextState = !d.isPrivileged;
-          addToast(
-            nextState
-              ? `Document classified as "Attorney-Client Privileged" (Protected under Utah RPC 1.6).`
-              : `Document classification updated to "Court Pleading / Public".`,
-            'info'
-          );
-          return {
-            ...d,
-            isPrivileged: nextState,
-            privilegeType: nextState ? 'Attorney Work Product (Utah RPC 1.6)' : null
-          };
-        }
-        return d;
-      })
-    );
+  const handleUploadNewVersion = async (docId) => {
+    try {
+      setIsUploading(true);
+      const targetDoc = documents.find((d) => d.id === docId);
+      const nextVerNum = (parseFloat((targetDoc?.version || 'v1.0').replace('v', '')) + 1.0).toFixed(1);
+      const fileName = targetDoc?.fileName || `${(targetDoc?.title || 'Document').replace(/\s+/g, '_')}_v${nextVerNum}.pdf`;
+      const base64Content = btoa(`Revision ${nextVerNum} content for ${targetDoc?.title}. Annotated by ${currentUser.name} on ${new Date().toISOString()}.`);
+
+      if (targetDoc?.isDbRecord) {
+        await documentService.uploadVersion(docId, {
+          fileName,
+          fileType: 'application/pdf',
+          fileSizeBytes: 2048,
+          fileContentBase64: base64Content,
+          revisionNotes: `Revision v${nextVerNum} updated with partner annotations.`,
+        });
+        await loadDocuments();
+      } else {
+        setDocuments((prev) =>
+          prev.map((d) => {
+            if (d.id === docId) {
+              const updatedHistory = [
+                { version: `v${nextVerNum}`, date: new Date().toISOString().split('T')[0], author: currentUser.name, note: 'Revised version with updated annotations' },
+                ...d.versionHistory,
+              ];
+              return { ...d, version: `v${nextVerNum}`, versionHistory: updatedHistory };
+            }
+            return d;
+          })
+        );
+      }
+
+      addToast(`Revision v${nextVerNum} uploaded for "${targetDoc?.title}". Previous revisions archived.`, 'success');
+      setVersionDoc(null);
+    } catch (err) {
+      addToast(err?.message || 'Failed to upload new revision to vault.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleUploadNewVersion = (docId) => {
-    setDocuments(prev =>
-      prev.map(d => {
-        if (d.id === docId) {
-          const nextVerNum = (parseFloat(d.version.replace('v', '')) + 1.0).toFixed(1);
-          const nextVer = `v${nextVerNum}`;
-          const updatedHistory = [
-            { version: nextVer, date: new Date().toISOString().split('T')[0], author: currentUser.name, note: 'Revised version with updated annotations' },
-            ...d.versionHistory
-          ];
-          addToast(`Version ${nextVer} uploaded for "${d.title}". Previous revisions archived.`, 'success');
-          return { ...d, version: nextVer, versionHistory: updatedHistory };
-        }
-        return d;
-      })
-    );
-    setVersionDoc(null);
+  const handleDownloadDocument = async (doc) => {
+    try {
+      if (doc.isDbRecord) {
+        addToast(`Downloading "${doc.fileName || doc.title}" from vault...`, 'info');
+        await documentService.downloadDocument(doc.id);
+        addToast(`Document "${doc.fileName || doc.title}" downloaded.`, 'success');
+      } else {
+        // Mock fallback simulation
+        const sampleText = `Heugly & Bludworth Legal Document: ${doc.title}\nMatter: ${doc.matterTitle}\nClient: ${doc.clientName}\nStatus: Certified Legal Instrument.`;
+        const blob = new Blob([sampleText], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.fileName || `${doc.title}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        addToast(`Document "${doc.title}" downloaded.`, 'success');
+      }
+    } catch (err) {
+      addToast(err?.message || 'Failed to download document from vault.', 'error');
+    }
   };
 
   return (
@@ -459,7 +533,7 @@ export function DocumentsList() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => addToast(`Download started for ${doc.fileName}.`, 'info')}
+                        onClick={() => handleDownloadDocument(doc)}
                         className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
                         title="Download Document"
                       >
@@ -565,7 +639,7 @@ export function DocumentsList() {
                 <Button size="sm" variant="outline" onClick={() => setPreviewDoc(null)}>
                   Close
                 </Button>
-                <Button size="sm" variant="primary" icon={Download} onClick={() => addToast('Document downloaded.', 'success')}>
+                <Button size="sm" variant="primary" icon={Download} onClick={() => handleDownloadDocument(previewDoc)}>
                   Download File
                 </Button>
               </div>
@@ -580,16 +654,17 @@ export function DocumentsList() {
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
           title="Upload &amp; Index Legal Document"
-          subtitle="Index new pleading, discovery exhibit, or confidential work product."
+          subtitle="Index new pleading, discovery exhibit, or confidential work product into firm vault."
           maxWidth="max-w-lg"
         >
           <form onSubmit={handleUploadSubmit} className="space-y-4 text-xs text-[#202A35]">
             <div>
               <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                Document Title
+                Document Title *
               </label>
               <input
                 type="text"
+                required
                 placeholder="e.g. Defendant Motion to Dismiss &amp; Supporting Memorandum"
                 value={uploadTitle}
                 onChange={(e) => setUploadTitle(e.target.value)}
@@ -597,34 +672,59 @@ export function DocumentsList() {
               />
             </div>
 
+            <div>
+              <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
+                Select Binary File (PDF / DOCX)
+              </label>
+              <input
+                type="file"
+                accept=".pdf,.docx,.doc,.txt,.png,.jpg"
+                onChange={handleFileChange}
+                className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white cursor-pointer"
+              />
+              {selectedFileName && (
+                <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">
+                  Selected: {selectedFileName} ({(fileSizeBytes / 1024).toFixed(1)} KB)
+                </span>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                  Category
+                  Category *
                 </label>
                 <select
                   value={uploadCategory}
                   onChange={(e) => setUploadCategory(e.target.value)}
-                  className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white"
+                  className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-medium"
                 >
-                  <option value="Pleadings">Pleadings</option>
+                  <option value="Pleading">Pleading</option>
+                  <option value="Motion">Motion</option>
                   <option value="Discovery">Discovery</option>
-                  <option value="Orders">Orders</option>
-                  <option value="Contracts">Contracts</option>
+                  <option value="Correspondence">Correspondence</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Evidence">Evidence</option>
+                  <option value="Court Order">Court Order</option>
+                  <option value="Billing / Receipt">Billing / Receipt</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
               <div>
                 <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                  Linked Matter
+                  Linked Matter *
                 </label>
                 <select
                   value={uploadMatterId}
                   onChange={(e) => setUploadMatterId(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-semibold"
                 >
-                  {matters.map(m => (
-                    <option key={m.id} value={m.id}>{m.matterNumber} — {m.title.slice(0, 24)}...</option>
+                  <option value="">Select Matter...</option>
+                  {matters.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.matterNumber} — {m.title.slice(0, 24)}...
+                    </option>
                   ))}
                 </select>
               </div>
@@ -650,8 +750,8 @@ export function DocumentsList() {
               <Button size="sm" variant="outline" type="button" onClick={() => setIsUploadModalOpen(false)}>
                 Cancel
               </Button>
-              <Button size="sm" variant="primary" type="submit">
-                Upload &amp; Index (v1.0)
+              <Button size="sm" variant="primary" type="submit" disabled={isUploading}>
+                {isUploading ? 'Uploading to Vault...' : 'Upload &amp; Index (v1.0)'}
               </Button>
             </div>
           </form>

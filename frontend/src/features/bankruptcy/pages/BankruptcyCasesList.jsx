@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Landmark,
   Plus,
@@ -30,6 +30,7 @@ import { Link } from 'react-router-dom';
 import { BankruptcyCaseDrawer } from '../components/BankruptcyCaseDrawer';
 import { DebtorIntakeWizardModal } from '../components/DebtorIntakeWizardModal';
 import { useToast } from '../../../components/ui/Toast';
+import { matterService } from '../../../services/matterService';
 
 export function BankruptcyCasesList() {
   const [cases, setCases] = useState(MOCK_BANKRUPTCY_CASES);
@@ -40,6 +41,35 @@ export function BankruptcyCasesList() {
   const [isEcfModalOpen, setIsEcfModalOpen] = useState(false);
   const [ecfTargetCase, setEcfTargetCase] = useState(null);
   const { addToast } = useToast();
+
+  useEffect(() => {
+    let isMounted = true;
+    matterService.getMatters({ practiceAreaId: 'pa-bk' })
+      .then((res) => {
+        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
+        if (isMounted && realMatters.length > 0) {
+          const mapped = realMatters.map((m) => ({
+            id: m.id,
+            caseNumber: m.matterNumber,
+            debtorName: m.client?.name || m.clientName || m.title,
+            chapter: m.title.includes('13') ? 'Chapter 13' : (m.title.includes('11') ? 'Chapter 11' : 'Chapter 7'),
+            status: m.status === 'Active' ? 'Filing Prepared' : (m.status === 'Concluded' ? 'Discharged' : 'Pending 341 Meeting'),
+            filingDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-11-13',
+            meeting341Date: '2026-12-15',
+            totalDebt: m.budget ? Number(m.budget) : 185000,
+            assetsValue: 240000,
+            trusteeName: 'Lon Jenkins (Ch. 13 Trustee)',
+            assignedJudge: 'Hon. Joel T. Marker',
+            assignedAttorney: m.responsibleAttorney?.name || 'Thomas Bludworth, Esq.',
+            isRealDbMatter: true,
+            matterId: m.id,
+          }));
+          setCases(mapped);
+        }
+      })
+      .catch((err) => console.warn('Could not load bankruptcy matters from API:', err?.message));
+    return () => { isMounted = false; };
+  }, []);
 
   const handleCreateCaseFromWizard = (newCase) => {
     setCases(prev => [newCase, ...prev]);

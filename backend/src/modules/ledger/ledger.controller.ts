@@ -15,6 +15,25 @@ export class LedgerController {
     }
   }
 
+  static async createAccount(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const account = await LedgerService.createAccount(req.body, {
+        userId: req.user!.id,
+        userRole: req.user!.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Chart of Account #${account.accountNumber} created successfully.`,
+        data: { account },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getJournals(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const journals = await LedgerService.getJournals();

@@ -27,3 +27,4 @@ export const draftQuerySchema = z.object({
 export type ValidateDraftInput = z.infer<typeof validateDraftInputSchema>;
 export type GenerateDraftInput = z.infer<typeof generateDraftInputSchema>;
 export type DraftQueryInput = z.infer<typeof draftQuerySchema>;
+

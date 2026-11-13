@@ -57,3 +57,4 @@ draftRouter.get(
   requirePermission('documents:view'),
   DraftController.downloadDraft
 );
+

@@ -24,3 +24,12 @@ export const createJournalSchema = z.object({
 
 export type CreateJournalInput = z.infer<typeof createJournalSchema>;
 
+export const createAccountSchema = z.object({
+  accountNumber: z.number().int().positive(),
+  accountName: z.string().min(2).max(100),
+  accountType: z.enum(['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']),
+  isActive: z.boolean().default(true),
+});
+
+export type CreateAccountInput = z.infer<typeof createAccountSchema>;
+
