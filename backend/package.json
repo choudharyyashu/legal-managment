@@ -14,7 +14,8 @@
     "prisma:seed": "prisma db seed",
     "db:test": "tsx src/test-db.ts",
     "user:create-admin": "tsx src/scripts/create-admin.ts",
-    "test:auth": "tsx src/tests/auth-rbac-test-suite.ts"
+    "test:auth": "tsx src/tests/auth-rbac-test-suite.ts",
+    "test:clients": "tsx src/tests/client-api-test-suite.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
