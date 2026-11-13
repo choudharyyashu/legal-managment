@@ -1,0 +1,375 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// 1. IDENTITY & RBAC
+// -----------------------------------------------------------------------------
+
+model User {
+  id              String    @id @default(uuid()) @db.VarChar(36)
+  userCode        String    @unique @map("user_code") @db.VarChar(20)
+  name            String    @db.VarChar(255)
+  email           String    @unique @db.VarChar(255)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  phone           String?   @db.VarChar(50)
+  role            String    @db.VarChar(50)
+  title           String?   @db.VarChar(100)
+  initials        String    @db.VarChar(10)
+  department      String?   @db.VarChar(100)
+  billingRate     Decimal   @default(0.00) @map("billing_rate") @db.Decimal(10, 2)
+  status          String    @default("Active") @db.VarChar(20)
+  mfaEnabled      Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret       String?   @map("mfa_secret") @db.VarChar(255)
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  roleRel                 Role?                    @relation(fields: [role], references: [id])
+  clientsAssigned         Client[]                 @relation("AssignedAttorney")
+  mattersAssigned         Matter[]                 @relation("ResponsibleAttorney")
+  matterStaffAssignments  MatterStaffAssignment[]
+  tasksAssigned           Task[]                   @relation("TaskAssignee")
+  timeEntries             TimeEntry[]
+  auditLogs               AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model RolePermission {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  roleId        String   @map("role_id") @db.VarChar(50)
+  permissionKey String   @map("permission_key") @db.VarChar(100)
+  grantedAt     DateTime @default(now()) @map("granted_at")
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionKey], name: "uq_role_permission")
+  @@map("role_permissions")
+}
+
+// -----------------------------------------------------------------------------
+// 2. CLIENTS & INTAKES
+// -----------------------------------------------------------------------------
+
+model Client {
+  id                  String   @id @default(uuid()) @db.VarChar(36)
+  clientNumber        String   @unique @map("client_number") @db.VarChar(50)
+  name                String   @db.VarChar(255)
+  clientType          String   @map("client_type") @db.VarChar(50)
+  primaryContact      String?  @map("primary_contact") @db.VarChar(255)
+  email               String   @db.VarChar(255)
+  phone               String   @db.VarChar(50)
+  address             String?  @db.Text
+  assignedAttorneyId  String?  @map("assigned_attorney_id") @db.VarChar(36)
+  status              String   @default("Active") @db.VarChar(20)
+  notes               String?  @db.Text
+  portalAccessEnabled Boolean  @default(false) @map("portal_access_enabled")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  assignedAttorney User?            @relation("AssignedAttorney", fields: [assignedAttorneyId], references: [id], onDelete: SetNull)
+  matters          Matter[]
+  invoices         Invoice[]
+  trustSubLedgers  TrustSubLedger[]
+
+  @@index([name, email, clientNumber], name: "idx_clients_search")
+  @@map("clients")
+}
+
+model Intake {
+  id                  String   @id @default(uuid()) @db.VarChar(36)
+  intakeNumber        String   @unique @map("intake_number") @db.VarChar(50)
+  prospectiveName     String   @map("prospective_name") @db.VarChar(255)
+  email               String   @db.VarChar(255)
+  phone               String   @db.VarChar(50)
+  practiceAreaId      String   @map("practice_area_id") @db.VarChar(50)
+  adversePartyNames   Json     @map("adverse_party_names")
+  conflictStatus      String   @default("Not Started") @map("conflict_status") @db.VarChar(50)
+  conflictNotes       String?  @map("conflict_notes") @db.Text
+  clearedByUserId     String?  @map("cleared_by_user_id") @db.VarChar(36)
+  clearedAt           DateTime? @map("cleared_at")
+  convertedToClient   Boolean  @default(false) @map("converted_to_client")
+  convertedClientId   String?  @map("converted_client_id") @db.VarChar(36)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  practiceArea PracticeArea @relation(fields: [practiceAreaId], references: [id])
+
+  @@map("intakes")
+}
+
+// -----------------------------------------------------------------------------
+// 3. MATTERS & PRACTICE AREAS
+// -----------------------------------------------------------------------------
+
+model PracticeArea {
+  id          String   @id @db.VarChar(50)
+  name        String   @db.VarChar(100)
+  code        String   @unique @db.VarChar(20)
+  description String?  @db.Text
+  color       String   @default("#2563eb") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  matters Matter[]
+  intakes Intake[]
+
+  @@map("practice_areas")
+}
+
+model Matter {
+  id                    String    @id @default(uuid()) @db.VarChar(36)
+  matterNumber          String    @unique @map("matter_number") @db.VarChar(50)
+  clientId              String    @map("client_id") @db.VarChar(36)
+  title                 String    @db.VarChar(255)
+  practiceAreaId        String    @map("practice_area_id") @db.VarChar(50)
+  status                String    @default("Open") @db.VarChar(50)
+  stage                 String    @default("Intake & Conflicts") @db.VarChar(100)
+  responsibleAttorneyId String    @map("responsible_attorney_id") @db.VarChar(36)
+  caseDocketNumber      String?   @map("case_docket_number") @db.VarChar(100)
+  courtJurisdiction     String?   @map("court_jurisdiction") @db.VarChar(150)
+  judgeAssigned         String?   @map("judge_assigned") @db.VarChar(150)
+  budget                Decimal   @default(0.00) @db.Decimal(12, 2)
+  billingModel          String    @default("Hourly") @map("billing_model") @db.VarChar(50)
+  contingencyRate       Decimal?  @map("contingency_rate") @db.Decimal(5, 2)
+  openDate              DateTime  @map("open_date") @db.Date
+  closeDate             DateTime? @map("close_date") @db.Date
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  client                 Client                  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  practiceArea           PracticeArea            @relation(fields: [practiceAreaId], references: [id])
+  responsibleAttorney    User                    @relation("ResponsibleAttorney", fields: [responsibleAttorneyId], references: [id])
+  staffAssignments       MatterStaffAssignment[]
+  tasks                  Task[]
+  timeEntries            TimeEntry[]
+  expenses               Expense[]
+  invoices               Invoice[]
+  documents              Document[]
+  trustSubLedgers        TrustSubLedger[]
+
+  @@index([clientId], name: "idx_matters_client")
+  @@index([status, practiceAreaId], name: "idx_matters_filter")
+  @@map("matters")
+}
+
+model MatterStaffAssignment {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  matterId   String   @map("matter_id") @db.VarChar(36)
+  userId     String   @map("user_id") @db.VarChar(36)
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  matter Matter @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matterId, userId], name: "uq_matter_user")
+  @@map("matter_staff_assignments")
+}
+
+// -----------------------------------------------------------------------------
+// 4. TASKS & DOCKETING
+// -----------------------------------------------------------------------------
+
+model Task {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  taskCode         String    @unique @map("task_code") @db.VarChar(50)
+  matterId         String    @map("matter_id") @db.VarChar(36)
+  title            String    @db.VarChar(255)
+  description      String?   @db.Text
+  assignedToUserId String    @map("assigned_to_user_id") @db.VarChar(36)
+  dueDate          DateTime  @map("due_date") @db.Date
+  priority         String    @default("Medium") @db.VarChar(20)
+  status           String    @default("Pending") @db.VarChar(30)
+  isCourtDeadline  Boolean   @default(false) @map("is_court_deadline")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  matter   Matter @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  assignee User   @relation("TaskAssignee", fields: [assignedToUserId], references: [id])
+
+  @@index([assignedToUserId, status], name: "idx_tasks_user_status")
+  @@map("tasks")
+}
+
+// -----------------------------------------------------------------------------
+// 5. BILLING & TIME TRACKING
+// -----------------------------------------------------------------------------
+
+model TimeEntry {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  entryCode          String    @unique @map("entry_code") @db.VarChar(50)
+  matterId           String    @map("matter_id") @db.VarChar(36)
+  userId             String    @map("user_id") @db.VarChar(36)
+  date               DateTime  @db.Date
+  hours              Decimal   @db.Decimal(5, 2)
+  rate               Decimal   @db.Decimal(10, 2)
+  amount             Decimal   @db.Decimal(12, 2)
+  activityType       String    @map("activity_type") @db.VarChar(100)
+  description        String    @db.Text
+  status             String    @default("Submitted") @db.VarChar(30)
+  approvedByUserId   String?   @map("approved_by_user_id") @db.VarChar(36)
+  approvedAt         DateTime? @map("approved_at")
+  invoiceId          String?   @map("invoice_id") @db.VarChar(36)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  matter  Matter   @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([matterId, status], name: "idx_time_matter_status")
+  @@map("time_entries")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  matterId    String   @map("matter_id") @db.VarChar(36)
+  date        DateTime @db.Date
+  category    String   @db.VarChar(100)
+  description String   @db.Text
+  amount      Decimal  @db.Decimal(10, 2)
+  isBillable  Boolean  @default(true) @map("is_billable")
+  status      String   @default("Unbilled") @db.VarChar(30)
+  invoiceId   String?  @map("invoice_id") @db.VarChar(36)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  matter  Matter   @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@map("expenses")
+}
+
+model Invoice {
+  id            String    @id @default(uuid()) @db.VarChar(36)
+  invoiceNumber String    @unique @map("invoice_number") @db.VarChar(50)
+  clientId      String    @map("client_id") @db.VarChar(36)
+  matterId      String    @map("matter_id") @db.VarChar(36)
+  issueDate     DateTime  @map("issue_date") @db.Date
+  dueDate       DateTime  @map("due_date") @db.Date
+  subtotal      Decimal   @db.Decimal(12, 2)
+  taxAmount     Decimal   @default(0.00) @map("tax_amount") @db.Decimal(10, 2)
+  totalAmount   Decimal   @map("total_amount") @db.Decimal(12, 2)
+  amountPaid    Decimal   @default(0.00) @map("amount_paid") @db.Decimal(12, 2)
+  balanceDue    Decimal   @map("balance_due") @db.Decimal(12, 2)
+  status        String    @default("Draft") @db.VarChar(30)
+  notes         String?   @db.Text
+  paidAt        DateTime? @map("paid_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  client         Client          @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  matter         Matter          @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  timeEntries    TimeEntry[]
+  expenses       Expense[]
+  paymentRecords PaymentRecord[]
+
+  @@map("invoices")
+}
+
+model PaymentRecord {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  invoiceId     String   @map("invoice_id") @db.VarChar(36)
+  paymentDate   DateTime @map("payment_date") @db.Date
+  amount        Decimal  @db.Decimal(12, 2)
+  paymentMethod String   @map("payment_method") @db.VarChar(50)
+  reference     String?  @db.VarChar(100)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@map("payment_records")
+}
+
+// -----------------------------------------------------------------------------
+// 6. IOLTA TRUST ACCOUNTING (Utah RPC 1.15)
+// -----------------------------------------------------------------------------
+
+model TrustSubLedger {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  clientId      String   @map("client_id") @db.VarChar(36)
+  matterId      String   @map("matter_id") @db.VarChar(36)
+  balance       Decimal  @default(0.00) @db.Decimal(12, 2)
+  lastAuditDate DateTime @map("last_audit_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  client       Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  matter       Matter             @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  transactions TrustTransaction[]
+
+  @@map("trust_sub_ledgers")
+}
+
+model TrustTransaction {
+  id               String   @id @default(uuid()) @db.VarChar(36)
+  trustSubLedgerId String   @map("trust_sub_ledger_id") @db.VarChar(36)
+  transactionType  String   @map("transaction_type") @db.VarChar(50)
+  amount           Decimal  @db.Decimal(12, 2)
+  runningBalance   Decimal  @map("running_balance") @db.Decimal(12, 2)
+  sourceReference  String   @map("source_reference") @db.VarChar(100)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  trustSubLedger TrustSubLedger @relation(fields: [trustSubLedgerId], references: [id], onDelete: Restrict)
+
+  @@map("trust_transactions")
+}
+
+// -----------------------------------------------------------------------------
+// 7. DOCUMENTS & AUDIT TRAIL
+// -----------------------------------------------------------------------------
+
+model Document {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  matterId     String   @map("matter_id") @db.VarChar(36)
+  title        String   @db.VarChar(255)
+  category     String   @db.VarChar(100)
+  fileType     String   @map("file_type") @db.VarChar(50)
+  fileSize     BigInt   @map("file_size")
+  s3StorageKey String   @map("s3_storage_key") @db.VarChar(500)
+  isPrivileged Boolean  @default(false) @map("is_privileged")
+  ocrContent   String?  @map("ocr_content") @db.LongText
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  matter Matter @relation(fields: [matterId], references: [id], onDelete: Restrict)
+
+  @@map("documents")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.VarChar(36)
+  userId       String?  @map("user_id") @db.VarChar(36)
+  action       String   @db.VarChar(100)
+  resourceType String   @map("resource_type") @db.VarChar(100)
+  resourceId   String?  @map("resource_id") @db.VarChar(100)
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  metadata     Json?
+  timestamp    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([timestamp], name: "idx_audit_timestamp")
+  @@map("audit_logs")
+}
+

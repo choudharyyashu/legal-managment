@@ -1,0 +1,53 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import { config } from './config/env.js';
+import { testDirectMySqlConnection, testPrismaConnection } from './config/database.js';
+
+export const app = express();
+
+// Security and standard middlewares
+app.use(helmet());
+app.use(cors({
+  origin: config.clientOrigin,
+  credentials: true,
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health Check Endpoint
+app.get('/api/v1/health', async (req: Request, res: Response) => {
+  const dbStatus = await testDirectMySqlConnection();
+  const prismaStatus = await testPrismaConnection();
+
+  const isHealthy = dbStatus.connected || prismaStatus.connected;
+
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'healthy' : 'unhealthy',
+    timestamp: new Date().toISOString(),
+    firm: 'Heugly & Bludworth, Attorneys at Law',
+    database: {
+      provider: 'mysql',
+      target: config.dbName,
+      directConnection: dbStatus.connected ? 'connected' : 'failed',
+      prismaConnection: prismaStatus.connected ? 'connected' : 'pending_or_failed',
+      version: dbStatus.version || null,
+      error: dbStatus.error || prismaStatus.error || null,
+    },
+    server: {
+      nodeEnv: config.nodeEnv,
+      port: config.port,
+    },
+  });
+});
+
+// Root welcome route
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    name: 'HEUGLY & BLUDWORTH Legal Practice Management API',
+    version: '1.0.0',
+    documentation: '/backend-docs',
+    healthCheck: '/api/v1/health',
+  });
+});
+
