@@ -1,9 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import { testDirectMySqlConnection, testPrismaConnection } from './config/database.js';
 import { logger } from './utils/logger.js';
+import { authRouter } from './modules/auth/auth.routes.js';
+import { userRouter } from './modules/users/user.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -17,6 +20,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -77,6 +81,10 @@ app.get('/api/v1/health', async (req: Request, res: Response) => {
     },
   });
 });
+
+// Primary Domain API Routes
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', userRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);
