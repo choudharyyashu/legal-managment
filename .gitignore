@@ -11,6 +11,8 @@ frontend/dist/
 *.local
 .env
 .env.*
+!.env.example
+!**/.env.example
 
 # Logs
 logs/
@@ -26,3 +28,4 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
