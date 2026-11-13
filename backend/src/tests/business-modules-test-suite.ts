@@ -525,10 +525,10 @@ async function runBusinessModulesTestSuite() {
         headers,
         body: JSON.stringify({
           transactionDate: new Date().toISOString().split('T')[0],
-          memo: 'Deposit retainer receipt and credit client trust liability',
+          memo: 'Deposit retainer receipt and credit client trust liability ($4,000 net)',
           entries: [
-            { accountNumber: 1010, debit: 5000.0, credit: 0.0, matterId: createdMatterId },
-            { accountNumber: 2100, debit: 0.0, credit: 5000.0, matterId: createdMatterId },
+            { accountNumber: 1010, debit: 4000.0, credit: 0.0, matterId: createdMatterId },
+            { accountNumber: 2100, debit: 0.0, credit: 4000.0, matterId: createdMatterId },
           ],
         }),
       });
