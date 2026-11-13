@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -35,6 +35,7 @@ import { ClientForm } from '../../clients/forms/ClientForm';
 import { MatterForm } from '../../matters/forms/MatterForm';
 import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
 import { MOCK_CALENDAR_EVENTS } from '../../../data/mockCalendar';
+import { reportService } from '../../../services/reportService';
 import { formatDate } from '../../../utils/formatDate';
 import { EndToEndDemoWizard } from '../../intake/components/EndToEndDemoWizard';
 
@@ -48,6 +49,8 @@ export function Dashboard() {
   const { timeEntries, approveTimeEntry, rejectTimeEntry } = useTime();
   const { addToast } = useToast();
 
+  const [dashboardMetrics, setDashboardMetrics] = useState(null);
+
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
@@ -55,10 +58,22 @@ export function Dashboard() {
   const [isDemoWizardOpen, setIsDemoWizardOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Derived metrics
-  const totalClientsCount = clients.length;
-  const activeMattersCount = matters.filter(m => m.status !== 'Concluded').length;
-  const myTasks = tasks.filter(t => t.assignedToId === currentUser.id);
+  useEffect(() => {
+    let isMounted = true;
+    reportService.getDashboard()
+      .then((data) => {
+        if (isMounted && data) setDashboardMetrics(data);
+      })
+      .catch((err) => {
+        console.warn('Could not fetch aggregated report metrics:', err?.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Derived metrics (live backend counts with fallback to context arrays)
+  const totalClientsCount = dashboardMetrics?.clients?.total !== undefined ? dashboardMetrics.clients.total : clients.length;
+  const activeMattersCount = dashboardMetrics?.matters?.active !== undefined ? dashboardMetrics.matters.active : matters.filter(m => m.status !== 'Concluded').length;
+  const myTasks = tasks.filter(t => t.assignedToId === currentUser.id || t.assignedToUserId === currentUser.id);
   const myPendingTasksCount = myTasks.filter(t => t.status !== 'Completed').length;
   const teamTasks = tasks.filter(t => t.status !== 'Completed');
   const pendingApprovals = timeEntries.filter(t => t.status === 'Submitted');

@@ -48,6 +48,27 @@ export function ChartOfAccounts() {
     { code: '5200', name: 'Westlaw / LexisNexis Research Subscriptions', type: 'Expense', category: 'Practice Tools', balance: 9600.00, status: 'Active' },
   ]);
 
+  React.useEffect(() => {
+    let isMounted = true;
+    import('../../../services/ledgerService').then(({ ledgerService }) => {
+      ledgerService.getAccounts().then((res) => {
+        if (isMounted && Array.isArray(res) && res.length > 0) {
+          setAccounts(
+            res.map((a) => ({
+              code: String(a.accountNumber),
+              name: a.accountName,
+              type: a.accountType,
+              category: a.accountType === 'Asset' ? 'Current Assets' : a.accountType,
+              balance: Number(a.balance) || 0,
+              status: a.isActive ? 'Active' : 'Inactive',
+            }))
+          );
+        }
+      }).catch((err) => console.warn('Could not load accounts from API:', err?.message));
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   const [newCode, setNewCode] = useState('');
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('Expense');

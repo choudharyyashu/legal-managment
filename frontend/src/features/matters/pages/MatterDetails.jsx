@@ -270,7 +270,21 @@ export function MatterDetails() {
   const [newTaskDue, setNewTaskDue] = useState(new Date().toISOString().split('T')[0]);
   const [newTaskPriority, setNewTaskPriority] = useState('High');
 
-  const matter = matters.find(m => m.id === matterId) || matters[0];
+  const [fetchedMatter, setFetchedMatter] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (matterId && !matters.some(m => m.id === matterId || m.matterNumber === matterId)) {
+      import('../../../services/matterService').then(({ matterService }) => {
+        matterService.getMatterById(matterId).then(res => {
+          if (isMounted && res) setFetchedMatter(res);
+        }).catch(() => {});
+      });
+    }
+    return () => { isMounted = false; };
+  }, [matterId, matters]);
+
+  const matter = matters.find(m => m.id === matterId || m.matterNumber === matterId) || fetchedMatter || matters[0];
 
   // Matter-scoped command panels state (reset cleanly when switching matters via Related Cases)
   const [nextActions, setNextActions] = useState(() => buildInitialNextActions(matter));

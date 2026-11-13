@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, User, AlertTriangle, Plus, Repeat } from 'lucide-react';
+import { calendarService } from '../../../services/calendarService';
 import { MOCK_CALENDAR_EVENTS } from '../../../data/mockCalendar';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -13,6 +14,32 @@ export function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState(MOCK_CALENDAR_EVENTS);
   const [isRecurringModalOpen, setIsRecurringModalOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    calendarService.getEvents()
+      .then((res) => {
+        if (isMounted && Array.isArray(res) && res.length > 0) {
+          const normalized = res.map((e) => ({
+            ...e,
+            id: e.id,
+            title: e.title,
+            date: e.startTime ? new Date(e.startTime).toISOString().split('T')[0] : e.date,
+            time: e.startTime
+              ? new Date(e.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : e.time,
+            type: e.isCourtAppearance ? 'Court Hearing' : 'Client Appointment',
+            matter: e.matter?.title || e.matter || 'Matter',
+            location: e.location || 'Salt Lake City',
+          }));
+          setEvents(normalized);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load calendar events from API:', err?.message);
+      });
+    return () => { isMounted = false; };
+  }, []);
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));

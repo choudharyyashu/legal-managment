@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -16,6 +16,7 @@ import {
   FileText,
   Scale
 } from 'lucide-react';
+import { trustService } from '../../../services/trustService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
@@ -27,63 +28,39 @@ export function TrustAccount() {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [ledgers, setLedgers] = useState([
-    {
-      id: 'TR-1001',
-      clientId: 'CLI-1001',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      balance: 25000,
-      escrowPurpose: 'General Retainer & Expert Deposition Reserve',
-      lastTransactionDate: '2026-02-15',
-      status: 'In Compliance'
-    },
-    {
-      id: 'TR-1002',
-      clientId: 'CLI-1002',
-      clientName: 'Dr. Evelyn Martinez',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      balance: 12500,
-      escrowPurpose: 'Forensic Accounting & Real Estate Appraisal Retainer',
-      lastTransactionDate: '2026-02-20',
-      status: 'In Compliance'
-    },
-    {
-      id: 'TR-1003',
-      clientId: 'CLI-1008',
-      clientName: 'Elena Rostova',
-      matterNumber: '26-IMM-0012',
-      matterTitle: 'Elena Rostova: Marriage-Based Adjustment of Status (I-130 / I-485)',
-      balance: 1440,
-      escrowPurpose: 'USCIS Statutory Filing Fee Escrow (Forms I-130 + I-485)',
-      lastTransactionDate: '2026-01-22',
-      status: 'In Compliance'
-    },
-    {
-      id: 'TR-1004',
-      clientId: 'CLI-1009',
-      clientName: 'Rachel Lynn Walker',
-      matterNumber: '26-25410-JTM',
-      matterTitle: 'Rachel Lynn Walker: Chapter 7 Consumer Debt Liquidation',
-      balance: 338,
-      escrowPurpose: 'U.S. Bankruptcy Court District of Utah Statutory Filing Fee',
-      lastTransactionDate: '2026-02-12',
-      status: 'In Compliance'
-    },
-    {
-      id: 'TR-1005',
-      clientId: 'CLI-1003',
-      clientName: 'Apex Horizon Real Estate Group',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      balance: 35000,
-      escrowPurpose: 'Hydrology Expert Escrow & Appeal Bond Reserve',
-      lastTransactionDate: '2026-01-05',
-      status: 'In Compliance'
+  const [ledgers, setLedgers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadLedgers = async () => {
+    try {
+      setLoading(true);
+      const data = await trustService.getLedgers({ limit: 100 });
+      if (Array.isArray(data?.ledgers) && data.ledgers.length > 0) {
+        setLedgers(
+          data.ledgers.map((l) => ({
+            id: l.id,
+            matterId: l.matterId,
+            clientId: l.clientId,
+            clientName: l.client?.name || 'Client Entity',
+            matterNumber: l.matter?.matterNumber || l.ledgerCode || 'Matter',
+            matterTitle: l.matter?.title || 'Matter Sub-Ledger',
+            balance: Number(l.balance) || 0,
+            escrowPurpose: 'General Retainer & Expert Deposition Reserve (IOLTA)',
+            lastTransactionDate: l.lastAuditDate ? new Date(l.lastAuditDate).toISOString().split('T')[0] : '2026-11-13',
+            status: 'In Compliance',
+          }))
+        );
+      }
+    } catch (err) {
+      console.warn('Could not load trust ledgers from API:', err?.message);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  useEffect(() => {
+    loadLedgers();
+  }, []);
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isDisburseOpen, setIsDisburseOpen] = useState(false);
@@ -93,31 +70,62 @@ export function TrustAccount() {
 
   const totalTrustBalance = ledgers.reduce((sum, item) => sum + item.balance, 0);
 
-  const handleDeposit = (e) => {
+  const handleDeposit = async (e) => {
     e.preventDefault();
     if (amount <= 0) return;
-    setLedgers(prev =>
-      prev.map(l => (l.id === selectedLedgerId ? { ...l, balance: l.balance + Number(amount) } : l))
-    );
-    addToast(`Client trust deposit of ${formatCurrency(amount)} recorded successfully.`, 'success');
-    setIsDepositOpen(false);
-    setAmount(1000);
+    const target = ledgers.find((l) => l.id === selectedLedgerId);
+    try {
+      if (target?.matterId) {
+        await trustService.deposit({
+          matterId: target.matterId,
+          amount: Number(amount),
+          sourceReference: reference || 'Wire Transfer / Client Retainer',
+          purpose: 'Retainer deposit to trust account',
+        });
+        await loadLedgers();
+      } else {
+        setLedgers((prev) =>
+          prev.map((l) => (l.id === selectedLedgerId ? { ...l, balance: l.balance + Number(amount) } : l))
+        );
+      }
+      addToast(`Client trust deposit of ${formatCurrency(amount)} recorded successfully.`, 'success');
+      setIsDepositOpen(false);
+      setAmount(1000);
+      setReference('');
+    } catch (err) {
+      addToast(err?.message || 'Failed to deposit trust funds', 'error');
+    }
   };
 
-  const handleDisburse = (e) => {
+  const handleDisburse = async (e) => {
     e.preventDefault();
     if (amount <= 0) return;
-    const target = ledgers.find(l => l.id === selectedLedgerId);
+    const target = ledgers.find((l) => l.id === selectedLedgerId);
     if (target && target.balance < amount) {
       addToast('Cannot disburse more than the individual client ledger balance (Utah Rule 1.15 anti-commingling).', 'error');
       return;
     }
-    setLedgers(prev =>
-      prev.map(l => (l.id === selectedLedgerId ? { ...l, balance: l.balance - Number(amount) } : l))
-    );
-    addToast(`Earned fee disbursement of ${formatCurrency(amount)} transferred to Operating Account.`, 'success');
-    setIsDisburseOpen(false);
-    setAmount(1000);
+    try {
+      if (target?.matterId) {
+        await trustService.disburse({
+          matterId: target.matterId,
+          amount: Number(amount),
+          sourceReference: reference || 'Earned Fee Transfer',
+          purpose: 'Transfer earned fees to operating account',
+        });
+        await loadLedgers();
+      } else {
+        setLedgers((prev) =>
+          prev.map((l) => (l.id === selectedLedgerId ? { ...l, balance: l.balance - Number(amount) } : l))
+        );
+      }
+      addToast(`Earned fee disbursement of ${formatCurrency(amount)} transferred to Operating Account.`, 'success');
+      setIsDisburseOpen(false);
+      setAmount(1000);
+      setReference('');
+    } catch (err) {
+      addToast(err?.message || 'Failed to disburse trust funds', 'error');
+    }
   };
 
   return (
