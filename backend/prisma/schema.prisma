@@ -55,6 +55,10 @@ model User {
   reconciliationsAudited  ThreeWayReconciliation[]
   documentVersionsUpload  DocumentVersion[]
   auditLogs               AuditLog[]
+  templatesCreated        DocumentTemplate[]       @relation("TemplateCreator")
+  templateVersionsUpload  TemplateVersion[]        @relation("TemplateVersionCreator")
+  draftsGenerated         DocumentDraft[]          @relation("DraftGenerator")
+  draftsReviewed          DocumentDraft[]          @relation("DraftReviewer")
 
   @@map("users")
 }
@@ -110,6 +114,7 @@ model Client {
   documents        Document[]
   convertedIntakes Intake[]         @relation("ConvertedClient")
   paymentRecords   PaymentRecord[]
+  documentDrafts   DocumentDraft[]
 
   @@index([name, email, clientNumber], name: "idx_clients_search")
   @@map("clients")
@@ -175,6 +180,7 @@ model PracticeArea {
   matters        Matter[]
   intakes        Intake[]
   workflowStages WorkflowStage[]
+  documentTemplates DocumentTemplate[]
 
   @@map("practice_areas")
 }
@@ -220,6 +226,7 @@ model Matter {
   generalLedgerEntries  GeneralLedgerEntry[]
   documents             Document[]
   originatingIntakes    Intake[]                @relation("ConvertedMatter")
+  documentDrafts        DocumentDraft[]
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -587,7 +594,8 @@ model Document {
 
   matter   Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
   client   Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  versions DocumentVersion[]
+  versions          DocumentVersion[]
+  originatingDrafts DocumentDraft[]   @relation("FinalizedDraftDocument")
 
   @@map("documents")
 }
@@ -634,4 +642,107 @@ model AuditLog {
   @@index([timestamp], name: "idx_audit_timestamp")
   @@index([resourceType, resourceId], name: "idx_audit_resource")
   @@map("audit_logs")
+}
+
+// -----------------------------------------------------------------------------
+// 10. DOCUMENT AUTOMATION ENGINE (Phase 1 Foundation)
+// -----------------------------------------------------------------------------
+
+model DocumentTemplate {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  templateCode    String   @unique @map("template_code") @db.VarChar(50)
+  templateName    String   @map("template_name") @db.VarChar(255)
+  description     String?  @db.Text
+  practiceAreaId  String   @map("practice_area_id") @db.VarChar(50)
+  category        String   @db.VarChar(100)
+  outputFormat    String   @default("DOCX") @map("output_format") @db.VarChar(20)
+  currentVersion  String   @default("v1.0") @map("current_version") @db.VarChar(20)
+  isActive        Boolean  @default(true) @map("is_active")
+  isSystemDefault Boolean  @default(false) @map("is_system_default")
+  createdById     String   @map("created_by_user_id") @db.VarChar(36)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  practiceArea  PracticeArea      @relation(fields: [practiceAreaId], references: [id], onDelete: Restrict)
+  createdByUser User              @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  versions      TemplateVersion[]
+  drafts        DocumentDraft[]
+
+  @@index([practiceAreaId, category, isActive], name: "idx_doc_templates_search")
+  @@map("document_templates")
+}
+
+model TemplateVersion {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  templateId     String   @map("template_id") @db.VarChar(36)
+  versionNumber  String   @map("version_number") @db.VarChar(20)
+  docxStorageKey String   @map("docx_storage_key") @db.VarChar(500)
+  sha256Checksum String   @map("sha256_checksum") @db.VarChar(64)
+  status         String   @default("Draft") @db.VarChar(30)
+  changeSummary  String?  @map("change_summary") @db.Text
+  createdById    String   @map("created_by_user_id") @db.VarChar(36)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  template      DocumentTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdByUser User                   @relation("TemplateVersionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  fieldMappings DocumentFieldMapping[]
+  drafts        DocumentDraft[]
+
+  @@unique([templateId, versionNumber], name: "uq_template_version")
+  @@map("template_versions")
+}
+
+model DocumentFieldMapping {
+  id                    String   @id @default(uuid()) @db.VarChar(36)
+  templateVersionId     String   @map("template_version_id") @db.VarChar(36)
+  placeholderTag        String   @map("placeholder_tag") @db.VarChar(150)
+  sourceEntity          String   @map("source_entity") @db.VarChar(50)
+  sourceField           String   @map("source_field") @db.VarChar(100)
+  isRequired            Boolean  @default(true) @map("is_required")
+  defaultValue          String?  @map("default_value") @db.VarChar(255)
+  formattingRule        String?  @map("formatting_rule") @db.VarChar(50)
+  conditionalExpression String?  @map("conditional_expression") @db.VarChar(255)
+  createdAt             DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  templateVersion TemplateVersion @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([templateVersionId, placeholderTag], name: "uq_version_placeholder")
+  @@index([templateVersionId], name: "idx_field_mappings_version")
+  @@map("document_field_mappings")
+}
+
+model DocumentDraft {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  draftCode          String    @unique @map("draft_code") @db.VarChar(50)
+  matterId           String    @map("matter_id") @db.VarChar(36)
+  clientId           String    @map("client_id") @db.VarChar(36)
+  templateId         String    @map("template_id") @db.VarChar(36)
+  templateVersionId  String    @map("template_version_id") @db.VarChar(36)
+  title              String    @db.VarChar(255)
+  status             String    @default("Draft") @db.VarChar(30)
+  docxStorageKey     String?   @map("docx_storage_key") @db.VarChar(500)
+  pdfStorageKey      String?   @map("pdf_storage_key") @db.VarChar(500)
+  missingFieldsFlags Json      @map("missing_fields_flags")
+  generatedByUserId  String    @map("generated_by_user_id") @db.VarChar(36)
+  reviewedByUserId   String?   @map("reviewed_by_user_id") @db.VarChar(36)
+  reviewedAt         DateTime? @map("reviewed_at") @db.DateTime(3)
+  hasManualEdits     Boolean   @default(false) @map("has_manual_edits")
+  isStale            Boolean   @default(false) @map("is_stale")
+  finalDocumentId    String?   @map("final_document_id") @db.VarChar(36)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter          Matter           @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  client          Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  template        DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  templateVersion TemplateVersion  @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  generatedByUser User             @relation("DraftGenerator", fields: [generatedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUser  User?            @relation("DraftReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  finalDocument   Document?        @relation("FinalizedDraftDocument", fields: [finalDocumentId], references: [id], onDelete: SetNull)
+
+  @@index([matterId, status], name: "idx_doc_drafts_matter")
+  @@index([clientId], name: "idx_doc_drafts_client")
+  @@index([isStale, status], name: "idx_doc_drafts_stale")
+  @@map("document_drafts")
 }
