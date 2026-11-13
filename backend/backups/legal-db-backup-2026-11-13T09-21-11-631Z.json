@@ -1,0 +1,1486 @@
+{
+  "_prisma_migrations": {
+    "createTable": "CREATE TABLE `_prisma_migrations` (\n  `id` varchar(36) NOT NULL,\n  `checksum` varchar(64) NOT NULL,\n  `finished_at` datetime(3) DEFAULT NULL,\n  `migration_name` varchar(255) NOT NULL,\n  `logs` text DEFAULT NULL,\n  `rolled_back_at` datetime(3) DEFAULT NULL,\n  `started_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `applied_steps_count` int(10) unsigned NOT NULL DEFAULT 0,\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "id": "5e3c3502-8397-4d3d-bf99-7e593ebd9368",
+        "checksum": "681d1d95d3b13bc38f590e5044b56bd8eaeb04fc17dd4cbc7502fdcf9f2f2f2e",
+        "finished_at": "2026-11-13T02:08:56.519Z",
+        "migration_name": "20261113071216_init",
+        "logs": null,
+        "rolled_back_at": null,
+        "started_at": "2026-11-13T02:08:54.871Z",
+        "applied_steps_count": 1
+      }
+    ]
+  },
+  "audit_logs": {
+    "createTable": "CREATE TABLE `audit_logs` (\n  `id` varchar(36) NOT NULL,\n  `user_id` varchar(36) DEFAULT NULL,\n  `user_name` varchar(255) NOT NULL,\n  `user_role` varchar(50) NOT NULL,\n  `action` varchar(100) NOT NULL,\n  `resource_type` varchar(50) NOT NULL,\n  `resource_id` varchar(100) DEFAULT NULL,\n  `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`details`)),\n  `ip_address` varchar(50) DEFAULT NULL,\n  `user_agent` text DEFAULT NULL,\n  `timestamp` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  KEY `idx_audit_timestamp` (`timestamp`),\n  KEY `idx_audit_resource` (`resource_type`,`resource_id`),\n  KEY `audit_logs_user_id_fkey` (`user_id`),\n  CONSTRAINT `audit_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "id": "00403eb5-224b-4b8e-a14b-8e92cc11d447",
+        "user_id": null,
+        "user_name": "SYSTEM",
+        "user_role": "SYSTEM",
+        "action": "USER_LOGIN_FAILED",
+        "resource_type": "AUTH",
+        "resource_id": null,
+        "details": "{\"email\":\"t.bludworth.1794560915288@utahslawyers.com\",\"reason\":\"USER_NOT_FOUND\"}",
+        "ip_address": "::1",
+        "user_agent": "node",
+        "timestamp": "2026-11-13T03:38:35.372Z"
+      },
+      {
+        "id": "3dd6463a-7e9d-4dbf-9ab2-95c1569464f9",
+        "user_id": null,
+        "user_name": "SYSTEM",
+        "user_role": "SYSTEM",
+        "action": "USER_LOGIN_FAILED",
+        "resource_type": "AUTH",
+        "resource_id": null,
+        "details": "{\"email\":\"t.bludworth.1794560915288@utahslawyers.com\",\"reason\":\"USER_NOT_FOUND\"}",
+        "ip_address": "::1",
+        "user_agent": "node",
+        "timestamp": "2026-11-13T03:38:35.421Z"
+      },
+      {
+        "id": "4eac3794-1e19-4a81-84eb-45fba6e8a17c",
+        "user_id": null,
+        "user_name": "SYSTEM",
+        "user_role": "SYSTEM",
+        "action": "USER_LOGIN_FAILED",
+        "resource_type": "AUTH",
+        "resource_id": null,
+        "details": "{\"email\":\"e.heugly@utahslawyers.com\",\"reason\":\"USER_NOT_FOUND\"}",
+        "ip_address": "::1",
+        "user_agent": "node",
+        "timestamp": "2026-11-13T03:38:35.241Z"
+      },
+      {
+        "id": "93d70378-afc2-476f-9b7d-bb451b20d3ae",
+        "user_id": null,
+        "user_name": "SYSTEM",
+        "user_role": "SYSTEM",
+        "action": "USER_LOGIN_FAILED",
+        "resource_type": "AUTH",
+        "resource_id": null,
+        "details": "{\"email\":\"t.bludworth.1794560915288@utahslawyers.com\",\"reason\":\"USER_NOT_FOUND\"}",
+        "ip_address": "::1",
+        "user_agent": "node",
+        "timestamp": "2026-11-13T03:38:35.324Z"
+      },
+      {
+        "id": "aa69c346-52b0-4414-9580-d96219f817bb",
+        "user_id": null,
+        "user_name": "SYSTEM",
+        "user_role": "SYSTEM",
+        "action": "USER_LOGIN_FAILED",
+        "resource_type": "AUTH",
+        "resource_id": null,
+        "details": "{\"email\":\"e.heugly@utahslawyers.com\",\"reason\":\"USER_NOT_FOUND\"}",
+        "ip_address": "::1",
+        "user_agent": "node",
+        "timestamp": "2026-11-13T03:38:35.191Z"
+      }
+    ]
+  },
+  "calendar_events": {
+    "createTable": "CREATE TABLE `calendar_events` (\n  `id` varchar(36) NOT NULL,\n  `matter_id` varchar(36) DEFAULT NULL,\n  `title` varchar(255) NOT NULL,\n  `event_type` varchar(50) NOT NULL,\n  `start_time` datetime(3) NOT NULL,\n  `end_time` datetime(3) NOT NULL,\n  `location` varchar(255) DEFAULT NULL,\n  `judge` varchar(150) DEFAULT NULL,\n  `is_court_appearance` tinyint(1) NOT NULL DEFAULT 0,\n  `created_by_user_id` varchar(36) NOT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  KEY `calendar_events_matter_id_fkey` (`matter_id`),\n  KEY `calendar_events_created_by_user_id_fkey` (`created_by_user_id`),\n  CONSTRAINT `calendar_events_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `calendar_events_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "chart_of_accounts": {
+    "createTable": "CREATE TABLE `chart_of_accounts` (\n  `account_number` int(11) NOT NULL,\n  `account_name` varchar(100) NOT NULL,\n  `account_type` varchar(50) NOT NULL,\n  `is_active` tinyint(1) NOT NULL DEFAULT 1,\n  PRIMARY KEY (`account_number`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "account_number": 1010,
+        "account_name": "Operating Cash Account",
+        "account_type": "Asset",
+        "is_active": 1
+      },
+      {
+        "account_number": 1020,
+        "account_name": "IOLTA Trust Bank Account",
+        "account_type": "Asset",
+        "is_active": 1
+      },
+      {
+        "account_number": 1200,
+        "account_name": "Accounts Receivable",
+        "account_type": "Asset",
+        "is_active": 1
+      },
+      {
+        "account_number": 2100,
+        "account_name": "Client Trust Liability (Escrow)",
+        "account_type": "Liability",
+        "is_active": 1
+      },
+      {
+        "account_number": 4000,
+        "account_name": "Legal Fee Revenue",
+        "account_type": "Revenue",
+        "is_active": 1
+      },
+      {
+        "account_number": 5000,
+        "account_name": "Operating Expenses",
+        "account_type": "Expense",
+        "is_active": 1
+      }
+    ]
+  },
+  "clients": {
+    "createTable": "CREATE TABLE `clients` (\n  `id` varchar(36) NOT NULL,\n  `client_number` varchar(50) NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `client_type` varchar(50) NOT NULL,\n  `primary_contact` varchar(255) DEFAULT NULL,\n  `email` varchar(255) NOT NULL,\n  `phone` varchar(50) NOT NULL,\n  `address` text DEFAULT NULL,\n  `assigned_attorney_id` varchar(36) DEFAULT NULL,\n  `status` varchar(20) NOT NULL DEFAULT 'Active',\n  `notes` text DEFAULT NULL,\n  `portal_access_enabled` tinyint(1) NOT NULL DEFAULT 0,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `clients_client_number_key` (`client_number`),\n  KEY `idx_clients_search` (`name`,`email`,`client_number`),\n  KEY `clients_assigned_attorney_id_fkey` (`assigned_attorney_id`),\n  CONSTRAINT `clients_assigned_attorney_id_fkey` FOREIGN KEY (`assigned_attorney_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "conflict_search_logs": {
+    "createTable": "CREATE TABLE `conflict_search_logs` (\n  `id` varchar(36) NOT NULL,\n  `intake_id` varchar(36) NOT NULL,\n  `queried_name` varchar(255) NOT NULL,\n  `matched_entity_type` varchar(50) NOT NULL,\n  `matched_record_id` varchar(100) NOT NULL,\n  `searched_by_user_id` varchar(36) NOT NULL,\n  `searched_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  KEY `conflict_search_logs_intake_id_fkey` (`intake_id`),\n  KEY `conflict_search_logs_searched_by_user_id_fkey` (`searched_by_user_id`),\n  CONSTRAINT `conflict_search_logs_intake_id_fkey` FOREIGN KEY (`intake_id`) REFERENCES `intakes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `conflict_search_logs_searched_by_user_id_fkey` FOREIGN KEY (`searched_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "document_versions": {
+    "createTable": "CREATE TABLE `document_versions` (\n  `id` varchar(36) NOT NULL,\n  `document_id` varchar(36) NOT NULL,\n  `version_label` varchar(20) NOT NULL,\n  `file_name` varchar(255) NOT NULL,\n  `file_type` varchar(50) NOT NULL,\n  `file_size_bytes` bigint(20) NOT NULL,\n  `s3_storage_key` varchar(500) NOT NULL,\n  `sha256_checksum` varchar(64) NOT NULL,\n  `uploaded_by_user_id` varchar(36) NOT NULL,\n  `revision_notes` text DEFAULT NULL,\n  `uploaded_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `document_versions_document_id_version_label_key` (`document_id`,`version_label`),\n  KEY `document_versions_uploaded_by_user_id_fkey` (`uploaded_by_user_id`),\n  CONSTRAINT `document_versions_document_id_fkey` FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `document_versions_uploaded_by_user_id_fkey` FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "documents": {
+    "createTable": "CREATE TABLE `documents` (\n  `id` varchar(36) NOT NULL,\n  `document_code` varchar(50) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `client_id` varchar(36) NOT NULL,\n  `title` varchar(255) NOT NULL,\n  `category` varchar(50) NOT NULL,\n  `current_version` varchar(20) NOT NULL DEFAULT 'v1.0',\n  `is_privileged` tinyint(1) NOT NULL DEFAULT 0,\n  `privilege_type` varchar(100) DEFAULT NULL,\n  `ocr_content` longtext DEFAULT NULL,\n  `bates_number_start` varchar(50) DEFAULT NULL,\n  `bates_number_end` varchar(50) DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `documents_document_code_key` (`document_code`),\n  KEY `documents_matter_id_fkey` (`matter_id`),\n  KEY `documents_client_id_fkey` (`client_id`),\n  CONSTRAINT `documents_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `documents_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "expenses": {
+    "createTable": "CREATE TABLE `expenses` (\n  `id` varchar(36) NOT NULL,\n  `expense_code` varchar(50) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `incurred_by_user_id` varchar(36) NOT NULL,\n  `date` date NOT NULL,\n  `category` varchar(100) NOT NULL,\n  `amount` decimal(12,2) NOT NULL,\n  `vendor_name` varchar(255) DEFAULT NULL,\n  `receipt_document_id` varchar(36) DEFAULT NULL,\n  `is_billable` tinyint(1) NOT NULL DEFAULT 1,\n  `status` varchar(30) NOT NULL DEFAULT 'Unbilled',\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `expenses_expense_code_key` (`expense_code`),\n  KEY `expenses_matter_id_fkey` (`matter_id`),\n  KEY `expenses_incurred_by_user_id_fkey` (`incurred_by_user_id`),\n  CONSTRAINT `expenses_incurred_by_user_id_fkey` FOREIGN KEY (`incurred_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `expenses_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "general_ledger_entries": {
+    "createTable": "CREATE TABLE `general_ledger_entries` (\n  `id` varchar(36) NOT NULL,\n  `journal_id` varchar(36) NOT NULL,\n  `account_number` int(11) NOT NULL,\n  `debit` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `credit` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `matter_id` varchar(36) DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `general_ledger_entries_journal_id_fkey` (`journal_id`),\n  KEY `general_ledger_entries_account_number_fkey` (`account_number`),\n  KEY `general_ledger_entries_matter_id_fkey` (`matter_id`),\n  CONSTRAINT `general_ledger_entries_account_number_fkey` FOREIGN KEY (`account_number`) REFERENCES `chart_of_accounts` (`account_number`) ON UPDATE CASCADE,\n  CONSTRAINT `general_ledger_entries_journal_id_fkey` FOREIGN KEY (`journal_id`) REFERENCES `general_ledger_journals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `general_ledger_entries_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "general_ledger_journals": {
+    "createTable": "CREATE TABLE `general_ledger_journals` (\n  `id` varchar(36) NOT NULL,\n  `journal_number` varchar(50) NOT NULL,\n  `transaction_date` date NOT NULL,\n  `memo` text NOT NULL,\n  `created_by_user_id` varchar(36) NOT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `general_ledger_journals_journal_number_key` (`journal_number`),\n  KEY `general_ledger_journals_created_by_user_id_fkey` (`created_by_user_id`),\n  CONSTRAINT `general_ledger_journals_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "intakes": {
+    "createTable": "CREATE TABLE `intakes` (\n  `id` varchar(36) NOT NULL,\n  `intake_number` varchar(50) NOT NULL,\n  `prospective_client` varchar(255) NOT NULL,\n  `contact_person` varchar(255) DEFAULT NULL,\n  `email` varchar(255) NOT NULL,\n  `phone` varchar(50) NOT NULL,\n  `practice_area_id` varchar(50) DEFAULT NULL,\n  `adverse_parties` text NOT NULL,\n  `matter_summary` text NOT NULL,\n  `dispute_amount` decimal(12,2) DEFAULT 0.00,\n  `jurisdiction_venue` varchar(255) DEFAULT NULL,\n  `conflict_status` varchar(50) NOT NULL DEFAULT 'Not Started',\n  `reviewed_by_user_id` varchar(36) DEFAULT NULL,\n  `reviewed_at` datetime(3) DEFAULT NULL,\n  `conflict_notes` text DEFAULT NULL,\n  `converted_to_client` tinyint(1) NOT NULL DEFAULT 0,\n  `converted_client_id` varchar(36) DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `intakes_intake_number_key` (`intake_number`),\n  KEY `intakes_practice_area_id_fkey` (`practice_area_id`),\n  KEY `intakes_reviewed_by_user_id_fkey` (`reviewed_by_user_id`),\n  KEY `intakes_converted_client_id_fkey` (`converted_client_id`),\n  CONSTRAINT `intakes_converted_client_id_fkey` FOREIGN KEY (`converted_client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `intakes_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `intakes_reviewed_by_user_id_fkey` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "invoice_line_items": {
+    "createTable": "CREATE TABLE `invoice_line_items` (\n  `id` varchar(36) NOT NULL,\n  `invoice_id` varchar(36) NOT NULL,\n  `item_type` varchar(20) NOT NULL,\n  `time_entry_id` varchar(36) DEFAULT NULL,\n  `expense_id` varchar(36) DEFAULT NULL,\n  `description` text NOT NULL,\n  `quantity` decimal(5,2) NOT NULL,\n  `unit_rate` decimal(10,2) NOT NULL,\n  `total_price` decimal(12,2) NOT NULL,\n  PRIMARY KEY (`id`),\n  KEY `invoice_line_items_invoice_id_fkey` (`invoice_id`),\n  KEY `invoice_line_items_time_entry_id_fkey` (`time_entry_id`),\n  KEY `invoice_line_items_expense_id_fkey` (`expense_id`),\n  CONSTRAINT `invoice_line_items_expense_id_fkey` FOREIGN KEY (`expense_id`) REFERENCES `expenses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `invoice_line_items_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `invoice_line_items_time_entry_id_fkey` FOREIGN KEY (`time_entry_id`) REFERENCES `time_entries` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "invoices": {
+    "createTable": "CREATE TABLE `invoices` (\n  `id` varchar(36) NOT NULL,\n  `invoice_number` varchar(50) NOT NULL,\n  `client_id` varchar(36) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `issue_date` date NOT NULL,\n  `due_date` date NOT NULL,\n  `total_amount` decimal(12,2) NOT NULL,\n  `paid_amount` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `balance_due` decimal(12,2) NOT NULL,\n  `status` varchar(30) NOT NULL DEFAULT 'Draft',\n  `sent_at` datetime(3) DEFAULT NULL,\n  `notes` text DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `invoices_invoice_number_key` (`invoice_number`),\n  KEY `invoices_client_id_fkey` (`client_id`),\n  KEY `invoices_matter_id_fkey` (`matter_id`),\n  CONSTRAINT `invoices_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `invoices_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "matter_staff_assignments": {
+    "createTable": "CREATE TABLE `matter_staff_assignments` (\n  `id` varchar(36) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `user_id` varchar(36) NOT NULL,\n  `assignment_role` varchar(50) NOT NULL,\n  `assigned_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `matter_staff_assignments_matter_id_user_id_key` (`matter_id`,`user_id`),\n  KEY `matter_staff_assignments_user_id_fkey` (`user_id`),\n  CONSTRAINT `matter_staff_assignments_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `matter_staff_assignments_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "matter_stage_histories": {
+    "createTable": "CREATE TABLE `matter_stage_histories` (\n  `id` varchar(36) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `from_stage_id` varchar(50) DEFAULT NULL,\n  `to_stage_id` varchar(50) NOT NULL,\n  `transitioned_by_user_id` varchar(36) NOT NULL,\n  `verified_gatekeepers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`verified_gatekeepers`)),\n  `transitioned_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  KEY `matter_stage_histories_matter_id_fkey` (`matter_id`),\n  KEY `matter_stage_histories_to_stage_id_fkey` (`to_stage_id`),\n  KEY `matter_stage_histories_transitioned_by_user_id_fkey` (`transitioned_by_user_id`),\n  CONSTRAINT `matter_stage_histories_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `matter_stage_histories_to_stage_id_fkey` FOREIGN KEY (`to_stage_id`) REFERENCES `workflow_stages` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `matter_stage_histories_transitioned_by_user_id_fkey` FOREIGN KEY (`transitioned_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "matters": {
+    "createTable": "CREATE TABLE `matters` (\n  `id` varchar(36) NOT NULL,\n  `matter_number` varchar(50) NOT NULL,\n  `client_id` varchar(36) NOT NULL,\n  `title` varchar(255) NOT NULL,\n  `practice_area_id` varchar(50) NOT NULL,\n  `current_stage_id` varchar(50) DEFAULT NULL,\n  `status` varchar(50) NOT NULL DEFAULT 'Active',\n  `responsible_attorney_id` varchar(36) NOT NULL,\n  `billing_type` varchar(50) NOT NULL,\n  `hourly_rate` decimal(10,2) DEFAULT NULL,\n  `flat_fee_amount` decimal(12,2) DEFAULT NULL,\n  `contingency_percentage` decimal(5,2) DEFAULT NULL,\n  `budget` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `open_date` date NOT NULL,\n  `close_date` date DEFAULT NULL,\n  `statute_of_limitations` date DEFAULT NULL,\n  `next_court_date` datetime(3) DEFAULT NULL,\n  `court_name` varchar(255) DEFAULT NULL,\n  `judge` varchar(150) DEFAULT NULL,\n  `case_docket_number` varchar(100) DEFAULT NULL,\n  `description` text DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `matters_matter_number_key` (`matter_number`),\n  KEY `idx_matters_client` (`client_id`),\n  KEY `idx_matters_attorney` (`responsible_attorney_id`),\n  KEY `matters_practice_area_id_fkey` (`practice_area_id`),\n  KEY `matters_current_stage_id_fkey` (`current_stage_id`),\n  CONSTRAINT `matters_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `matters_current_stage_id_fkey` FOREIGN KEY (`current_stage_id`) REFERENCES `workflow_stages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `matters_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `matters_responsible_attorney_id_fkey` FOREIGN KEY (`responsible_attorney_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "payment_records": {
+    "createTable": "CREATE TABLE `payment_records` (\n  `id` varchar(36) NOT NULL,\n  `payment_reference` varchar(50) NOT NULL,\n  `invoice_id` varchar(36) NOT NULL,\n  `client_id` varchar(36) NOT NULL,\n  `amount` decimal(12,2) NOT NULL,\n  `payment_method` varchar(50) NOT NULL,\n  `destination_account` varchar(50) NOT NULL,\n  `transaction_reference` varchar(100) DEFAULT NULL,\n  `received_date` date NOT NULL,\n  `recorded_by_user_id` varchar(36) NOT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `payment_records_payment_reference_key` (`payment_reference`),\n  KEY `payment_records_invoice_id_fkey` (`invoice_id`),\n  KEY `payment_records_client_id_fkey` (`client_id`),\n  KEY `payment_records_recorded_by_user_id_fkey` (`recorded_by_user_id`),\n  CONSTRAINT `payment_records_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `payment_records_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `payment_records_recorded_by_user_id_fkey` FOREIGN KEY (`recorded_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "practice_areas": {
+    "createTable": "CREATE TABLE `practice_areas` (\n  `id` varchar(50) NOT NULL,\n  `name` varchar(150) NOT NULL,\n  `code` varchar(10) NOT NULL,\n  `brand_color` varchar(20) NOT NULL,\n  `is_active` tinyint(1) NOT NULL DEFAULT 1,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `practice_areas_code_key` (`code`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "id": "pa-app",
+        "name": "Appeals",
+        "code": "APP",
+        "brand_color": "#4f46e5",
+        "is_active": 1
+      },
+      {
+        "id": "pa-bk",
+        "name": "Bankruptcy",
+        "code": "BK",
+        "brand_color": "#0284c7",
+        "is_active": 1
+      },
+      {
+        "id": "pa-civ",
+        "name": "Civil/Commercial Litigation",
+        "code": "CIV",
+        "brand_color": "#2563eb",
+        "is_active": 1
+      },
+      {
+        "id": "pa-crim",
+        "name": "Criminal Defense",
+        "code": "CRIM",
+        "brand_color": "#ef4444",
+        "is_active": 1
+      },
+      {
+        "id": "pa-evict",
+        "name": "Landlord-Tenant/Evictions",
+        "code": "EVICT",
+        "brand_color": "#d97706",
+        "is_active": 1
+      },
+      {
+        "id": "pa-fam",
+        "name": "Family Law",
+        "code": "FAM",
+        "brand_color": "#ec4899",
+        "is_active": 1
+      },
+      {
+        "id": "pa-imm",
+        "name": "Immigration",
+        "code": "IMM",
+        "brand_color": "#059669",
+        "is_active": 1
+      },
+      {
+        "id": "pa-pi",
+        "name": "Personal Injury",
+        "code": "PI",
+        "brand_color": "#ea580c",
+        "is_active": 1
+      },
+      {
+        "id": "pa-prob",
+        "name": "Probate",
+        "code": "PROB",
+        "brand_color": "#8b5cf6",
+        "is_active": 1
+      }
+    ]
+  },
+  "role_permissions": {
+    "createTable": "CREATE TABLE `role_permissions` (\n  `id` varchar(36) NOT NULL,\n  `role_id` varchar(50) NOT NULL,\n  `permission_key` varchar(100) NOT NULL,\n  `granted_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `role_permissions_role_id_permission_key_key` (`role_id`,`permission_key`),\n  CONSTRAINT `role_permissions_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "id": "005c92fd-f6b0-4c22-bd3f-523fadeb9c1d",
+        "role_id": "super_admin",
+        "permission_key": "matters:view",
+        "granted_at": "2026-11-13T02:09:36.914Z"
+      },
+      {
+        "id": "02f3adf3-46bc-426f-9d99-936da2e7294c",
+        "role_id": "super_admin",
+        "permission_key": "operating:view",
+        "granted_at": "2026-11-13T02:09:37.004Z"
+      },
+      {
+        "id": "037d1662-84d3-4c3e-b385-43a1e75a31c3",
+        "role_id": "super_admin",
+        "permission_key": "expenses:view",
+        "granted_at": "2026-11-13T02:09:36.980Z"
+      },
+      {
+        "id": "05a44d2a-5814-4ce1-930e-dff40f237e73",
+        "role_id": "super_admin",
+        "permission_key": "calendar:view",
+        "granted_at": "2026-11-13T02:09:36.953Z"
+      },
+      {
+        "id": "070983f4-11f3-4235-b6c8-289f5bfe5671",
+        "role_id": "supervisor",
+        "permission_key": "deadlines:view",
+        "granted_at": "2026-11-13T02:09:37.373Z"
+      },
+      {
+        "id": "071e6522-1306-4ca1-bee0-5b1137b8f1d4",
+        "role_id": "super_admin",
+        "permission_key": "matters:delete",
+        "granted_at": "2026-11-13T02:09:36.920Z"
+      },
+      {
+        "id": "08d10416-0463-41b1-840b-126cd463a9d0",
+        "role_id": "super_admin",
+        "permission_key": "communications:manage",
+        "granted_at": "2026-11-13T02:09:36.937Z"
+      },
+      {
+        "id": "0a3878ce-4f96-4850-9e5c-6ddea2dbbfae",
+        "role_id": "attorney",
+        "permission_key": "clients:create",
+        "granted_at": "2026-11-13T02:09:37.073Z"
+      },
+      {
+        "id": "0a9501b6-29be-4428-a6bd-dbe5ee3743b7",
+        "role_id": "billing",
+        "permission_key": "billing:reports_view",
+        "granted_at": "2026-11-13T02:09:37.297Z"
+      },
+      {
+        "id": "0dc376e7-7074-472e-8125-924de79e2aa3",
+        "role_id": "supervisor",
+        "permission_key": "documents:view",
+        "granted_at": "2026-11-13T02:09:37.348Z"
+      },
+      {
+        "id": "0e73fe49-7251-4269-a5c8-753dc7220d2c",
+        "role_id": "super_admin",
+        "permission_key": "cosmolex:view",
+        "granted_at": "2026-11-13T02:09:37.009Z"
+      },
+      {
+        "id": "0fbd0175-1af2-4898-8bf5-50a1601a75f6",
+        "role_id": "paralegal",
+        "permission_key": "matters:view",
+        "granted_at": "2026-11-13T02:09:37.173Z"
+      },
+      {
+        "id": "1146ec99-bf63-4e3b-8fb6-faf14c7d71b4",
+        "role_id": "supervisor",
+        "permission_key": "time:review_own",
+        "granted_at": "2026-11-13T02:09:37.377Z"
+      },
+      {
+        "id": "1a68c2d3-3f78-459a-8df5-effed8dab155",
+        "role_id": "super_admin",
+        "permission_key": "deadlines:view",
+        "granted_at": "2026-11-13T02:09:36.955Z"
+      },
+      {
+        "id": "1d582f9c-2141-47a2-a097-a3da54480c87",
+        "role_id": "supervisor",
+        "permission_key": "time:review_team",
+        "granted_at": "2026-11-13T02:09:37.380Z"
+      },
+      {
+        "id": "1f1deb36-5abc-4a63-813a-5c58f3c3f2d6",
+        "role_id": "billing",
+        "permission_key": "billing:hours_view",
+        "granted_at": "2026-11-13T02:09:37.272Z"
+      },
+      {
+        "id": "1f636074-eb96-42ef-a2e1-fee72b9f9d20",
+        "role_id": "supervisor",
+        "permission_key": "notifications:manage",
+        "granted_at": "2026-11-13T02:09:37.425Z"
+      },
+      {
+        "id": "209f6139-23e1-41e9-93e6-fdb3078602ce",
+        "role_id": "billing",
+        "permission_key": "matters:view",
+        "granted_at": "2026-11-13T02:09:37.252Z"
+      },
+      {
+        "id": "20f71b65-f04a-430c-834f-3b334e8b0e53",
+        "role_id": "billing",
+        "permission_key": "notifications:manage",
+        "granted_at": "2026-11-13T02:09:37.315Z"
+      },
+      {
+        "id": "21054aa4-f913-4ecd-9038-2d9eccd07523",
+        "role_id": "paralegal",
+        "permission_key": "time:log",
+        "granted_at": "2026-11-13T02:09:37.217Z"
+      },
+      {
+        "id": "21f0e5c9-2562-4f90-80d7-fb7461f4d33f",
+        "role_id": "supervisor",
+        "permission_key": "time:reject",
+        "granted_at": "2026-11-13T02:09:37.386Z"
+      },
+      {
+        "id": "235706a4-dcc5-4bdf-b61b-52e6d7f00ee4",
+        "role_id": "super_admin",
+        "permission_key": "clients:delete",
+        "granted_at": "2026-11-13T02:09:36.911Z"
+      },
+      {
+        "id": "25d34bd0-7132-4aab-8053-3683ee638a23",
+        "role_id": "supervisor",
+        "permission_key": "templates:view",
+        "granted_at": "2026-11-13T02:09:37.420Z"
+      },
+      {
+        "id": "26cea092-4247-4b67-9bec-9621cba7876b",
+        "role_id": "paralegal",
+        "permission_key": "communications:manage",
+        "granted_at": "2026-11-13T02:09:37.191Z"
+      },
+      {
+        "id": "2845b3ba-3b1a-4db4-83a2-f3149867c28a",
+        "role_id": "paralegal",
+        "permission_key": "checklists:manage",
+        "granted_at": "2026-11-13T02:09:37.230Z"
+      },
+      {
+        "id": "2863b860-ff53-4b98-8b13-52cebc05a2e2",
+        "role_id": "super_admin",
+        "permission_key": "tasks:delete",
+        "granted_at": "2026-11-13T02:09:36.951Z"
+      },
+      {
+        "id": "29d00561-f5c8-4d2e-8c2e-08cc37fd5f5c",
+        "role_id": "paralegal",
+        "permission_key": "dashboard:view",
+        "granted_at": "2026-11-13T02:09:37.167Z"
+      },
+      {
+        "id": "2a92b607-9397-4caf-85ca-9fe779ecdc72",
+        "role_id": "attorney",
+        "permission_key": "reports:staff_view",
+        "granted_at": "2026-11-13T02:09:37.155Z"
+      },
+      {
+        "id": "2dd9b43b-7d3e-48f7-849d-e45366403436",
+        "role_id": "billing",
+        "permission_key": "clients:view",
+        "granted_at": "2026-11-13T02:09:37.249Z"
+      },
+      {
+        "id": "2ee41a6c-0aa5-4820-b193-da73b02bde16",
+        "role_id": "super_admin",
+        "permission_key": "branding:manage",
+        "granted_at": "2026-11-13T02:09:37.052Z"
+      },
+      {
+        "id": "2f4c00ca-bdc0-4312-9c2d-880aded4dcf5",
+        "role_id": "attorney",
+        "permission_key": "documents:view",
+        "granted_at": "2026-11-13T02:09:37.096Z"
+      },
+      {
+        "id": "2f5a52bc-54c2-4d3e-be1d-58aeb3aa69c8",
+        "role_id": "supervisor",
+        "permission_key": "communications:view",
+        "granted_at": "2026-11-13T02:09:37.353Z"
+      },
+      {
+        "id": "30444d98-294d-4ccb-848c-6d9baccc07f7",
+        "role_id": "paralegal",
+        "permission_key": "deadlines:view",
+        "granted_at": "2026-11-13T02:09:37.213Z"
+      },
+      {
+        "id": "30dcd7de-fc30-4d2e-809f-d30cbc36b07c",
+        "role_id": "super_admin",
+        "permission_key": "dashboard:approvals_view",
+        "granted_at": "2026-11-13T02:09:36.903Z"
+      },
+      {
+        "id": "3139e58c-6b6b-4236-8c14-760309ae8679",
+        "role_id": "super_admin",
+        "permission_key": "users:manage",
+        "granted_at": "2026-11-13T02:09:37.026Z"
+      },
+      {
+        "id": "31a0884d-69ad-49ba-833f-081dd2235a7f",
+        "role_id": "billing",
+        "permission_key": "cosmolex:export",
+        "granted_at": "2026-11-13T02:09:37.307Z"
+      },
+      {
+        "id": "3261ab5b-c72f-4a1b-8ce0-8837de7329e8",
+        "role_id": "attorney",
+        "permission_key": "calendar:view",
+        "granted_at": "2026-11-13T02:09:37.122Z"
+      },
+      {
+        "id": "32ddac8d-ca3e-44a9-ae5f-48900001a0dc",
+        "role_id": "paralegal",
+        "permission_key": "documents:view",
+        "granted_at": "2026-11-13T02:09:37.183Z"
+      },
+      {
+        "id": "3305c1c8-c884-4884-9e8a-92ea3e7a2b87",
+        "role_id": "attorney",
+        "permission_key": "tasks:view_team",
+        "granted_at": "2026-11-13T02:09:37.115Z"
+      },
+      {
+        "id": "33c495de-c295-466f-b3a7-c48f88ec2a41",
+        "role_id": "attorney",
+        "permission_key": "matters:create",
+        "granted_at": "2026-11-13T02:09:37.081Z"
+      },
+      {
+        "id": "3558df8c-b941-4c69-9e02-8d2d10b421fd",
+        "role_id": "super_admin",
+        "permission_key": "integrations:manage",
+        "granted_at": "2026-11-13T02:09:37.049Z"
+      },
+      {
+        "id": "378b1d13-db3a-4621-b3ca-8c78582ce206",
+        "role_id": "supervisor",
+        "permission_key": "tasks:view_own",
+        "granted_at": "2026-11-13T02:09:37.361Z"
+      },
+      {
+        "id": "3b59a7fa-371f-4c33-9260-674b14730b34",
+        "role_id": "paralegal",
+        "permission_key": "expenses:create",
+        "granted_at": "2026-11-13T02:09:37.236Z"
+      },
+      {
+        "id": "3f405b33-c14a-46c6-82e6-ca2b6e8c3247",
+        "role_id": "billing",
+        "permission_key": "billing:overview_view",
+        "granted_at": "2026-11-13T02:09:37.269Z"
+      },
+      {
+        "id": "40298537-06fa-4f1f-95a5-737fbc4d6847",
+        "role_id": "supervisor",
+        "permission_key": "time:suggested_view",
+        "granted_at": "2026-11-13T02:09:37.383Z"
+      },
+      {
+        "id": "404bb7d1-fc8b-494c-9e59-3d4b2baacf7e",
+        "role_id": "super_admin",
+        "permission_key": "templates:manage",
+        "granted_at": "2026-11-13T02:09:37.037Z"
+      },
+      {
+        "id": "409bafa5-538a-4ec9-9da4-7d78f9c49ed2",
+        "role_id": "attorney",
+        "permission_key": "clients:view",
+        "granted_at": "2026-11-13T02:09:37.070Z"
+      },
+      {
+        "id": "40f42a9c-3223-4496-9d67-00f4e187335c",
+        "role_id": "super_admin",
+        "permission_key": "time:approve",
+        "granted_at": "2026-11-13T02:09:36.966Z"
+      },
+      {
+        "id": "41207bd5-ebf0-4438-9f2c-e60fbff53405",
+        "role_id": "billing",
+        "permission_key": "reports:export",
+        "granted_at": "2026-11-13T02:09:37.312Z"
+      },
+      {
+        "id": "4132227f-0631-440c-a84f-4170dc9fd57f",
+        "role_id": "super_admin",
+        "permission_key": "tasks:view_own",
+        "granted_at": "2026-11-13T02:09:36.942Z"
+      },
+      {
+        "id": "420241b6-11e0-4e7d-9028-fad459d5e8ea",
+        "role_id": "attorney",
+        "permission_key": "dashboard:workload_view",
+        "granted_at": "2026-11-13T02:09:37.067Z"
+      },
+      {
+        "id": "4243dfd9-b7ac-40b8-9c1f-534598d00636",
+        "role_id": "attorney",
+        "permission_key": "reports:matter_view",
+        "granted_at": "2026-11-13T02:09:37.158Z"
+      },
+      {
+        "id": "444c0ca3-c029-4b4c-bbb7-48dfd1d1fe10",
+        "role_id": "super_admin",
+        "permission_key": "time:suggested_view",
+        "granted_at": "2026-11-13T02:09:36.964Z"
+      },
+      {
+        "id": "448627af-1593-44a5-8b01-301d01387d60",
+        "role_id": "super_admin",
+        "permission_key": "dashboard:view",
+        "granted_at": "2026-11-13T02:09:36.897Z"
+      },
+      {
+        "id": "4556bbd0-5432-4172-b5fe-83154b09bb52",
+        "role_id": "super_admin",
+        "permission_key": "tasks:edit",
+        "granted_at": "2026-11-13T02:09:36.949Z"
+      },
+      {
+        "id": "47f4d686-97af-487f-a37f-6a55ef584f6c",
+        "role_id": "super_admin",
+        "permission_key": "checklists:manage",
+        "granted_at": "2026-11-13T02:09:36.973Z"
+      },
+      {
+        "id": "4829107f-8c3f-4f1c-929e-025b65409d9b",
+        "role_id": "attorney",
+        "permission_key": "expenses:create",
+        "granted_at": "2026-11-13T02:09:37.152Z"
+      },
+      {
+        "id": "48f65d03-5ca9-4566-a3ac-666ce4b98855",
+        "role_id": "attorney",
+        "permission_key": "clients:edit",
+        "granted_at": "2026-11-13T02:09:37.076Z"
+      },
+      {
+        "id": "4b959c82-f6da-4948-9471-a292ff3cdea7",
+        "role_id": "supervisor",
+        "permission_key": "time:approve",
+        "granted_at": "2026-11-13T02:09:37.384Z"
+      },
+      {
+        "id": "4c26d77b-ede3-4222-b73c-d99a5441c624",
+        "role_id": "super_admin",
+        "permission_key": "dashboard:workload_view",
+        "granted_at": "2026-11-13T02:09:36.901Z"
+      },
+      {
+        "id": "4ca73a3b-d334-4557-a48e-25b419f74c11",
+        "role_id": "super_admin",
+        "permission_key": "documents:upload",
+        "granted_at": "2026-11-13T02:09:36.931Z"
+      },
+      {
+        "id": "4ebf61a2-5a4d-4570-8e52-b78d3cfeb892",
+        "role_id": "paralegal",
+        "permission_key": "templates:view",
+        "granted_at": "2026-11-13T02:09:37.239Z"
+      },
+      {
+        "id": "4ed201e2-ac9c-44e4-bcb2-bff9b6b79ab2",
+        "role_id": "super_admin",
+        "permission_key": "payments:view",
+        "granted_at": "2026-11-13T02:09:36.996Z"
+      },
+      {
+        "id": "4f124ed1-5d11-4fd6-961e-34b6448853c6",
+        "role_id": "supervisor",
+        "permission_key": "matters:view",
+        "granted_at": "2026-11-13T02:09:37.332Z"
+      },
+      {
+        "id": "4f824143-cf91-4aec-bd2a-cf1f02318647",
+        "role_id": "super_admin",
+        "permission_key": "trust:view",
+        "granted_at": "2026-11-13T02:09:37.006Z"
+      },
+      {
+        "id": "4fa3b7cf-1c87-4d0a-8f4c-49bff6b6d168",
+        "role_id": "attorney",
+        "permission_key": "intake:view",
+        "granted_at": "2026-11-13T02:09:37.087Z"
+      },
+      {
+        "id": "5019f5ca-2e3d-4a7c-b3a9-4bc9ff7a329b",
+        "role_id": "supervisor",
+        "permission_key": "matters:create",
+        "granted_at": "2026-11-13T02:09:37.335Z"
+      },
+      {
+        "id": "523adb25-b675-493e-ad63-9b2b158b9347",
+        "role_id": "super_admin",
+        "permission_key": "clients:create",
+        "granted_at": "2026-11-13T02:09:36.907Z"
+      },
+      {
+        "id": "525a016c-5da9-41a3-ba43-cb9c438b3e3f",
+        "role_id": "supervisor",
+        "permission_key": "portal:preview",
+        "granted_at": "2026-11-13T02:09:37.358Z"
+      },
+      {
+        "id": "5328b0b9-60b1-4baa-8f2f-98726758da99",
+        "role_id": "paralegal",
+        "permission_key": "calendar:view",
+        "granted_at": "2026-11-13T02:09:37.211Z"
+      },
+      {
+        "id": "560d0193-cef1-4094-821b-cbf74349b280",
+        "role_id": "paralegal",
+        "permission_key": "tasks:view_team",
+        "granted_at": "2026-11-13T02:09:37.203Z"
+      },
+      {
+        "id": "560ee21f-4b6d-4c0d-9f80-455b7c624a4e",
+        "role_id": "supervisor",
+        "permission_key": "billing:overview_view",
+        "granted_at": "2026-11-13T02:09:37.392Z"
+      },
+      {
+        "id": "56746df7-6c83-4dc5-91c8-3b707075a039",
+        "role_id": "supervisor",
+        "permission_key": "dashboard:workload_view",
+        "granted_at": "2026-11-13T02:09:37.319Z"
+      },
+      {
+        "id": "567b4598-cc08-4268-ae2c-19159e79d6a5",
+        "role_id": "supervisor",
+        "permission_key": "checklists:manage",
+        "granted_at": "2026-11-13T02:09:37.390Z"
+      },
+      {
+        "id": "593d752e-9337-4649-8f9b-b2fd2b251978",
+        "role_id": "attorney",
+        "permission_key": "expenses:view",
+        "granted_at": "2026-11-13T02:09:37.150Z"
+      },
+      {
+        "id": "5af6a2a3-60a1-4031-8dc4-ad56c588bfa7",
+        "role_id": "super_admin",
+        "permission_key": "matters:create",
+        "granted_at": "2026-11-13T02:09:36.916Z"
+      },
+      {
+        "id": "5b01025e-0784-41f2-a4cc-6287f1d1d076",
+        "role_id": "billing",
+        "permission_key": "invoices:view",
+        "granted_at": "2026-11-13T02:09:37.283Z"
+      },
+      {
+        "id": "5bca675a-4e8f-4332-8108-4bfc1523b2d9",
+        "role_id": "attorney",
+        "permission_key": "checklists:view",
+        "granted_at": "2026-11-13T02:09:37.137Z"
+      },
+      {
+        "id": "5d7374a5-990f-488f-951b-3fd6b6dac01a",
+        "role_id": "super_admin",
+        "permission_key": "payments:record",
+        "granted_at": "2026-11-13T02:09:36.999Z"
+      },
+      {
+        "id": "5ff7e463-037a-4c46-bcc3-097aaf339ceb",
+        "role_id": "super_admin",
+        "permission_key": "notifications:manage",
+        "granted_at": "2026-11-13T02:09:37.055Z"
+      },
+      {
+        "id": "60f06f72-71e9-4784-9fd7-9a148df7c2b4",
+        "role_id": "attorney",
+        "permission_key": "communications:manage",
+        "granted_at": "2026-11-13T02:09:37.106Z"
+      },
+      {
+        "id": "6284b5e6-7696-45b9-8982-8ea7f0896ab5",
+        "role_id": "supervisor",
+        "permission_key": "expenses:view",
+        "granted_at": "2026-11-13T02:09:37.407Z"
+      },
+      {
+        "id": "64c9baf8-9ba3-472b-a4e7-d087906f1aaa",
+        "role_id": "super_admin",
+        "permission_key": "billing:hours_view",
+        "granted_at": "2026-11-13T02:09:36.977Z"
+      },
+      {
+        "id": "6605653b-3909-47b1-8be9-27994d6f705e",
+        "role_id": "paralegal",
+        "permission_key": "tasks:create",
+        "granted_at": "2026-11-13T02:09:37.205Z"
+      },
+      {
+        "id": "665deed5-a098-48e7-875b-d934de8bb422",
+        "role_id": "super_admin",
+        "permission_key": "security:manage",
+        "granted_at": "2026-11-13T02:09:37.061Z"
+      },
+      {
+        "id": "667a0bd8-3f91-4a73-9dba-42e9f05beed4",
+        "role_id": "attorney",
+        "permission_key": "time:review_own",
+        "granted_at": "2026-11-13T02:09:37.131Z"
+      },
+      {
+        "id": "69d5bb21-a53b-47cd-b6b6-1aa845278168",
+        "role_id": "supervisor",
+        "permission_key": "billing:hours_view",
+        "granted_at": "2026-11-13T02:09:37.404Z"
+      },
+      {
+        "id": "6a0f4cce-d99e-498b-a2c8-9a026aa91de4",
+        "role_id": "attorney",
+        "permission_key": "intake:conflict_review",
+        "granted_at": "2026-11-13T02:09:37.093Z"
+      },
+      {
+        "id": "6a8a3b6b-1e41-4f55-bf76-46efd79a315f",
+        "role_id": "billing",
+        "permission_key": "payments:view",
+        "granted_at": "2026-11-13T02:09:37.291Z"
+      },
+      {
+        "id": "6b38c9d9-2188-4379-8026-14b26b747b6a",
+        "role_id": "super_admin",
+        "permission_key": "portal:preview",
+        "granted_at": "2026-11-13T02:09:36.940Z"
+      },
+      {
+        "id": "6bb0cd63-a4ea-4d0a-8761-33a91b5cca75",
+        "role_id": "super_admin",
+        "permission_key": "time:review_own",
+        "granted_at": "2026-11-13T02:09:36.959Z"
+      },
+      {
+        "id": "6c211e40-3613-471e-b96c-3c62cdd56673",
+        "role_id": "billing",
+        "permission_key": "dashboard:view",
+        "granted_at": "2026-11-13T02:09:37.246Z"
+      },
+      {
+        "id": "6f07726a-2071-460e-94f5-ef22085a9527",
+        "role_id": "paralegal",
+        "permission_key": "expenses:view",
+        "granted_at": "2026-11-13T02:09:37.233Z"
+      },
+      {
+        "id": "700ae968-9ed0-4962-a6cb-055e059f722b",
+        "role_id": "supervisor",
+        "permission_key": "clients:edit",
+        "granted_at": "2026-11-13T02:09:37.329Z"
+      },
+      {
+        "id": "73b56302-4e08-4daf-9a56-7ae0b37a9c9f",
+        "role_id": "supervisor",
+        "permission_key": "calendar:view",
+        "granted_at": "2026-11-13T02:09:37.371Z"
+      },
+      {
+        "id": "74b2bfa1-c591-4dd8-a8b4-4904b7a0dd01",
+        "role_id": "attorney",
+        "permission_key": "intake:create",
+        "granted_at": "2026-11-13T02:09:37.090Z"
+      },
+      {
+        "id": "77207133-9dfb-49b6-adda-2a6583e5ddcf",
+        "role_id": "paralegal",
+        "permission_key": "tasks:edit",
+        "granted_at": "2026-11-13T02:09:37.208Z"
+      },
+      {
+        "id": "77c58a3e-cf97-494b-a862-69d9b38881ca",
+        "role_id": "attorney",
+        "permission_key": "documents:upload",
+        "granted_at": "2026-11-13T02:09:37.099Z"
+      },
+      {
+        "id": "7bcca790-f0b5-4629-a1bc-c9e573016b0f",
+        "role_id": "super_admin",
+        "permission_key": "time:log",
+        "granted_at": "2026-11-13T02:09:36.957Z"
+      },
+      {
+        "id": "7be839fa-70ee-4270-a67d-8987d356aed8",
+        "role_id": "paralegal",
+        "permission_key": "time:suggested_view",
+        "granted_at": "2026-11-13T02:09:37.223Z"
+      },
+      {
+        "id": "8275a21c-f4a9-4521-919c-8e9b2aa9a5eb",
+        "role_id": "super_admin",
+        "permission_key": "intake:view",
+        "granted_at": "2026-11-13T02:09:36.922Z"
+      },
+      {
+        "id": "8330a0d0-7331-485c-bcb5-08089177de16",
+        "role_id": "attorney",
+        "permission_key": "tasks:edit",
+        "granted_at": "2026-11-13T02:09:37.119Z"
+      },
+      {
+        "id": "835c4014-8b6b-425b-867d-da30c1260cad",
+        "role_id": "billing",
+        "permission_key": "expenses:create",
+        "granted_at": "2026-11-13T02:09:37.278Z"
+      },
+      {
+        "id": "8610e3c9-d09f-4039-b137-b9a65050eef1",
+        "role_id": "paralegal",
+        "permission_key": "documents:upload",
+        "granted_at": "2026-11-13T02:09:37.186Z"
+      },
+      {
+        "id": "8927ab38-83c3-4538-939c-fca9b10df09b",
+        "role_id": "billing",
+        "permission_key": "operating:view",
+        "granted_at": "2026-11-13T02:09:37.299Z"
+      },
+      {
+        "id": "89bb2413-91ee-47b0-87af-e5cd9ac0b80b",
+        "role_id": "billing",
+        "permission_key": "reports:financial_view",
+        "granted_at": "2026-11-13T02:09:37.309Z"
+      },
+      {
+        "id": "89e9e22f-af37-4baa-b1e1-feedad21cc12",
+        "role_id": "supervisor",
+        "permission_key": "matters:edit",
+        "granted_at": "2026-11-13T02:09:37.337Z"
+      },
+      {
+        "id": "8a4e357e-cd91-4e84-83df-bd72c86deaa3",
+        "role_id": "super_admin",
+        "permission_key": "reports:export",
+        "granted_at": "2026-11-13T02:09:37.021Z"
+      },
+      {
+        "id": "8a8fb1b2-21e7-425c-b4e8-6abe0ae1b9c5",
+        "role_id": "attorney",
+        "permission_key": "matters:edit",
+        "granted_at": "2026-11-13T02:09:37.084Z"
+      },
+      {
+        "id": "8c3377a1-f840-4ae1-be6f-09b1578415d9",
+        "role_id": "super_admin",
+        "permission_key": "documents:delete",
+        "granted_at": "2026-11-13T02:09:36.933Z"
+      },
+      {
+        "id": "8db44013-2bc3-4dd9-9a06-7cb51a690494",
+        "role_id": "super_admin",
+        "permission_key": "cosmolex:export",
+        "granted_at": "2026-11-13T02:09:37.011Z"
+      },
+      {
+        "id": "8df4aee3-810e-4c72-81bb-4a644f0b30c6",
+        "role_id": "attorney",
+        "permission_key": "checklists:manage",
+        "granted_at": "2026-11-13T02:09:37.140Z"
+      },
+      {
+        "id": "8e5db45d-8333-4ac9-a893-a06c063105de",
+        "role_id": "supervisor",
+        "permission_key": "dashboard:view",
+        "granted_at": "2026-11-13T02:09:37.317Z"
+      },
+      {
+        "id": "90705ec7-4855-4f34-9757-9b896af91b22",
+        "role_id": "super_admin",
+        "permission_key": "time:review_team",
+        "granted_at": "2026-11-13T02:09:36.961Z"
+      },
+      {
+        "id": "908f4fce-e6ad-41df-a33a-5fb80d0c3f8a",
+        "role_id": "attorney",
+        "permission_key": "deadlines:view",
+        "granted_at": "2026-11-13T02:09:37.126Z"
+      },
+      {
+        "id": "90b313ea-3bd0-439e-a1c9-7eb68bfff9f2",
+        "role_id": "supervisor",
+        "permission_key": "tasks:edit",
+        "granted_at": "2026-11-13T02:09:37.368Z"
+      },
+      {
+        "id": "91d521e7-52db-40f4-aa57-0817f4678690",
+        "role_id": "paralegal",
+        "permission_key": "tasks:view_own",
+        "granted_at": "2026-11-13T02:09:37.200Z"
+      },
+      {
+        "id": "9401fbbb-3a15-4622-836a-619db9d02466",
+        "role_id": "paralegal",
+        "permission_key": "intake:view",
+        "granted_at": "2026-11-13T02:09:37.176Z"
+      },
+      {
+        "id": "958ca7e4-0385-42d9-843f-fe193a2034a5",
+        "role_id": "attorney",
+        "permission_key": "time:log",
+        "granted_at": "2026-11-13T02:09:37.129Z"
+      },
+      {
+        "id": "95ba384d-08fa-4930-a08f-92445b7b5b32",
+        "role_id": "super_admin",
+        "permission_key": "intake:conflict_review",
+        "granted_at": "2026-11-13T02:09:36.927Z"
+      },
+      {
+        "id": "97216c0e-0c5d-4e3f-a7b8-75e52939dc82",
+        "role_id": "paralegal",
+        "permission_key": "clients:view",
+        "granted_at": "2026-11-13T02:09:37.170Z"
+      },
+      {
+        "id": "9864a751-7f38-4012-b487-f136059991bc",
+        "role_id": "billing",
+        "permission_key": "invoices:manage",
+        "granted_at": "2026-11-13T02:09:37.288Z"
+      },
+      {
+        "id": "9cb59388-e524-467e-9bb4-3efd3459be8b",
+        "role_id": "super_admin",
+        "permission_key": "integrations:view",
+        "granted_at": "2026-11-13T02:09:37.040Z"
+      },
+      {
+        "id": "9feb6f7c-2b85-4984-8317-c7e6fed3cea6",
+        "role_id": "super_admin",
+        "permission_key": "tasks:view_team",
+        "granted_at": "2026-11-13T02:09:36.944Z"
+      },
+      {
+        "id": "a1bab09f-b560-4386-828d-677ad2c83aa3",
+        "role_id": "supervisor",
+        "permission_key": "intake:view",
+        "granted_at": "2026-11-13T02:09:37.340Z"
+      },
+      {
+        "id": "a295f3e3-332d-4878-af35-fcf290cc85d7",
+        "role_id": "supervisor",
+        "permission_key": "documents:upload",
+        "granted_at": "2026-11-13T02:09:37.351Z"
+      },
+      {
+        "id": "a49e4522-acb5-4c57-8fe5-e0deed66f0bc",
+        "role_id": "supervisor",
+        "permission_key": "reports:staff_view",
+        "granted_at": "2026-11-13T02:09:37.412Z"
+      },
+      {
+        "id": "a79f363b-abcb-49a9-a891-2f041128ce3a",
+        "role_id": "super_admin",
+        "permission_key": "clients:edit",
+        "granted_at": "2026-11-13T02:09:36.909Z"
+      },
+      {
+        "id": "a8f9eb89-0955-4de8-85aa-d82507130426",
+        "role_id": "supervisor",
+        "permission_key": "time:log",
+        "granted_at": "2026-11-13T02:09:37.375Z"
+      },
+      {
+        "id": "aa79e01a-edfb-49ba-9d03-239373024e82",
+        "role_id": "supervisor",
+        "permission_key": "intake:conflict_review",
+        "granted_at": "2026-11-13T02:09:37.345Z"
+      },
+      {
+        "id": "ac2b4939-22f4-4f5e-9c6e-3f230fd6faba",
+        "role_id": "billing",
+        "permission_key": "time:review_own",
+        "granted_at": "2026-11-13T02:09:37.266Z"
+      },
+      {
+        "id": "ac60b2cb-2b9f-4e1e-9d41-f399b2414c68",
+        "role_id": "super_admin",
+        "permission_key": "intake:create",
+        "granted_at": "2026-11-13T02:09:36.924Z"
+      },
+      {
+        "id": "ae47fb0d-73ae-4d64-bf8f-02483095e6e9",
+        "role_id": "attorney",
+        "permission_key": "billing:overview_view",
+        "granted_at": "2026-11-13T02:09:37.144Z"
+      },
+      {
+        "id": "af327a6a-18c4-4928-a6e7-177c38703351",
+        "role_id": "super_admin",
+        "permission_key": "expenses:edit",
+        "granted_at": "2026-11-13T02:09:36.985Z"
+      },
+      {
+        "id": "afb2cfa3-30b4-42a2-98eb-59f2a423a91a",
+        "role_id": "super_admin",
+        "permission_key": "tasks:create",
+        "granted_at": "2026-11-13T02:09:36.946Z"
+      },
+      {
+        "id": "b03b4c83-05b6-4d21-ba0f-188371ea19b9",
+        "role_id": "super_admin",
+        "permission_key": "documents:view",
+        "granted_at": "2026-11-13T02:09:36.929Z"
+      },
+      {
+        "id": "b1263644-d000-4aea-a96b-a691d30a8490",
+        "role_id": "paralegal",
+        "permission_key": "portal:preview",
+        "granted_at": "2026-11-13T02:09:37.197Z"
+      },
+      {
+        "id": "b3d47ac5-3ae4-470e-a4e5-b96e0ead7d41",
+        "role_id": "attorney",
+        "permission_key": "templates:view",
+        "granted_at": "2026-11-13T02:09:37.161Z"
+      },
+      {
+        "id": "b62f6994-8ad3-4409-8aa6-42ef58d3af31",
+        "role_id": "super_admin",
+        "permission_key": "billing:reports_view",
+        "granted_at": "2026-11-13T02:09:37.001Z"
+      },
+      {
+        "id": "b8077134-b8cf-4380-81bf-28028bfbe2c4",
+        "role_id": "paralegal",
+        "permission_key": "notifications:manage",
+        "granted_at": "2026-11-13T02:09:37.243Z"
+      },
+      {
+        "id": "b81dd8e8-7fce-4345-af6c-3e1fa9fa662d",
+        "role_id": "supervisor",
+        "permission_key": "dashboard:approvals_view",
+        "granted_at": "2026-11-13T02:09:37.322Z"
+      },
+      {
+        "id": "b86156cd-d95a-4f63-a7ee-55f10d7354bb",
+        "role_id": "super_admin",
+        "permission_key": "invoices:view",
+        "granted_at": "2026-11-13T02:09:36.988Z"
+      },
+      {
+        "id": "b9c62a36-6499-4002-ad07-225aed403cb9",
+        "role_id": "super_admin",
+        "permission_key": "templates:view",
+        "granted_at": "2026-11-13T02:09:37.034Z"
+      },
+      {
+        "id": "bb18dd8d-c52e-485f-8429-9bca9333a709",
+        "role_id": "attorney",
+        "permission_key": "portal:preview",
+        "granted_at": "2026-11-13T02:09:37.109Z"
+      },
+      {
+        "id": "bc691e32-7966-4352-a387-04007b3d1992",
+        "role_id": "super_admin",
+        "permission_key": "reports:matter_view",
+        "granted_at": "2026-11-13T02:09:37.016Z"
+      },
+      {
+        "id": "bdb633a0-5a61-4e26-b8ce-bc70f1a4bcaa",
+        "role_id": "super_admin",
+        "permission_key": "invoices:manage",
+        "granted_at": "2026-11-13T02:09:36.993Z"
+      },
+      {
+        "id": "bf99bcf0-0113-4684-bfdd-44b256b1b526",
+        "role_id": "super_admin",
+        "permission_key": "roles:view",
+        "granted_at": "2026-11-13T02:09:37.028Z"
+      },
+      {
+        "id": "c29b6757-84ee-4e76-ab6d-97d4827970b4",
+        "role_id": "super_admin",
+        "permission_key": "roles:manage",
+        "granted_at": "2026-11-13T02:09:37.031Z"
+      },
+      {
+        "id": "c592ef5e-199f-4330-aa48-555ebe1d8a45",
+        "role_id": "attorney",
+        "permission_key": "tasks:create",
+        "granted_at": "2026-11-13T02:09:37.117Z"
+      },
+      {
+        "id": "c5a7e799-de07-4cab-b49b-222de1d205e2",
+        "role_id": "billing",
+        "permission_key": "tasks:view_own",
+        "granted_at": "2026-11-13T02:09:37.258Z"
+      },
+      {
+        "id": "c5adc8a3-0b4b-44e6-b179-8d56dfa15006",
+        "role_id": "attorney",
+        "permission_key": "tasks:view_own",
+        "granted_at": "2026-11-13T02:09:37.112Z"
+      },
+      {
+        "id": "c6b41d00-037e-4185-a2a8-0b2af4f4da13",
+        "role_id": "super_admin",
+        "permission_key": "invoices:create",
+        "granted_at": "2026-11-13T02:09:36.991Z"
+      },
+      {
+        "id": "c8e84c03-3aa3-4276-a1bf-e44d06200918",
+        "role_id": "billing",
+        "permission_key": "cosmolex:view",
+        "granted_at": "2026-11-13T02:09:37.304Z"
+      },
+      {
+        "id": "c913af7f-4539-4042-ab7d-621744b61cc7",
+        "role_id": "supervisor",
+        "permission_key": "expenses:create",
+        "granted_at": "2026-11-13T02:09:37.409Z"
+      },
+      {
+        "id": "c9adb8a4-0847-4a6e-a79c-a64636f2025f",
+        "role_id": "billing",
+        "permission_key": "calendar:view",
+        "granted_at": "2026-11-13T02:09:37.260Z"
+      },
+      {
+        "id": "cadeb96f-c3aa-4b2c-99d6-d041590fffc4",
+        "role_id": "attorney",
+        "permission_key": "time:suggested_view",
+        "granted_at": "2026-11-13T02:09:37.134Z"
+      },
+      {
+        "id": "cb0c2b12-24fc-492e-9d37-d0d3f5855f2d",
+        "role_id": "paralegal",
+        "permission_key": "intake:create",
+        "granted_at": "2026-11-13T02:09:37.179Z"
+      },
+      {
+        "id": "cb49b5c2-813d-47a0-9c62-3a0291d61454",
+        "role_id": "paralegal",
+        "permission_key": "time:review_own",
+        "granted_at": "2026-11-13T02:09:37.220Z"
+      },
+      {
+        "id": "cda53d26-82cf-4007-9257-2ed6b305077b",
+        "role_id": "supervisor",
+        "permission_key": "templates:manage",
+        "granted_at": "2026-11-13T02:09:37.422Z"
+      },
+      {
+        "id": "d06bb3ff-9e39-4d9b-9e55-7fd56e88f35c",
+        "role_id": "super_admin",
+        "permission_key": "clients:view",
+        "granted_at": "2026-11-13T02:09:36.905Z"
+      },
+      {
+        "id": "d22283dc-8e55-4fd6-8c21-0b9665e37839",
+        "role_id": "super_admin",
+        "permission_key": "audit_logs:view",
+        "granted_at": "2026-11-13T02:09:37.058Z"
+      },
+      {
+        "id": "d294046f-b6bf-4fa8-a9ca-66429ab57af3",
+        "role_id": "attorney",
+        "permission_key": "matters:view",
+        "granted_at": "2026-11-13T02:09:37.079Z"
+      },
+      {
+        "id": "d8591a3b-c5b1-4d68-9d3c-a38d7f24d82d",
+        "role_id": "supervisor",
+        "permission_key": "reports:matter_view",
+        "granted_at": "2026-11-13T02:09:37.414Z"
+      },
+      {
+        "id": "da4fe7d4-e8d5-4a0f-aad8-2ad5e8489319",
+        "role_id": "billing",
+        "permission_key": "expenses:edit",
+        "granted_at": "2026-11-13T02:09:37.280Z"
+      },
+      {
+        "id": "db033b53-8149-4204-b941-9f4d7d828e5d",
+        "role_id": "supervisor",
+        "permission_key": "checklists:view",
+        "granted_at": "2026-11-13T02:09:37.388Z"
+      },
+      {
+        "id": "dcf9c054-7057-4dd9-bdb8-f80891a1edfe",
+        "role_id": "billing",
+        "permission_key": "payments:record",
+        "granted_at": "2026-11-13T02:09:37.294Z"
+      },
+      {
+        "id": "dd5d72c9-8b3e-4850-8838-1371ea843580",
+        "role_id": "super_admin",
+        "permission_key": "time:reject",
+        "granted_at": "2026-11-13T02:09:36.969Z"
+      },
+      {
+        "id": "ddd16ece-ad8c-4fd7-85d8-de65ba0637c4",
+        "role_id": "billing",
+        "permission_key": "portal:preview",
+        "granted_at": "2026-11-13T02:09:37.255Z"
+      },
+      {
+        "id": "de6e125d-5445-4085-8a61-8d5c8cb63164",
+        "role_id": "supervisor",
+        "permission_key": "clients:view",
+        "granted_at": "2026-11-13T02:09:37.324Z"
+      },
+      {
+        "id": "de6e6b60-423b-4b8e-8bbc-a4c7dd710db3",
+        "role_id": "supervisor",
+        "permission_key": "intake:create",
+        "granted_at": "2026-11-13T02:09:37.342Z"
+      },
+      {
+        "id": "e17089ae-1d53-4a87-b350-1625563cb3fa",
+        "role_id": "attorney",
+        "permission_key": "communications:view",
+        "granted_at": "2026-11-13T02:09:37.102Z"
+      },
+      {
+        "id": "e192d708-8bc2-43be-9774-17ee30a4f793",
+        "role_id": "billing",
+        "permission_key": "time:log",
+        "granted_at": "2026-11-13T02:09:37.264Z"
+      },
+      {
+        "id": "e29a8de3-3775-4bd9-8b30-4631459de7a2",
+        "role_id": "attorney",
+        "permission_key": "dashboard:view",
+        "granted_at": "2026-11-13T02:09:37.064Z"
+      },
+      {
+        "id": "e45ec3fb-3ee7-47b3-9700-c263e5f11f19",
+        "role_id": "super_admin",
+        "permission_key": "communications:view",
+        "granted_at": "2026-11-13T02:09:36.935Z"
+      },
+      {
+        "id": "e4c4ae24-393c-463e-9399-e62acab20dcc",
+        "role_id": "super_admin",
+        "permission_key": "reports:staff_view",
+        "granted_at": "2026-11-13T02:09:37.014Z"
+      },
+      {
+        "id": "e59b703c-2031-4d4b-88b5-14f33992973a",
+        "role_id": "attorney",
+        "permission_key": "notifications:manage",
+        "granted_at": "2026-11-13T02:09:37.164Z"
+      },
+      {
+        "id": "e665bc4d-0855-45ed-8fc9-46f7d62d3963",
+        "role_id": "supervisor",
+        "permission_key": "clients:create",
+        "granted_at": "2026-11-13T02:09:37.326Z"
+      },
+      {
+        "id": "e74a7662-e346-43d0-8f66-a74ac1a83e90",
+        "role_id": "super_admin",
+        "permission_key": "matters:edit",
+        "granted_at": "2026-11-13T02:09:36.918Z"
+      },
+      {
+        "id": "e98b82e7-71bf-4acd-a837-5fda686bd4c9",
+        "role_id": "super_admin",
+        "permission_key": "expenses:create",
+        "granted_at": "2026-11-13T02:09:36.982Z"
+      },
+      {
+        "id": "e9935623-401a-49c9-ba14-45c4a3bcf5ce",
+        "role_id": "supervisor",
+        "permission_key": "communications:manage",
+        "granted_at": "2026-11-13T02:09:37.356Z"
+      },
+      {
+        "id": "e99b8c52-3894-4cd9-b2c2-03e6857a8205",
+        "role_id": "attorney",
+        "permission_key": "billing:hours_view",
+        "granted_at": "2026-11-13T02:09:37.147Z"
+      },
+      {
+        "id": "ea907337-29ec-4c2f-a0f0-287c58d65b3a",
+        "role_id": "supervisor",
+        "permission_key": "tasks:create",
+        "granted_at": "2026-11-13T02:09:37.365Z"
+      },
+      {
+        "id": "eb0f26d7-6176-4b86-8e1c-af268346a51f",
+        "role_id": "super_admin",
+        "permission_key": "reports:financial_view",
+        "granted_at": "2026-11-13T02:09:37.019Z"
+      },
+      {
+        "id": "eb2fa8b2-692c-44f4-8087-eaa431e52340",
+        "role_id": "super_admin",
+        "permission_key": "billing:overview_view",
+        "granted_at": "2026-11-13T02:09:36.975Z"
+      },
+      {
+        "id": "eb40dc78-75a0-487a-a96e-c12e9881b09e",
+        "role_id": "paralegal",
+        "permission_key": "checklists:view",
+        "granted_at": "2026-11-13T02:09:37.226Z"
+      },
+      {
+        "id": "ef8665b7-469c-4032-8ae7-5fd21a25b497",
+        "role_id": "supervisor",
+        "permission_key": "tasks:view_team",
+        "granted_at": "2026-11-13T02:09:37.363Z"
+      },
+      {
+        "id": "f0ae8df9-ab51-44b9-a297-88df8c04070f",
+        "role_id": "billing",
+        "permission_key": "trust:view",
+        "granted_at": "2026-11-13T02:09:37.302Z"
+      },
+      {
+        "id": "f25a1f27-e9d8-4158-b1c1-bca7dfa37b0d",
+        "role_id": "billing",
+        "permission_key": "expenses:view",
+        "granted_at": "2026-11-13T02:09:37.275Z"
+      },
+      {
+        "id": "f36595b9-8fc5-44ae-b0f8-656e370d9b7c",
+        "role_id": "paralegal",
+        "permission_key": "communications:view",
+        "granted_at": "2026-11-13T02:09:37.188Z"
+      },
+      {
+        "id": "f902edc0-6cd9-48cc-a9c5-19251f7ef726",
+        "role_id": "billing",
+        "permission_key": "invoices:create",
+        "granted_at": "2026-11-13T02:09:37.285Z"
+      },
+      {
+        "id": "f9ba78a3-c49c-4ee8-a683-269460d713c2",
+        "role_id": "super_admin",
+        "permission_key": "users:view",
+        "granted_at": "2026-11-13T02:09:37.024Z"
+      },
+      {
+        "id": "fcd0bf81-5876-4394-b67e-52add2d759e3",
+        "role_id": "supervisor",
+        "permission_key": "reports:export",
+        "granted_at": "2026-11-13T02:09:37.417Z"
+      },
+      {
+        "id": "fde7045b-162d-4131-951e-b636c8706843",
+        "role_id": "super_admin",
+        "permission_key": "checklists:view",
+        "granted_at": "2026-11-13T02:09:36.971Z"
+      }
+    ]
+  },
+  "roles": {
+    "createTable": "CREATE TABLE `roles` (\n  `id` varchar(50) NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `description` text DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": [
+      {
+        "id": "attorney",
+        "name": "Attorney",
+        "description": "Case file management, litigation dockets, client advisory, time logging, and personal workload.",
+        "created_at": "2026-11-13T02:09:36.862Z"
+      },
+      {
+        "id": "billing",
+        "name": "Billing / Accounting Staff",
+        "description": "Invoicing, disbursements, fee accounting, receivables, and official CosmoLex ledger synchronization.",
+        "created_at": "2026-11-13T02:09:36.868Z"
+      },
+      {
+        "id": "paralegal",
+        "name": "Paralegal / Staff",
+        "description": "Litigation support, court filings, document repository management, and task checklists.",
+        "created_at": "2026-11-13T02:09:36.866Z"
+      },
+      {
+        "id": "super_admin",
+        "name": "Super Admin",
+        "description": "Full administrative control, user governance, security policies, and firm-wide ledger visibility.",
+        "created_at": "2026-11-13T02:09:36.856Z"
+      },
+      {
+        "id": "supervisor",
+        "name": "Supervisor",
+        "description": "Cross-matter oversight, department workload balancing, and partner time-entry approval queues.",
+        "created_at": "2026-11-13T02:09:36.870Z"
+      }
+    ]
+  },
+  "suggested_billing_captures": {
+    "createTable": "CREATE TABLE `suggested_billing_captures` (\n  `id` varchar(36) NOT NULL,\n  `source_type` varchar(50) NOT NULL,\n  `source_identifier` varchar(255) NOT NULL,\n  `matter_id` varchar(36) DEFAULT NULL,\n  `date` date NOT NULL,\n  `actual_duration_seconds` int(11) NOT NULL,\n  `suggested_hours` decimal(4,2) NOT NULL,\n  `match_confidence` int(11) NOT NULL,\n  `activity_description` text NOT NULL,\n  `detected_rate` decimal(10,2) DEFAULT NULL,\n  `is_converted` tinyint(1) NOT NULL DEFAULT 0,\n  `converted_time_entry_id` varchar(36) DEFAULT NULL,\n  `is_dismissed` tinyint(1) NOT NULL DEFAULT 0,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `suggested_billing_captures_source_identifier_key` (`source_identifier`),\n  KEY `suggested_billing_captures_matter_id_fkey` (`matter_id`),\n  KEY `suggested_billing_captures_converted_time_entry_id_fkey` (`converted_time_entry_id`),\n  CONSTRAINT `suggested_billing_captures_converted_time_entry_id_fkey` FOREIGN KEY (`converted_time_entry_id`) REFERENCES `time_entries` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `suggested_billing_captures_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE SET NULL ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "tasks": {
+    "createTable": "CREATE TABLE `tasks` (\n  `id` varchar(36) NOT NULL,\n  `task_code` varchar(50) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `title` varchar(255) NOT NULL,\n  `description` text DEFAULT NULL,\n  `assigned_to_user_id` varchar(36) NOT NULL,\n  `created_by_user_id` varchar(36) NOT NULL,\n  `due_date` date NOT NULL,\n  `priority` varchar(20) NOT NULL DEFAULT 'Medium',\n  `status` varchar(30) NOT NULL DEFAULT 'Not Started',\n  `completed_at` datetime(3) DEFAULT NULL,\n  `reminder_setting` varchar(50) DEFAULT '1 day prior',\n  `urcp_rule_reference` varchar(50) DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `tasks_task_code_key` (`task_code`),\n  KEY `idx_tasks_assigned_due` (`assigned_to_user_id`,`due_date`,`status`),\n  KEY `tasks_matter_id_fkey` (`matter_id`),\n  KEY `tasks_created_by_user_id_fkey` (`created_by_user_id`),\n  CONSTRAINT `tasks_assigned_to_user_id_fkey` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `tasks_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `tasks_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "three_way_reconciliations": {
+    "createTable": "CREATE TABLE `three_way_reconciliations` (\n  `id` varchar(36) NOT NULL,\n  `reconciliation_month` varchar(7) NOT NULL,\n  `bank_statement_balance` decimal(12,2) NOT NULL,\n  `deposits_in_transit` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `outstanding_checks` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `adjusted_bank_balance` decimal(12,2) NOT NULL,\n  `gl_trust_liability_balance` decimal(12,2) NOT NULL,\n  `client_subledgers_total_balance` decimal(12,2) NOT NULL,\n  `reconciliation_variance` decimal(12,2) NOT NULL,\n  `is_balanced` tinyint(1) NOT NULL,\n  `audited_by_user_id` varchar(36) NOT NULL,\n  `audit_certificate_pdf_url` text DEFAULT NULL,\n  `reconciled_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `three_way_reconciliations_reconciliation_month_key` (`reconciliation_month`),\n  KEY `three_way_reconciliations_audited_by_user_id_fkey` (`audited_by_user_id`),\n  CONSTRAINT `three_way_reconciliations_audited_by_user_id_fkey` FOREIGN KEY (`audited_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "time_entries": {
+    "createTable": "CREATE TABLE `time_entries` (\n  `id` varchar(36) NOT NULL,\n  `entry_code` varchar(50) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `user_id` varchar(36) NOT NULL,\n  `date` date NOT NULL,\n  `hours` decimal(5,2) NOT NULL,\n  `rate` decimal(10,2) NOT NULL,\n  `amount` decimal(12,2) NOT NULL,\n  `activity_type` varchar(100) NOT NULL,\n  `activity_code` varchar(50) DEFAULT NULL,\n  `description` text NOT NULL,\n  `is_billable` tinyint(1) NOT NULL DEFAULT 1,\n  `status` varchar(30) NOT NULL DEFAULT 'Submitted',\n  `approved_by_user_id` varchar(36) DEFAULT NULL,\n  `approved_at` datetime(3) DEFAULT NULL,\n  `rejection_comment` text DEFAULT NULL,\n  `exported_to_cosmolex` tinyint(1) NOT NULL DEFAULT 0,\n  `export_batch_id` varchar(50) DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `time_entries_entry_code_key` (`entry_code`),\n  KEY `idx_time_matter_status` (`matter_id`,`status`),\n  KEY `idx_time_user_date` (`user_id`,`date`),\n  KEY `time_entries_approved_by_user_id_fkey` (`approved_by_user_id`),\n  CONSTRAINT `time_entries_approved_by_user_id_fkey` FOREIGN KEY (`approved_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,\n  CONSTRAINT `time_entries_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `time_entries_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "trust_sub_ledgers": {
+    "createTable": "CREATE TABLE `trust_sub_ledgers` (\n  `id` varchar(36) NOT NULL,\n  `ledger_code` varchar(50) NOT NULL,\n  `client_id` varchar(36) NOT NULL,\n  `matter_id` varchar(36) NOT NULL,\n  `balance` decimal(12,2) NOT NULL DEFAULT 0.00,\n  `last_audit_date` date NOT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `trust_sub_ledgers_ledger_code_key` (`ledger_code`),\n  UNIQUE KEY `trust_sub_ledgers_matter_id_key` (`matter_id`),\n  KEY `trust_sub_ledgers_client_id_fkey` (`client_id`),\n  CONSTRAINT `trust_sub_ledgers_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `trust_sub_ledgers_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "trust_transactions": {
+    "createTable": "CREATE TABLE `trust_transactions` (\n  `id` varchar(36) NOT NULL,\n  `trust_sub_ledger_id` varchar(36) NOT NULL,\n  `transaction_type` varchar(50) NOT NULL,\n  `amount` decimal(12,2) NOT NULL,\n  `running_balance` decimal(12,2) NOT NULL,\n  `source_reference` varchar(100) NOT NULL,\n  `authorized_by_user_id` varchar(36) NOT NULL,\n  `purpose` text NOT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  PRIMARY KEY (`id`),\n  KEY `trust_transactions_trust_sub_ledger_id_fkey` (`trust_sub_ledger_id`),\n  KEY `trust_transactions_authorized_by_user_id_fkey` (`authorized_by_user_id`),\n  CONSTRAINT `trust_transactions_authorized_by_user_id_fkey` FOREIGN KEY (`authorized_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,\n  CONSTRAINT `trust_transactions_trust_sub_ledger_id_fkey` FOREIGN KEY (`trust_sub_ledger_id`) REFERENCES `trust_sub_ledgers` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "users": {
+    "createTable": "CREATE TABLE `users` (\n  `id` varchar(36) NOT NULL,\n  `user_code` varchar(20) NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `email` varchar(255) NOT NULL,\n  `password_hash` varchar(255) NOT NULL,\n  `phone` varchar(50) DEFAULT NULL,\n  `role` varchar(50) NOT NULL,\n  `title` varchar(100) DEFAULT NULL,\n  `initials` varchar(10) NOT NULL,\n  `department` varchar(100) DEFAULT NULL,\n  `billing_rate` decimal(10,2) NOT NULL DEFAULT 0.00,\n  `status` varchar(20) NOT NULL DEFAULT 'Active',\n  `mfa_enabled` tinyint(1) NOT NULL DEFAULT 0,\n  `mfa_secret` varchar(255) DEFAULT NULL,\n  `last_login_at` datetime(3) DEFAULT NULL,\n  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),\n  `updated_at` datetime(3) NOT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `users_user_code_key` (`user_code`),\n  UNIQUE KEY `users_email_key` (`email`),\n  KEY `users_role_fkey` (`role`),\n  CONSTRAINT `users_role_fkey` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  },
+  "workflow_stages": {
+    "createTable": "CREATE TABLE `workflow_stages` (\n  `id` varchar(50) NOT NULL,\n  `practice_area_id` varchar(50) NOT NULL,\n  `stage_name` varchar(150) NOT NULL,\n  `stage_code` varchar(20) NOT NULL,\n  `stage_order` int(11) NOT NULL,\n  `required_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`required_fields`)),\n  `auto_tasks` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`auto_tasks`)),\n  `is_active` tinyint(1) NOT NULL DEFAULT 1,\n  PRIMARY KEY (`id`),\n  KEY `workflow_stages_practice_area_id_fkey` (`practice_area_id`),\n  CONSTRAINT `workflow_stages_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "rows": []
+  }
+}

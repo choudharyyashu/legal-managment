@@ -94,6 +94,34 @@ export async function testPrismaConnection(): Promise<{
 }
 
 /**
+ * Bounded retry mechanism with exponential backoff for database connection on startup
+ */
+export async function connectWithRetry(
+  maxRetries: number = 5,
+  initialDelayMs: number = 1000,
+  maxDelayMs: number = 10000
+): Promise<{ connected: boolean; attempts: number; error?: string }> {
+  let attempt = 0;
+  let lastError: string | undefined;
+
+  while (attempt < maxRetries) {
+    attempt++;
+    const prismaResult = await testPrismaConnection();
+    if (prismaResult.connected) {
+      return { connected: true, attempts: attempt };
+    }
+
+    lastError = prismaResult.error;
+    if (attempt < maxRetries) {
+      const delay = Math.min(initialDelayMs * Math.pow(2, attempt - 1), maxDelayMs);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+
+  return { connected: false, attempts: attempt, error: lastError };
+}
+
+/**
  * Graceful database disconnection for application shutdown handlers
  */
 export async function disconnectDatabase(): Promise<void> {
