@@ -285,7 +285,7 @@ export class IntakeService {
   static async convertToClient(
     id: string,
     input: ConvertToIntakeClientInput,
-    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+    context: { userId: string; userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ client: any; intake: IntakeResponse }> {
     const intake = await this.getIntakeByIdOrNumber(id);
 
@@ -302,9 +302,17 @@ export class IntakeService {
         email: intake.email,
         phone: intake.phone,
         assignedAttorneyId: input.assignedAttorneyId || context.userId,
+        status: 'Active',
+        portalAccessEnabled: false,
         notes: `Converted from Intake ${intake.intakeNumber}. Summary: ${intake.matterSummary}`,
       },
-      context
+      {
+        userId: context.userId,
+        userName: context.userName || 'Legal Staff',
+        userRole: context.userRole,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
     );
 
     const updatedIntake = await prisma.intake.update({
@@ -322,7 +330,7 @@ export class IntakeService {
   static async convertToMatter(
     id: string,
     input: ConvertToIntakeMatterInput,
-    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+    context: { userId: string; userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ matter: any; intake: IntakeResponse }> {
     const intake = await this.getIntakeByIdOrNumber(id);
 
@@ -336,16 +344,26 @@ export class IntakeService {
     const matter = await MatterService.createMatter(
       {
         title: `${intake.prospectiveClient} - Legal Matter`,
-        clientId,
-        practiceAreaId: intake.practiceAreaId || 'pa-civ',
+        clientId: clientId as string,
+        practiceAreaId: intake.practiceAreaId ?? 'pa-civ',
         responsibleAttorneyId: input.responsibleAttorneyId,
         billingType: input.billingType,
         hourlyRate: input.hourlyRate,
         flatFeeAmount: input.flatFeeAmount,
         contingencyPercentage: input.contingencyPercentage,
+        budget: 0,
+        status: 'Active',
+        assignedStaffRole: 'paralegal',
+        isEthicalWallEnabled: false,
         description: intake.matterSummary,
       },
-      context
+      {
+        userId: context.userId,
+        userName: context.userName || 'Legal Staff',
+        userRole: context.userRole,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
     );
 
     const updatedIntake = await prisma.intake.update({

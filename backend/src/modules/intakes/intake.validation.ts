@@ -37,7 +37,7 @@ export const convertToIntakeClientSchema = z.object({
 export const convertToIntakeMatterSchema = z.object({
   clientId: z.string().uuid().optional(),
   responsibleAttorneyId: z.string().uuid(),
-  billingType: z.enum(['Hourly', 'Flat Fee', 'Contingency', 'Pro Bono']),
+  billingType: z.enum(['Hourly', 'Flat Fee', 'Contingency']),
   hourlyRate: z.number().positive().optional(),
   flatFeeAmount: z.number().positive().optional(),
   contingencyPercentage: z.number().positive().max(100).optional(),
