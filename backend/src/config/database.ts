@@ -2,13 +2,39 @@ import { PrismaClient } from '@prisma/client';
 import mysql from 'mysql2/promise';
 import { config } from './env.js';
 
-// Prisma singleton
-export const prisma = new PrismaClient({
-  log: config.nodeEnv === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-});
+// Sanitize helper to guarantee database passwords and connection strings are NEVER logged
+export function sanitizeDbErrorMessage(message: string): string {
+  if (!message) return 'Unknown database error';
+  return message
+    .replace(/:([^:@/]+)@/g, ':****@')
+    .replace(/(password|pwd)=([^;&]+)/gi, '$1=****');
+}
+
+// -----------------------------------------------------------------------------
+// REUSABLE PRISMA CLIENT SINGLETON
+// Avoids instantiating multiple connection pools during development or hot-reloads
+// -----------------------------------------------------------------------------
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: config.nodeEnv === 'development' ? ['error', 'warn'] : ['error'],
+  });
+
+if (config.nodeEnv !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
+
+// -----------------------------------------------------------------------------
+// CONNECTION TESTING & HEALTH MONITORS
+// -----------------------------------------------------------------------------
 
 /**
  * Direct check of MySQL connection using mysql2
+ * Safe against credential leaks
  */
 export async function testDirectMySqlConnection(): Promise<{
   connected: boolean;
@@ -31,19 +57,20 @@ export async function testDirectMySqlConnection(): Promise<{
     const result = (rows as any[])[0];
     return {
       connected: true,
-      version: result.version,
-      database: result.database_name,
+      version: result?.version,
+      database: result?.database_name,
     };
   } catch (err: any) {
     return {
       connected: false,
-      error: err.message || String(err),
+      error: sanitizeDbErrorMessage(err.message || String(err)),
     };
   }
 }
 
 /**
  * Prisma database connection health test
+ * Runs a benign SELECT DATABASE() query
  */
 export async function testPrismaConnection(): Promise<{
   connected: boolean;
@@ -51,7 +78,9 @@ export async function testPrismaConnection(): Promise<{
   error?: string;
 }> {
   try {
-    const result = await prisma.$queryRaw<any[]>`SELECT 1 as is_alive, DATABASE() as db_name`;
+    const result = await prisma.$queryRaw<Array<{ is_alive: number; db_name: string }>>`
+      SELECT 1 as is_alive, DATABASE() as db_name
+    `;
     return {
       connected: true,
       database: result[0]?.db_name || config.dbName,
@@ -59,8 +88,18 @@ export async function testPrismaConnection(): Promise<{
   } catch (err: any) {
     return {
       connected: false,
-      error: err.message || String(err),
+      error: sanitizeDbErrorMessage(err.message || String(err)),
     };
   }
 }
 
+/**
+ * Graceful database disconnection for application shutdown handlers
+ */
+export async function disconnectDatabase(): Promise<void> {
+  try {
+    await prisma.$disconnect();
+  } catch (err: any) {
+    // Ignore teardown errors during shutdown
+  }
+}

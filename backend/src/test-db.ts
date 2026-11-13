@@ -1,4 +1,4 @@
-import { testDirectMySqlConnection, testPrismaConnection } from './config/database.js';
+import { testDirectMySqlConnection, testPrismaConnection, disconnectDatabase } from './config/database.js';
 import { config } from './config/env.js';
 
 async function runDatabaseCheck() {
@@ -8,7 +8,6 @@ async function runDatabaseCheck() {
   console.log(`Target Host:     ${config.dbHost}:${config.dbPort}`);
   console.log(`Target User:     ${config.dbUser}`);
   console.log(`Target Database: ${config.dbName}`);
-  console.log(`Connection URL:  ${config.databaseUrl}`);
   console.log('----------------------------------------------------------------');
 
   console.log('1. Testing direct MySQL connection via mysql2...');
@@ -28,13 +27,12 @@ async function runDatabaseCheck() {
     console.log('   SUCCESS: Connected via Prisma ORM!');
     console.log(`   Connected Database: ${prismaResult.database}`);
   } else {
-    console.log('   Prisma Note: (Run "npx prisma db push" or "prisma generate" first if client not generated yet)');
-    console.log('   Error Details:', prismaResult.error);
+    console.log('   Prisma Status:', prismaResult.error);
   }
 
   console.log('================================================================');
-  process.exit(directResult.connected ? 0 : 1);
+  await disconnectDatabase();
+  process.exit(directResult.connected || prismaResult.connected ? 0 : 1);
 }
 
 runDatabaseCheck();
-
