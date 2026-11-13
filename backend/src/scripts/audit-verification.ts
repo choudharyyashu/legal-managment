@@ -53,6 +53,28 @@ async function runAudit() {
   console.log(`Total Roles: ${roles.length}`);
   console.log(`Total Permission Mappings: ${totalPermissions}`);
 
+  console.log('\n=== SECTION 4: PRACTICE AREAS & CLIENTS AUDIT ===');
+  const practiceAreas = await prisma.practiceArea.findMany({
+    orderBy: { code: 'asc' },
+  });
+  console.log(`Total Practice Areas: ${practiceAreas.length}`);
+  practiceAreas.forEach((pa) => {
+    console.log(`- [${pa.code.padEnd(5)}] ID: ${pa.id.padEnd(10)} | Name: ${pa.name}`);
+  });
+
+  const clients = await prisma.client.findMany({
+    select: { id: true, clientNumber: true, name: true, status: true },
+  });
+  console.log(`Total Existing Clients: ${clients.length}`);
+  clients.forEach((c) => {
+    console.log(`- [${c.clientNumber}] ID: ${c.id} | Name: ${c.name} | Status: ${c.status}`);
+  });
+
+  const matters = await prisma.matter.findMany({
+    select: { id: true, matterNumber: true, title: true, status: true },
+  });
+  console.log(`Total Existing Matters: ${matters.length}`);
+
   await disconnectDatabase();
 }
 
