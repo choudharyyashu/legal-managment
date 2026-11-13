@@ -34,37 +34,48 @@ export function Login() {
   const { addToast } = useToast();
 
   const [email, setEmail] = useState('e.heugly@utahslawyers.com');
-  const [password, setPassword] = useState('UtahLaw@2026');
+  const [password, setPassword] = useState('UtahLaw@2026!');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isForgotOpen, setIsForgotOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) {
       addToast('Please enter your work email.', 'error');
       return;
     }
 
-    const res = login(email);
-    if (!res.success) {
-      addToast(res.message, 'error');
-      return;
-    }
+    setSubmitting(true);
+    try {
+      const res = await login(email, password);
+      if (!res.success) {
+        addToast(res.message, 'error');
+        return;
+      }
 
-    addToast(`Signed in successfully as ${res.user.name} (${res.user.title}).`, 'success');
-    navigate('/dashboard');
+      addToast(`Signed in successfully as ${res.user.name} (${res.user.title || res.user.role}).`, 'success');
+      navigate('/dashboard');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleQuickLogin = (userEmail) => {
-    const res = login(userEmail);
-    if (!res.success) {
-      addToast(res.message, 'error');
-      return;
-    }
+  const handleQuickLogin = async (userEmail) => {
+    setSubmitting(true);
+    try {
+      const res = await login(userEmail, 'UtahLaw@2026!');
+      if (!res.success) {
+        addToast(res.message, 'error');
+        return;
+      }
 
-    addToast(`Welcome back, ${res.user.name}.`, 'success');
-    navigate('/dashboard');
+      addToast(`Welcome back, ${res.user.name}.`, 'success');
+      navigate('/dashboard');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -241,9 +252,10 @@ export function Login() {
 
               <button
                 type="submit"
-                className="w-full py-2.5 px-4 bg-[#A4432B] hover:bg-[#8D3823] text-white font-bold rounded-lg text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                disabled={submitting}
+                className="w-full py-2.5 px-4 bg-[#A4432B] hover:bg-[#8D3823] disabled:opacity-60 text-white font-bold rounded-lg text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>Sign In to Legal Portal</span>
+                <span>{submitting ? 'Authenticating...' : 'Sign In to Legal Portal'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </form>

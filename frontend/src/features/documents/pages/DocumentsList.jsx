@@ -65,6 +65,41 @@ export function DocumentsList() {
   const [privilegeFilter, setPrivilegeFilter] = useState('all'); // 'all', 'privileged', 'public'
   const [searchOCR, setSearchOCR] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+    import('../../../services/documentService').then(({ documentService }) => {
+      documentService.getDocuments().then((res) => {
+        if (isMounted && Array.isArray(res) && res.length > 0) {
+          setDocuments(
+            res.map((d) => ({
+              ...d,
+              id: d.id,
+              title: d.title,
+              matterName: d.matter?.title || d.matterName || 'Matter Document',
+              clientName: d.client?.name || d.clientName || 'Firm Client',
+              category: d.category || 'Pleading',
+              version: d.currentVersion ? `v${d.currentVersion}.0` : 'v1.0',
+              uploadedAt: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
+              uploadedByName: d.createdBy?.name || 'Staff Member',
+              isPrivileged: Boolean(d.isPrivileged),
+              privilegeType: d.privilegeType || null,
+              ocrText: d.ocrText || 'Document content indexed for search.',
+              versionHistory: [
+                {
+                  version: d.currentVersion ? `v${d.currentVersion}.0` : 'v1.0',
+                  date: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
+                  author: d.createdBy?.name || 'Staff Member',
+                  note: 'Uploaded document version',
+                },
+              ],
+            }))
+          );
+        }
+      }).catch((err) => console.warn('Could not load documents from API:', err?.message));
+    });
+    return () => { isMounted = false; };
+  }, []);
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [versionDoc, setVersionDoc] = useState(null);

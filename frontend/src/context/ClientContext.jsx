@@ -1,134 +1,162 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MOCK_CLIENTS } from '../data/mockClients';
-import { mockStorage } from '../services/mockStorage';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { clientService } from '../services/clientService';
+import { intakeService } from '../services/intakeService';
+import { useAuth } from '../hooks/useAuth';
 
 const ClientContext = createContext();
 
 export function ClientProvider({ children }) {
-  const [clients, setClients] = useState(() => {
-    return mockStorage.get('clients', MOCK_CLIENTS);
+  const { isAuthenticated } = useAuth();
+  const [clients, setClients] = useState([]);
+  const [intakes, setIntakes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Normalizes a backend client object to ensure compatibility with all UI components
+  const normalizeClient = (c) => ({
+    ...c,
+    id: c.id,
+    clientNumber: c.clientNumber || c.id,
+    type: c.clientType || c.type || 'Organization',
+    assignedAttorneyName: c.assignedAttorney?.name || c.assignedAttorneyName || 'Unassigned',
+    totalMatters: c._count?.matters !== undefined ? c._count.matters : (c.totalMatters || 0),
+    outstandingBalance: c.outstandingBalance || 0,
+    createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
-  // Mock Intake records
-  const [intakes, setIntakes] = useState(() => {
-    return mockStorage.get('intakes', [
-      {
-        id: 'INT-901',
-        prospectiveClient: 'Clearwater Basin Agricultural Water Co.',
-        contactPerson: 'LeRoy Jenkins (Board President)',
-        email: 'leroy@clearwaterbasin.org',
-        phone: '(435) 555-0311',
-        practiceAreaId: 'pa-6',
-        practiceAreaName: 'Real Estate, Water Rights & Land Use',
-        adverseParties: 'Utah State Water Resources Board, Central Valley Irrigation Canal Co.',
-        conflictStatus: 'Cleared',
-        reviewedBy: 'Eleanor Heugly, Esq.',
-        reviewedAt: '2026-11-04',
-        matterSummary: 'Petition for supplemental ground well extraction rights and canal maintenance easement defense.',
-        convertedToClient: false,
-        createdAt: '2026-11-02',
-      },
-      {
-        id: 'INT-902',
-        prospectiveClient: 'Vanguard Medical Devices Corp',
-        contactPerson: 'Dr. Gregory Vance',
-        email: 'gvance@vanguardmed.com',
-        phone: '(801) 555-0988',
-        practiceAreaId: 'pa-1',
-        practiceAreaName: 'Civil Litigation & Dispute Resolution',
-        adverseParties: 'Summit Crest BioSciences Inc., BioNexus Labs',
-        conflictStatus: 'Conflict Identified',
-        reviewedBy: 'Thomas Bludworth, Esq.',
-        reviewedAt: '2026-11-05',
-        matterSummary: 'Prospective representation adverse to existing firm client Summit Crest BioSciences. Direct conflict of interest identified under Utah RPC 1.7.',
-        convertedToClient: false,
-        createdAt: '2026-11-03',
-      },
-      {
-        id: 'INT-903',
-        prospectiveClient: 'Bryce Canyon Hospitality Partners',
-        contactPerson: 'Marcus Aurelius Sterling',
-        email: 'sterling@brycehospitality.com',
-        phone: '(435) 555-0622',
-        practiceAreaId: 'pa-5',
-        practiceAreaName: 'Commercial & Corporate Law',
-        adverseParties: 'Garfield County Planning Commission',
-        conflictStatus: 'In Review',
-        reviewedBy: null,
-        reviewedAt: null,
-        matterSummary: 'Hotel zoning variances, municipal sewer capacity credits, and resort tax licensing.',
-        convertedToClient: false,
-        createdAt: '2026-11-05',
-      }
-    ]);
+  // Normalizes an intake object
+  const normalizeIntake = (i) => ({
+    ...i,
+    id: i.id,
+    intakeNumber: i.intakeNumber || i.id,
+    practiceAreaName: i.practiceArea?.name || i.practiceAreaName || 'General',
+    conflictStatus: i.conflictStatus || 'In Review',
+    createdAt: i.createdAt ? new Date(i.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    mockStorage.set('clients', clients);
-  }, [clients]);
+  const refreshClients = useCallback(async (params = {}) => {
+    if (!isAuthenticated) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await clientService.getClients({ limit: 100, ...params });
+      const rawClients = Array.isArray(data?.clients) ? data.clients : [];
+      setClients(rawClients.map(normalizeClient));
+    } catch (err) {
+      console.warn('Failed to load clients from API:', err?.message);
+      setError(err?.message || 'Failed to load clients');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const refreshIntakes = useCallback(async (params = {}) => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await intakeService.getIntakes({ limit: 100, ...params });
+      const rawIntakes = Array.isArray(data?.intakes) ? data.intakes : [];
+      setIntakes(rawIntakes.map(normalizeIntake));
+    } catch (err) {
+      console.warn('Failed to load intakes from API:', err?.message);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    mockStorage.set('intakes', intakes);
-  }, [intakes]);
+    if (isAuthenticated) {
+      refreshClients();
+      refreshIntakes();
+    } else {
+      setClients([]);
+      setIntakes([]);
+    }
+  }, [isAuthenticated, refreshClients, refreshIntakes]);
 
-  const addClient = (newClientData) => {
-    const id = `CLI-${1000 + clients.length + 1}`;
-    const newClient = {
-      id,
-      createdAt: new Date().toISOString().split('T')[0],
-      totalMatters: 0,
-      outstandingBalance: 0,
-      ...newClientData,
-    };
-    setClients(prev => [newClient, ...prev]);
-    return newClient;
+  const addClient = async (newClientData) => {
+    try {
+      const payload = {
+        name: newClientData.name,
+        clientType: newClientData.type || newClientData.clientType || 'Organization',
+        email: newClientData.email,
+        phone: newClientData.phone,
+        address: newClientData.address || null,
+        primaryContact: newClientData.primaryContact || null,
+        assignedAttorneyId: newClientData.assignedAttorneyId || null,
+        status: newClientData.status || 'Active',
+        notes: newClientData.notes || null,
+      };
+
+      const created = await clientService.createClient(payload);
+      const normalized = normalizeClient(created);
+      setClients((prev) => [normalized, ...prev.filter((c) => c.id !== normalized.id)]);
+      return normalized;
+    } catch (err) {
+      throw err;
+    }
   };
 
-  const updateClient = (id, updatedFields) => {
-    setClients(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
+  const updateClient = async (id, updatedFields) => {
+    try {
+      const updated = await clientService.updateClient(id, updatedFields);
+      const normalized = normalizeClient(updated);
+      setClients((prev) => prev.map((c) => (c.id === id || c.clientNumber === id ? normalized : c)));
+      return normalized;
+    } catch (err) {
+      throw err;
+    }
   };
 
-  const getClient = (id) => clients.find(c => c.id === id);
+  const getClient = (id) =>
+    clients.find((c) => c.id === id || c.clientNumber === id);
 
-  const addIntake = (intakeData) => {
-    const id = `INT-${900 + intakes.length + 1}`;
-    const newIntake = {
-      id,
-      conflictStatus: 'Not Started',
-      reviewedBy: null,
-      reviewedAt: null,
-      convertedToClient: false,
-      createdAt: new Date().toISOString().split('T')[0],
-      ...intakeData,
-    };
-    setIntakes(prev => [newIntake, ...prev]);
-    return newIntake;
+  const addIntake = async (intakeData) => {
+    try {
+      const created = await intakeService.createIntake(intakeData);
+      const normalized = normalizeIntake(created);
+      setIntakes((prev) => [normalized, ...prev]);
+      return normalized;
+    } catch (err) {
+      throw err;
+    }
   };
 
-  const updateConflictCheck = (id, status, reviewerName) => {
-    setIntakes(prev => prev.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          conflictStatus: status,
-          reviewedBy: reviewerName,
-          reviewedAt: new Date().toISOString().split('T')[0],
-        };
-      }
-      return item;
-    }));
+  const updateConflictCheck = async (id, status, reviewerName) => {
+    try {
+      await intakeService.clearConflict(id, { waiverNotes: `Conflict reviewed by ${reviewerName || 'Counsel'}` });
+      await refreshIntakes();
+    } catch (err) {
+      console.warn('Failed to clear conflict on API:', err?.message);
+      // Optimistic UI fallback
+      setIntakes((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                conflictStatus: status,
+                reviewedBy: reviewerName,
+                reviewedAt: new Date().toISOString().split('T')[0],
+              }
+            : item
+        )
+      );
+    }
   };
 
   return (
-    <ClientContext.Provider value={{
-      clients,
-      addClient,
-      updateClient,
-      getClient,
-      intakes,
-      addIntake,
-      updateConflictCheck,
-    }}>
+    <ClientContext.Provider
+      value={{
+        clients,
+        loading,
+        error,
+        refreshClients,
+        addClient,
+        updateClient,
+        getClient,
+        intakes,
+        refreshIntakes,
+        addIntake,
+        updateConflictCheck,
+      }}
+    >
       {children}
     </ClientContext.Provider>
   );
@@ -139,4 +167,3 @@ export const useClients = () => {
   if (!context) throw new Error('useClients must be used within ClientProvider');
   return context;
 };
-

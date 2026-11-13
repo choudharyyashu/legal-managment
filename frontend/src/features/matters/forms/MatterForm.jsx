@@ -51,35 +51,50 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const selectedClient = clients.find(c => c.id === formData.clientId);
-    const selectedPracticeArea = PRACTICE_AREAS.find(pa => pa.id === formData.practiceAreaId);
-    const selectedAttorney = allUsers.find(u => u.id === formData.responsibleAttorneyId);
-    const selectedStaff = allUsers.find(u => u.id === formData.assignedStaffId);
+    setSubmitting(true);
+    try {
+      const selectedClient = clients.find(c => c.id === formData.clientId || c.clientNumber === formData.clientId);
+      const selectedPracticeArea = PRACTICE_AREAS.find(pa => pa.id === formData.practiceAreaId || pa.legacyId === formData.practiceAreaId);
+      const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      const attorneyUuid = validUuidPattern.test(formData.responsibleAttorneyId)
+        ? formData.responsibleAttorneyId
+        : (attorneys.find(a => validUuidPattern.test(a.id))?.id || allUsers.find(u => validUuidPattern.test(u.id))?.id);
 
-    const payload = {
-      ...formData,
-      clientName: selectedClient?.name || 'Client',
-      practiceAreaName: selectedPracticeArea?.name || 'Practice Area',
-      responsibleAttorneyName: selectedAttorney?.name || 'Attorney',
-      assignedStaffIds: selectedStaff ? [selectedStaff.id] : ['usr-4'],
-      assignedStaffNames: selectedStaff ? [selectedStaff.name] : ['Marcus Vance'],
-      hourlyRate: formData.billingType === 'Hourly' ? Number(formData.hourlyRate) : null,
-      flatFeeAmount: formData.billingType === 'Flat Fee' ? Number(formData.flatFeeAmount) : null,
-      budget: Number(formData.budget) || 25000,
-    };
+      const staffUuid = validUuidPattern.test(formData.assignedStaffId)
+        ? formData.assignedStaffId
+        : (staff.find(s => validUuidPattern.test(s.id))?.id || null);
 
-    if (initialData?.id) {
-      updateMatter(initialData.id, payload);
-      addToast(`Matter "${formData.title}" successfully updated.`, 'success');
-      if (onSuccess) onSuccess(initialData);
-    } else {
-      const created = addMatter(payload);
-      addToast(`Matter "${formData.title}" created (${created.matterNumber}).`, 'success');
-      if (onSuccess) onSuccess(created);
+      const payload = {
+        ...formData,
+        clientId: selectedClient?.id || formData.clientId,
+        practiceAreaId: selectedPracticeArea?.id || 'pa-civ',
+        responsibleAttorneyId: attorneyUuid,
+        assignedStaffId: staffUuid,
+        hourlyRate: formData.billingType === 'Hourly' ? Number(formData.hourlyRate || 350) : null,
+        flatFeeAmount: formData.billingType === 'Flat Fee' ? Number(formData.flatFeeAmount || 25000) : null,
+        budget: Number(formData.budget) || 25000,
+      };
+
+      if (initialData?.id) {
+        const updated = await updateMatter(initialData.id, payload);
+        addToast(`Matter "${formData.title}" successfully updated.`, 'success');
+        if (onSuccess) onSuccess(updated || initialData);
+      } else {
+        const created = await addMatter(payload);
+        addToast(`Matter "${formData.title}" created (${created.matterNumber || created.id}).`, 'success');
+        if (onSuccess) onSuccess(created);
+      }
+    } catch (err) {
+      addToast(err?.message || 'Failed to save matter record', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 

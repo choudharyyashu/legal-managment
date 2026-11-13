@@ -44,6 +44,8 @@ import { formatDate } from '../../../utils/formatDate';
 import { RelatedPartiesTab } from '../../matters/components/RelatedPartiesTab';
 import { EngagementLetterModal } from '../components/EngagementLetterModal';
 
+import { clientService } from '../../../services/clientService';
+
 export function ClientDetails() {
   const { clientId } = useParams();
   const navigate = useNavigate();
@@ -56,8 +58,19 @@ export function ClientDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isNewMatterModalOpen, setIsNewMatterModalOpen] = useState(false);
   const [isEngagementLetterOpen, setIsEngagementLetterOpen] = useState(false);
+  const [fetchedClient, setFetchedClient] = useState(null);
 
-  const client = clients.find(c => c.id === clientId) || clients[0];
+  useEffect(() => {
+    let isMounted = true;
+    if (clientId && !clients.some(c => c.id === clientId || c.clientNumber === clientId)) {
+      clientService.getClientById(clientId).then(res => {
+        if (isMounted && res) setFetchedClient(res);
+      }).catch(() => {});
+    }
+    return () => { isMounted = false; };
+  }, [clientId, clients]);
+
+  const client = clients.find(c => c.id === clientId || c.clientNumber === clientId) || fetchedClient || clients[0];
   const clientMatters = client ? getMattersByClient(client.id) : [];
 
   // 360° Financials & Invoices for this client

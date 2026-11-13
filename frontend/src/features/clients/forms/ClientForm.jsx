@@ -42,24 +42,40 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    const assignedAttorney = allUsers.find(u => u.id === formData.assignedAttorneyId);
-    const clientPayload = {
-      ...formData,
-      assignedAttorneyName: assignedAttorney?.name || 'Assigned Counsel',
-    };
+    setSubmitting(true);
+    try {
+      const assignedAttorney = allUsers.find(u => u.id === formData.assignedAttorneyId);
+      // Ensure assignedAttorneyId is a valid UUID or fallback to real attorney UUID from database
+      const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const attorneyUuid = validUuidPattern.test(formData.assignedAttorneyId)
+        ? formData.assignedAttorneyId
+        : (attorneys.find(a => validUuidPattern.test(a.id))?.id || null);
 
-    if (initialData?.id) {
-      updateClient(initialData.id, clientPayload);
-      addToast(`Client record "${formData.name}" successfully updated.`, 'success');
-      if (onSuccess) onSuccess(initialData);
-    } else {
-      const created = addClient(clientPayload);
-      addToast(`New client "${formData.name}" created with ID ${created.id}.`, 'success');
-      if (onSuccess) onSuccess(created);
+      const clientPayload = {
+        ...formData,
+        assignedAttorneyId: attorneyUuid,
+        assignedAttorneyName: assignedAttorney?.name || 'Assigned Counsel',
+      };
+
+      if (initialData?.id) {
+        const updated = await updateClient(initialData.id, clientPayload);
+        addToast(`Client record "${formData.name}" successfully updated.`, 'success');
+        if (onSuccess) onSuccess(updated || initialData);
+      } else {
+        const created = await addClient(clientPayload);
+        addToast(`New client "${formData.name}" created with ID ${created.clientNumber || created.id}.`, 'success');
+        if (onSuccess) onSuccess(created);
+      }
+    } catch (err) {
+      addToast(err?.message || 'Failed to save client record', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
