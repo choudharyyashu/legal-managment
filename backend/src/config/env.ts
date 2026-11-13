@@ -21,8 +21,10 @@ const envSchema = z.object({
   DB_NAME: z.string().default('legal-db'),
   JWT_ACCESS_SECRET: z.string().min(16).default('dev_jwt_access_secret_32_characters_minimum'),
   JWT_REFRESH_SECRET: z.string().min(16).default('dev_jwt_refresh_secret_32_characters_minimum'),
-  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
-  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_ACCESS_EXPIRES_IN: z.string().optional(),
+  JWT_ACCESS_EXPIRY: z.string().optional(),
+  JWT_REFRESH_EXPIRES_IN: z.string().optional(),
+  JWT_REFRESH_EXPIRY: z.string().optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 });
 
@@ -45,7 +47,7 @@ export const config = {
   dbName: parsedEnv.data.DB_NAME,
   jwtAccessSecret: parsedEnv.data.JWT_ACCESS_SECRET,
   jwtRefreshSecret: parsedEnv.data.JWT_REFRESH_SECRET,
-  jwtAccessExpiresIn: parsedEnv.data.JWT_ACCESS_EXPIRES_IN,
-  jwtRefreshExpiresIn: parsedEnv.data.JWT_REFRESH_EXPIRES_IN,
+  jwtAccessExpiresIn: parsedEnv.data.JWT_ACCESS_EXPIRES_IN || parsedEnv.data.JWT_ACCESS_EXPIRY || '15m',
+  jwtRefreshExpiresIn: parsedEnv.data.JWT_REFRESH_EXPIRES_IN || parsedEnv.data.JWT_REFRESH_EXPIRY || '7d',
   logLevel: parsedEnv.data.LOG_LEVEL,
 };
