@@ -10,6 +10,17 @@ import { authRouter } from './modules/auth/auth.routes.js';
 import { userRouter } from './modules/users/user.routes.js';
 import { clientRouter } from './modules/clients/client.routes.js';
 import { matterRouter } from './modules/matters/matter.routes.js';
+import { intakeRouter } from './modules/intakes/intake.routes.js';
+import { taskRouter } from './modules/tasks/task.routes.js';
+import { calendarRouter } from './modules/calendar/calendar.routes.js';
+import { documentRouter } from './modules/documents/document.routes.js';
+import { timeRouter } from './modules/time/time.routes.js';
+import { expenseRouter } from './modules/expenses/expense.routes.js';
+import { billingRouter } from './modules/billing/billing.routes.js';
+import { trustRouter } from './modules/trust/trust.routes.js';
+import { ledgerRouter } from './modules/ledger/ledger.routes.js';
+import { reconciliationRouter } from './modules/reconciliation/reconciliation.routes.js';
+import { reportRouter } from './modules/reports/report.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -140,6 +151,17 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/clients', clientRouter);
 app.use('/api/v1/matters', matterRouter);
+app.use('/api/v1/intakes', intakeRouter);
+app.use('/api/v1/tasks', taskRouter);
+app.use('/api/v1/calendar', calendarRouter);
+app.use('/api/v1/documents', documentRouter);
+app.use('/api/v1/time', timeRouter);
+app.use('/api/v1/expenses', expenseRouter);
+app.use('/api/v1/billing', billingRouter);
+app.use('/api/v1/trust', trustRouter);
+app.use('/api/v1/ledger', ledgerRouter);
+app.use('/api/v1/reconciliation', reconciliationRouter);
+app.use('/api/v1/reports', reportRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

@@ -1,3 +1,12 @@
+// Ensure tests execute against the dedicated isolated test database only
+const testDbUrl = process.env.TEST_DATABASE_URL || 'mysql://root:@localhost:3306/legal-db-test';
+process.env.DATABASE_URL = testDbUrl;
+
+if (!testDbUrl.toLowerCase().includes('test')) {
+  console.error('CRITICAL SAFETY GUARD: Automated tests must run against legal-db-test! Aborting.');
+  process.exit(1);
+}
+
 import { app } from '../app.js';
 import { prisma, disconnectDatabase } from '../config/database.js';
 import { Server } from 'http';
@@ -32,6 +41,9 @@ async function runClientTestSuite() {
   });
 
   const baseUrl = `http://localhost:${testPort}/api/v1`;
+
+  let createdClientUuid = '';
+  let createdClientNumber = '';
 
   try {
     // -------------------------------------------------------------------------
@@ -85,8 +97,6 @@ async function runClientTestSuite() {
     // -------------------------------------------------------------------------
     // TEST 3: Valid Client Creation
     // -------------------------------------------------------------------------
-    let createdClientUuid = '';
-    let createdClientNumber = '';
     const testClientEmail = `apex.logistics.${Date.now()}@utahfreight.com`;
 
     {
@@ -356,6 +366,9 @@ async function runClientTestSuite() {
       );
     }
   } finally {
+    if (createdClientUuid) {
+      await prisma.client.delete({ where: { id: createdClientUuid } }).catch(() => {});
+    }
     server.close();
     await disconnectDatabase();
   }
