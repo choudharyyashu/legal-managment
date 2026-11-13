@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import { config } from './config/env.js';
 import { testDirectMySqlConnection, testPrismaConnection } from './config/database.js';
 import { logger } from './utils/logger.js';
@@ -37,7 +38,8 @@ app.use(
       if (isAllowed) {
         return callback(null, true);
       }
-      return callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+      // Clean CORS denial: omits Access-Control-Allow-Origin header without throwing unhandled HTTP 500 exception
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -47,6 +49,24 @@ app.use(
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Global Rate Limiter: max 300 requests per 15 minutes per IP
+// Skips root / and /api/v1/health to ensure system monitoring is never throttled
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path === '/' || req.path === '/api/v1/health',
+  message: {
+    success: false,
+    error: {
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many requests from this IP address. Please try again after 15 minutes.',
+    },
+  },
+});
+app.use(globalApiLimiter);
 
 // Lightweight request logging
 app.use((req: Request, res: Response, next: NextFunction) => {
