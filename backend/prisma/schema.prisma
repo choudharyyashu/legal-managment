@@ -133,12 +133,14 @@ model Intake {
   conflictNotes       String?   @map("conflict_notes") @db.Text
   convertedToClient   Boolean   @default(false) @map("converted_to_client")
   convertedClientId   String?   @map("converted_client_id") @db.VarChar(36)
+  convertedMatterId   String?   @map("converted_matter_id") @db.VarChar(36)
   createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
 
   practiceArea       PracticeArea?       @relation(fields: [practiceAreaId], references: [id], onDelete: SetNull)
   reviewedByUser     User?               @relation("IntakeReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
   convertedClient    Client?             @relation("ConvertedClient", fields: [convertedClientId], references: [id], onDelete: SetNull)
+  convertedMatter    Matter?             @relation("ConvertedMatter", fields: [convertedMatterId], references: [id], onDelete: SetNull)
   conflictSearchLogs ConflictSearchLog[]
 
   @@map("intakes")
@@ -217,6 +219,7 @@ model Matter {
   trustSubLedger        TrustSubLedger?
   generalLedgerEntries  GeneralLedgerEntry[]
   documents             Document[]
+  originatingIntakes    Intake[]                @relation("ConvertedMatter")
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")

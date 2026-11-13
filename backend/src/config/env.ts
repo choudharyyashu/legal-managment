@@ -12,7 +12,7 @@ try {
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
+  CLIENT_ORIGIN: z.string().default('http://localhost:3000,http://localhost:5173'),
   DATABASE_URL: z.string().default('mysql://root:@localhost:3306/legal-db'),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(3306),
@@ -39,6 +39,7 @@ export const config = {
   port: parsedEnv.data.PORT,
   nodeEnv: parsedEnv.data.NODE_ENV,
   clientOrigin: parsedEnv.data.CLIENT_ORIGIN,
+  allowedOrigins: parsedEnv.data.CLIENT_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean),
   databaseUrl: parsedEnv.data.DATABASE_URL,
   dbHost: parsedEnv.data.DB_HOST,
   dbPort: parsedEnv.data.DB_PORT,
