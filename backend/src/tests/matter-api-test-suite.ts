@@ -1,3 +1,12 @@
+// Ensure tests execute against the dedicated isolated test database only
+const testDbUrl = process.env.TEST_DATABASE_URL || 'mysql://root:@localhost:3306/legal-db-test';
+process.env.DATABASE_URL = testDbUrl;
+
+if (!testDbUrl.toLowerCase().includes('test')) {
+  console.error('CRITICAL SAFETY GUARD: Automated tests must run against legal-db-test! Aborting.');
+  process.exit(1);
+}
+
 import { app } from '../app.js';
 import { prisma, disconnectDatabase } from '../config/database.js';
 import { Server } from 'http';
@@ -38,6 +47,15 @@ async function runMatterTestSuite() {
   });
 
   const baseUrl = `http://localhost:${testPort}/api/v1`;
+
+  let paralegalUserId = '';
+  let paralegalToken = '';
+  let activeClientUuid = '';
+  let inactiveClientUuid = '';
+  let createdMatterUuid = '';
+  let createdMatterNumber = '';
+  let secondMatterUuid = '';
+  let ethicalMatterUuid = '';
 
   try {
     // -------------------------------------------------------------------------
@@ -91,8 +109,6 @@ async function runMatterTestSuite() {
     // SETUP: Provision a test paralegal user for RBAC and Ethical Wall tests
     // -------------------------------------------------------------------------
     const paralegalEmail = `paralegal.test.${Date.now()}@utahslawyers.com`;
-    let paralegalUserId = '';
-    let paralegalToken = '';
 
     {
       const createParalegalRes = await fetch(`${baseUrl}/users`, {
@@ -160,9 +176,6 @@ async function runMatterTestSuite() {
     // -------------------------------------------------------------------------
     // SETUP: Ensure an Active Client exists for Matter associations
     // -------------------------------------------------------------------------
-    let activeClientUuid = '';
-    let inactiveClientUuid = '';
-
     {
       // 1. Create a dedicated active client for matter tests
       const clientRes = await fetch(`${baseUrl}/clients`, {
@@ -194,15 +207,24 @@ async function runMatterTestSuite() {
       });
       if (inactiveClient) {
         inactiveClientUuid = inactiveClient.id;
+      } else {
+        const inClient = await prisma.client.create({
+          data: {
+            clientNumber: `CLI-INACT-${Date.now().toString().slice(-4)}`,
+            name: 'Inactive Client Corp',
+            clientType: 'Organization',
+            email: `inactive.${Date.now()}@test.com`,
+            phone: '555-0000',
+            status: 'Inactive',
+          },
+        });
+        inactiveClientUuid = inClient.id;
       }
     }
 
     // -------------------------------------------------------------------------
     // TEST 4: Valid Matter Creation (POST /api/v1/matters -> 201 Created)
     // -------------------------------------------------------------------------
-    let createdMatterUuid = '';
-    let createdMatterNumber = '';
-
     {
       const res = await fetch(`${baseUrl}/matters`, {
         method: 'POST',
@@ -422,7 +444,6 @@ async function runMatterTestSuite() {
     // TEST 10: Matter Number Sequencing & Uniqueness
     // Create second matter in same practice area to verify sequence increment
     // -------------------------------------------------------------------------
-    let secondMatterUuid = '';
     let secondMatterNumber = '';
     {
       const res = await fetch(`${baseUrl}/matters`, {
@@ -879,7 +900,6 @@ async function runMatterTestSuite() {
     // Create an Ethical Wall matter where paralegal is NOT assigned
     // Paralegal requests GET /matters/:id -> 403 ETHICAL_WALL_RESTRICTION
     // -------------------------------------------------------------------------
-    let ethicalMatterUuid = '';
     let ethicalMatterNumber = '';
 
     {
@@ -1041,6 +1061,18 @@ async function runMatterTestSuite() {
       );
     }
   } finally {
+    const mattersToDelete = [createdMatterUuid, secondMatterUuid, ethicalMatterUuid].filter(Boolean);
+    for (const mId of mattersToDelete) {
+      await prisma.matterStaffAssignment.deleteMany({ where: { matterId: mId } }).catch(() => {});
+      await prisma.matter.delete({ where: { id: mId } }).catch(() => {});
+    }
+    const clientsToDelete = [activeClientUuid, inactiveClientUuid].filter(Boolean);
+    for (const cId of clientsToDelete) {
+      await prisma.client.delete({ where: { id: cId } }).catch(() => {});
+    }
+    if (paralegalUserId) {
+      await prisma.user.delete({ where: { id: paralegalUserId } }).catch(() => {});
+    }
     server.close();
     await disconnectDatabase();
   }
