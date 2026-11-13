@@ -1,12 +1,13 @@
 import { Response, NextFunction } from 'express';
+import { prisma } from '../config/database.js';
 import { TokenService } from '../modules/auth/token.service.js';
 import { AuthenticatedRequest } from '../modules/auth/auth.types.js';
 import { AppError } from '../errors/AppError.js';
 
 /**
- * Authentication Middleware: Validates Bearer Access Token
+ * Authentication Middleware: Validates Bearer Access Token with Immediate Status Revocation
  */
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     let token: string | undefined;
 
@@ -23,11 +24,29 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
 
     const payload = TokenService.verifyAccessToken(token);
 
+    // Immediate Revocation & Account Status Check
+    // Prevents deactivated employees from using unexpired (up to 15m) access tokens
+    const liveUser = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, status: true, role: true },
+    });
+
+    if (!liveUser) {
+      throw AppError.unauthorized('User account associated with this token no longer exists.', 'USER_NOT_FOUND');
+    }
+
+    if (liveUser.status !== 'Active') {
+      throw AppError.forbidden(
+        'Account deactivated. Immediate session revocation enforced.',
+        'ACCOUNT_DEACTIVATED'
+      );
+    }
+
     req.user = {
       id: payload.userId,
       userCode: payload.userCode,
       email: payload.email,
-      role: payload.role,
+      role: liveUser.role,
       permissions: payload.permissions || [],
     };
 

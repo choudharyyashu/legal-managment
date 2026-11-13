@@ -141,7 +141,14 @@ export class UserService {
       throw AppError.conflict(`A user account with email '${normalizedEmail}' already exists.`, 'EMAIL_EXISTS');
     }
 
-    // Verify role exists
+    // Verify role exists and prevent unauthorized privilege escalation
+    if (input.role === 'super_admin' && creatorContext.userRole !== 'super_admin') {
+      throw AppError.forbidden(
+        'Privilege Escalation Blocked: Only an active Super Admin can provision another Super Admin account.',
+        'PRIVILEGE_ESCALATION_BLOCKED'
+      );
+    }
+
     const roleRecord = await prisma.role.findUnique({
       where: { id: input.role },
       include: { permissions: { select: { permissionKey: true } } },
@@ -210,9 +217,16 @@ export class UserService {
       throw AppError.notFound('User', 'USER_NOT_FOUND');
     }
 
-    // Role change check
+    // Role change check and privilege escalation guard
     let perms: string[] = [];
     if (input.role) {
+      if (input.role === 'super_admin' && updaterContext.userRole !== 'super_admin') {
+        throw AppError.forbidden(
+          'Privilege Escalation Blocked: Only an active Super Admin can promote a user to Super Admin.',
+          'PRIVILEGE_ESCALATION_BLOCKED'
+        );
+      }
+
       const roleRecord = await prisma.role.findUnique({
         where: { id: input.role },
         include: { permissions: { select: { permissionKey: true } } },
