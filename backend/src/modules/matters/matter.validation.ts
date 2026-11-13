@@ -69,7 +69,21 @@ export const updateMatterSchema = z.object({
   description: z.string().trim().optional().nullable(),
   isEthicalWallEnabled: z.boolean().optional(),
   ethicalWallExcludedRole: z.string().trim().max(100).optional().nullable(),
-});
+}).refine(
+  (data) => {
+    if (data.billingType === 'Hourly' && data.hourlyRate === null) {
+      return false;
+    }
+    if (data.billingType === 'Flat Fee' && data.flatFeeAmount === null) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Hourly billing cannot have a null rate; Flat-fee billing cannot have a null fee amount.',
+    path: ['billingType'],
+  }
+);
 
 export const updateMatterStatusSchema = z.object({
   status: z.enum(MATTER_STATUSES, {

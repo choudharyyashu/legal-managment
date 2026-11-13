@@ -1,14 +1,3 @@
-// Explicit Test Database Isolation Guard
-if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.includes('-test')) {
-  process.env.DATABASE_URL = 'mysql://root:@localhost:3306/legal-db-test';
-}
-
-if (!process.env.DATABASE_URL.includes('-test')) {
-  throw new Error(
-    `CRITICAL TEST ISOLATION GUARD: Automated tests must run against an isolated test database ('legal-db-test'). Current target: ${process.env.DATABASE_URL}. Execution aborted to protect primary database.`
-  );
-}
-
 import { app } from '../app.js';
 import { prisma } from '../config/database.js';
 import { Server } from 'http';

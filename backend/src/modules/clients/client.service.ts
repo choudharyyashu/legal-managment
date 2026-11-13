@@ -7,6 +7,8 @@ import {
   ClientQueryInput,
 } from './client.validation.js';
 import { ClientResponse, ClientStatus } from './client.types.js';
+import { MatterService } from '../matters/matter.service.js';
+import { AuthenticatedUser } from '../auth/auth.types.js';
 
 export class ClientService {
   /**
@@ -191,16 +193,51 @@ export class ClientService {
   }
 
   /**
-   * Retrieves matters for a specific client
+   * Retrieves matters for a specific client with Ethical Wall screening (Utah RPC 1.10)
    */
-  static async getClientMatters(clientIdOrNumber: string): Promise<any[]> {
+  static async getClientMatters(clientIdOrNumber: string, currentUser?: AuthenticatedUser): Promise<any[]> {
     const client = await this.getClientByIdOrNumber(clientIdOrNumber);
 
+    const where: any = { clientId: client.id };
+
+    if (currentUser && currentUser.role !== 'super_admin') {
+      const ethicalWallConditions: any[] = [
+        { description: { not: { contains: '[ETHICAL_WALL:ENABLED' } } },
+        { description: null },
+        { responsibleAttorneyId: currentUser.id },
+      ];
+
+      if (currentUser.role === 'paralegal') {
+        ethicalWallConditions.push({
+          AND: [
+            { staffAssignments: { some: { userId: currentUser.id } } },
+            { description: { not: { contains: 'Excluded=Paralegal' } } },
+          ],
+        });
+      } else if (currentUser.role === 'attorney') {
+        ethicalWallConditions.push({
+          AND: [
+            { staffAssignments: { some: { userId: currentUser.id } } },
+            { description: { not: { contains: 'Excluded=Attorney' } } },
+          ],
+        });
+      } else {
+        ethicalWallConditions.push({
+          staffAssignments: { some: { userId: currentUser.id } },
+        });
+      }
+
+      where.AND = [{ OR: ethicalWallConditions }];
+    }
+
     const matters = await prisma.matter.findMany({
-      where: { clientId: client.id },
+      where,
       include: {
         practiceArea: { select: { id: true, name: true, code: true, brandColor: true } },
         responsibleAttorney: { select: { id: true, name: true, title: true } },
+        staffAssignments: {
+          select: { userId: true, assignmentRole: true },
+        },
         _count: {
           select: { tasks: true, timeEntries: true, documents: true },
         },
@@ -208,7 +245,11 @@ export class ClientService {
       orderBy: { openDate: 'desc' },
     });
 
-    return matters.map((m) => ({
+    const visibleMatters = currentUser
+      ? matters.filter((m) => MatterService.isUserAuthorizedForMatter(m, currentUser))
+      : matters;
+
+    return visibleMatters.map((m) => ({
       id: m.id,
       matterNumber: m.matterNumber,
       title: m.title,

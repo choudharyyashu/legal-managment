@@ -30,7 +30,7 @@ export class ClientController {
 
   static async getClientMatters(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const matters = await ClientService.getClientMatters(req.params.id);
+      const matters = await ClientService.getClientMatters(req.params.id, req.user);
       res.status(200).json({
         success: true,
         data: { matters },
