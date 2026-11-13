@@ -81,7 +81,7 @@ export function requireRole(allowedRoles: string[]) {
 
 /**
  * Permission-Based Access Control Middleware
- * Verifies that user has the specified permission key from the 193 database permissions
+ * Verifies that user has all of the specified permission keys
  * Super Admin accounts automatically pass all permission gates
  */
 export function requirePermission(permission: string | string[]) {
@@ -104,6 +104,38 @@ export function requirePermission(permission: string | string[]) {
       return next(
         AppError.forbidden(
           `Access denied: Missing required permission [${requiredKeys.join(', ')}]`,
+          'INSUFFICIENT_PERMISSIONS'
+        )
+      );
+    }
+
+    next();
+  };
+}
+
+/**
+ * Flexible Permission-Based Access Control Middleware
+ * Verifies that user has at least one of the specified permission keys
+ * Super Admin accounts automatically pass all permission gates
+ */
+export function requireAnyPermission(permissions: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      return next(AppError.unauthorized('Authentication required'));
+    }
+
+    // Super Admin has universal access across all modules
+    if (req.user.role === 'super_admin') {
+      return next();
+    }
+
+    const userPermissions = new Set(req.user.permissions);
+    const hasAny = permissions.some((key) => userPermissions.has(key));
+
+    if (!hasAny) {
+      return next(
+        AppError.forbidden(
+          `Access denied: Missing at least one required permission from [${permissions.join(', ')}]`,
           'INSUFFICIENT_PERMISSIONS'
         )
       );

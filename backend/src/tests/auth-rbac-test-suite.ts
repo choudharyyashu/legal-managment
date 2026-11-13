@@ -1,5 +1,14 @@
+// Ensure tests execute against the dedicated isolated test database only
+const testDbUrl = process.env.TEST_DATABASE_URL || 'mysql://root:@localhost:3306/legal-db-test';
+process.env.DATABASE_URL = testDbUrl;
+
+if (!testDbUrl.toLowerCase().includes('test')) {
+  console.error('CRITICAL SAFETY GUARD: Automated tests must run against legal-db-test! Aborting.');
+  process.exit(1);
+}
+
 import { app } from '../app.js';
-import { prisma } from '../config/database.js';
+import { prisma, disconnectDatabase } from '../config/database.js';
 import { Server } from 'http';
 
 interface TestResult {
@@ -484,10 +493,18 @@ async function runTestSuite() {
   } finally {
     // Test Lifecycle Teardown: safely clean up test-created records to guarantee isolated, repeatable tests
     if (createdAttorneyId) {
+      await prisma.auditLog.deleteMany({
+        where: {
+          OR: [
+            { userId: createdAttorneyId },
+            { resourceId: createdAttorneyId },
+          ],
+        },
+      }).catch(() => {});
       await prisma.user.delete({ where: { id: createdAttorneyId } }).catch(() => {});
     }
     server.close();
-    await prisma.$disconnect();
+    await disconnectDatabase().catch(() => {});
   }
 
   // Summary

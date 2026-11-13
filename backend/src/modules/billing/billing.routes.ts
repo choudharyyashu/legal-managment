@@ -15,41 +15,41 @@ billingRouter.use(requireAuth);
 
 billingRouter.get(
   '/invoices',
-  requirePermission('billing:view'),
+  requirePermission('invoices:view'),
   validateRequest({ query: invoiceQuerySchema }),
   BillingController.getInvoices
 );
 
 billingRouter.get(
   '/invoices/:id',
-  requirePermission('billing:view'),
+  requirePermission('invoices:view'),
   BillingController.getInvoiceById
 );
 
 billingRouter.post(
   '/invoices',
-  requirePermission('billing:edit'),
+  requirePermission('invoices:create'),
   validateRequest({ body: createInvoiceSchema }),
   BillingController.createInvoice
 );
 
 billingRouter.patch(
   '/invoices/:id/status',
-  requirePermission('billing:edit'),
+  requirePermission('invoices:manage'),
   validateRequest({ body: updateInvoiceStatusSchema }),
   BillingController.updateStatus
 );
 
 billingRouter.post(
   '/payments',
-  requirePermission('billing:edit'),
+  requirePermission('payments:record'),
   validateRequest({ body: recordPaymentSchema }),
   BillingController.recordPayment
 );
 
 billingRouter.get(
   '/payments',
-  requirePermission('billing:view'),
+  requirePermission('payments:view'),
   BillingController.getPayments
 );
 

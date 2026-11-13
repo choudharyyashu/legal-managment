@@ -5,15 +5,15 @@ import { CreateTrustDepositInput, CreateTrustDisbursementInput } from './trust.v
 import { TrustSubLedgerResponse, TrustTransactionResponse, TrustLedgerListQuery } from './trust.types.js';
 
 export class TrustService {
-  private static async generateLedgerCode(): Promise<string> {
+  private static async generateLedgerCode(client: any = prisma): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
     let attempts = 0;
     while (attempts < 10) {
       attempts++;
-      const count = await prisma.trustSubLedger.count();
+      const count = await client.trustSubLedger.count();
       const sequence = String(count + attempts).padStart(4, '0');
       const candidate = `TRU-${year}-${sequence}`;
-      const existing = await prisma.trustSubLedger.findUnique({ where: { ledgerCode: candidate } });
+      const existing = await client.trustSubLedger.findUnique({ where: { ledgerCode: candidate } });
       if (!existing) return candidate;
     }
     return `TRU-${year}-${Date.now().toString().slice(-4)}`;
@@ -50,14 +50,14 @@ export class TrustService {
     };
   }
 
-  static async getOrCreateSubLedger(matterId: string): Promise<any> {
-    const matter = await prisma.matter.findUnique({ where: { id: matterId }, include: { client: true } });
+  static async getOrCreateSubLedger(matterId: string, client: any = prisma): Promise<any> {
+    const matter = await client.matter.findUnique({ where: { id: matterId }, include: { client: true } });
     if (!matter) throw AppError.notFound('Referenced matter not found.', 'MATTER_NOT_FOUND');
 
-    let subLedger = await prisma.trustSubLedger.findUnique({ where: { matterId } });
+    let subLedger = await client.trustSubLedger.findUnique({ where: { matterId } });
     if (!subLedger) {
-      const ledgerCode = await this.generateLedgerCode();
-      subLedger = await prisma.trustSubLedger.create({
+      const ledgerCode = await this.generateLedgerCode(client);
+      subLedger = await client.trustSubLedger.create({
         data: {
           ledgerCode,
           clientId: matter.clientId,
@@ -129,36 +129,49 @@ export class TrustService {
     input: CreateTrustDepositInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ transaction: TrustTransactionResponse; ledger: TrustSubLedgerResponse }> {
-    const subLedger = await this.getOrCreateSubLedger(input.matterId);
-
     const depositAmount = Number(input.amount.toFixed(2));
-    const newBalance = Number((Number(subLedger.balance) + depositAmount).toFixed(2));
+    if (depositAmount <= 0 || isNaN(depositAmount)) {
+      throw AppError.badRequest('Deposit amount must be a positive number.', 'INVALID_DEPOSIT_AMOUNT');
+    }
 
-    const transaction = await prisma.trustTransaction.create({
-      data: {
-        trustSubLedgerId: subLedger.id,
-        transactionType: 'Deposit',
-        amount: depositAmount,
-        runningBalance: newBalance,
-        sourceReference: input.sourceReference,
-        authorizedByUserId: context.userId,
-        purpose: input.purpose,
-      },
-      include: {
-        authorizedByUser: { select: { id: true, name: true } },
-      },
-    });
+    const { transaction, updatedLedger, newBalance } = await prisma.$transaction(async (tx) => {
+      const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
 
-    const updatedLedger = await prisma.trustSubLedger.update({
-      where: { id: subLedger.id },
-      data: {
-        balance: newBalance,
-        lastAuditDate: new Date(),
-      },
-      include: {
-        client: { select: { id: true, clientNumber: true, name: true } },
-        matter: { select: { id: true, matterNumber: true, title: true } },
-      },
+      // Exclusive row lock on client trust sub-ledger to prevent race conditions
+      const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
+        SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
+      `;
+      const currentBalance = Number(lockedRows[0]?.balance ?? subLedgerRecord.balance);
+      const calculatedBalance = Number((currentBalance + depositAmount).toFixed(2));
+
+      const txRecord = await tx.trustTransaction.create({
+        data: {
+          trustSubLedgerId: subLedgerRecord.id,
+          transactionType: 'Deposit',
+          amount: depositAmount,
+          runningBalance: calculatedBalance,
+          sourceReference: input.sourceReference,
+          authorizedByUserId: context.userId,
+          purpose: input.purpose,
+        },
+        include: {
+          authorizedByUser: { select: { id: true, name: true } },
+        },
+      });
+
+      const ledgerRecord = await tx.trustSubLedger.update({
+        where: { id: subLedgerRecord.id },
+        data: {
+          balance: calculatedBalance,
+          lastAuditDate: new Date(),
+        },
+        include: {
+          client: { select: { id: true, clientNumber: true, name: true } },
+          matter: { select: { id: true, matterNumber: true, title: true } },
+        },
+      });
+
+      return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance };
     });
 
     await createAuditLog({
@@ -200,46 +213,58 @@ export class TrustService {
     input: CreateTrustDisbursementInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ transaction: TrustTransactionResponse; ledger: TrustSubLedgerResponse }> {
-    const subLedger = await this.getOrCreateSubLedger(input.matterId);
-
     const disburseAmount = Number(input.amount.toFixed(2));
-    const currentBalance = Number(subLedger.balance);
-
-    // Utah RPC 1.15 Strict Negative Balance Guard
-    if (currentBalance < disburseAmount) {
-      throw AppError.badRequest(
-        `Insufficient trust funds: Ledger balance is $${currentBalance.toFixed(2)}, cannot disburse $${disburseAmount.toFixed(2)}. Utah RPC 1.15 strictly prohibits negative client trust balances.`,
-        'INSUFFICIENT_TRUST_FUNDS'
-      );
+    if (disburseAmount <= 0 || isNaN(disburseAmount)) {
+      throw AppError.badRequest('Disbursement amount must be a positive number.', 'INVALID_DISBURSEMENT_AMOUNT');
     }
 
-    const newBalance = Number((currentBalance - disburseAmount).toFixed(2));
+    const { transaction, updatedLedger, newBalance } = await prisma.$transaction(async (tx) => {
+      const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
 
-    const transaction = await prisma.trustTransaction.create({
-      data: {
-        trustSubLedgerId: subLedger.id,
-        transactionType: 'Disbursement',
-        amount: disburseAmount,
-        runningBalance: newBalance,
-        sourceReference: input.sourceReference,
-        authorizedByUserId: context.userId,
-        purpose: input.purpose,
-      },
-      include: {
-        authorizedByUser: { select: { id: true, name: true } },
-      },
-    });
+      // Exclusive row-level lock on client trust subledger to prevent concurrent overdrafts
+      const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
+        SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
+      `;
+      const currentBalance = Number(lockedRows[0]?.balance ?? subLedgerRecord.balance);
 
-    const updatedLedger = await prisma.trustSubLedger.update({
-      where: { id: subLedger.id },
-      data: {
-        balance: newBalance,
-        lastAuditDate: new Date(),
-      },
-      include: {
-        client: { select: { id: true, clientNumber: true, name: true } },
-        matter: { select: { id: true, matterNumber: true, title: true } },
-      },
+      // Utah RPC 1.15 Strict Negative Balance Guard (Evaluated under exclusive row lock)
+      if (currentBalance < disburseAmount) {
+        throw AppError.badRequest(
+          `Insufficient trust funds: Ledger balance is $${currentBalance.toFixed(2)}, cannot disburse $${disburseAmount.toFixed(2)}. Utah RPC 1.15 strictly prohibits negative client trust balances.`,
+          'INSUFFICIENT_TRUST_FUNDS'
+        );
+      }
+
+      const calculatedBalance = Number((currentBalance - disburseAmount).toFixed(2));
+
+      const txRecord = await tx.trustTransaction.create({
+        data: {
+          trustSubLedgerId: subLedgerRecord.id,
+          transactionType: 'Disbursement',
+          amount: disburseAmount,
+          runningBalance: calculatedBalance,
+          sourceReference: input.sourceReference,
+          authorizedByUserId: context.userId,
+          purpose: input.purpose,
+        },
+        include: {
+          authorizedByUser: { select: { id: true, name: true } },
+        },
+      });
+
+      const ledgerRecord = await tx.trustSubLedger.update({
+        where: { id: subLedgerRecord.id },
+        data: {
+          balance: calculatedBalance,
+          lastAuditDate: new Date(),
+        },
+        include: {
+          client: { select: { id: true, clientNumber: true, name: true } },
+          matter: { select: { id: true, matterNumber: true, title: true } },
+        },
+      });
+
+      return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance };
     });
 
     await createAuditLog({

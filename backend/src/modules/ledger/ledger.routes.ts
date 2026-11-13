@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { LedgerController } from './ledger.controller.js';
-import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { requireAuth, requireAnyPermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import { createJournalSchema } from './ledger.validation.js';
 
@@ -10,25 +10,25 @@ ledgerRouter.use(requireAuth);
 
 ledgerRouter.get(
   '/accounts',
-  requirePermission('billing:view'),
+  requireAnyPermission(['operating:view', 'trust:view', 'billing:overview_view']),
   LedgerController.getChartOfAccounts
 );
 
 ledgerRouter.get(
   '/journals',
-  requirePermission('billing:view'),
+  requireAnyPermission(['operating:view', 'trust:view', 'billing:overview_view']),
   LedgerController.getJournals
 );
 
 ledgerRouter.get(
   '/journals/:id',
-  requirePermission('billing:view'),
+  requireAnyPermission(['operating:view', 'trust:view', 'billing:overview_view']),
   LedgerController.getJournalById
 );
 
 ledgerRouter.post(
   '/journals',
-  requirePermission('billing:edit'),
+  requireAnyPermission(['invoices:manage', 'payments:record', 'billing:overview_view']),
   validateRequest({ body: createJournalSchema }),
   LedgerController.createJournal
 );

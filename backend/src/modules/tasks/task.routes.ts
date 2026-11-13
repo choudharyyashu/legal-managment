@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { TaskController } from './task.controller.js';
-import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { requireAuth, requirePermission, requireAnyPermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
   createTaskSchema,
@@ -15,14 +15,14 @@ taskRouter.use(requireAuth);
 
 taskRouter.get(
   '/',
-  requirePermission('tasks:view'),
+  requireAnyPermission(['tasks:view_own', 'tasks:view_team']),
   validateRequest({ query: taskQuerySchema }),
   TaskController.getTasks
 );
 
 taskRouter.get(
   '/:id',
-  requirePermission('tasks:view'),
+  requireAnyPermission(['tasks:view_own', 'tasks:view_team']),
   TaskController.getTaskById
 );
 

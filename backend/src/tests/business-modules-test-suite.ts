@@ -624,6 +624,272 @@ async function runBusinessModulesTestSuite() {
         200
       );
     }
+
+    // -------------------------------------------------------------------------
+    // MODULE 12: CONCURRENCY & TRANSACTION SAFETY TESTS
+    // -------------------------------------------------------------------------
+    {
+      // 1. Invalid/Zero Deposit Amount Validation Guard
+      const invalidDepRes = await fetch(`${baseUrl}/trust/deposits`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          matterId: createdMatterId,
+          amount: 0.0,
+          sourceReference: 'ZERO-DEP',
+          purpose: 'Zero deposit test',
+        }),
+      });
+      recordResult(
+        '25. Trust Deposit with zero amount rejected (422 / 400 Bad Request)',
+        invalidDepRes.status === 400 || invalidDepRes.status === 422,
+        invalidDepRes.status,
+        400
+      );
+
+      // 2. Concurrent Trust Disbursal with Row-Level Locking (Race Condition Safety)
+      // Current sub-ledger balance is $4,000.00.
+      // Launch two concurrent disbursements of $3,000.00 simultaneously.
+      // EXACTLY ONE must succeed; the other MUST fail with 400 INSUFFICIENT_TRUST_FUNDS.
+      const [res1, res2] = await Promise.all([
+        fetch(`${baseUrl}/trust/disbursements`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            matterId: createdMatterId,
+            amount: 3000.0,
+            sourceReference: 'CONCURRENT-1',
+            purpose: 'Concurrent withdrawal 1',
+          }),
+        }),
+        fetch(`${baseUrl}/trust/disbursements`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            matterId: createdMatterId,
+            amount: 3000.0,
+            sourceReference: 'CONCURRENT-2',
+            purpose: 'Concurrent withdrawal 2',
+          }),
+        }),
+      ]);
+
+      const statuses = [res1.status, res2.status];
+      const oneSuccess = statuses.filter((s) => s === 201).length === 1;
+      const oneOverdraftBlocked = statuses.filter((s) => s === 400).length === 1;
+
+      // Verify sub-ledger balance is now exactly $1,000.00 ($4,000 - $3,000)
+      const subCheck = await prisma.trustSubLedger.findUnique({ where: { matterId: createdMatterId } });
+      const finalBalance = Number(subCheck?.balance);
+
+      recordResult(
+        '26. Concurrent Trust Disbursal with row-level locking strictly prevents overdraft race condition',
+        oneSuccess && oneOverdraftBlocked && finalBalance === 1000.0,
+        `201=${oneSuccess}, 400=${oneOverdraftBlocked}, Final=$${finalBalance}`,
+        '201=true, 400=true, Final=$1000'
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // MODULE 13: MULTI-ROLE RBAC PERMISSION VERIFICATION
+    // -------------------------------------------------------------------------
+    {
+      const runTag = Date.now();
+
+      // 1. Provision Attorney, Paralegal, and Billing Clerk
+      const attorneyEmail = `attorney.rbac.${runTag}@utahslawyers.com`;
+      const paralegalEmail = `paralegal.rbac.${runTag}@utahslawyers.com`;
+      const billingEmail = `billing.rbac.${runTag}@utahslawyers.com`;
+
+      // 1. Provision Attorney, Paralegal, and Billing Clerk sequentially (avoids userCode generation race condition)
+      const attorneyUserRes = await fetch(`${baseUrl}/users`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name: 'Harvey Specter, Esq.',
+          email: attorneyEmail,
+          role: 'attorney',
+          password: 'AttorneyPassword@2026!',
+          billingRate: 350.0,
+        }),
+      });
+
+      const paralegalUserRes = await fetch(`${baseUrl}/users`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name: 'Donna Paulsen',
+          email: paralegalEmail,
+          role: 'paralegal',
+          password: 'ParalegalPassword@2026!',
+          billingRate: 150.0,
+        }),
+      });
+
+      const billingUserRes = await fetch(`${baseUrl}/users`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name: 'Louis Litt (CFO)',
+          email: billingEmail,
+          role: 'billing',
+          password: 'BillingPassword@2026!',
+          billingRate: 200.0,
+        }),
+      });
+
+      const attorneyData = (await attorneyUserRes.json()) as any;
+      const paralegalData = (await paralegalUserRes.json()) as any;
+      const billingData = (await billingUserRes.json()) as any;
+
+      const attorneyId = attorneyData.data?.user?.id;
+      const paralegalId = paralegalData.data?.user?.id;
+      const billingId = billingData.data?.user?.id;
+
+      // 2. Log in with each role to obtain scoped JWT access tokens
+      const [attorneyLoginRes, paralegalLoginRes, billingLoginRes] = await Promise.all([
+        fetch(`${baseUrl}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: attorneyEmail, password: 'AttorneyPassword@2026!' }),
+        }),
+        fetch(`${baseUrl}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: paralegalEmail, password: 'ParalegalPassword@2026!' }),
+        }),
+        fetch(`${baseUrl}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: billingEmail, password: 'BillingPassword@2026!' }),
+        }),
+      ]);
+
+      const attorneyToken = ((await attorneyLoginRes.json()) as any).data?.accessToken;
+      const paralegalToken = ((await paralegalLoginRes.json()) as any).data?.accessToken;
+      const billingToken = ((await billingLoginRes.json()) as any).data?.accessToken;
+
+      const attorneyHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${attorneyToken}` };
+      const paralegalHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${paralegalToken}` };
+      const billingHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${billingToken}` };
+
+      // TEST 27: Attorney Role Allowed Operations (intake:create, tasks:create, time:log)
+      const attorneyIntakeRes = await fetch(`${baseUrl}/intakes`, {
+        method: 'POST',
+        headers: attorneyHeaders,
+        body: JSON.stringify({
+          prospectiveClient: 'Salt Lake Tech Ventures LLC',
+          email: 'contact@slctech.com',
+          phone: '(801) 555-9988',
+          adverseParties: 'None Identified',
+          matterSummary: 'IP Trademark registration review',
+        }),
+      });
+      recordResult(
+        '27. Attorney Role Authorized Access (intake:create -> 201 Created)',
+        attorneyIntakeRes.status === 201,
+        attorneyIntakeRes.status,
+        201
+      );
+
+      // Clean up intake created by attorney
+      const attorneyIntakeData = (await attorneyIntakeRes.json()) as any;
+      if (attorneyIntakeData.data?.intake?.id) {
+        await prisma.intake.delete({ where: { id: attorneyIntakeData.data.intake.id } }).catch(() => {});
+      }
+
+      // TEST 28: Attorney Role Denied on Trust Disbursals (403 Forbidden)
+      const attorneyDisbRes = await fetch(`${baseUrl}/trust/disbursements`, {
+        method: 'POST',
+        headers: attorneyHeaders,
+        body: JSON.stringify({
+          matterId: createdMatterId,
+          amount: 500.0,
+          sourceReference: 'ILLEGAL-ATTORNEY-DISB',
+          purpose: 'Unauthorized withdrawal attempt',
+        }),
+      });
+      recordResult(
+        '28. Attorney Role Denied on Trust Disbursement (403 Forbidden)',
+        attorneyDisbRes.status === 403,
+        attorneyDisbRes.status,
+        403
+      );
+
+      // TEST 29: Paralegal Role Allowed Operations (tasks:create, time:log, calendar:view)
+      const paralegalTaskRes = await fetch(`${baseUrl}/tasks`, {
+        method: 'POST',
+        headers: paralegalHeaders,
+        body: JSON.stringify({
+          matterId: createdMatterId,
+          title: 'Paralegal Filing Task - Rule 26 Disclosure',
+          assignedToUserId: paralegalId,
+          dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          priority: 'Medium',
+        }),
+      });
+      recordResult(
+        '29. Paralegal Role Authorized Access (tasks:create -> 201 Created)',
+        paralegalTaskRes.status === 201,
+        paralegalTaskRes.status,
+        201
+      );
+
+      const paralegalTaskData = (await paralegalTaskRes.json()) as any;
+      if (paralegalTaskData.data?.task?.id) {
+        await prisma.task.delete({ where: { id: paralegalTaskData.data.task.id } }).catch(() => {});
+      }
+
+      // TEST 30: Paralegal Role Denied on Client Creation (403 Forbidden)
+      const paralegalClientRes = await fetch(`${baseUrl}/clients`, {
+        method: 'POST',
+        headers: paralegalHeaders,
+        body: JSON.stringify({
+          name: 'Unauthorized Paralegal Client',
+          type: 'Individual',
+          email: 'unauth@test.com',
+          phone: '(801) 555-0000',
+        }),
+      });
+      recordResult(
+        '30. Paralegal Role Denied on Client Creation (403 Forbidden)',
+        paralegalClientRes.status === 403,
+        paralegalClientRes.status,
+        403
+      );
+
+      // TEST 31: Billing Clerk Authorized Access (trust:view -> 200 OK)
+      const billingTrustRes = await fetch(`${baseUrl}/trust/ledgers`, {
+        headers: billingHeaders,
+      });
+      recordResult(
+        '31. Billing Clerk Authorized Access (trust:view -> 200 OK)',
+        billingTrustRes.status === 200,
+        billingTrustRes.status,
+        200
+      );
+
+      // TEST 32: Billing Clerk Denied on Adverse Conflict Clearance (403 Forbidden)
+      const billingConflictRes = await fetch(`${baseUrl}/intakes/${createdIntakeId}/clear-conflict`, {
+        method: 'POST',
+        headers: billingHeaders,
+        body: JSON.stringify({
+          waiverObtained: true,
+          waiverNotes: 'Unauthorized waiver clearance by billing clerk',
+        }),
+      });
+      recordResult(
+        '32. Billing Clerk Denied on Adverse Conflict Clearance (403 Forbidden)',
+        billingConflictRes.status === 403,
+        billingConflictRes.status,
+        403
+      );
+
+      // Teardown test users
+      if (attorneyId) await prisma.user.delete({ where: { id: attorneyId } }).catch(() => {});
+      if (paralegalId) await prisma.user.delete({ where: { id: paralegalId } }).catch(() => {});
+      if (billingId) await prisma.user.delete({ where: { id: billingId } }).catch(() => {});
+    }
   } finally {
     // Teardown: Safely remove test records created during this run
     if (createdPaymentId) await prisma.paymentRecord.delete({ where: { id: createdPaymentId } }).catch(() => {});

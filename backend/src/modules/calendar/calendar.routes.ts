@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { CalendarController } from './calendar.controller.js';
-import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { requireAuth, requirePermission, requireAnyPermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
   createCalendarEventSchema,
@@ -27,21 +27,21 @@ calendarRouter.get(
 
 calendarRouter.post(
   '/events',
-  requirePermission('calendar:create'),
+  requireAnyPermission(['calendar:view', 'matters:edit', 'tasks:create']),
   validateRequest({ body: createCalendarEventSchema }),
   CalendarController.createEvent
 );
 
 calendarRouter.put(
   '/events/:id',
-  requirePermission('calendar:edit'),
+  requireAnyPermission(['calendar:view', 'matters:edit', 'tasks:edit']),
   validateRequest({ body: updateCalendarEventSchema }),
   CalendarController.updateEvent
 );
 
 calendarRouter.delete(
   '/events/:id',
-  requirePermission('calendar:delete'),
+  requireAnyPermission(['matters:edit', 'tasks:delete']),
   CalendarController.deleteEvent
 );
 
