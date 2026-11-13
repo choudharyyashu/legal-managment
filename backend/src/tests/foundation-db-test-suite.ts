@@ -1,3 +1,14 @@
+// Explicit Test Database Isolation Guard
+if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.includes('-test')) {
+  process.env.DATABASE_URL = 'mysql://root:@localhost:3306/legal-db-test';
+}
+
+if (!process.env.DATABASE_URL.includes('-test')) {
+  throw new Error(
+    `CRITICAL TEST ISOLATION GUARD: Automated tests must run against an isolated test database ('legal-db-test'). Current target: ${process.env.DATABASE_URL}. Execution aborted to protect primary database.`
+  );
+}
+
 import { app } from '../app.js';
 import { prisma } from '../config/database.js';
 import { config } from '../config/env.js';
@@ -82,15 +93,16 @@ async function runFoundationTestSuite() {
     }
 
     // -------------------------------------------------------------------------
-    // TEST 5: CORS Policy Blocks Disallowed External Origins
+    // TEST 5: Clean CORS Policy Denial for Disallowed External Origins
     // -------------------------------------------------------------------------
     {
       const res = await fetch(`${baseUrl}/api/v1/health`, {
         headers: { Origin: 'https://malicious-external-site.com' },
       });
-      const data = await res.json() as any;
-      const ok = res.status === 500 && data.error?.message?.includes('not allowed by CORS policy');
-      recordResult('5. CORS policy blocks disallowed external origins', ok, JSON.stringify(data));
+      const allowHeader = res.headers.get('access-control-allow-origin');
+      // Clean CORS denial: origin header is omitted, no internal 500 error thrown
+      const ok = allowHeader === null && res.status === 200;
+      recordResult('5. Clean CORS policy denial: omits origin header without throwing HTTP 500', ok, `Allow-Origin Header: ${allowHeader}, Status: ${res.status}`);
     }
 
     // -------------------------------------------------------------------------
@@ -185,6 +197,22 @@ async function runFoundationTestSuite() {
         '12. Strict financial decimal precision verified (DECIMAL 12,2 on invoices.total_amount)',
         ok,
         JSON.stringify(col)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 13: Global Rate Limiter Active on General Endpoints
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/api/v1/users?page=1&limit=1`, {
+        headers: { Origin: 'http://localhost:3000' },
+      });
+      const limitHeader = res.headers.get('ratelimit-limit');
+      const ok = limitHeader === '300' || res.headers.has('ratelimit-remaining');
+      recordResult(
+        '13. Global Rate Limiter active on general endpoints (300 requests / 15m window)',
+        ok,
+        `RateLimit-Limit Header: ${limitHeader}`
       );
     }
   } catch (err: any) {

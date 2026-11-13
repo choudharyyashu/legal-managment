@@ -45,6 +45,12 @@ async function runTestSuite() {
 
   const baseUrl = `http://localhost:${testPort}/api/v1`;
 
+  let adminAccessToken = '';
+  let adminRefreshToken = '';
+  let adminCookie = '';
+  let createdAttorneyId = '';
+  let attorneyAccessToken = '';
+
   try {
     // -------------------------------------------------------------------------
     // TEST 1: Missing Credentials on Login
@@ -90,10 +96,6 @@ async function runTestSuite() {
     // -------------------------------------------------------------------------
     // TEST 3: Valid Super Admin Login
     // -------------------------------------------------------------------------
-    let adminAccessToken = '';
-    let adminRefreshToken = '';
-    let adminCookie = '';
-
     {
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: 'POST',
@@ -203,7 +205,6 @@ async function runTestSuite() {
     // -------------------------------------------------------------------------
     // TEST 8: Administrative User Provisioning (Create Attorney)
     // -------------------------------------------------------------------------
-    let createdAttorneyId = '';
     const attorneyEmail = `t.bludworth.${Date.now()}@utahslawyers.com`;
     {
       const res = await fetch(`${baseUrl}/users`, {
@@ -269,6 +270,7 @@ async function runTestSuite() {
       });
       const attorneyLoginData = await attorneyLoginRes.json() as any;
       const attorneyToken = attorneyLoginData.data?.accessToken;
+      attorneyAccessToken = attorneyToken;
 
       // Attorney attempts to create a user (which requires 'users:manage')
       const unauthorizedCreateRes = await fetch(`${baseUrl}/users`, {
@@ -423,14 +425,78 @@ async function runTestSuite() {
       });
       const ok = auditCount >= 5;
       recordResult(
-        '15. Immutable Audit Logs recorded in legal-db for all auth & security events',
+        '15. Immutable Audit Logs recorded in test database for all auth & security events',
         ok,
         auditCount,
         5,
         `Audit entries recorded: ${auditCount}`
       );
     }
+
+    // -------------------------------------------------------------------------
+    // TEST 16: Privilege Escalation Guard - Non-Super Admin Blocked from Creating Super Admin
+    // -------------------------------------------------------------------------
+    {
+      const res = await fetch(`${baseUrl}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${attorneyAccessToken}`,
+        },
+        body: JSON.stringify({
+          name: 'Rogue Admin Candidate',
+          email: `rogue.${Date.now()}@hb-legal.test`,
+          password: 'RoguePassword123!',
+          role: 'super_admin',
+        }),
+      });
+      const data = (await res.json()) as any;
+      const ok =
+        res.status === 403 &&
+        (data.error?.code === 'PRIVILEGE_ESCALATION_BLOCKED' ||
+          data.error?.code === 'INSUFFICIENT_PERMISSIONS');
+      recordResult(
+        '16. Privilege Escalation Guard: Non-Super Admin blocked from creating Super Admin (403 Forbidden)',
+        ok,
+        res.status,
+        403,
+        JSON.stringify(data.error)
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // TEST 17: Immediate In-Flight Access Token Revocation upon Deactivation
+    // -------------------------------------------------------------------------
+    {
+      // 1. Deactivate attorney again
+      await fetch(`${baseUrl}/users/${createdAttorneyId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminAccessToken}`,
+        },
+        body: JSON.stringify({ status: 'Inactive' }),
+      });
+
+      // 2. Attorney attempts to use existing valid, unexpired access token immediately
+      const res = await fetch(`${baseUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${attorneyAccessToken}` },
+      });
+      const data = (await res.json()) as any;
+      const ok = res.status === 403 && data.error?.code === 'ACCOUNT_DEACTIVATED';
+      recordResult(
+        '17. Immediate Token Revocation: In-flight access token of deactivated user blocked immediately (403)',
+        ok,
+        res.status,
+        403,
+        JSON.stringify(data.error)
+      );
+    }
   } finally {
+    // Test Lifecycle Teardown: safely clean up test-created records to guarantee isolated, repeatable tests
+    if (createdAttorneyId) {
+      await prisma.user.delete({ where: { id: createdAttorneyId } }).catch(() => {});
+    }
     server.close();
     await prisma.$disconnect();
   }
