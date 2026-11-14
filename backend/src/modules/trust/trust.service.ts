@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database.js';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { CreateTrustDepositInput, CreateTrustDisbursementInput } from './trust.validation.js';
@@ -125,53 +126,127 @@ export class TrustService {
     return this.formatResponse(ledger);
   }
 
+  /**
+   * Internal transactional helper for executing trust deposits.
+   * Reusable within existing Prisma transactions without opening nested transactions.
+   */
+  static async executeDepositOperation(
+    input: CreateTrustDepositInput,
+    context: { userId: string },
+    tx: Prisma.TransactionClient
+  ): Promise<{ transaction: any; updatedLedger: any; newBalance: number }> {
+    const depositAmount = new Prisma.Decimal(input.amount).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    if (depositAmount.lessThanOrEqualTo(0) || depositAmount.isNaN()) {
+      throw AppError.badRequest('Deposit amount must be a positive number.', 'INVALID_DEPOSIT_AMOUNT');
+    }
+
+    const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
+
+    // Exclusive row lock on client trust sub-ledger to prevent race conditions
+    const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
+      SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
+    `;
+    const currentBalance = new Prisma.Decimal(lockedRows[0]?.balance ?? subLedgerRecord.balance);
+    const calculatedBalance = currentBalance.plus(depositAmount);
+
+    const txRecord = await tx.trustTransaction.create({
+      data: {
+        trustSubLedgerId: subLedgerRecord.id,
+        transactionType: 'Deposit',
+        amount: depositAmount.toNumber(),
+        runningBalance: calculatedBalance.toNumber(),
+        sourceReference: input.sourceReference,
+        authorizedByUserId: context.userId,
+        purpose: input.purpose,
+      },
+      include: {
+        authorizedByUser: { select: { id: true, name: true } },
+      },
+    });
+
+    const ledgerRecord = await tx.trustSubLedger.update({
+      where: { id: subLedgerRecord.id },
+      data: {
+        balance: calculatedBalance.toNumber(),
+        lastAuditDate: new Date(),
+      },
+      include: {
+        client: { select: { id: true, clientNumber: true, name: true } },
+        matter: { select: { id: true, matterNumber: true, title: true } },
+      },
+    });
+
+    return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
+  }
+
+  /**
+   * Internal transactional helper for executing trust disbursements.
+   * Reusable within external transactions (e.g. settlement executions) without opening nested transactions.
+   */
+  static async executeDisbursementOperation(
+    input: CreateTrustDisbursementInput,
+    context: { userId: string },
+    tx: Prisma.TransactionClient
+  ): Promise<{ transaction: any; updatedLedger: any; newBalance: number }> {
+    const disburseAmount = new Prisma.Decimal(input.amount).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    if (disburseAmount.lessThanOrEqualTo(0) || disburseAmount.isNaN()) {
+      throw AppError.badRequest('Disbursement amount must be a positive number.', 'INVALID_DISBURSEMENT_AMOUNT');
+    }
+
+    const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
+
+    // Exclusive row-level lock on client trust subledger to prevent concurrent overdrafts
+    const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
+      SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
+    `;
+    const currentBalance = new Prisma.Decimal(lockedRows[0]?.balance ?? subLedgerRecord.balance);
+
+    // Utah RPC 1.15 Strict Negative Balance Guard (Evaluated under exclusive row lock)
+    if (currentBalance.lessThan(disburseAmount)) {
+      throw AppError.badRequest(
+        `Insufficient trust funds: Ledger balance is $${currentBalance.toFixed(2)}, cannot disburse $${disburseAmount.toFixed(2)}. Utah RPC 1.15 strictly prohibits negative client trust balances.`,
+        'INSUFFICIENT_TRUST_FUNDS'
+      );
+    }
+
+    const calculatedBalance = currentBalance.minus(disburseAmount);
+
+    const txRecord = await tx.trustTransaction.create({
+      data: {
+        trustSubLedgerId: subLedgerRecord.id,
+        transactionType: 'Disbursement',
+        amount: disburseAmount.toNumber(),
+        runningBalance: calculatedBalance.toNumber(),
+        sourceReference: input.sourceReference,
+        authorizedByUserId: context.userId,
+        purpose: input.purpose,
+      },
+      include: {
+        authorizedByUser: { select: { id: true, name: true } },
+      },
+    });
+
+    const ledgerRecord = await tx.trustSubLedger.update({
+      where: { id: subLedgerRecord.id },
+      data: {
+        balance: calculatedBalance.toNumber(),
+        lastAuditDate: new Date(),
+      },
+      include: {
+        client: { select: { id: true, clientNumber: true, name: true } },
+        matter: { select: { id: true, matterNumber: true, title: true } },
+      },
+    });
+
+    return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
+  }
+
   static async depositToTrust(
     input: CreateTrustDepositInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ transaction: TrustTransactionResponse; ledger: TrustSubLedgerResponse }> {
-    const depositAmount = Number(input.amount.toFixed(2));
-    if (depositAmount <= 0 || isNaN(depositAmount)) {
-      throw AppError.badRequest('Deposit amount must be a positive number.', 'INVALID_DEPOSIT_AMOUNT');
-    }
-
     const { transaction, updatedLedger, newBalance } = await prisma.$transaction(async (tx) => {
-      const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
-
-      // Exclusive row lock on client trust sub-ledger to prevent race conditions
-      const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
-        SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
-      `;
-      const currentBalance = Number(lockedRows[0]?.balance ?? subLedgerRecord.balance);
-      const calculatedBalance = Number((currentBalance + depositAmount).toFixed(2));
-
-      const txRecord = await tx.trustTransaction.create({
-        data: {
-          trustSubLedgerId: subLedgerRecord.id,
-          transactionType: 'Deposit',
-          amount: depositAmount,
-          runningBalance: calculatedBalance,
-          sourceReference: input.sourceReference,
-          authorizedByUserId: context.userId,
-          purpose: input.purpose,
-        },
-        include: {
-          authorizedByUser: { select: { id: true, name: true } },
-        },
-      });
-
-      const ledgerRecord = await tx.trustSubLedger.update({
-        where: { id: subLedgerRecord.id },
-        data: {
-          balance: calculatedBalance,
-          lastAuditDate: new Date(),
-        },
-        include: {
-          client: { select: { id: true, clientNumber: true, name: true } },
-          matter: { select: { id: true, matterNumber: true, title: true } },
-        },
-      });
-
-      return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance };
+      return this.executeDepositOperation(input, context, tx);
     });
 
     await createAuditLog({
@@ -181,7 +256,7 @@ export class TrustService {
       resourceType: 'TRUST_ACCOUNTING',
       resourceId: transaction.id,
       details: {
-        amount: depositAmount,
+        amount: Number(transaction.amount),
         newBalance,
         ledgerCode: updatedLedger.ledgerCode,
         sourceReference: input.sourceReference,
@@ -213,58 +288,8 @@ export class TrustService {
     input: CreateTrustDisbursementInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ transaction: TrustTransactionResponse; ledger: TrustSubLedgerResponse }> {
-    const disburseAmount = Number(input.amount.toFixed(2));
-    if (disburseAmount <= 0 || isNaN(disburseAmount)) {
-      throw AppError.badRequest('Disbursement amount must be a positive number.', 'INVALID_DISBURSEMENT_AMOUNT');
-    }
-
     const { transaction, updatedLedger, newBalance } = await prisma.$transaction(async (tx) => {
-      const subLedgerRecord = await this.getOrCreateSubLedger(input.matterId, tx);
-
-      // Exclusive row-level lock on client trust subledger to prevent concurrent overdrafts
-      const lockedRows = await tx.$queryRaw<{ id: string; balance: any }[]>`
-        SELECT id, balance FROM trust_sub_ledgers WHERE id = ${subLedgerRecord.id} FOR UPDATE
-      `;
-      const currentBalance = Number(lockedRows[0]?.balance ?? subLedgerRecord.balance);
-
-      // Utah RPC 1.15 Strict Negative Balance Guard (Evaluated under exclusive row lock)
-      if (currentBalance < disburseAmount) {
-        throw AppError.badRequest(
-          `Insufficient trust funds: Ledger balance is $${currentBalance.toFixed(2)}, cannot disburse $${disburseAmount.toFixed(2)}. Utah RPC 1.15 strictly prohibits negative client trust balances.`,
-          'INSUFFICIENT_TRUST_FUNDS'
-        );
-      }
-
-      const calculatedBalance = Number((currentBalance - disburseAmount).toFixed(2));
-
-      const txRecord = await tx.trustTransaction.create({
-        data: {
-          trustSubLedgerId: subLedgerRecord.id,
-          transactionType: 'Disbursement',
-          amount: disburseAmount,
-          runningBalance: calculatedBalance,
-          sourceReference: input.sourceReference,
-          authorizedByUserId: context.userId,
-          purpose: input.purpose,
-        },
-        include: {
-          authorizedByUser: { select: { id: true, name: true } },
-        },
-      });
-
-      const ledgerRecord = await tx.trustSubLedger.update({
-        where: { id: subLedgerRecord.id },
-        data: {
-          balance: calculatedBalance,
-          lastAuditDate: new Date(),
-        },
-        include: {
-          client: { select: { id: true, clientNumber: true, name: true } },
-          matter: { select: { id: true, matterNumber: true, title: true } },
-        },
-      });
-
-      return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance };
+      return this.executeDisbursementOperation(input, context, tx);
     });
 
     await createAuditLog({
@@ -274,7 +299,7 @@ export class TrustService {
       resourceType: 'TRUST_ACCOUNTING',
       resourceId: transaction.id,
       details: {
-        amount: disburseAmount,
+        amount: Number(transaction.amount),
         newBalance,
         ledgerCode: updatedLedger.ledgerCode,
         purpose: input.purpose,
