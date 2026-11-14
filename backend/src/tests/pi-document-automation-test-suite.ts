@@ -96,7 +96,12 @@ export async function runPIDocumentAutomationTestSuite(): Promise<void> {
   });
   if (!piPracticeArea) {
     piPracticeArea = await prisma.practiceArea.create({
-      data: { code: 'PI', name: 'Personal Injury', description: 'Auto Accidents, Premises Liability, Wrongful Death' },
+      data: {
+        id: 'pa-pi',
+        code: 'PI',
+        name: 'Personal Injury',
+        brandColor: '#A4432B',
+      },
     });
   }
 
@@ -205,7 +210,7 @@ export async function runPIDocumentAutomationTestSuite(): Promise<void> {
       phone: '(801) 555-8291',
       address: '2450 E Sunnyside Ave, Salt Lake City, UT 84108',
       status: 'Active',
-      createdById: attorney.id,
+      assignedAttorneyId: attorney.id,
     },
   });
 
@@ -285,7 +290,7 @@ export async function runPIDocumentAutomationTestSuite(): Promise<void> {
     const reviewTask096 = await prisma.task.findFirst({
       where: {
         matterId: testMatter.id,
-        title: { contains: drafts096[0]?.draftCode || 'Representation Letter' },
+        title: { contains: 'Representation Letter' },
       },
     });
 

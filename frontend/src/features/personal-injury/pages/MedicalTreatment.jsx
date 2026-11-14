@@ -85,18 +85,27 @@ export function MedicalTreatment() {
         })
         .catch(() => {});
 
-      // 2. Missing Records Trigger: Document 115 (Records Deficiency Follow-up)
-      if (savedRecord.recordsStatus === 'Missing / Overdue') {
+      // 2. Incomplete / Deficient Records Trigger: Document 116 (Incomplete Medical Records Follow-up)
+      if (
+        savedRecord.recordsStatus === 'Deficient / Missing Billing Ledger' ||
+        savedRecord.recordsStatus === 'Missing / Overdue' ||
+        savedRecord.recordsStatus?.toLowerCase().includes('deficient') ||
+        savedRecord.recordsStatus?.toLowerCase().includes('missing') ||
+        savedRecord.recordsStatus?.toLowerCase().includes('incomplete')
+      ) {
         documentService
           .triggerDocumentEvent('pi.missing.records', savedRecord.matterId, {
             providerName: savedRecord.providerName,
             requestDate: savedRecord.dateOfService,
             daysOverdue: 30,
-            outstandingRecords: ['Billing Itemized Ledger', 'Operative & Diagnostic Reports'],
+            outstandingRecords: savedRecord.outstandingRecords
+              ? [savedRecord.outstandingRecords]
+              : ['Billing Itemized Ledger', 'Operative & Diagnostic Reports'],
+            followUpNotes: savedRecord.outstandingRecords || 'Incomplete packet received from provider.',
           })
           .then((res) => {
             if (res?.draftsCreated?.length > 0) {
-              addToast(`Deficiency auto-draft created: ${res.draftsCreated[0].title}`, 'warning');
+              addToast(`Incomplete records follow-up created: ${res.draftsCreated[0].title}`, 'warning');
             }
           })
           .catch(() => {});

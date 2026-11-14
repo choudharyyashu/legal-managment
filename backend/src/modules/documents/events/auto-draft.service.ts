@@ -145,6 +145,7 @@ export class AutoDraftService {
           description: `Auto-generated draft '${draft.draftCode}' (${templateName}) requires attorney review and approval prior to transmission.`,
           dueDate: dueDate.toISOString().split('T')[0],
           priority: 'High',
+          reminderSetting: '1 day prior',
         },
         {
           userId: user.id,

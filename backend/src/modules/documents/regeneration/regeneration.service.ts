@@ -49,7 +49,7 @@ export class RegenerationService {
         template: {
           include: {
             versions: {
-              where: { isCurrent: true },
+              where: { status: 'Published' },
               include: { fieldMappings: true },
             },
           },
@@ -167,7 +167,7 @@ export class RegenerationService {
         template: {
           include: {
             versions: {
-              where: { isCurrent: true },
+              where: { status: 'Published' },
               include: { fieldMappings: true },
             },
           },
@@ -244,7 +244,7 @@ export class RegenerationService {
           template: {
             include: {
               versions: {
-                where: { isCurrent: true },
+                where: { status: 'Published' },
                 include: { fieldMappings: true },
               },
             },
@@ -258,7 +258,7 @@ export class RegenerationService {
           template: {
             include: {
               versions: {
-                where: { isCurrent: true },
+                where: { status: 'Published' },
                 include: { fieldMappings: true },
               },
             },
