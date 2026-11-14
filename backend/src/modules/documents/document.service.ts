@@ -8,7 +8,7 @@ import { CreateDocumentInput, UploadVersionInput } from './document.validation.j
 import { DocumentResponse, DocumentListQuery, DocumentVersionResponse } from './document.types.js';
 
 export class DocumentService {
-  private static async generateDocumentCode(): Promise<string> {
+  public static async generateDocumentCode(): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
     let attempts = 0;
     while (attempts < 10) {

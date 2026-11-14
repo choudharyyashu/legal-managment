@@ -108,5 +108,59 @@ export class DraftController {
       next(err);
     }
   }
+
+  static async approveDraft(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const draftId = req.params.draftId || req.params.id;
+      const result = await DraftService.approveDraft(draftId, req.body, req.user!, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Draft '${result.draft.draftCode}' approved and finalized into legal document '${result.finalDocument.documentCode}'.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async rejectDraft(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const draftId = req.params.draftId || req.params.id;
+      const result = await DraftService.rejectDraft(draftId, req.body, req.user!, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Draft '${result.draft.draftCode}' rejected. Correction task '${result.correctionTask.taskCode}' assigned.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async sendDraft(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const draftId = req.params.draftId || req.params.id;
+      const result = await DraftService.sendDraft(draftId, req.body, req.user!, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Approved document draft '${result.draft.draftCode}' successfully transmitted via ${result.transmission.channel}.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

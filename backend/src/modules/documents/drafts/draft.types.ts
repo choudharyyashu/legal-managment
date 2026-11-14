@@ -70,3 +70,44 @@ export interface DraftListQuery {
   search?: string;
 }
 
+export interface TransmissionEvidence {
+  transmissionId: string;
+  draftId?: string;
+  documentId?: string | null;
+  draftCode: string;
+  versionLabel?: string;
+  sha256Checksum?: string;
+  channel: 'EMAIL' | 'PORTAL' | 'CERTIFIED_MAIL' | 'FAX' | 'MANUAL_HAND_DELIVERY';
+  recipient: {
+    name: string;
+    email?: string;
+    mailingAddress?: string;
+    fax?: string;
+    organization?: string;
+  };
+  sentByUserId: string;
+  sentByName?: string | null;
+  sentAt: string;
+  sendStatus: 'SENT' | 'FAILED';
+  deliveryStatus: 'PENDING_CONFIRMATION' | 'DELIVERED' | 'UNDELIVERED' | 'BOUNCED';
+  notes?: string;
+}
+
+export interface DraftApprovalResult {
+  draft: DocumentDraftResponse;
+  finalDocument: any;
+  completedTasksCount: number;
+}
+
+export interface DraftRejectionResult {
+  draft: DocumentDraftResponse;
+  correctionTask: any;
+  rejectionReason: string;
+}
+
+export interface DraftSendResult {
+  draft: DocumentDraftResponse;
+  transmission: TransmissionEvidence;
+}
+
+

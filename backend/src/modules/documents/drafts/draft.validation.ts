@@ -36,11 +36,50 @@ export const draftQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(20),
   matterId: z.string().optional(),
   clientId: z.string().optional(),
-  status: z.enum(['Draft', 'Under Review', 'Approved', 'Finalized', 'Stale']).optional(),
+  status: z.enum(['Draft', 'Under Review', 'Approved', 'Rejected', 'Sent', 'Finalized', 'Stale']).optional(),
   search: z.string().optional(),
+});
+
+export const approveDraftSchema = z.object({
+  notes: z.string().max(1000).optional(),
+  approvalEvidence: z.record(z.string(), z.any()).optional(),
+});
+
+export const rejectDraftSchema = z.object({
+  rejectionReason: z
+    .string({
+      required_error: 'rejectionReason is required',
+      invalid_type_error: 'rejectionReason must be a string',
+    })
+    .trim()
+    .min(3, 'rejectionReason must be at least 3 characters')
+    .max(1000, 'rejectionReason must not exceed 1000 characters'),
+  notes: z.string().max(1000).optional(),
+});
+
+export const sendDraftSchema = z.object({
+  recipient: z
+    .object({
+      name: z.string().min(1, 'Recipient name is required'),
+      email: z.string().email('Invalid recipient email address').optional(),
+      mailingAddress: z.string().optional(),
+      fax: z.string().optional(),
+      organization: z.string().optional(),
+    })
+    .refine((data) => Boolean(data.email || data.mailingAddress || data.fax), {
+      message: 'Recipient must have at least one delivery destination (email, mailingAddress, or fax)',
+    }),
+  channel: z.enum(['EMAIL', 'PORTAL', 'CERTIFIED_MAIL', 'FAX', 'MANUAL_HAND_DELIVERY'], {
+    errorMap: () => ({ message: 'Channel must be EMAIL, PORTAL, CERTIFIED_MAIL, FAX, or MANUAL_HAND_DELIVERY' }),
+  }),
+  notes: z.string().max(1000).optional(),
+  idempotencyKey: z.string().optional(),
 });
 
 export type ValidateDraftInput = z.infer<typeof validateDraftInputSchema>;
 export type GenerateDraftInput = z.infer<typeof generateDraftInputSchema>;
 export type CreateFollowUpTaskInput = z.infer<typeof createFollowUpTaskSchema>;
 export type DraftQueryInput = z.infer<typeof draftQuerySchema>;
+export type ApproveDraftInput = z.infer<typeof approveDraftSchema>;
+export type RejectDraftInput = z.infer<typeof rejectDraftSchema>;
+export type SendDraftInput = z.infer<typeof sendDraftSchema>;

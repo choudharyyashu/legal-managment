@@ -7,6 +7,9 @@ import {
   generateDraftInputSchema,
   createFollowUpTaskSchema,
   draftQuerySchema,
+  approveDraftSchema,
+  rejectDraftSchema,
+  sendDraftSchema,
 } from './draft.validation.js';
 
 export const draftRouter = Router();
@@ -38,14 +41,14 @@ draftRouter.post(
   DraftController.generateDraft
 );
 
-// 3. Conversion of existing generated draft to PDF
+// 4. Conversion of existing generated draft to PDF
 draftRouter.post(
   '/:id/pdf',
   requirePermission('documents:upload'),
   DraftController.convertDraftToPdf
 );
 
-// 4. Listing generated drafts with pagination & filtering
+// 5. Listing generated drafts with pagination & filtering
 draftRouter.get(
   '/',
   requirePermission('documents:view'),
@@ -53,17 +56,42 @@ draftRouter.get(
   DraftController.getDrafts
 );
 
-// 5. Retrieve specific draft metadata
+// 6. Approval: Finalize draft into legal document and complete review task
+draftRouter.post(
+  '/:id/approve',
+  requirePermission('documents:approve'),
+  validateRequest({ body: approveDraftSchema }),
+  DraftController.approveDraft
+);
+
+// 7. Rejection: Reject draft with required reason and create correction task
+draftRouter.post(
+  '/:id/reject',
+  requirePermission('documents:approve'),
+  validateRequest({ body: rejectDraftSchema }),
+  DraftController.rejectDraft
+);
+
+// 8. Transmission: Send approved document with verifiable transmission evidence
+draftRouter.post(
+  '/:id/send',
+  requirePermission('documents:send'),
+  validateRequest({ body: sendDraftSchema }),
+  DraftController.sendDraft
+);
+
+// 9. Retrieve specific draft metadata
 draftRouter.get(
   '/:id',
   requirePermission('documents:view'),
   DraftController.getDraftById
 );
 
-// 6. Download generated document draft (format=docx or format=pdf)
+// 10. Download generated document draft (format=docx or format=pdf)
 draftRouter.get(
   '/:id/download',
   requirePermission('documents:view'),
   DraftController.downloadDraft
 );
+
 

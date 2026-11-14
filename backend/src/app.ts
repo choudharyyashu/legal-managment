@@ -160,6 +160,7 @@ app.use('/api/v1/intakes', intakeRouter);
 app.use('/api/v1/tasks', taskRouter);
 app.use('/api/v1/calendar', calendarRouter);
 app.use('/api/v1/documents', documentRouter);
+app.use('/documents', documentRouter);
 app.use('/api/v1/time', timeRouter);
 app.use('/api/v1/expenses', expenseRouter);
 app.use('/api/v1/billing', billingRouter);
