@@ -15,8 +15,10 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        // target: 'http://localhost:5000',
+        target: 'https://legal-case-yashvant-backend-production.up.railway.app',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
