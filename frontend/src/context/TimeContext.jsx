@@ -107,21 +107,12 @@ export function TimeProvider({ children }) {
   }, [isAuthenticated, canViewInvoices]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoading(true);
-      const refreshPromises = [refreshTimeEntries(), refreshExpenses()];
-      if (canViewInvoices) {
-        refreshPromises.push(refreshInvoices());
-      }
-      Promise.allSettled(refreshPromises).finally(() => {
-        setLoading(false);
-      });
-    } else {
+    if (!isAuthenticated) {
       setTimeEntries([]);
       setExpenses([]);
       setInvoices([]);
     }
-  }, [isAuthenticated, canViewInvoices, refreshTimeEntries, refreshExpenses, refreshInvoices]);
+  }, [isAuthenticated]);
 
   const markSlotReviewed = (slotId) => {
     setReviewSlots((prev) =>

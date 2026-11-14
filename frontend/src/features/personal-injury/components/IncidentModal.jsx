@@ -4,7 +4,8 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] }) {
+export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], defaultCaseId = '' }) {
+  const [matterError, setMatterError] = useState('');
   const [formData, setFormData] = useState({
     matterId: '',
     matterTitle: '',
@@ -29,6 +30,7 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
   });
 
   useEffect(() => {
+    setMatterError('');
     if (incident) {
       setFormData({
         matterId: incident.matterId || '',
@@ -53,9 +55,12 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
         investigationNotes: incident.investigationNotes || '',
       });
     } else {
+      const isSingleMatter = Boolean(defaultCaseId && defaultCaseId !== 'ALL');
+      const initialMatterId = isSingleMatter ? defaultCaseId : '';
+      const defaultMatter = isSingleMatter ? cases.find(c => c.id === initialMatterId) : null;
       setFormData({
-        matterId: cases[0]?.id || '',
-        matterTitle: cases[0]?.matterTitle || '',
+        matterId: initialMatterId,
+        matterTitle: defaultMatter?.matterTitle || '',
         incidentDate: new Date().toISOString().split('T')[0],
         incidentTime: '14:30 MT',
         incidentLocation: '',
@@ -76,10 +81,15 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
         investigationNotes: '',
       });
     }
-  }, [incident, cases, isOpen]);
+  }, [incident, cases, defaultCaseId, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.matterId || formData.matterId === 'ALL') {
+      setMatterError('Please select an associated PI matter before saving.');
+      return;
+    }
 
     const selectedMatter = cases.find(c => c.id === formData.matterId);
 
@@ -139,7 +149,17 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
           <Select
             label="Associated PI Matter *"
             value={formData.matterId}
-            onChange={(e) => setFormData({ ...formData, matterId: e.target.value })}
+            onChange={(e) => {
+              const selectedMatter = cases.find(c => c.id === e.target.value);
+              setFormData({
+                ...formData,
+                matterId: e.target.value,
+                matterTitle: selectedMatter?.matterTitle || formData.matterTitle,
+              });
+              if (matterError) setMatterError('');
+            }}
+            placeholder={cases.length === 0 ? 'No active PI matters available' : '-- Select Associated PI Matter --'}
+            error={matterError}
             required
             options={cases.map((c) => ({
               value: c.id,

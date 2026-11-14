@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useClients } from '../../context/ClientContext';
+import { useMatters } from '../../context/MatterContext';
+import { useTasks } from '../../context/TaskContext';
+import { useTime } from '../../context/TimeContext';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { PersistentMatterBar } from './PersistentMatterBar';
@@ -12,6 +16,12 @@ import { TimeEntryForm } from '../../features/time-tracking/forms/TimeEntryForm'
 
 export function AppLayout() {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { refreshClients, refreshIntakes } = useClients();
+  const { refreshMatters } = useMatters();
+  const { refreshTasks } = useTasks();
+  const { refreshTimeEntries, refreshExpenses, refreshInvoices } = useTime();
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 768 && window.innerWidth < 1024;
@@ -29,6 +39,58 @@ export function AppLayout() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // On-demand route-aware fetcher: only fires APIs when the corresponding menu or page route is accessed
+  const prevPathRef = useRef('');
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const path = location.pathname;
+
+    // Trigger API calls specific to the navigated menu
+    if (path.startsWith('/clients')) {
+      refreshClients();
+    } else if (path.startsWith('/intake')) {
+      refreshIntakes();
+    } else if (
+      path.startsWith('/matters') ||
+      path.startsWith('/documents') ||
+      path.startsWith('/personal-injury') ||
+      path.startsWith('/immigration') ||
+      path.startsWith('/bankruptcy') ||
+      path.startsWith('/litigation') ||
+      path.startsWith('/specialty-practices')
+    ) {
+      refreshMatters();
+    } else if (
+      path.startsWith('/tasks') ||
+      path.startsWith('/calendar') ||
+      path.startsWith('/deadlines') ||
+      path.startsWith('/checklists')
+    ) {
+      refreshTasks();
+    } else if (path.startsWith('/time')) {
+      refreshTimeEntries();
+    } else if (path.startsWith('/billing/invoices')) {
+      refreshInvoices();
+    } else if (path.startsWith('/billing/expenses')) {
+      refreshExpenses();
+    } else if (path.startsWith('/billing')) {
+      refreshInvoices();
+      refreshExpenses();
+    }
+
+    prevPathRef.current = path;
+  }, [
+    location.pathname,
+    isAuthenticated,
+    refreshClients,
+    refreshIntakes,
+    refreshMatters,
+    refreshTasks,
+    refreshTimeEntries,
+    refreshExpenses,
+    refreshInvoices,
+  ]);
 
   // Global Quick Action Modal states (Must be before any early return to obey React Rules of Hooks)
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);

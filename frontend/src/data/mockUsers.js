@@ -5,7 +5,9 @@
 
 export const MOCK_USERS = [
   {
-    id: 'usr-1',
+    id: '66c97d44-096b-4d34-8bd1-5691ba855e23',
+    legacyId: 'usr-1',
+    userCode: 'usr-1',
     name: 'Eleanor Heugly, Esq.',
     email: 'e.heugly@utahslawyers.com',
     phone: '(801) 555-0101',
@@ -20,7 +22,9 @@ export const MOCK_USERS = [
     avatar: null,
   },
   {
-    id: 'usr-2',
+    id: '8640f71a-0142-42f4-a4c0-732537dcd9b7',
+    legacyId: 'usr-2',
+    userCode: 'usr-2',
     name: 'Thomas Bludworth, Esq.',
     email: 't.bludworth@utahslawyers.com',
     phone: '(801) 555-0102',
@@ -35,7 +39,9 @@ export const MOCK_USERS = [
     avatar: null,
   },
   {
-    id: 'usr-3',
+    id: '1a1c1f3c-1a81-47aa-bad3-ec5fd76b9730',
+    legacyId: 'usr-3',
+    userCode: 'usr-3',
     name: 'Sarah Jenkins, Esq.',
     email: 's.jenkins@utahslawyers.com',
     phone: '(801) 555-0103',
@@ -50,7 +56,9 @@ export const MOCK_USERS = [
     avatar: null,
   },
   {
-    id: 'usr-4',
+    id: 'a0b374d7-a8b4-4d42-b4c1-909094f4598b',
+    legacyId: 'usr-4',
+    userCode: 'usr-4',
     name: 'Marcus Vance',
     email: 'm.vance@utahslawyers.com',
     phone: '(801) 555-0104',
@@ -65,7 +73,9 @@ export const MOCK_USERS = [
     avatar: null,
   },
   {
-    id: 'usr-5',
+    id: 'b4144e13-e1b8-4c10-bc62-3ca0966380e0',
+    legacyId: 'usr-5',
+    userCode: 'usr-5',
     name: 'Rachel Adams',
     email: 'r.adams@utahslawyers.com',
     phone: '(801) 555-0105',
@@ -80,7 +90,9 @@ export const MOCK_USERS = [
     avatar: null,
   },
   {
-    id: 'usr-6',
+    id: 'eca5d99f-a1cd-43f8-82f2-830acd1a5ddc',
+    legacyId: 'usr-6',
+    userCode: 'usr-6',
     name: 'David Sterling, Esq.',
     email: 'd.sterling@utahslawyers.com',
     phone: '(801) 555-0106',
@@ -96,4 +108,4 @@ export const MOCK_USERS = [
   },
 ];
 
-export const getUserById = (id) => MOCK_USERS.find((u) => u.id === id);
+export const getUserById = (id) => MOCK_USERS.find((u) => u.id === id || u.legacyId === id);

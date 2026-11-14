@@ -43,12 +43,10 @@ export function TaskProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshTasks();
-    } else {
+    if (!isAuthenticated) {
       setTasks([]);
     }
-  }, [isAuthenticated, refreshTasks]);
+  }, [isAuthenticated]);
 
   const addTask = async (taskData) => {
     try {

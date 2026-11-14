@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function LienModal({ isOpen, onClose, onSave, lien, cases = [] }) {
+export function LienModal({ isOpen, onClose, onSave, lien, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     lienHolder: '',
@@ -22,7 +22,7 @@ export function LienModal({ isOpen, onClose, onSave, lien, cases = [] }) {
   useEffect(() => {
     if (lien) {
       setFormData({
-        matterId: lien.matterId || cases[0]?.id || '',
+        matterId: lien.matterId || defaultCaseId || cases[0]?.id || '',
         lienHolder: lien.lienHolder || '',
         lienType: lien.lienType || 'Health Insurance / ERISA Subrogation',
         originalLienAmount: lien.originalLienAmount || 0,
@@ -36,7 +36,7 @@ export function LienModal({ isOpen, onClose, onSave, lien, cases = [] }) {
       });
     } else {
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: defaultCaseId || cases[0]?.id || '',
         lienHolder: '',
         lienType: 'Health Insurance / ERISA Subrogation',
         originalLienAmount: 5000.0,
@@ -49,7 +49,7 @@ export function LienModal({ isOpen, onClose, onSave, lien, cases = [] }) {
         notes: 'Requesting 33.3% common fund attorney fee reduction under Utah law.',
       });
     }
-  }, [lien, cases, isOpen]);
+  }, [lien, cases, defaultCaseId, isOpen]);
 
   // Handle automatic 1/3 common fund reduction helper
   const applyCommonFundReduction = () => {

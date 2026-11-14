@@ -22,11 +22,13 @@ import { MOCK_PI_CASES, MOCK_SETTLEMENT_MODELS } from '../../../data/mockPersona
 import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function SettlementCalculator() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [activeCaseId, setActiveCaseId] = useState(cases[0]?.id || 'PI-2026-001');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || cases[0]?.id || 'PI-2026-001');
 
   // Load preset or initialize state
   const presetModel = MOCK_SETTLEMENT_MODELS.find(m => m.matterId === activeCaseId) || MOCK_SETTLEMENT_MODELS[0] || {};
@@ -43,6 +45,33 @@ export function SettlementCalculator() {
   const [newOtherAmt, setNewOtherAmt] = useState('');
 
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+
+  // Sync activeCaseId when global activeMatter changes
+  useEffect(() => {
+    if (activeMatter?.id && activeMatter.id !== activeCaseId) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId && newCaseId !== 'ALL') {
+      const match = cases.find((c) => c.id === newCaseId);
+      if (match) {
+        setActiveMatter({
+          id: match.id,
+          title: match.matterTitle || `${match.clientName} - PI Claim`,
+          clientName: match.clientName,
+          clientNumber: match.clientNumber || match.id,
+          matterNumber: match.matterNumber || match.id,
+          practiceArea: 'Personal Injury',
+          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
+          status: match.caseStage || 'Active',
+          incidentDate: match.incidentDate,
+        });
+      }
+    }
+  };
 
   // Sync when case changes
   useEffect(() => {
@@ -123,9 +152,9 @@ export function SettlementCalculator() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
-        title="Settlement Disbursement Modeling &amp; Calculator"
+        title="Settlement Disbursement Modeling & Calculator"
         subtitle="Real-time Utah RPC 1.5 contingency fee modeling, litigation disbursement accounting, healthcare lien holdbacks, and official client closing statement generator."
         actions={
           <Button

@@ -26,10 +26,27 @@ export async function requireAuth(req: AuthenticatedRequest, res: Response, next
 
     // Immediate Revocation & Account Status Check
     // Prevents deactivated employees from using unexpired (up to 15m) access tokens
-    const liveUser = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, status: true, role: true },
-    });
+    // Includes auto-recovery on cloud proxy socket timeout
+    let liveUser;
+    try {
+      liveUser = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: { id: true, status: true, role: true },
+      });
+    } catch (dbErr: any) {
+      if (dbErr?.message?.includes('closed the connection') || dbErr?.code === 'P2024') {
+        try {
+          await prisma.$disconnect();
+          await prisma.$connect();
+        } catch {}
+        liveUser = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          select: { id: true, status: true, role: true },
+        });
+      } else {
+        throw dbErr;
+      }
+    }
 
     if (!liveUser) {
       throw AppError.unauthorized('User account associated with this token no longer exists.', 'USER_NOT_FOUND');

@@ -110,27 +110,31 @@ export function PINavigationHeader({
         </div>
 
         {/* Selected Matter Quick Metadata Strip */}
-        {selectedCase && activeCaseId !== 'ALL' && (
+        {selectedCase && effectiveCaseId !== 'ALL' && (
           <div className="mt-4 pt-3 border-t border-[#0B356D]/80 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-slate-300">
             <div>
               <span className="text-slate-400 block">Lead Matter:</span>
-              <span className="font-semibold text-white truncate block">{selectedCase.matterTitle}</span>
+              <span className="font-semibold text-white truncate block">
+                {selectedCase.matterTitle || selectedCase.title || activeMatter?.title || selectedCase.clientName}
+              </span>
             </div>
             <div>
               <span className="text-slate-400 block">Accident Date &amp; Location:</span>
-              <span className="font-semibold text-white truncate block">{selectedCase.incidentDate} • {selectedCase.incidentLocation?.split(',')[0]}</span>
+              <span className="font-semibold text-white truncate block">
+                {selectedCase.incidentDate || selectedCase.dateOfLoss || '2025-08-14'} • {selectedCase.incidentLocation ? selectedCase.incidentLocation.split(',')[0] : 'Salt Lake County, UT'}
+              </span>
             </div>
             <div>
               <span className="text-slate-400 block">Case Status:</span>
               <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#A4432B] text-white mt-0.5">
-                {selectedCase.status}
+                {selectedCase.status || 'Active'}
               </span>
             </div>
             <div>
               <span className="text-slate-400 block">Utah SoL Bar Date:</span>
               <span className="font-semibold text-amber-300 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                {selectedCase.statuteOfLimitations}
+                {selectedCase.statuteOfLimitations || '4 Years (Utah Code § 78B-2-307)'}
               </span>
             </div>
           </div>

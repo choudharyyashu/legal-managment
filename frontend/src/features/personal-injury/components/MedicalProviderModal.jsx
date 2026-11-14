@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function MedicalProviderModal({ isOpen, onClose, onSave, provider, cases = [] }) {
+export function MedicalProviderModal({ isOpen, onClose, onSave, provider, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     providerName: '',
@@ -26,7 +26,7 @@ export function MedicalProviderModal({ isOpen, onClose, onSave, provider, cases 
   useEffect(() => {
     if (provider) {
       setFormData({
-        matterId: provider.matterId || cases[0]?.id || '',
+        matterId: provider.matterId || defaultCaseId || cases[0]?.id || '',
         providerName: provider.providerName || '',
         providerType: provider.providerType || 'Orthopedic Surgery & Sports Medicine',
         treatmentStartDate: provider.treatmentStartDate || '',
@@ -44,7 +44,7 @@ export function MedicalProviderModal({ isOpen, onClose, onSave, provider, cases 
       });
     } else {
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: defaultCaseId || cases[0]?.id || '',
         providerName: '',
         providerType: 'Orthopedic Surgery & Sports Medicine',
         treatmentStartDate: new Date().toISOString().split('T')[0],
@@ -61,7 +61,7 @@ export function MedicalProviderModal({ isOpen, onClose, onSave, provider, cases 
         paymentStatus: 'Outstanding / Pending Settlement',
       });
     }
-  }, [provider, cases, isOpen]);
+  }, [provider, cases, defaultCaseId, isOpen]);
 
   const outstandingBalance = Math.max(
     0,

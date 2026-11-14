@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cases = [] }) {
+export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     vendorName: '',
@@ -20,7 +20,7 @@ export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cas
   useEffect(() => {
     if (assignment) {
       setFormData({
-        matterId: assignment.matterId || cases[0]?.id || '',
+        matterId: assignment.matterId || defaultCaseId || cases[0]?.id || '',
         vendorName: assignment.vendorName || '',
         vendorType: assignment.vendorType || 'Medical Chronology',
         assignmentDate: assignment.assignmentDate || '',
@@ -32,7 +32,7 @@ export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cas
       });
     } else {
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: defaultCaseId || cases[0]?.id || '',
         vendorName: '',
         vendorType: 'Medical Chronology',
         assignmentDate: new Date().toISOString().split('T')[0],
@@ -43,7 +43,7 @@ export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cas
         notes: '',
       });
     }
-  }, [assignment, cases, isOpen]);
+  }, [assignment, cases, defaultCaseId, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

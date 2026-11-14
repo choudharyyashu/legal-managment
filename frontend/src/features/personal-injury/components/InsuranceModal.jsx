@@ -4,7 +4,8 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) {
+export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], defaultCaseId = '' }) {
+  const [matterError, setMatterError] = useState('');
   const [formData, setFormData] = useState({
     matterId: '',
     insuranceCompany: '',
@@ -25,9 +26,10 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
   });
 
   useEffect(() => {
+    setMatterError('');
     if (policy) {
       setFormData({
-        matterId: policy.matterId || cases[0]?.id || '',
+        matterId: policy.matterId || '',
         insuranceCompany: policy.insuranceCompany || '',
         insuranceType: policy.insuranceType || '3rd Party Commercial Auto / Bodily Injury Liability',
         insuredName: policy.insuredName || '',
@@ -45,8 +47,10 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
         coverageNotes: policy.coverageNotes || '',
       });
     } else {
+      const isSingleMatter = Boolean(defaultCaseId && defaultCaseId !== 'ALL');
+      const initialMatterId = isSingleMatter ? defaultCaseId : '';
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: initialMatterId,
         insuranceCompany: '',
         insuranceType: '3rd Party Bodily Injury Liability',
         insuredName: '',
@@ -64,10 +68,15 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
         coverageNotes: '',
       });
     }
-  }, [policy, cases, isOpen]);
+  }, [policy, cases, defaultCaseId, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.matterId || formData.matterId === 'ALL') {
+      setMatterError('Please select an associated PI matter before saving.');
+      return;
+    }
 
     const savedPolicy = {
       id: policy?.id || `INS-${Date.now()}`,
@@ -106,7 +115,12 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
           <Select
             label="Associated PI Matter *"
             value={formData.matterId}
-            onChange={(e) => setFormData({ ...formData, matterId: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, matterId: e.target.value });
+              if (matterError) setMatterError('');
+            }}
+            placeholder={cases.length === 0 ? 'No active PI matters available' : '-- Select Associated PI Matter --'}
+            error={matterError}
             required
             options={cases.map((c) => ({
               value: c.id,

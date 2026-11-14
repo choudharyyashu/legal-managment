@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DollarSign,
   Plus,
@@ -20,15 +20,44 @@ import { MOCK_PI_CASES, MOCK_LIENS } from '../../../data/mockPersonalInjury';
 import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function LienRegister() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [liens, setLiens] = useState(() => mockStorage.get('pi_liens', MOCK_LIENS));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLien, setSelectedLien] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Sync activeCaseId when global activeMatter changes
+  useEffect(() => {
+    if (activeMatter?.id && activeMatter.id !== activeCaseId) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId && newCaseId !== 'ALL') {
+      const match = cases.find((c) => c.id === newCaseId);
+      if (match) {
+        setActiveMatter({
+          id: match.id,
+          title: match.matterTitle || `${match.clientName} - PI Claim`,
+          clientName: match.clientName,
+          clientNumber: match.clientNumber || match.id,
+          matterNumber: match.matterNumber || match.id,
+          practiceArea: 'Personal Injury',
+          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
+          status: match.caseStage || 'Active',
+          incidentDate: match.incidentDate,
+        });
+      }
+    }
+  };
 
   const filteredLiens = liens.filter((l) => {
     if (!l) return false;
@@ -176,9 +205,9 @@ export function LienRegister() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
-        title="Healthcare Lien Register &amp; Statutory Reductions"
+        title="Healthcare Lien Register & Statutory Reductions"
         subtitle="Manage Medicare (CMS BCRC super-liens), Utah Medicaid statutory subrogation, ERISA self-funded private health plans, hospital liens (UCA § 38-7-1), and common fund fee reductions."
         actions={
           <Button
@@ -266,6 +295,7 @@ export function LienRegister() {
         onSave={handleSaveLien}
         lien={selectedLien}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

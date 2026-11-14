@@ -68,14 +68,11 @@ export function ClientProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshClients();
-      refreshIntakes();
-    } else {
+    if (!isAuthenticated) {
       setClients([]);
       setIntakes([]);
     }
-  }, [isAuthenticated, refreshClients, refreshIntakes]);
+  }, [isAuthenticated]);
 
   const addClient = async (newClientData) => {
     try {
