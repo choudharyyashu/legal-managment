@@ -5,6 +5,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
 export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], defaultCaseId = '' }) {
+  const [matterError, setMatterError] = useState('');
   const [formData, setFormData] = useState({
     matterId: '',
     insuranceCompany: '',
@@ -25,6 +26,7 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], de
   });
 
   useEffect(() => {
+    setMatterError('');
     if (policy) {
       setFormData({
         matterId: policy.matterId || '',
@@ -45,7 +47,8 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], de
         coverageNotes: policy.coverageNotes || '',
       });
     } else {
-      const initialMatterId = (defaultCaseId && defaultCaseId !== 'ALL') ? defaultCaseId : (cases[0]?.id || '');
+      const isSingleMatter = Boolean(defaultCaseId && defaultCaseId !== 'ALL');
+      const initialMatterId = isSingleMatter ? defaultCaseId : '';
       setFormData({
         matterId: initialMatterId,
         insuranceCompany: '',
@@ -69,6 +72,11 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], de
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.matterId || formData.matterId === 'ALL') {
+      setMatterError('Please select an associated PI matter before saving.');
+      return;
+    }
 
     const savedPolicy = {
       id: policy?.id || `INS-${Date.now()}`,
@@ -107,7 +115,12 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], de
           <Select
             label="Associated PI Matter *"
             value={formData.matterId}
-            onChange={(e) => setFormData({ ...formData, matterId: e.target.value })}
+            onChange={(e) => {
+              setFormData({ ...formData, matterId: e.target.value });
+              if (matterError) setMatterError('');
+            }}
+            placeholder={cases.length === 0 ? 'No active PI matters available' : '-- Select Associated PI Matter --'}
+            error={matterError}
             required
             options={cases.map((c) => ({
               value: c.id,
