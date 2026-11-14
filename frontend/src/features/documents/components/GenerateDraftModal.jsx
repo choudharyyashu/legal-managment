@@ -44,12 +44,20 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
           Authorization: `Bearer ${tokenStorage.get() || ''}`,
         },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch templates');
+          return res.json();
+        })
         .then((json) => {
-          if (json?.data?.templates) {
-            setTemplates(json.data.templates);
-            if (json.data.templates.length > 0 && !selectedTemplateId) {
-              setSelectedTemplateId(json.data.templates[0].id);
+          const list = Array.isArray(json?.data)
+            ? json.data
+            : Array.isArray(json?.data?.templates)
+            ? json.data.templates
+            : [];
+          if (list.length > 0) {
+            setTemplates(list);
+            if (!selectedTemplateId) {
+              setSelectedTemplateId(list[0].id);
             }
           }
         })

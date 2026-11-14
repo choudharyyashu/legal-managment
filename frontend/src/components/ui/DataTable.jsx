@@ -111,7 +111,7 @@ export function DataTable({
                     let renderedContent = null;
                     if (typeof col.render === 'function') {
                       try {
-                        const firstArg = cellValue !== undefined ? cellValue : safeRow;
+                        const firstArg = cellValue !== undefined ? cellValue : null;
                         renderedContent = col.render(firstArg, safeRow);
                       } catch (err) {
                         console.warn(`DataTable error rendering column "${col.key || col.label}":`, err);

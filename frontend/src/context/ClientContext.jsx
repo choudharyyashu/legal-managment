@@ -31,6 +31,8 @@ export function ClientProvider({ children }) {
     intakeNumber: i.intakeNumber || i.id,
     practiceAreaName: i.practiceArea?.name || i.practiceAreaName || 'General',
     conflictStatus: i.conflictStatus || 'In Review',
+    reviewedBy: i.reviewedByName || i.reviewedBy || null,
+    reviewedAt: i.reviewedAt || null,
     createdAt: i.createdAt ? new Date(i.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 
@@ -54,7 +56,11 @@ export function ClientProvider({ children }) {
     if (!isAuthenticated) return;
     try {
       const data = await intakeService.getIntakes({ limit: 100, ...params });
-      const rawIntakes = Array.isArray(data?.intakes) ? data.intakes : [];
+      const rawIntakes = Array.isArray(data?.intakes)
+        ? data.intakes
+        : Array.isArray(data)
+        ? data
+        : [];
       setIntakes(rawIntakes.map(normalizeIntake));
     } catch (err) {
       console.warn('Failed to load intakes from API:', err?.message);

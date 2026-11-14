@@ -8,7 +8,7 @@ export const createIntakeSchema = z.object({
   practiceAreaId: z.string().max(50).optional(),
   adverseParties: z.string().min(2),
   matterSummary: z.string().min(5),
-  disputeAmount: z.number().nonnegative().optional().default(0),
+  disputeAmount: z.coerce.number().nonnegative().optional().default(0),
   jurisdictionVenue: z.string().max(255).optional(),
 });
 
@@ -20,7 +20,7 @@ export const updateIntakeSchema = z.object({
   practiceAreaId: z.string().max(50).optional(),
   adverseParties: z.string().min(2).optional(),
   matterSummary: z.string().min(5).optional(),
-  disputeAmount: z.number().nonnegative().optional(),
+  disputeAmount: z.coerce.number().nonnegative().optional(),
   jurisdictionVenue: z.string().max(255).optional(),
 });
 
