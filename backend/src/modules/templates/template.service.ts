@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
@@ -511,7 +512,9 @@ export class TemplateService {
     versionId: string
   ): Promise<{ buffer: Buffer; fileName: string; versionNumber: string; sha256Checksum: string }> {
     const version = await this.getTemplateVersionById(templateIdOrCode, versionId);
-    const absolutePath = path.resolve('storage', version.docxStorageKey);
+    const normalized = version.docxStorageKey.replace(/^[\\/]*/, '').replace(/^storage[\\/]/, '');
+    const candidate1 = path.resolve(process.cwd(), 'storage', normalized);
+    const absolutePath = fsSync.existsSync(candidate1) ? candidate1 : path.resolve(process.cwd(), version.docxStorageKey);
 
     try {
       const buffer = await fs.readFile(absolutePath);

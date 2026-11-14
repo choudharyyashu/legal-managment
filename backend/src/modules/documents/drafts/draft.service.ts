@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { prisma } from '../../../config/database.js';
 import { AppError } from '../../../errors/AppError.js';
@@ -20,6 +21,17 @@ import {
 } from './draft.types.js';
 
 export class DraftService {
+  public static resolveStoragePath(storageKey: string): string {
+    if (!storageKey) return '';
+    if (path.isAbsolute(storageKey)) return storageKey;
+    const normalized = storageKey.replace(/^[\\/]*/, '').replace(/^storage[\\/]/, '');
+    const candidate1 = path.resolve(process.cwd(), 'storage', normalized);
+    if (fsSync.existsSync(candidate1)) return candidate1;
+    const candidate2 = path.resolve(process.cwd(), storageKey);
+    if (fsSync.existsSync(candidate2)) return candidate2;
+    return candidate1;
+  }
+
   private static async generateDraftCode(): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
     let attempts = 0;
@@ -252,7 +264,7 @@ export class DraftService {
     }
 
     // 4. Read Template DOCX Binary from Storage
-    const templateAbsolutePath = path.resolve('storage', version.docxStorageKey);
+    const templateAbsolutePath = this.resolveStoragePath(version.docxStorageKey);
     let templateBuffer: Buffer;
     try {
       templateBuffer = await fs.readFile(templateAbsolutePath);
@@ -354,7 +366,7 @@ export class DraftService {
       throw AppError.badRequest('Draft does not have a valid DOCX file for PDF conversion.', 'NO_DOCX_FILE');
     }
 
-    const docxAbsolutePath = path.resolve('storage', draft.docxStorageKey);
+    const docxAbsolutePath = this.resolveStoragePath(draft.docxStorageKey);
     let docxBuffer: Buffer;
     try {
       docxBuffer = await fs.readFile(docxAbsolutePath);

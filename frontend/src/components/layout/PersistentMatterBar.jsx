@@ -28,11 +28,18 @@ import { useMatters } from '../../context/MatterContext';
 export function PersistentMatterBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeMatter, matters, setActiveMatter, clearActiveMatter } = useMatters();
+  const { activeMatter, matters, setActiveMatter, clearActiveMatter, refreshMatters } = useMatters();
 
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [switcherSearch, setSwitcherSearch] = useState('');
   const switcherRef = useRef(null);
+
+  // Lazy load matters if user opens the persistent workspace switcher
+  useEffect(() => {
+    if (isSwitcherOpen && matters.length === 0) {
+      refreshMatters();
+    }
+  }, [isSwitcherOpen, matters.length, refreshMatters]);
 
   // Close switcher on outside click
   useEffect(() => {

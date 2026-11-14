@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMatters } from '../../../context/MatterContext';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
@@ -11,19 +11,29 @@ import { DatePicker } from '../../../components/ui/DatePicker';
 
 export function MatterForm({ initialData = null, defaultClientId = null, onSuccess, onCancel }) {
   const { addMatter, updateMatter } = useMatters();
-  const { clients } = useClients();
+  const { clients, refreshClients } = useClients();
   const { allUsers } = useAuth();
   const { addToast } = useToast();
 
-  const attorneys = allUsers.filter(u => u.role === 'attorney' || u.role === 'super_admin' || u.role === 'supervisor');
+  // Lazy load clients if empty when opening the new matter form
+  useEffect(() => {
+    if (clients.length === 0) {
+      refreshClients();
+    }
+  }, [clients.length, refreshClients]);
+
+  const attorneys = allUsers.filter(u => u.role === 'attorney' || u.role === 'super_admin');
   const staff = allUsers.filter(u => u.role === 'paralegal' || u.role === 'billing');
+
+  const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const defaultAttorney = attorneys.find(a => validUuidPattern.test(a.id)) || attorneys[0];
 
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     clientId: initialData?.clientId || defaultClientId || clients[0]?.id || '',
     practiceAreaId: initialData?.practiceAreaId || PRACTICE_AREAS[0]?.id || '',
-    responsibleAttorneyId: initialData?.responsibleAttorneyId || attorneys[0]?.id || '',
-    assignedStaffId: initialData?.assignedStaffIds?.[0] || staff[0]?.id || 'usr-4',
+    responsibleAttorneyId: initialData?.responsibleAttorneyId || defaultAttorney?.id || '8640f71a-0142-42f4-a4c0-732537dcd9b7',
+    assignedStaffId: initialData?.assignedStaffIds?.[0] || staff[0]?.id || 'a0b374d7-a8b4-4d42-b4c1-909094f4598b',
     status: initialData?.status || 'Active',
     billingType: initialData?.billingType || 'Hourly',
     hourlyRate: initialData?.hourlyRate || 500,
@@ -61,15 +71,20 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
     try {
       const selectedClient = clients.find(c => c.id === formData.clientId || c.clientNumber === formData.clientId);
       const selectedPracticeArea = PRACTICE_AREAS.find(pa => pa.id === formData.practiceAreaId || pa.legacyId === formData.practiceAreaId);
-      const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       
-      const attorneyUuid = validUuidPattern.test(formData.responsibleAttorneyId)
-        ? formData.responsibleAttorneyId
-        : (attorneys.find(a => validUuidPattern.test(a.id))?.id || allUsers.find(u => validUuidPattern.test(u.id))?.id);
+      // Resolve valid Attorney UUID strictly matching attorney or super_admin
+      let attorneyUuid = formData.responsibleAttorneyId;
+      if (!validUuidPattern.test(attorneyUuid)) {
+        const found = attorneys.find(a => (a.id === attorneyUuid || a.legacyId === attorneyUuid) && validUuidPattern.test(a.id));
+        attorneyUuid = found?.id || '8640f71a-0142-42f4-a4c0-732537dcd9b7'; // Thomas Bludworth, Esq.
+      }
 
-      const staffUuid = validUuidPattern.test(formData.assignedStaffId)
-        ? formData.assignedStaffId
-        : (staff.find(s => validUuidPattern.test(s.id))?.id || null);
+      // Resolve valid Staff UUID
+      let staffUuid = formData.assignedStaffId;
+      if (staffUuid && !validUuidPattern.test(staffUuid)) {
+        const found = staff.find(s => (s.id === staffUuid || s.legacyId === staffUuid) && validUuidPattern.test(s.id));
+        staffUuid = found?.id || 'a0b374d7-a8b4-4d42-b4c1-909094f4598b'; // Marcus Vance
+      }
 
       const payload = {
         ...formData,

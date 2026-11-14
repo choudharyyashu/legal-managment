@@ -29,6 +29,23 @@ if (config.nodeEnv !== 'production') {
 }
 
 // -----------------------------------------------------------------------------
+// TCP KEEPALIVE FOR CLOUD PROXIES (Railway / Cloud MySQL)
+// Pings DB every 20 seconds to prevent proxy idle socket drops
+// -----------------------------------------------------------------------------
+setInterval(async () => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (err: any) {
+    if (err?.message?.includes('closed the connection') || err?.code === 'P2024') {
+      try {
+        await prisma.$disconnect();
+        await prisma.$connect();
+      } catch {}
+    }
+  }
+}, 20000).unref();
+
+// -----------------------------------------------------------------------------
 // CONNECTION TESTING & HEALTH MONITORS
 // -----------------------------------------------------------------------------
 

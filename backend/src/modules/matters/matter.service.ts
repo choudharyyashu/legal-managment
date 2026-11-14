@@ -506,6 +506,9 @@ export class MatterService {
               },
             },
           });
+        }, {
+          maxWait: 15000,
+          timeout: 30000,
         });
 
         break;

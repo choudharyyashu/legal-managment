@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTime } from '../../../context/TimeContext';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
@@ -11,10 +11,15 @@ import { DatePicker } from '../../../components/ui/DatePicker';
 
 export function TimeEntryForm({ defaultMatterId = null, onSuccess, onCancel }) {
   const { addTimeEntry } = useTime();
-  const { clients } = useClients();
-  const { matters } = useMatters();
+  const { clients, refreshClients } = useClients();
+  const { matters, refreshMatters } = useMatters();
   const { currentUser } = useAuth();
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (clients.length === 0) refreshClients();
+    if (matters.length === 0) refreshMatters();
+  }, [clients.length, matters.length, refreshClients, refreshMatters]);
 
   const selectedDefaultMatter = defaultMatterId ? matters.find(m => m.id === defaultMatterId) : matters[0];
 

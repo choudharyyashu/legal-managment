@@ -78,16 +78,14 @@ export function MatterProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshMatters();
-    } else {
+    if (!isAuthenticated) {
       setMatters([]);
       setActiveMatterId(null);
       try {
         sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
       } catch {}
     }
-  }, [isAuthenticated, refreshMatters]);
+  }, [isAuthenticated]);
 
   // Resolve active matter object from list
   const activeMatter = useMemo(() => {
