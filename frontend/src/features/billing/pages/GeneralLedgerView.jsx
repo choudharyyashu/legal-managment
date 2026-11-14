@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landmark, Filter, Search, Calendar, Download, FileSpreadsheet, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ledgerService } from '../../../services/ledgerService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
@@ -81,27 +82,25 @@ export function GeneralLedgerView() {
     }
   ]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
-    import('../../../services/ledgerService').then(({ ledgerService }) => {
-      ledgerService.getJournals().then((res) => {
-        if (isMounted && Array.isArray(res?.journals) && res.journals.length > 0) {
-          setJournalEntries(
-            res.journals.map((j) => ({
-              id: j.journalNumber || j.id,
-              date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : '2026-11-13',
-              ref: j.reference || 'GL-REF',
-              description: j.memo || 'Journal Entry',
-              accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || 1010} - Debit`,
-              debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit) || 0,
-              accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || 2100} - Credit`,
-              credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit) || 0,
-              postedBy: j.postedByUser?.name || 'Firm Staff',
-            }))
-          );
-        }
-      }).catch((err) => console.warn('Could not load journals from API:', err?.message));
-    });
+    ledgerService.getJournals().then((res) => {
+      if (isMounted && Array.isArray(res?.journals) && res.journals.length > 0) {
+        setJournalEntries(
+          res.journals.map((j) => ({
+            id: j.journalNumber || j.id,
+            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : '2026-11-13',
+            ref: j.reference || 'GL-REF',
+            description: j.memo || 'Journal Entry',
+            accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || 1010} - Debit`,
+            debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit) || 0,
+            accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || 2100} - Credit`,
+            credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit) || 0,
+            postedBy: j.postedByUser?.name || 'Firm Staff',
+          }))
+        );
+      }
+    }).catch((err) => console.warn('Could not load journals from API:', err?.message));
     return () => { isMounted = false; };
   }, []);
 

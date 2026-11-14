@@ -8,13 +8,18 @@ import { INITIAL_REVIEW_SLOTS } from '../data/mockTimeReviewSchedules';
 const TimeContext = createContext();
 
 export function TimeProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
   const [timeEntries, setTimeEntries] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [cosmoLexExports, setCosmoLexExports] = useState([]);
   const [reviewSlots, setReviewSlots] = useState(INITIAL_REVIEW_SLOTS);
   const [loading, setLoading] = useState(false);
+
+  const canViewInvoices =
+    currentUser?.role === 'super_admin' ||
+    currentUser?.role === 'billing' ||
+    currentUser?.role === 'supervisor';
 
   const normalizeTimeEntry = (t) => {
     const hours = Number(t.hours) || 0;
@@ -91,7 +96,7 @@ export function TimeProvider({ children }) {
   }, [isAuthenticated]);
 
   const refreshInvoices = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !canViewInvoices) return;
     try {
       const data = await billingService.getInvoices({ limit: 100 });
       const raw = Array.isArray(data?.invoices) ? data.invoices : [];
@@ -99,12 +104,16 @@ export function TimeProvider({ children }) {
     } catch (err) {
       console.warn('Failed to load invoices from API:', err?.message);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, canViewInvoices]);
 
   useEffect(() => {
     if (isAuthenticated) {
       setLoading(true);
-      Promise.allSettled([refreshTimeEntries(), refreshExpenses(), refreshInvoices()]).finally(() => {
+      const refreshPromises = [refreshTimeEntries(), refreshExpenses()];
+      if (canViewInvoices) {
+        refreshPromises.push(refreshInvoices());
+      }
+      Promise.allSettled(refreshPromises).finally(() => {
         setLoading(false);
       });
     } else {
@@ -112,7 +121,7 @@ export function TimeProvider({ children }) {
       setExpenses([]);
       setInvoices([]);
     }
-  }, [isAuthenticated, refreshTimeEntries, refreshExpenses, refreshInvoices]);
+  }, [isAuthenticated, canViewInvoices, refreshTimeEntries, refreshExpenses, refreshInvoices]);
 
   const markSlotReviewed = (slotId) => {
     setReviewSlots((prev) =>

@@ -5,6 +5,15 @@ const prisma = new PrismaClient();
 
 const USERS = [
   {
+    name: 'Eleanor Heugly, Esq.',
+    email: 'e.heugly@utahslawyers.com',
+    role: 'super_admin',
+    title: 'Managing Partner',
+    initials: 'EH',
+    department: 'Executive Management',
+    billingRate: 650,
+  },
+  {
     name: 'Thomas Bludworth, Esq.',
     email: 't.bludworth@utahslawyers.com',
     role: 'attorney',
