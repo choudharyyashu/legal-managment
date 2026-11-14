@@ -7,9 +7,11 @@ import { MatterService } from '../../matters/matter.service.js';
 import { AuthenticatedUser } from '../../auth/auth.types.js';
 import { DraftDataResolver } from './draft.data-resolver.js';
 import { DraftEngine } from './draft.engine.js';
+import { TaskService } from '../../tasks/task.service.js';
 import {
   ValidateDraftInput,
   GenerateDraftInput,
+  CreateFollowUpTaskInput,
   DraftQueryInput,
 } from './draft.validation.js';
 import {
@@ -140,7 +142,7 @@ export class DraftService {
     }
 
     // 3. Resolve Field Mappings
-    const resolved = DraftDataResolver.resolve(matter, version);
+    const resolved = DraftDataResolver.resolve(matter, version, input.customOverrides);
 
     // Build preview dictionary
     const preview: Record<string, any> = {};
@@ -161,7 +163,10 @@ export class DraftService {
       clientName: matter.client.name,
       totalFieldsCount: resolved.totalFieldsCount,
       missingFieldsCount: resolved.missingFieldsCount,
+      missingRequiredCount: resolved.missingRequiredCount,
+      missingOptionalCount: resolved.missingOptionalCount,
       missingFields: resolved.missingFields,
+      optionalMissingFields: resolved.optionalMissingFields,
       resolvedPreview: preview,
     };
   }
@@ -513,6 +518,120 @@ export class DraftService {
       contentType,
       draftCode: draft.draftCode,
     };
+  }
+
+  /**
+   * Creates a structured follow-up task directly from missing document information.
+   * Prevents duplicate open tasks for the same unresolved issue.
+   * Enforces matter-level access and Utah RPC 1.10 Ethical Wall restrictions.
+   */
+  static async createFollowUpTask(
+    input: CreateFollowUpTaskInput,
+    currentUser: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<any> {
+    // 1. Authorize matter access (Ethical Wall enforcement)
+    await MatterService.getMatterByIdOrNumber(input.matterId, currentUser);
+
+    const fullMatter = await prisma.matter.findFirst({
+      where: { OR: [{ id: input.matterId }, { matterNumber: input.matterId }] },
+      include: { responsibleAttorney: true },
+    });
+
+    if (!fullMatter) {
+      throw AppError.notFound(`Matter '${input.matterId}' not found.`, 'MATTER_NOT_FOUND');
+    }
+
+    // 2. Resolve Assignee (defaults to matter's lead attorney or current user)
+    let assigneeId = input.assignedToUserId;
+    if (!assigneeId) {
+      assigneeId = fullMatter.responsibleAttorneyId || currentUser.id;
+    }
+
+    const assignee = await prisma.user.findUnique({
+      where: { id: assigneeId },
+      select: { id: true, name: true, status: true },
+    });
+
+    if (!assignee || assignee.status !== 'Active') {
+      throw AppError.badRequest('Assigned staff member is invalid or inactive.', 'INVALID_ASSIGNEE');
+    }
+
+    // 3. Resolve Title and Description with issue tag
+    const fieldTag = `${input.missingField.sourceEntity}.${input.missingField.sourceField}`;
+    const taskTitle = input.title || `Follow-up: Missing ${input.missingField.sourceEntity} ${input.missingField.sourceField}`;
+    const issueMarker = `[ISSUE:${fieldTag}]`;
+    const taskDescription = input.description
+      ? `${issueMarker} ${input.description}`
+      : `${issueMarker} Required document generation field '${input.missingField.placeholderTag}' is missing from matter records. ${input.missingField.description || ''}`.trim();
+
+    // 4. Duplicate Open Task Prevention
+    const existingOpenTask = await prisma.task.findFirst({
+      where: {
+        matterId: fullMatter.id,
+        status: { not: 'Completed' },
+        OR: [
+          { title: taskTitle },
+          { description: { contains: issueMarker } },
+        ],
+      },
+      include: {
+        assignee: { select: { id: true, name: true } },
+        matter: { select: { id: true, matterNumber: true, title: true } },
+      },
+    });
+
+    if (existingOpenTask) {
+      throw AppError.conflict(
+        `An open follow-up task already exists for this unresolved issue ('${existingOpenTask.taskCode}' - ${existingOpenTask.title}).`,
+        'DUPLICATE_OPEN_TASK'
+      );
+    }
+
+    // 5. Default Due Date (7 days from today if not provided)
+    let dueDateStr = input.dueDate;
+    if (!dueDateStr) {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      dueDateStr = d.toISOString().split('T')[0];
+    }
+
+    // 6. Create Task via TaskService
+    const createdTask = await TaskService.createTask(
+      {
+        matterId: fullMatter.id,
+        title: taskTitle,
+        description: taskDescription,
+        assignedToUserId: assignee.id,
+        dueDate: dueDateStr,
+        priority: input.priority || 'High',
+        reminderSetting: '1 day prior',
+      },
+      {
+        userId: currentUser.id,
+        userRole: currentUser.role,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
+
+    // 7. Immutable Audit Log
+    await createAuditLog({
+      userId: currentUser.id,
+      action: 'CREATE',
+      resourceType: 'tasks',
+      resourceId: createdTask.id,
+      details: {
+        purpose: 'DOCUMENT_MISSING_INFO_FOLLOWUP',
+        matterId: fullMatter.id,
+        taskCode: createdTask.taskCode,
+        missingField: input.missingField,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return createdTask;
   }
 }
 

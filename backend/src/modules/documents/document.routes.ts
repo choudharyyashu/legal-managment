@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { DocumentController } from './document.controller.js';
 import { draftRouter } from './drafts/draft.routes.js';
+import { documentEventRouter } from './events/event.routes.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -15,6 +16,9 @@ documentRouter.use(requireAuth);
 
 // Sub-router for automated document drafts and generation engine
 documentRouter.use('/drafts', draftRouter);
+
+// Sub-router for event-driven automatic document draft triggers (Phase 4)
+documentRouter.use('/events', documentEventRouter);
 
 documentRouter.get(
   '/',

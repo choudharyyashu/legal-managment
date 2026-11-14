@@ -55,4 +55,33 @@ export const documentService = {
     const res = await apiClient.delete(`/documents/${id}`);
     return res?.data;
   },
+
+  async getEventCatalog() {
+    const res = await apiClient.get('/documents/events/catalog');
+    return res?.data?.events || [];
+  },
+
+  async triggerDocumentEvent(event, matterId, payload = {}) {
+    const res = await apiClient.post('/documents/events/trigger', {
+      event,
+      matterId,
+      payload,
+    });
+    return res?.data;
+  },
+
+  async validateDraftPrerequisites(data) {
+    const res = await apiClient.post('/documents/drafts/validate', data);
+    return res?.data;
+  },
+
+  async generateDraft(data) {
+    const res = await apiClient.post('/documents/drafts/generate', data);
+    return res?.data;
+  },
+
+  async createFollowUpTask(data) {
+    const res = await apiClient.post('/documents/drafts/tasks/followup', data);
+    return res?.data;
+  },
 };

@@ -7,6 +7,7 @@ import {
   disconnectDatabase,
 } from './config/database.js';
 import { logger } from './utils/logger.js';
+import { AutoDraftService } from './modules/documents/events/auto-draft.service.js';
 
 async function bootstrap() {
   console.log('================================================================');
@@ -45,6 +46,9 @@ async function bootstrap() {
     console.warn(`Reason: ${dbCheck.error || retryResult.error}`);
     console.warn('Please verify that the XAMPP MySQL service is running on port 3306.');
   }
+
+  // Initialize Event-Driven Auto Draft Subscriptions (Phase 4)
+  AutoDraftService.initSubscriptions();
 
   const server = app.listen(config.port, () => {
     logger.info(`API Server listening on http://localhost:${config.port}`, {

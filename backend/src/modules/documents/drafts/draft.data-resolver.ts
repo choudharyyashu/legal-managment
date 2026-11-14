@@ -80,6 +80,97 @@ export class DraftDataResolver {
     }
   }
 
+  /**
+   * Helper mapping missing fields to their respective source records, navigation URLs, and task suggestions.
+   */
+  private static getSourceRecordDetails(
+    sourceEntity: string,
+    sourceField: string
+  ): {
+    recordType: string;
+    navigationUrl: string;
+    suggestedTitle: string;
+    suggestedDescription: string;
+    priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  } {
+    const sField = sourceField.toLowerCase();
+    const sEntity = sourceEntity.toLowerCase();
+
+    if (sEntity === 'insurance' || sField.includes('claim') || sField.includes('adjuster') || sField.includes('policy')) {
+      return {
+        recordType: 'Insurance & Claims Record',
+        navigationUrl: '/personal-injury/insurance',
+        suggestedTitle: sField.includes('claim')
+          ? 'Follow-up: Missing Adverse Insurance Claim Number'
+          : sField.includes('adjuster')
+          ? 'Follow-up: Missing Adverse Adjuster Details'
+          : 'Follow-up: Missing Insurance Policy Details',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is required for document generation. Please contact the carrier or client to obtain and update this record.`,
+        priority: 'High',
+      };
+    }
+
+    if (sEntity === 'incident' || sField.includes('accident') || sField.includes('police') || sField.includes('reportnumber')) {
+      return {
+        recordType: 'Incident & Liability Investigation',
+        navigationUrl: '/personal-injury/incident',
+        suggestedTitle: sField.includes('report')
+          ? 'Follow-up: Missing Official Police Accident Report'
+          : 'Follow-up: Missing Incident & Collision Details',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is required for representation and liability notices. Please obtain and update the incident record.`,
+        priority: 'High',
+      };
+    }
+
+    if (sEntity === 'medicalprovider' || sEntity === 'provider') {
+      return {
+        recordType: 'Treating Medical Provider',
+        navigationUrl: '/personal-injury/medical',
+        suggestedTitle: 'Follow-up: Missing Medical Provider Contact & Facility Details',
+        suggestedDescription: `Facility address and provider details for ${sourceField} are required for medical records requests. Please update the provider registry.`,
+        priority: 'Medium',
+      };
+    }
+
+    if (sEntity === 'medicalrecords' || sField.includes('record')) {
+      return {
+        recordType: 'Medical Records Ledger',
+        navigationUrl: '/personal-injury/medical',
+        suggestedTitle: 'Follow-up: Overdue Medical Records Inquiry',
+        suggestedDescription: `Medical records or treatment status (${sourceField}) are missing or overdue. A follow-up deficiency request is needed.`,
+        priority: 'High',
+      };
+    }
+
+    if (sEntity === 'client') {
+      return {
+        recordType: 'Client Profile',
+        navigationUrl: '/clients',
+        suggestedTitle: `Follow-up: Missing Client ${sourceField}`,
+        suggestedDescription: `Client ${sourceField} is required before legal instruments can be executed or served. Please update the client profile.`,
+        priority: 'High',
+      };
+    }
+
+    if (sEntity === 'matter') {
+      return {
+        recordType: 'Matter Case Docket',
+        navigationUrl: '/matters',
+        suggestedTitle: `Follow-up: Incomplete Matter ${sourceField}`,
+        suggestedDescription: `Matter ${sourceField} is required to complete document validation. Please update the case docket record.`,
+        priority: 'Medium',
+      };
+    }
+
+    return {
+      recordType: 'Legal Matter Records',
+      navigationUrl: '/matters',
+      suggestedTitle: `Follow-up: Missing ${sourceEntity}.${sourceField}`,
+      suggestedDescription: `Field '${sourceEntity}.${sourceField}' is required for document drafting. Please review and update the matter records.`,
+      priority: 'Medium',
+    };
+  }
+
   static resolve(
     matter: any,
     templateVersion: any,
@@ -89,10 +180,14 @@ export class DraftDataResolver {
     canGenerate: boolean;
     resolvedData: Record<string, any>;
     missingFields: MissingFieldFlag[];
+    optionalMissingFields: MissingFieldFlag[];
     totalFieldsCount: number;
     missingFieldsCount: number;
+    missingRequiredCount: number;
+    missingOptionalCount: number;
   } {
     const missingFields: MissingFieldFlag[] = [];
+    const optionalMissingFields: MissingFieldFlag[] = [];
     const resolvedData: Record<string, any> = {};
 
     const client = matter.client || {};
@@ -168,6 +263,38 @@ export class DraftDataResolver {
         disputeAmount: intake.disputeAmount,
         jurisdictionVenue: intake.jurisdictionVenue,
       },
+      Incident: {
+        accidentDate: customOverrides?.accident_date || customOverrides?.incident_date || customOverrides?.['Incident.accidentDate'] || null,
+        accidentType: customOverrides?.accident_type || customOverrides?.['Incident.accidentType'] || null,
+        incidentLocation: customOverrides?.incident_location || customOverrides?.['Incident.incidentLocation'] || null,
+        policeAgency: customOverrides?.police_agency || customOverrides?.['Incident.policeAgency'] || null,
+        reportNumber: customOverrides?.report_number || customOverrides?.['Incident.reportNumber'] || null,
+        investigatingOfficer: customOverrides?.investigating_officer || null,
+        description: customOverrides?.accident_description || customOverrides?.description || null,
+        mechanismOfInjury: customOverrides?.mechanism_of_injury || null,
+      },
+      Insurance: {
+        insuranceCompany: customOverrides?.insurance_company || customOverrides?.['Insurance.insuranceCompany'] || null,
+        claimNumber: customOverrides?.claim_number || customOverrides?.['Insurance.claimNumber'] || null,
+        policyNumber: customOverrides?.policy_number || customOverrides?.['Insurance.policyNumber'] || null,
+        adjusterName: customOverrides?.adjuster_name || customOverrides?.['Insurance.adjusterName'] || null,
+        adjusterPhone: customOverrides?.adjuster_phone || customOverrides?.['Insurance.adjusterPhone'] || null,
+        adjusterEmail: customOverrides?.adjuster_email || customOverrides?.['Insurance.adjusterEmail'] || null,
+      },
+      MedicalProvider: {
+        providerName: customOverrides?.provider_name || customOverrides?.['MedicalProvider.providerName'] || null,
+        providerType: customOverrides?.provider_type || customOverrides?.['MedicalProvider.providerType'] || null,
+        facilityAddress: customOverrides?.facility_address || customOverrides?.provider_address || null,
+        phone: customOverrides?.provider_phone || customOverrides?.phone || null,
+        fax: customOverrides?.provider_fax || customOverrides?.fax || null,
+        treatmentDates: customOverrides?.treatment_dates || customOverrides?.dates_of_service || null,
+      },
+      MedicalRecords: {
+        recordsStatus: customOverrides?.records_status || customOverrides?.['MedicalRecords.recordsStatus'] || null,
+        requestDate: customOverrides?.request_date || customOverrides?.initial_request_date || null,
+        daysOverdue: customOverrides?.days_overdue || null,
+        missingRecordsSummary: customOverrides?.missing_records_summary || null,
+      },
       Firm: {
         name: 'Heugly & Bludworth, Attorneys at Law',
         address: '136 E South Temple, Suite 1400, Salt Lake City, UT 84111',
@@ -189,6 +316,10 @@ export class DraftDataResolver {
     resolvedData['matter'] = { ...rawEntityLookup.Matter };
     resolvedData['attorney'] = { ...rawEntityLookup.ResponsibleAttorney };
     resolvedData['court'] = { ...rawEntityLookup.Court };
+    resolvedData['incident'] = { ...rawEntityLookup.Incident };
+    resolvedData['insurance'] = { ...rawEntityLookup.Insurance };
+    resolvedData['medicalProvider'] = { ...rawEntityLookup.MedicalProvider };
+    resolvedData['medicalRecords'] = { ...rawEntityLookup.MedicalRecords };
     resolvedData['firm'] = { ...rawEntityLookup.Firm };
     resolvedData['today'] = rawEntityLookup.CurrentDate.long;
     resolvedData['currentYear'] = rawEntityLookup.CurrentDate.year;
@@ -212,6 +343,8 @@ export class DraftDataResolver {
       // Check for user-provided custom overrides
       if (customOverrides && customOverrides[cleanTag] !== undefined) {
         val = customOverrides[cleanTag];
+      } else if (customOverrides && customOverrides[mapping.sourceField] !== undefined) {
+        val = customOverrides[mapping.sourceField];
       }
 
       // Fallback to default value if empty
@@ -219,15 +352,30 @@ export class DraftDataResolver {
         val = mapping.defaultValue;
       }
 
-      // Check required validation
-      if ((val === null || val === undefined || val === '') && mapping.isRequired) {
-        missingFields.push({
+      // Check required vs optional validation
+      if (val === null || val === undefined || val === '') {
+        const details = this.getSourceRecordDetails(mapping.sourceEntity, mapping.sourceField);
+        const flag: MissingFieldFlag = {
           placeholderTag: mapping.placeholderTag,
           sourceEntity: mapping.sourceEntity,
           sourceField: mapping.sourceField,
           reason: 'MISSING_DATA',
-          description: `Required field '${mapping.sourceEntity}.${mapping.sourceField}' is missing or empty in matter records.`,
-        });
+          isRequired: Boolean(mapping.isRequired),
+          description: mapping.isRequired
+            ? `Required field '${mapping.sourceEntity}.${mapping.sourceField}' is missing or empty in matter records.`
+            : `Optional field '${mapping.sourceEntity}.${mapping.sourceField}' is not populated.`,
+          sourceRecordType: details.recordType,
+          sourceRecordNavigationUrl: details.navigationUrl,
+          suggestedTaskTitle: details.suggestedTitle,
+          suggestedTaskDescription: details.suggestedDescription,
+          suggestedPriority: details.priority,
+        };
+
+        if (mapping.isRequired) {
+          missingFields.push(flag);
+        } else {
+          optionalMissingFields.push(flag);
+        }
       }
 
       // Apply formatting rule
@@ -257,9 +405,11 @@ export class DraftDataResolver {
       canGenerate: isValid,
       resolvedData,
       missingFields,
+      optionalMissingFields,
       totalFieldsCount: mappings.length,
-      missingFieldsCount: missingFields.length,
+      missingFieldsCount: missingFields.length + optionalMissingFields.length,
+      missingRequiredCount: missingFields.length,
+      missingOptionalCount: optionalMissingFields.length,
     };
   }
 }
-

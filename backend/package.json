@@ -24,6 +24,7 @@
     "test:business": "tsx src/tests/business-modules-test-suite.ts",
     "test:templates": "tsx src/tests/template-registry-test-suite.ts",
     "test:generation": "tsx src/tests/document-generation-test-suite.ts",
+    "test:events": "tsx src/tests/event-driven-drafts-test-suite.ts",
     "prisma:deploy": "prisma migrate deploy"
   },
   "prisma": {

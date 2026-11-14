@@ -5,6 +5,7 @@ import { validateRequest } from '../../../middleware/validate.js';
 import {
   validateDraftInputSchema,
   generateDraftInputSchema,
+  createFollowUpTaskSchema,
   draftQuerySchema,
 } from './draft.validation.js';
 
@@ -13,7 +14,7 @@ export const draftRouter = Router();
 // Authentication required for all document generation and draft endpoints
 draftRouter.use(requireAuth);
 
-// 1. Validation of generation prerequisites
+// 1. Validation of generation prerequisites and missing information warnings
 draftRouter.post(
   '/validate',
   requirePermission('documents:view'),
@@ -21,7 +22,15 @@ draftRouter.post(
   DraftController.validateDraft
 );
 
-// 2. Execution of document draft generation (DOCX)
+// 2. Creation of follow-up task directly from missing information warning
+draftRouter.post(
+  '/tasks/followup',
+  requirePermission('tasks:create'),
+  validateRequest({ body: createFollowUpTaskSchema }),
+  DraftController.createFollowUpTask
+);
+
+// 3. Execution of document draft generation (DOCX)
 draftRouter.post(
   '/generate',
   requirePermission('documents:upload'),

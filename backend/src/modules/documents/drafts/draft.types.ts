@@ -4,6 +4,12 @@ export interface MissingFieldFlag {
   sourceField: string;
   reason: 'MISSING_DATA' | 'INVALID_FORMAT' | 'NULL_VALUE';
   description: string;
+  isRequired?: boolean;
+  sourceRecordType?: string;
+  sourceRecordNavigationUrl?: string;
+  suggestedTaskTitle?: string;
+  suggestedTaskDescription?: string;
+  suggestedPriority?: 'Low' | 'Medium' | 'High' | 'Critical';
 }
 
 export interface DraftValidationResult {
@@ -16,7 +22,10 @@ export interface DraftValidationResult {
   clientName: string;
   totalFieldsCount: number;
   missingFieldsCount: number;
+  missingRequiredCount: number;
+  missingOptionalCount: number;
   missingFields: MissingFieldFlag[];
+  optionalMissingFields: MissingFieldFlag[];
   resolvedPreview: Record<string, string | number | boolean>;
 }
 

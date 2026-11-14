@@ -91,5 +91,22 @@ export class DraftController {
       next(err);
     }
   }
+
+  static async createFollowUpTask(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const task = await DraftService.createFollowUpTask(req.body, req.user!, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Follow-up task '${task.taskCode}' created successfully for missing document information.`,
+        data: { task },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

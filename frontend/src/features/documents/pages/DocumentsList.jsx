@@ -30,6 +30,7 @@ import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { Modal } from '../../../components/ui/Modal';
+import { GenerateDraftModal } from '../components/GenerateDraftModal';
 import { formatDate } from '../../../utils/formatDate';
 
 export function DocumentsList() {
@@ -114,6 +115,7 @@ export function DocumentsList() {
   }, [loadDocuments]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [versionDoc, setVersionDoc] = useState(null);
 

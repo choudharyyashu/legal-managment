@@ -20,6 +20,7 @@ import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { StatCard } from '../../../components/shared/StatCard';
 import { MOCK_PI_CASES, MOCK_MEDICAL_PROVIDERS } from '../../../data/mockPersonalInjury';
 import { mockStorage } from '../../../services/mockStorage';
+import { documentService } from '../../../services/documentService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 
@@ -63,6 +64,44 @@ export function MedicalTreatment() {
       mockStorage.set('pi_medical', updated);
       return updated;
     });
+
+    // Event-Driven Auto Draft Triggers (Phase 4)
+    if (savedRecord.matterId && savedRecord.providerName) {
+      // 1. Provider Added Trigger: Document 113 (Records Request) & 112 (Authorization)
+      documentService
+        .triggerDocumentEvent('pi.provider.added', savedRecord.matterId, {
+          providerName: savedRecord.providerName,
+          providerType: savedRecord.providerType,
+          treatmentDates: savedRecord.dateOfService,
+          recordsStatus: savedRecord.recordsStatus,
+          requestRecords: true,
+          requestAuthorization: true,
+        })
+        .then((res) => {
+          if (res?.draftsCreated?.length > 0) {
+            const titles = res.draftsCreated.map((d) => d.title).join(', ');
+            addToast(`Auto-drafts created: ${titles}`, 'info');
+          }
+        })
+        .catch(() => {});
+
+      // 2. Missing Records Trigger: Document 115 (Records Deficiency Follow-up)
+      if (savedRecord.recordsStatus === 'Missing / Overdue') {
+        documentService
+          .triggerDocumentEvent('pi.missing.records', savedRecord.matterId, {
+            providerName: savedRecord.providerName,
+            requestDate: savedRecord.dateOfService,
+            daysOverdue: 30,
+            outstandingRecords: ['Billing Itemized Ledger', 'Operative & Diagnostic Reports'],
+          })
+          .then((res) => {
+            if (res?.draftsCreated?.length > 0) {
+              addToast(`Deficiency auto-draft created: ${res.draftsCreated[0].title}`, 'warning');
+            }
+          })
+          .catch(() => {});
+      }
+    }
   };
 
   const openAddModal = () => {

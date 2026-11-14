@@ -21,6 +21,7 @@ import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { MOCK_PI_CASES, MOCK_INCIDENT_RECORDS } from '../../../data/mockPersonalInjury';
 import { mockStorage } from '../../../services/mockStorage';
+import { documentService } from '../../../services/documentService';
 import { useToast } from '../../../components/ui/Toast';
 
 export function IncidentLiability() {
@@ -58,6 +59,30 @@ export function IncidentLiability() {
       mockStorage.set('pi_incidents', updated);
       return updated;
     });
+
+    // Event-Driven Auto Draft Trigger (Phase 4): Document 096 (Representation Letter)
+    if (savedRecord.matterId) {
+      documentService
+        .triggerDocumentEvent('pi.accident.saved', savedRecord.matterId, {
+          incidentDate: savedRecord.incidentDate,
+          incidentTime: savedRecord.incidentTime,
+          incidentLocation: savedRecord.incidentLocation,
+          accidentType: savedRecord.accidentType,
+          description: savedRecord.description,
+          policeAgency: savedRecord.policeReportDetails?.agency,
+          reportNumber: savedRecord.policeReportDetails?.reportNumber,
+          investigatingOfficer: savedRecord.policeReportDetails?.investigatingOfficer,
+          liabilityAssessment: savedRecord.liabilityAssessment,
+        })
+        .then((res) => {
+          if (res?.draftsCreated?.length > 0) {
+            addToast(`Auto-draft created: ${res.draftsCreated[0].title} (${res.draftsCreated[0].draftCode})`, 'info');
+          }
+        })
+        .catch(() => {
+          // Graceful non-blocking error handling
+        });
+    }
   };
 
   const openAddModal = () => {
