@@ -135,8 +135,8 @@ async function runFoundationTestSuite() {
         SELECT COUNT(*) as table_count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME != '_prisma_migrations';
       `;
       const count = Number(tableCheck[0]?.table_count || 0);
-      const ok = count === 28;
-      recordResult('8. Live MySQL database contains all 28 domain application tables', ok, `Table count: ${count}`);
+      const ok = count === 28 || count === 32;
+      recordResult('8. Live MySQL database contains all 28 domain application tables (or 32 with document automation)', ok, `Table count: ${count}`);
     }
 
     // -------------------------------------------------------------------------
