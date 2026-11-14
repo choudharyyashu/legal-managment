@@ -101,7 +101,7 @@ export class DraftService {
     // 1. Authorize Matter Access with Ethical Wall screening
     await MatterService.getMatterByIdOrNumber(input.matterId, currentUser);
 
-    const matter = await prisma.matter.findFirst({
+    const matter: any = await (prisma.matter.findFirst as any)({
       where: {
         OR: [{ id: input.matterId }, { matterNumber: input.matterId }],
       },
@@ -113,6 +113,10 @@ export class DraftService {
         incidents: { take: 1, orderBy: { createdAt: 'desc' } },
         insurancePolicies: { take: 1, orderBy: { createdAt: 'desc' } },
         medicalProviders: { take: 1, orderBy: { createdAt: 'desc' } },
+        demandPackages: { take: 1, orderBy: { createdAt: 'desc' } },
+        damagesRecords: { orderBy: { createdAt: 'desc' } },
+        wageLossRecords: { orderBy: { createdAt: 'desc' } },
+        medicalBillingSummaries: { orderBy: { createdAt: 'desc' } },
       },
     });
 
@@ -197,7 +201,7 @@ export class DraftService {
     // 1. Authorize Matter Access
     await MatterService.getMatterByIdOrNumber(input.matterId, currentUser);
 
-    const matter = await prisma.matter.findFirst({
+    const matter: any = await (prisma.matter.findFirst as any)({
       where: {
         OR: [{ id: input.matterId }, { matterNumber: input.matterId }],
       },
@@ -209,6 +213,10 @@ export class DraftService {
         incidents: { take: 1, orderBy: { createdAt: 'desc' } },
         insurancePolicies: { take: 1, orderBy: { createdAt: 'desc' } },
         medicalProviders: { take: 1, orderBy: { createdAt: 'desc' } },
+        demandPackages: { take: 1, orderBy: { createdAt: 'desc' } },
+        damagesRecords: { orderBy: { createdAt: 'desc' } },
+        wageLossRecords: { orderBy: { createdAt: 'desc' } },
+        medicalBillingSummaries: { orderBy: { createdAt: 'desc' } },
       },
     });
 

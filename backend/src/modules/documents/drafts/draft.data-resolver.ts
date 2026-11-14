@@ -437,6 +437,11 @@ export class DraftDataResolver {
     resolvedData['insurance'] = { ...rawEntityLookup.Insurance };
     resolvedData['medicalProvider'] = { ...rawEntityLookup.MedicalProvider };
     resolvedData['medicalRecords'] = { ...rawEntityLookup.MedicalRecords };
+    resolvedData['demand'] = { ...rawEntityLookup.Demand };
+    resolvedData['damages'] = { ...rawEntityLookup.Damages };
+    resolvedData['wageLoss'] = { ...rawEntityLookup.WageLoss };
+    resolvedData['medicalBilling'] = { ...rawEntityLookup.MedicalBilling };
+    resolvedData['specials'] = { ...rawEntityLookup.Specials };
     resolvedData['firm'] = { ...rawEntityLookup.Firm };
     resolvedData['today'] = rawEntityLookup.CurrentDate.long;
     resolvedData['currentYear'] = rawEntityLookup.CurrentDate.year;
