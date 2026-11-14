@@ -19,15 +19,30 @@ import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { MOCK_PI_CASES, MOCK_INSURANCE_POLICIES } from '../../../data/mockPersonalInjury';
 import { mockStorage } from '../../../services/mockStorage';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function InsuranceManagement() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [policies, setPolicies] = useState(() => mockStorage.get('pi_policies', MOCK_INSURANCE_POLICIES));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (activeMatter?.id) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter?.id]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId !== 'ALL') {
+      setActiveMatter(newCaseId);
+    }
+  };
 
   const filteredPolicies = policies.filter((p) => {
     if (!p) return false;
@@ -158,7 +173,7 @@ export function InsuranceManagement() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
         title="Insurance Management &amp; Coverage Tracking"
         subtitle="Manage 3rd-party commercial liability policies, 1st-party Utah statutory PIP exhaustion ledgers, Underinsured Motorist (UIM) reserves, and claims adjuster logs."
@@ -223,6 +238,7 @@ export function InsuranceManagement() {
         onSave={handleSavePolicy}
         policy={selectedPolicy}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

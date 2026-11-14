@@ -23,16 +23,24 @@ import { MOCK_PI_CASES, MOCK_INCIDENT_RECORDS } from '../../../data/mockPersonal
 import { mockStorage } from '../../../services/mockStorage';
 import { documentService } from '../../../services/documentService';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function IncidentLiability() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [incidents, setIncidents] = useState(() => mockStorage.get('pi_incidents', MOCK_INCIDENT_RECORDS));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewDetailIncident, setViewDetailIncident] = useState(null);
+
+  React.useEffect(() => {
+    if (activeMatter?.id) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter?.id]);
 
   const filteredIncidents = incidents.filter((inc) => {
     const matchesSearch =
@@ -44,6 +52,13 @@ export function IncidentLiability() {
     const matchesCase = activeCaseId === 'ALL' || inc.matterId === activeCaseId;
     return matchesSearch && matchesCase;
   });
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId !== 'ALL') {
+      setActiveMatter(newCaseId);
+    }
+  };
 
   const handleSaveIncident = (savedRecord) => {
     setIncidents((prev) => {
@@ -199,7 +214,7 @@ export function IncidentLiability() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
         title="Incident &amp; Liability Investigation"
         subtitle="Forensic accident reconstruction telemetry, police crash reports, witness interviews, Utah comparative fault analysis, and evidence spoliation preservation."
@@ -400,6 +415,7 @@ export function IncidentLiability() {
         onSave={handleSaveIncident}
         incident={selectedIncident}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

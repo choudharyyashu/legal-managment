@@ -1,14 +1,39 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { matterService } from '../services/matterService';
 import { useAuth } from '../hooks/useAuth';
+import { MOCK_MATTERS } from '../data/mockMatters';
 
 const MatterContext = createContext();
 
 const ACTIVE_MATTER_STORAGE_KEY = 'hb_active_matter_id';
 
+const normalizeMatter = (m) => ({
+  ...m,
+  id: m.id,
+  matterNumber: m.matterNumber || m.id,
+  title: m.title,
+  clientName: m.client?.name || m.clientName || 'Client',
+  clientId: m.clientId,
+  practiceAreaId: m.practiceAreaId,
+  practiceAreaName: m.practiceArea?.name || m.practiceAreaName || 'Practice Area',
+  responsibleAttorneyName: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Lead Counsel',
+  assignedStaffNames: m.staffAssignments?.map((s) => s.user?.name).filter(Boolean) || m.assignedStaffNames || [],
+  assignedStaffIds: m.staffAssignments?.map((s) => s.userId).filter(Boolean) || m.assignedStaffIds || [],
+  status: m.status || 'Active',
+  billingType: m.billingType || 'Hourly',
+  hourlyRate: m.hourlyRate ? Number(m.hourlyRate) : 0,
+  flatFeeAmount: m.flatFeeAmount ? Number(m.flatFeeAmount) : 0,
+  budget: m.budget ? Number(m.budget) : 0,
+  totalBilled: m.totalBilled ? Number(m.totalBilled) : 0,
+  unbilledHours: m.unbilledHours ? Number(m.unbilledHours) : 0,
+  openDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  isEthicalWallEnabled: Boolean(m.isEthicalWallEnabled),
+  ethicalWallExcludedRole: m.ethicalWallExcludedRole || null,
+});
+
 export function MatterProvider({ children }) {
   const { isAuthenticated, currentUser } = useAuth();
-  const [matters, setMatters] = useState([]);
+  const [matters, setMatters] = useState(() => MOCK_MATTERS.map(normalizeMatter));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -25,30 +50,6 @@ export function MatterProvider({ children }) {
       // Fallback
     }
     return null;
-  });
-
-  const normalizeMatter = (m) => ({
-    ...m,
-    id: m.id,
-    matterNumber: m.matterNumber || m.id,
-    title: m.title,
-    clientName: m.client?.name || m.clientName || 'Client',
-    clientId: m.clientId,
-    practiceAreaId: m.practiceAreaId,
-    practiceAreaName: m.practiceArea?.name || m.practiceAreaName || 'Practice Area',
-    responsibleAttorneyName: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Lead Counsel',
-    assignedStaffNames: m.staffAssignments?.map((s) => s.user?.name).filter(Boolean) || m.assignedStaffNames || [],
-    assignedStaffIds: m.staffAssignments?.map((s) => s.userId).filter(Boolean) || m.assignedStaffIds || [],
-    status: m.status || 'Active',
-    billingType: m.billingType || 'Hourly',
-    hourlyRate: m.hourlyRate ? Number(m.hourlyRate) : 0,
-    flatFeeAmount: m.flatFeeAmount ? Number(m.flatFeeAmount) : 0,
-    budget: m.budget ? Number(m.budget) : 0,
-    totalBilled: m.totalBilled ? Number(m.totalBilled) : 0,
-    unbilledHours: m.unbilledHours ? Number(m.unbilledHours) : 0,
-    openDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    isEthicalWallEnabled: Boolean(m.isEthicalWallEnabled),
-    ethicalWallExcludedRole: m.ethicalWallExcludedRole || null,
   });
 
   // Verify whether the currently authenticated user is locked out by Utah RPC 1.10 Ethical Wall

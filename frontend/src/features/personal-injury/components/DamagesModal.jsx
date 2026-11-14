@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function DamagesModal({ isOpen, onClose, onSave, damagesRecord, cases = [] }) {
+export function DamagesModal({ isOpen, onClose, onSave, damagesRecord, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     bodyArea: 'Cervical Spine',
@@ -30,7 +30,7 @@ export function DamagesModal({ isOpen, onClose, onSave, damagesRecord, cases = [
       const primaryEvidence = damagesRecord.supportingMedicalEvidence?.[0] || {};
 
       setFormData({
-        matterId: damagesRecord.matterId || cases[0]?.id || '',
+        matterId: damagesRecord.matterId || defaultCaseId || cases[0]?.id || '',
         bodyArea: primaryInjury.bodyArea || 'Cervical Spine',
         category: primaryInjury.category || 'Spinal / Discogenic',
         description: primaryInjury.description || '',
@@ -49,7 +49,7 @@ export function DamagesModal({ isOpen, onClose, onSave, damagesRecord, cases = [
       });
     } else {
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: defaultCaseId || cases[0]?.id || '',
         bodyArea: 'Cervical Spine',
         category: 'Spinal / Discogenic',
         description: '',
@@ -67,7 +67,7 @@ export function DamagesModal({ isOpen, onClose, onSave, damagesRecord, cases = [
         damagesNotes: '',
       });
     }
-  }, [damagesRecord, cases, isOpen]);
+  }, [damagesRecord, cases, defaultCaseId, isOpen]);
 
   const calculatedLostWages = Number(formData.hourlyRate || 0) * 8 * Number(formData.daysMissed || 0);
 

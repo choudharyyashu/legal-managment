@@ -23,15 +23,30 @@ import { mockStorage } from '../../../services/mockStorage';
 import { documentService } from '../../../services/documentService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function MedicalTreatment() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [providers, setProviders] = useState(() => mockStorage.get('pi_medical', MOCK_MEDICAL_PROVIDERS));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (activeMatter?.id) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter?.id]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId !== 'ALL') {
+      setActiveMatter(newCaseId);
+    }
+  };
 
   const filteredProviders = providers.filter((p) => {
     if (!p) return false;
@@ -234,9 +249,9 @@ export function MedicalTreatment() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
-        title="Medical Treatment &amp; Records Workspace"
+        title="Medical Treatment & Records Workspace"
         subtitle="Medical provider directory, date-of-service chronologies, HIPAA authorization tracking, certified medical records requests, and master billing ledger."
         actions={
           <Button
@@ -313,6 +328,7 @@ export function MedicalTreatment() {
         onSave={handleSaveProvider}
         provider={selectedProvider}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

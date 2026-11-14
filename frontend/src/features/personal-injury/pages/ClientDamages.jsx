@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserCheck,
   Plus,
@@ -25,16 +25,45 @@ import { MOCK_PI_CASES, MOCK_DAMAGES_RECORDS } from '../../../data/mockPersonalI
 import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function ClientDamages() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [damagesList, setDamagesList] = useState(() => mockStorage.get('pi_damages', MOCK_DAMAGES_RECORDS));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDamage, setSelectedDamage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedRecord, setExpandedRecord] = useState(null);
+
+  // Sync activeCaseId when global activeMatter changes
+  useEffect(() => {
+    if (activeMatter?.id && activeMatter.id !== activeCaseId) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId && newCaseId !== 'ALL') {
+      const match = cases.find((c) => c.id === newCaseId);
+      if (match) {
+        setActiveMatter({
+          id: match.id,
+          title: match.matterTitle || `${match.clientName} - PI Claim`,
+          clientName: match.clientName,
+          clientNumber: match.clientNumber || match.id,
+          matterNumber: match.matterNumber || match.id,
+          practiceArea: 'Personal Injury',
+          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
+          status: match.caseStage || 'Active',
+          incidentDate: match.incidentDate,
+        });
+      }
+    }
+  };
 
   // Filtered dataset
   const filteredDamages = damagesList.filter((d) => {
@@ -97,7 +126,7 @@ export function ClientDamages() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
         title="Client & Damages Management"
         subtitle="Anatomical injury profiles, objective diagnostic MRI/CT findings, functional disability ratings, and verified economic wage loss calculations."
@@ -447,6 +476,7 @@ export function ClientDamages() {
         onSave={handleSaveDamage}
         damagesRecord={selectedDamage}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] }) {
+export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     matterTitle: '',
@@ -53,9 +53,11 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
         investigationNotes: incident.investigationNotes || '',
       });
     } else {
+      const initialMatterId = (defaultCaseId && defaultCaseId !== 'ALL') ? defaultCaseId : (cases[0]?.id || '');
+      const defaultMatter = cases.find(c => c.id === initialMatterId) || cases[0];
       setFormData({
-        matterId: cases[0]?.id || '',
-        matterTitle: cases[0]?.matterTitle || '',
+        matterId: initialMatterId,
+        matterTitle: defaultMatter?.matterTitle || '',
         incidentDate: new Date().toISOString().split('T')[0],
         incidentTime: '14:30 MT',
         incidentLocation: '',
@@ -76,7 +78,7 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [] })
         investigationNotes: '',
       });
     }
-  }, [incident, cases, isOpen]);
+  }, [incident, cases, defaultCaseId, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

@@ -16,7 +16,8 @@ import {
   Shield,
   Stethoscope,
   ChevronRight,
-  Scale
+  Scale,
+  FolderOpen
 } from 'lucide-react';
 import { PINavigationHeader } from '../components/PINavigationHeader';
 import { StatCard } from '../../../components/shared/StatCard';
@@ -27,13 +28,21 @@ import { MOCK_PI_CASES, MOCK_DEMAND_PACKAGES } from '../../../data/mockPersonalI
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { matterService } from '../../../services/matterService';
+import { useMatters } from '../../../context/MatterContext';
 
 export function PIDashboard() {
   const navigate = useNavigate();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases, setCases] = useState(MOCK_PI_CASES);
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+
+  useEffect(() => {
+    if (activeMatter?.id) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -96,17 +105,30 @@ export function PIDashboard() {
       key: 'clientName',
       label: 'Client / Case Title',
       sortable: true,
-      render: (val, c) => (
-        <div className="min-w-[160px] max-w-[220px]">
-          <span
-            className="font-bold text-[#06244B] block hover:underline cursor-pointer"
-            onClick={() => navigate('/personal-injury/incident-liability')}
-          >
-            {c?.clientName || val || 'Unnamed Client'}
-          </span>
-          <span className="text-[11px] text-[#667085] truncate block">{c?.matterTitle || '—'}</span>
-        </div>
-      ),
+      render: (val, c) => {
+        const isCurrentActive = activeMatter?.id === c.id || activeMatter?.matterNumber === c.matterNumber;
+        return (
+          <div className="min-w-[180px] max-w-[240px]">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="font-bold text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
+                onClick={() => {
+                  setActiveMatter(c.matterId || c.id || c);
+                  navigate('/personal-injury/incident-liability');
+                }}
+              >
+                {c?.clientName || val || 'Unnamed Client'}
+              </span>
+              {isCurrentActive && (
+                <span className="shrink-0 px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#06244B] text-white uppercase font-mono tracking-wider">
+                  Active
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] text-[#667085] truncate block">{c?.matterTitle || c?.accidentType || '—'}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'accidentType',
@@ -155,23 +177,39 @@ export function PIDashboard() {
     },
     {
       key: 'actions',
-      label: 'Action',
+      label: 'Actions',
       align: 'right',
-      render: (_, c) => (
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs py-1"
-          onClick={() => {
-            if (c?.id) {
-              setActiveCaseId(c.id);
-            }
-            navigate('/personal-injury/settlement-calculator');
-          }}
-        >
-          Calculator
-        </Button>
-      ),
+      render: (_, c) => {
+        const isCurrentActive = activeMatter?.id === c.id || activeMatter?.matterNumber === c.matterNumber;
+        return (
+          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              variant={isCurrentActive ? 'primary' : 'outline'}
+              className="text-xs py-1"
+              icon={FolderOpen}
+              title="Open Matter Workspace"
+              onClick={() => {
+                setActiveMatter(c.matterId || c.id || c);
+                navigate('/personal-injury/incident-liability');
+              }}
+            >
+              Workspace
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs py-1 text-[#06244B] hover:text-[#A4432B]"
+              onClick={() => {
+                setActiveMatter(c.matterId || c.id || c);
+                navigate('/personal-injury/settlement-calculator');
+              }}
+            >
+              Calculator
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

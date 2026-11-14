@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Plus,
@@ -22,15 +22,44 @@ import { MOCK_PI_CASES, MOCK_DEMAND_PACKAGES } from '../../../data/mockPersonalI
 import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function DemandPackages() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [demandPackages, setDemandPackages] = useState(() => mockStorage.get('pi_demands', MOCK_DEMAND_PACKAGES));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDemand, setSelectedDemand] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Sync activeCaseId when global activeMatter changes
+  useEffect(() => {
+    if (activeMatter?.id && activeMatter.id !== activeCaseId) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId && newCaseId !== 'ALL') {
+      const match = cases.find((c) => c.id === newCaseId);
+      if (match) {
+        setActiveMatter({
+          id: match.id,
+          title: match.matterTitle || `${match.clientName} - PI Claim`,
+          clientName: match.clientName,
+          clientNumber: match.clientNumber || match.id,
+          matterNumber: match.matterNumber || match.id,
+          practiceArea: 'Personal Injury',
+          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
+          status: match.caseStage || 'Active',
+          incidentDate: match.incidentDate,
+        });
+      }
+    }
+  };
 
   const filteredDemands = demandPackages.filter((d) => {
     if (!d) return false;
@@ -173,9 +202,9 @@ export function DemandPackages() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
-        title="Demand Packages &amp; Readiness Builder"
+        title="Demand Packages & Readiness Builder"
         subtitle="10-point evidentiary readiness checklist, Utah formal policy limits demand narratives, hyperlinked exhibit indices, and partner approval workflow."
         actions={
           <Button
@@ -247,6 +276,7 @@ export function DemandPackages() {
         onSave={handleSaveDemand}
         demandPackage={selectedDemand}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );

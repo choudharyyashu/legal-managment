@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
-export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) {
+export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], defaultCaseId = '' }) {
   const [formData, setFormData] = useState({
     matterId: '',
     insuranceCompany: '',
@@ -27,7 +27,7 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
   useEffect(() => {
     if (policy) {
       setFormData({
-        matterId: policy.matterId || cases[0]?.id || '',
+        matterId: policy.matterId || '',
         insuranceCompany: policy.insuranceCompany || '',
         insuranceType: policy.insuranceType || '3rd Party Commercial Auto / Bodily Injury Liability',
         insuredName: policy.insuredName || '',
@@ -45,8 +45,9 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
         coverageNotes: policy.coverageNotes || '',
       });
     } else {
+      const initialMatterId = (defaultCaseId && defaultCaseId !== 'ALL') ? defaultCaseId : (cases[0]?.id || '');
       setFormData({
-        matterId: cases[0]?.id || '',
+        matterId: initialMatterId,
         insuranceCompany: '',
         insuranceType: '3rd Party Bodily Injury Liability',
         insuredName: '',
@@ -64,7 +65,7 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [] }) 
         coverageNotes: '',
       });
     }
-  }, [policy, cases, isOpen]);
+  }, [policy, cases, defaultCaseId, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

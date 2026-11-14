@@ -5,7 +5,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { CheckSquare, Square, Eye, FileText, Printer, ShieldCheck } from 'lucide-react';
 
-export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cases = [] }) {
+export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cases = [], defaultCaseId = '' }) {
   const [activeTab, setActiveTab] = useState('edit'); // 'edit' | 'preview'
   const [formData, setFormData] = useState({
     matterId: '',
@@ -35,7 +35,7 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
   useEffect(() => {
     if (demandPackage) {
       setFormData({
-        matterId: demandPackage.matterId || cases[0]?.id || '',
+        matterId: demandPackage.matterId || defaultCaseId || cases[0]?.id || '',
         matterTitle: demandPackage.matterTitle || '',
         demandAmount: demandPackage.demandAmount || 350000,
         policyLimitsDemand: demandPackage.policyLimitsDemand || false,
@@ -59,9 +59,10 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
         narrative: demandPackage.narrative || '',
       });
     } else {
+      const selectedCase = cases.find(c => c.id === (defaultCaseId || cases[0]?.id)) || cases[0];
       setFormData({
-        matterId: cases[0]?.id || '',
-        matterTitle: cases[0]?.matterTitle || '',
+        matterId: selectedCase?.id || '',
+        matterTitle: selectedCase?.matterTitle || '',
         demandAmount: 250000,
         policyLimitsDemand: false,
         datePrepared: new Date().toISOString().split('T')[0],
@@ -84,7 +85,7 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
         narrative: 'RE: Formal Settlement Demand Under Utah Law\n\nPlease find attached the comprehensive damages dossier regarding the subject collision...',
       });
     }
-  }, [demandPackage, cases, isOpen]);
+  }, [demandPackage, cases, defaultCaseId, isOpen]);
 
   const toggleChecklistItem = (key) => {
     setFormData((prev) => ({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Briefcase,
   Plus,
@@ -19,16 +19,45 @@ import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { MOCK_PI_CASES, MOCK_VENDOR_ASSIGNMENTS } from '../../../data/mockPersonalInjury';
 import { mockStorage } from '../../../services/mockStorage';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function VendorAssignments() {
   const { addToast } = useToast();
+  const { activeMatter, setActiveMatter } = useMatters();
   const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
   const [assignments, setAssignments] = useState(() => mockStorage.get('pi_vendors', MOCK_VENDOR_ASSIGNMENTS));
-  const [activeCaseId, setActiveCaseId] = useState('ALL');
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Sync activeCaseId when global activeMatter changes
+  useEffect(() => {
+    if (activeMatter?.id && activeMatter.id !== activeCaseId) {
+      setActiveCaseId(activeMatter.id);
+    }
+  }, [activeMatter]);
+
+  const handleCaseChange = (newCaseId) => {
+    setActiveCaseId(newCaseId);
+    if (newCaseId && newCaseId !== 'ALL') {
+      const match = cases.find((c) => c.id === newCaseId);
+      if (match) {
+        setActiveMatter({
+          id: match.id,
+          title: match.matterTitle || `${match.clientName} - PI Claim`,
+          clientName: match.clientName,
+          clientNumber: match.clientNumber || match.id,
+          matterNumber: match.matterNumber || match.id,
+          practiceArea: 'Personal Injury',
+          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
+          status: match.caseStage || 'Active',
+          incidentDate: match.incidentDate,
+        });
+      }
+    }
+  };
 
   const filteredAssignments = assignments.filter((a) => {
     if (!a) return false;
@@ -155,9 +184,9 @@ export function VendorAssignments() {
     <div className="space-y-6">
       <PINavigationHeader
         activeCaseId={activeCaseId}
-        onCaseChange={setActiveCaseId}
+        onCaseChange={handleCaseChange}
         cases={cases}
-        title="Outside Vendor &amp; Expert Assignments"
+        title="Outside Vendor & Expert Assignments"
         subtitle="Manage secure work product delegations to medical records retrieval agencies, professional chronologies, medical bill auditors, and accident reconstruction experts."
         actions={
           <Button
@@ -225,6 +254,7 @@ export function VendorAssignments() {
         onSave={handleSaveAssignment}
         assignment={selectedAssignment}
         cases={cases}
+        defaultCaseId={activeMatter?.id || activeCaseId}
       />
     </div>
   );
