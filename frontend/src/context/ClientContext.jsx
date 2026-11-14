@@ -31,6 +31,8 @@ export function ClientProvider({ children }) {
     intakeNumber: i.intakeNumber || i.id,
     practiceAreaName: i.practiceArea?.name || i.practiceAreaName || 'General',
     conflictStatus: i.conflictStatus || 'In Review',
+    reviewedBy: i.reviewedByName || i.reviewedBy || null,
+    reviewedAt: i.reviewedAt || null,
     createdAt: i.createdAt ? new Date(i.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   });
 

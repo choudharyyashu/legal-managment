@@ -29,15 +29,15 @@ export function AppLayout() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Global Quick Action Modal states (Must be before any early return to obey React Rules of Hooks)
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
+  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+
   // Redirect to login if user is not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  // Global Quick Action Modal states
-  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isMatterModalOpen, setIsMatterModalOpen] = useState(false);
-  const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#F5F0E5] text-[#202A35] flex">

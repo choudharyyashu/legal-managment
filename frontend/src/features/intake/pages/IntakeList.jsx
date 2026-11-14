@@ -109,22 +109,26 @@ export function IntakeList() {
     }
   };
 
-  const handleConvertClient = (intake) => {
-    const newClient = addClient({
-      name: intake.prospectiveClient,
-      primaryContact: intake.contactPerson,
-      email: intake.email,
-      phone: intake.phone,
-      type: 'Organization',
-      assignedAttorneyId: currentUser.id,
-      assignedAttorneyName: currentUser.name,
-      status: 'Active',
-      notes: `Converted from Intake ${intake.id}. Adverse Parties cleared: ${intake.adverseParties}`,
-    });
+  const handleConvertClient = async (intake) => {
+    try {
+      const newClient = await addClient({
+        name: intake.prospectiveClient,
+        primaryContact: intake.contactPerson || null,
+        email: intake.email,
+        phone: intake.phone,
+        type: 'Organization',
+        assignedAttorneyId: currentUser?.id || null,
+        assignedAttorneyName: currentUser?.name || null,
+        status: 'Active',
+        notes: `Converted from Intake ${intake.intakeNumber || intake.id}. Adverse Parties cleared: ${intake.adverseParties}`,
+      });
 
-    addToast(`Client record created: ${newClient.name} (${newClient.id}). Opening matter workflow...`, 'success');
-    setSelectedIntake(null);
-    navigate(`/clients/${newClient.id}`);
+      addToast(`Client record created: ${newClient.name} (${newClient.clientNumber || newClient.id}). Opening client dossier...`, 'success');
+      setSelectedIntake(null);
+      navigate(`/clients/${newClient.id || newClient.clientNumber}`);
+    } catch (err) {
+      addToast(err?.message || 'Failed to convert intake to client.', 'error');
+    }
   };
 
   const columns = [
@@ -168,12 +172,15 @@ export function IntakeList() {
     {
       key: 'reviewedBy',
       label: 'Reviewer',
-      render: (val, row) => (
-        <div className="text-xs">
-          <span className="text-[#06244B] font-semibold">{val || 'Pending Review'}</span>
-          {row.reviewedAt && <span className="text-[10px] text-[#667085] block">{formatDate(row.reviewedAt, { short: true })}</span>}
-        </div>
-      ),
+      render: (val, row) => {
+        const reviewerText = typeof val === 'string' && val ? val : (row.reviewedByName || row.reviewedBy || 'Pending Review');
+        return (
+          <div className="text-xs">
+            <span className="text-[#06244B] font-semibold">{reviewerText}</span>
+            {row.reviewedAt && <span className="text-[10px] text-[#667085] block">{formatDate(row.reviewedAt, { short: true })}</span>}
+          </div>
+        );
+      },
     },
     {
       key: 'actions',
