@@ -34,3 +34,36 @@ piRouter.post(
   validateRequest({ body: signAuthorizationSchema }),
   PersonalInjuryController.signAuthorization
 );
+
+// Records Request Status Update (Enforces Authorization Readiness Gate)
+piRouter.patch(
+  '/matters/:matterId/records-requests/:requestId/status',
+  requirePermission('matters:edit'),
+  PersonalInjuryController.updateRecordRequestStatus
+);
+
+// Matter PI Workflow Tasks & Reminders Inspector
+piRouter.get(
+  '/matters/:matterId/workflow/tasks',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getMatterWorkflowTasks
+);
+
+piRouter.get(
+  '/matters/:matterId/pi-tasks',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getMatterWorkflowTasks
+);
+
+// Scheduled Reminders & Overdue Processing Endpoints
+piRouter.post(
+  '/tasks/process-reminders',
+  requirePermission('tasks:edit'),
+  PersonalInjuryController.processScheduledReminders
+);
+
+piRouter.post(
+  '/tasks/process-overdue',
+  requirePermission('tasks:edit'),
+  PersonalInjuryController.processOverdueTasks
+);

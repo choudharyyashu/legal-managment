@@ -97,3 +97,23 @@ matterRouter.post(
   PersonalInjuryController.signAuthorization
 );
 
+// Records Request Status Update (Enforces Authorization Readiness Gate)
+matterRouter.patch(
+  '/:matterId/records-requests/:requestId/status',
+  requirePermission('matters:edit'),
+  PersonalInjuryController.updateRecordRequestStatus
+);
+
+// Matter PI Workflow Tasks & Reminders Inspector
+matterRouter.get(
+  '/:matterId/workflow/tasks',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getMatterWorkflowTasks
+);
+
+matterRouter.get(
+  '/:matterId/pi-tasks',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getMatterWorkflowTasks
+);
+

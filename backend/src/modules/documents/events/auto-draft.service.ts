@@ -10,6 +10,7 @@ import { MatterService } from '../../matters/matter.service.js';
 import { AuthenticatedUser } from '../../auth/auth.types.js';
 import { TaskService } from '../../tasks/task.service.js';
 import { DraftService } from '../drafts/draft.service.js';
+import { PIWorkflowAutomationService } from '../../personal-injury/pi.workflow.js';
 import {
   DOCUMENT_EVENT,
   DocumentEventType,
@@ -142,25 +143,43 @@ export class AutoDraftService {
   /**
    * Helper: Automatically assigns an attorney review task upon auto-draft generation.
    * Ensures Utah RPC 1.1, 1.3 ethical diligence so no draft is issued unreviewed.
+   * Enforces retry-safe idempotency so duplicate events do not create duplicate tasks.
    */
-  private static async createDraftReviewTask(
+  public static async createDraftReviewTask(
     matter: any,
     draft: any,
     templateName: string,
     user: AuthenticatedUser,
     context: { ipAddress?: string; userAgent?: string }
-  ): Promise<void> {
+  ): Promise<any> {
     try {
+      // 1. Idempotency Check: Do not create duplicate open review task for the same draftCode
+      const existingTask = await prisma.task.findFirst({
+        where: {
+          matterId: matter.id,
+          status: { not: 'Completed' },
+          OR: [
+            { description: { contains: `[IDEMPOTENCY_KEY: DRAFT_REVIEW_${draft.draftCode}]` } },
+            { description: { contains: draft.draftCode } },
+            { title: `Review Document Draft: ${draft.title}` },
+          ],
+        },
+      });
+
+      if (existingTask) {
+        return { task: existingTask, isDuplicate: true };
+      }
+
       const assigneeId = matter.responsibleAttorneyId || user.id;
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 2);
 
-      await TaskService.createTask(
+      const created = await TaskService.createTask(
         {
           matterId: matter.id,
           assignedToUserId: assigneeId,
           title: `Review Document Draft: ${draft.title}`,
-          description: `Auto-generated draft '${draft.draftCode}' (${templateName}) requires attorney review and approval prior to transmission.`,
+          description: `Auto-generated draft '${draft.draftCode}' (${templateName}) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_${draft.draftCode}]`,
           dueDate: dueDate.toISOString().split('T')[0],
           priority: 'High',
           reminderSetting: '1 day prior',
@@ -172,8 +191,10 @@ export class AutoDraftService {
           userAgent: context.userAgent,
         }
       );
+      return { task: created, isDuplicate: false };
     } catch (err: any) {
       console.warn(`[AutoDraft] Could not create review task for draft ${draft.draftCode}:`, err.message);
+      return null;
     }
   }
 
@@ -772,6 +793,20 @@ export class AutoDraftService {
 
       // Assign attorney review task
       await this.createDraftReviewTask(matter, draft140, template140.templateName, user, context);
+
+      // Create dedicated demand review task for responsible attorney (Sub-Stage E)
+      if (payload.demandPackageId) {
+        try {
+          const pkg = await (prisma as any).pIDemandPackage.findUnique({
+            where: { id: payload.demandPackageId },
+          });
+          if (pkg) {
+            await PIWorkflowAutomationService.onDemandDraftReady(matter, pkg, user, context);
+          }
+        } catch (demandTaskErr: any) {
+          console.warn('[AutoDraft] Could not create demand review task:', demandTaskErr.message);
+        }
+      }
 
       await createAuditLog({
         userId: user.id,

@@ -11,7 +11,11 @@ import {
   medicalProviderSchema,
   markIncompleteSchema,
   demandPackageSchema,
+  updateRecordsRequestStatusSchema,
+  processRemindersSchema,
+  processOverdueSchema,
 } from './pi.validation.js';
+import { PIWorkflowAutomationService } from './pi.workflow.js';
 
 export class PersonalInjuryController {
   static async getIncident(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -168,6 +172,103 @@ export class PersonalInjuryController {
       res.status(200).json({
         success: true,
         message: `Medical authorization signature evidence successfully linked to request '${result.recordRequest.requestCode}'.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateRecordRequestStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId, requestId } = req.params;
+      const user = (req as any).user;
+      const validated = updateRecordsRequestStatusSchema.parse(req.body);
+      const context = {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const result = await PersonalInjuryService.updateRecordRequestStatus(
+        matterId,
+        requestId,
+        validated,
+        user,
+        context
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `Medical record request '${result.recordRequest.requestCode}' status updated to '${result.recordRequest.status}'.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getMatterWorkflowTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const result = await PIWorkflowAutomationService.getMatterWorkflowTasks(matterId, user);
+      res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async processScheduledReminders(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const context = {
+        userId: user.id,
+        userRole: user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const validated = processRemindersSchema.parse(req.body || {});
+      const result = await PIWorkflowAutomationService.processScheduledReminders(
+        {
+          asOfDate: validated.asOfDate,
+          matterId: validated.matterId,
+        },
+        context
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `Processed reminders for ${result.processedCount} tasks; ${result.triggeredReminders.length} reminders triggered.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async processOverdueTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const context = {
+        userId: user.id,
+        userRole: user.role,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const validated = processOverdueSchema.parse(req.body || {});
+      const result = await PIWorkflowAutomationService.processOverdueTasks(
+        {
+          asOfDate: validated.asOfDate,
+          matterId: validated.matterId,
+        },
+        context
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `Evaluated ${result.evaluatedCount} tasks; ${result.escalatedCount} tasks transitioned to Overdue.`,
         data: result,
       });
     } catch (err) {
