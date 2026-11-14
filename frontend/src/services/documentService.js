@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient, tokenStorage } from './apiClient';
 
 export const documentService = {
   async getDocuments(params = {}) {
@@ -24,12 +24,14 @@ export const documentService = {
   },
 
   async downloadDocument(id) {
-    const token = localStorage.getItem('hb_auth_token');
-    const response = await fetch(`/api/documents/${id}/download`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const token = tokenStorage.get();
+    const baseUrl = apiClient.getBaseUrl().replace(/\/+$/, '');
+    const url = `${baseUrl}/documents/${id}/download`;
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, { headers });
     if (!response.ok) {
       throw new Error(`Failed to download document: ${response.statusText}`);
     }
@@ -40,13 +42,13 @@ export const documentService = {
       const match = disposition.match(/filename="?([^"]+)"?/);
       if (match && match[1]) filename = match[1];
     }
-    const url = window.URL.createObjectURL(blob);
+    const blobUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = blobUrl;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(blobUrl);
     document.body.removeChild(a);
     return true;
   },

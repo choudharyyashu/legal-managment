@@ -16,6 +16,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Select } from '../../../components/ui/Select';
 import { documentService } from '../../../services/documentService';
+import { tokenStorage } from '../../../services/apiClient';
 import { useToast } from '../../../components/ui/Toast';
 
 export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] }) {
@@ -40,7 +41,7 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
       // Fetch active templates
       fetch('/api/v1/templates?limit=50', {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('hb_auth_token')}`,
+          Authorization: `Bearer ${tokenStorage.get() || ''}`,
         },
       })
         .then((res) => res.json())
