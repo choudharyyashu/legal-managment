@@ -23,6 +23,13 @@ import { DocumentEventBus, DomainEventContext } from './event-bus.js';
 
 export class AutoDraftService {
   /**
+   * Concurrency Serialization Mutex: Tracks active in-flight document generations
+   * Scoped to: matterId + demandPackageId + templateCode
+   * Prevents TOCTOU race conditions between simultaneous concurrent requests.
+   */
+  private static inFlightOperations = new Map<string, Promise<AutoDraftTriggerResult>>();
+
+  /**
    * Initialize event subscribers on application start.
    */
   static initSubscriptions(): void {
@@ -577,8 +584,35 @@ export class AutoDraftService {
    * EVENT 4: PI Demand Package / Demand Ready Event
    * Target Document: 140 ("Personal Injury Settlement Demand Letter")
    * Canonical Code: UT-PI-DEM-140 / PI-DOC-005
+   * Idempotency Scoped: matterId + demandPackageId + templateCode (140)
+   * Guaranteed concurrency serialization via inFlightOperations mutex.
    */
   static async handleDemandReady(
+    payload: DemandReadyPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const idempotencyKey = `${payload.matterId}:${payload.demandPackageId || 'default'}:140`;
+
+    // 1. Concurrency Check: If an identical generation is currently executing, attach to active promise
+    if (this.inFlightOperations.has(idempotencyKey)) {
+      return await this.inFlightOperations.get(idempotencyKey)!;
+    }
+
+    // 2. Wrap execution in active operation promise to serialize concurrent requests
+    const executionPromise = (async () => {
+      try {
+        return await this.executeDemandReady(payload, user, context);
+      } finally {
+        this.inFlightOperations.delete(idempotencyKey);
+      }
+    })();
+
+    this.inFlightOperations.set(idempotencyKey, executionPromise);
+    return await executionPromise;
+  }
+
+  private static async executeDemandReady(
     payload: DemandReadyPayload,
     user: AuthenticatedUser,
     context: { ipAddress?: string; userAgent?: string }
@@ -627,21 +661,43 @@ export class AutoDraftService {
         return result;
       }
 
-      // Idempotency check:
-      const existingDraft140 = await prisma.documentDraft.findFirst({
-        where: {
-          matterId: matter.id,
-          templateId: template140.id,
-          ...(payload.demandPackageId
-            ? { title: { contains: payload.demandPackageId } }
-            : { title: { contains: 'Demand' } }),
-        },
-      });
+      // Database-backed idempotency check (Does NOT rely only on document titles)
+      let existingDraft140: any = null;
+
+      if (payload.demandPackageId) {
+        // 1. Direct relational check via PIDemandPackage metadata
+        try {
+          const pkg = await (prisma as any).pIDemandPackage.findUnique({
+            where: { id: payload.demandPackageId },
+            select: { id: true, checklistState: true, draftDocumentId: true },
+          });
+
+          const linkedDraftId = pkg?.checklistState?.autoDraftId || pkg?.draftDocumentId;
+          if (linkedDraftId) {
+            existingDraft140 = await prisma.documentDraft.findUnique({
+              where: { id: linkedDraftId },
+            });
+          }
+        } catch {}
+      }
+
+      // 2. Scoped query fallback (matterId + templateId + demandPackageId)
+      if (!existingDraft140) {
+        existingDraft140 = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template140.id,
+            ...(payload.demandPackageId
+              ? { title: { contains: payload.demandPackageId } }
+              : { title: { contains: 'Settlement Demand' } }),
+          },
+        });
+      }
 
       if (existingDraft140) {
         result.skipped.push({
           templateCode: template140.templateCode,
-          reason: `Settlement demand draft '${existingDraft140.draftCode}' already exists for this matter (Idempotent trigger).`,
+          reason: `Settlement demand draft '${existingDraft140.draftCode}' already exists for this demand package (Idempotent trigger).`,
         });
         return result;
       }
@@ -662,10 +718,10 @@ export class AutoDraftService {
         ...payload.customOverrides,
       };
 
-      const draftTitle = payload.demandTitle
+      const draftTitle = payload.demandPackageId
+        ? `${payload.demandTitle || 'Settlement Demand Letter'} - [Pkg: ${payload.demandPackageId}]`
+        : payload.demandTitle
         ? payload.demandTitle
-        : payload.demandPackageId
-        ? `Settlement Demand Letter - ${payload.demandPackageId}`
         : `Settlement Demand Letter - ${payload.recipientCarrier || 'Adverse Carrier'}`;
 
       const draft140 = await DraftService.generateDraft(
@@ -689,6 +745,30 @@ export class AutoDraftService {
         missingFieldsCount: draft140.missingFieldsFlags.length,
         filePath: draft140.docxStorageKey || '',
       });
+
+      // Link the generated draft directly to the PIDemandPackage record in database
+      if (payload.demandPackageId) {
+        try {
+          const currentPkg = await (prisma as any).pIDemandPackage.findUnique({
+            where: { id: payload.demandPackageId },
+          });
+          const currentState = (currentPkg?.checklistState as Record<string, any>) || {};
+
+          await (prisma as any).pIDemandPackage.update({
+            where: { id: payload.demandPackageId },
+            data: {
+              checklistState: {
+                ...currentState,
+                autoDraftId: draft140.id,
+                autoDraftCode: draft140.draftCode,
+                generatedAt: new Date().toISOString(),
+              },
+            },
+          });
+        } catch (dbErr: any) {
+          console.warn('[AutoDraft] Could not link draft to demandPackage checklistState:', dbErr.message);
+        }
+      }
 
       // Assign attorney review task
       await this.createDraftReviewTask(matter, draft140, template140.templateName, user, context);

@@ -44,8 +44,11 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/+$/, '');
       const isAllowed =
+        config.allowedOrigins.includes(normalizedOrigin) ||
         config.allowedOrigins.includes(origin) ||
+        normalizedOrigin === 'https://legal-managment.netlify.app' ||
         (config.nodeEnv === 'development' &&
           (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')));
       if (isAllowed) {
