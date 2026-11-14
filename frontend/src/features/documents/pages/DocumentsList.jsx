@@ -312,6 +312,15 @@ export function DocumentsList() {
         actions={
           <div className="flex items-center gap-2">
             <Button
+              variant="outline"
+              size="sm"
+              icon={Sparkles}
+              onClick={() => setIsGenerateModalOpen(true)}
+              className="border-[#06244B] text-[#06244B] hover:bg-[#06244B]/5"
+            >
+              Generate Draft
+            </Button>
+            <Button
               variant="primary"
               size="sm"
               icon={Upload}
@@ -759,6 +768,14 @@ export function DocumentsList() {
           </form>
         </Modal>
       )}
+
+      {/* Automated Document Generation & Missing Information Check Modal */}
+      <GenerateDraftModal
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
+        onGenerated={loadDocuments}
+        matters={matters}
+      />
     </div>
   );
 }

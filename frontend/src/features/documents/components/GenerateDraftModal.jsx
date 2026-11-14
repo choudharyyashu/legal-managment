@@ -322,3 +322,4 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
     </Modal>
   );
 }
+
