@@ -8,6 +8,7 @@ import { prisma } from '../../../config/database.js';
 import { createAuditLog } from '../../../utils/auditLogger.js';
 import { MatterService } from '../../matters/matter.service.js';
 import { AuthenticatedUser } from '../../auth/auth.types.js';
+import { TaskService } from '../../tasks/task.service.js';
 import { DraftService } from '../drafts/draft.service.js';
 import {
   DOCUMENT_EVENT,
@@ -111,12 +112,49 @@ export class AutoDraftService {
 
       const fullMatter = await prisma.matter.findFirst({
         where: { OR: [{ id: matterId }, { matterNumber: matterId }] },
-        include: { practiceArea: true, client: true },
+        include: { practiceArea: true, client: true, responsibleAttorney: true },
       });
 
       return fullMatter;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Helper: Automatically assigns an attorney review task upon auto-draft generation.
+   * Ensures Utah RPC 1.1, 1.3 ethical diligence so no draft is issued unreviewed.
+   */
+  private static async createDraftReviewTask(
+    matter: any,
+    draft: any,
+    templateName: string,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<void> {
+    try {
+      const assigneeId = matter.responsibleAttorneyId || user.id;
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 2);
+
+      await TaskService.createTask(
+        {
+          matterId: matter.id,
+          assignedToUserId: assigneeId,
+          title: `Review Document Draft: ${draft.title}`,
+          description: `Auto-generated draft '${draft.draftCode}' (${templateName}) requires attorney review and approval prior to transmission.`,
+          dueDate: dueDate.toISOString().split('T')[0],
+          priority: 'High',
+        },
+        {
+          userId: user.id,
+          userRole: user.role,
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        }
+      );
+    } catch (err: any) {
+      console.warn(`[AutoDraft] Could not create review task for draft ${draft.draftCode}:`, err.message);
     }
   }
 
@@ -226,6 +264,9 @@ export class AutoDraftService {
         missingFieldsCount: draft.missingFieldsFlags.length,
         filePath: draft.docxStorageKey || '',
       });
+
+      // Assign attorney review task
+      await this.createDraftReviewTask(matter, draft, template.templateName, user, context);
 
       await createAuditLog({
         userId: user.id,
@@ -346,6 +387,9 @@ export class AutoDraftService {
               missingFieldsCount: draft113.missingFieldsFlags.length,
               filePath: draft113.docxStorageKey || '',
             });
+
+            // Assign attorney review task
+            await this.createDraftReviewTask(matter, draft113, template113.templateName, user, context);
           }
         }
       }
@@ -402,6 +446,9 @@ export class AutoDraftService {
               missingFieldsCount: draft112.missingFieldsFlags.length,
               filePath: draft112.docxStorageKey || '',
             });
+
+            // Assign attorney review task
+            await this.createDraftReviewTask(matter, draft112, template112.templateName, user, context);
           }
         }
       }
@@ -414,8 +461,12 @@ export class AutoDraftService {
   }
 
   /**
-   * EVENT 3: Missing Medical Records Flagged / Overdue
-   * Target Document: 115 ("Records deficiency follow-up letter")
+   * EVENT 3: Received Medical Records Packet Marked Incomplete or Deficient
+   * Target Document: 116 ("Incomplete medical records follow-up")
+   * IMPORTANT CATALOG CORRECTION:
+   * Client Catalog ID 115 is "Imaging and diagnostic study request".
+   * Client Catalog ID 116 is "Incomplete medical records follow-up".
+   * Never map ID 116 to template code 115.
    */
   static async handleMissingRecords(
     payload: MissingRecordsPayload,
@@ -438,50 +489,51 @@ export class AutoDraftService {
         return result;
       }
 
-      // Find template for Document 115
-      const template115 = await this.findTemplate(
-        ['UT-PI-DEF-115', 'TPL-PI-115', 'UT-PI-115', '115'],
-        'Deficiency'
+      // Find template for Document 116 (Incomplete medical records follow-up)
+      const template116 = await this.findTemplate(
+        ['UT-PI-DEF-116', 'TPL-PI-116', 'UT-PI-116', '116'],
+        'Incomplete'
       );
 
-      if (!template115) {
+      if (!template116) {
         result.skipped.push({
-          templateCode: '115',
-          reason: 'Template for Records Deficiency Follow-up Letter (115) is unavailable or has no active version.',
+          templateCode: '116',
+          reason: 'Template for Incomplete Medical Records Follow-up (116) is unavailable or has no active version.',
         });
         return result;
       }
 
-      // Idempotency check: Don't create duplicate deficiency letter on same day for provider
+      // Idempotency check: Don't create duplicate follow-up letter on same day for provider
       const today = new Date().toISOString().split('T')[0];
-      const existingDraft115 = await prisma.documentDraft.findFirst({
+      const existingDraft116 = await prisma.documentDraft.findFirst({
         where: {
           matterId: matter.id,
-          templateId: template115.id,
+          templateId: template116.id,
           title: { contains: payload.providerName },
           createdAt: { gte: new Date(`${today}T00:00:00.000Z`) },
         },
       });
 
-      if (existingDraft115) {
+      if (existingDraft116) {
         result.skipped.push({
-          templateCode: template115.templateCode,
-          reason: `Deficiency follow-up draft '${existingDraft115.draftCode}' was already generated today for '${payload.providerName}'.`,
+          templateCode: template116.templateCode,
+          reason: `Incomplete records follow-up draft '${existingDraft116.draftCode}' was already generated today for '${payload.providerName}'.`,
         });
         return result;
       }
 
-      const draft115 = await DraftService.generateDraft(
+      const draft116 = await DraftService.generateDraft(
         {
           matterId: matter.id,
-          templateId: template115.id,
-          title: `Records Deficiency Follow-up - ${payload.providerName}`,
+          templateId: template116.id,
+          title: `Incomplete Records Follow-up - ${payload.providerName}`,
           allowIncomplete: true,
           customOverrides: {
             provider_name: payload.providerName,
             initial_request_date: payload.requestDate,
             days_overdue: payload.daysOverdue || 30,
             missing_records_summary: (payload.outstandingRecords || []).join(', ') || 'All outstanding medical & billing records',
+            follow_up_notes: payload.followUpNotes,
             ...payload.customOverrides,
           },
         },
@@ -490,14 +542,17 @@ export class AutoDraftService {
       );
 
       result.draftsCreated.push({
-        id: draft115.id,
-        draftCode: draft115.draftCode,
-        templateCode: template115.templateCode,
-        templateName: template115.templateName,
-        title: draft115.title,
-        missingFieldsCount: draft115.missingFieldsFlags.length,
-        filePath: draft115.docxStorageKey || '',
+        id: draft116.id,
+        draftCode: draft116.draftCode,
+        templateCode: template116.templateCode,
+        templateName: template116.templateName,
+        title: draft116.title,
+        missingFieldsCount: draft116.missingFieldsFlags.length,
+        filePath: draft116.docxStorageKey || '',
       });
+
+      // Assign attorney review task
+      await this.createDraftReviewTask(matter, draft116, template116.templateName, user, context);
     } catch (err: any) {
       result.success = false;
       result.errors.push(err.message || String(err));

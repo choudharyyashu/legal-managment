@@ -13,8 +13,12 @@ export function AuthProvider({ children }) {
   const [allUsers, setAllUsers] = useState(MOCK_USERS);
   const [rolePermissions, setRolePermissions] = useState(DEFAULT_ROLE_PERMISSIONS);
 
-  // Load real firm staff from backend /users
-  const refreshUsers = useCallback(async () => {
+  // Load real firm staff from backend /users (Restricted to Super Admin or users with users:view permission)
+  const refreshUsers = useCallback(async (roleOverride) => {
+    const role = roleOverride || currentUser?.role;
+    if (role !== 'super_admin') {
+      return;
+    }
     try {
       const data = await userService.getUsers({ limit: 100 });
       if (Array.isArray(data?.users) && data.users.length > 0) {
@@ -23,7 +27,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.warn('Could not fetch remote users list, retaining baseline staff:', err?.message);
     }
-  }, []);
+  }, [currentUser?.role]);
 
   // Validate session on mount or token change
   useEffect(() => {
@@ -40,7 +44,9 @@ export function AuthProvider({ children }) {
         if (isMounted && user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
-          await refreshUsers();
+          if (user.role === 'super_admin') {
+            await refreshUsers(user.role);
+          }
         }
       } catch (err) {
         console.warn('Session verification error:', err?.message);
@@ -76,7 +82,9 @@ export function AuthProvider({ children }) {
       if (data?.user) {
         setCurrentUser(data.user);
         setIsAuthenticated(true);
-        await refreshUsers();
+        if (data.user.role === 'super_admin') {
+          await refreshUsers(data.user.role);
+        }
         return {
           success: true,
           user: data.user,
