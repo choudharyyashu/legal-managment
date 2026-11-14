@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderPlus, Search, Filter, Eye, Edit, Briefcase, Calendar, Clock, DollarSign, RotateCcw } from 'lucide-react';
+import { FolderPlus, Search, Filter, Eye, Edit, Briefcase, Calendar, Clock, DollarSign, RotateCcw, FolderOpen, CheckCircle2 } from 'lucide-react';
 import { useMatters } from '../../../context/MatterContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -18,7 +18,7 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 
 export function MattersList() {
   const navigate = useNavigate();
-  const { matters } = useMatters();
+  const { matters, activeMatter, setActiveMatter } = useMatters();
   const { allUsers } = useAuth();
   const permissions = usePermissions();
 
@@ -52,18 +52,34 @@ export function MattersList() {
       key: 'matterNumber',
       label: 'Matter ID & Caption',
       sortable: true,
-      render: (val, row) => (
-        <div className="min-w-[200px]">
-          <span className="font-serif font-bold text-[#06244B] hover:text-[#A4432B] block cursor-pointer text-sm leading-snug">
-            {row.title}
-          </span>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#667085] mt-1">
-            <span className="font-semibold text-[#A4432B] whitespace-nowrap">{row.matterNumber}</span>
-            <span>•</span>
-            <span>Client: <strong className="text-[#06244B]">{row.clientName}</strong></span>
+      render: (val, row) => {
+        const isActive = activeMatter?.id === row.id;
+        return (
+          <div className="min-w-[200px]">
+            <div className="flex items-center gap-1.5">
+              <span
+                onClick={() => {
+                  setActiveMatter(row);
+                  navigate(`/matters/${row.id}`);
+                }}
+                className="font-serif font-bold text-[#06244B] hover:text-[#A4432B] block cursor-pointer text-sm leading-snug"
+              >
+                {row.title}
+              </span>
+              {isActive && (
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#06244B] text-white uppercase font-mono tracking-wider">
+                  Active
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#667085] mt-1">
+              <span className="font-semibold text-[#A4432B] whitespace-nowrap">{row.matterNumber}</span>
+              <span>•</span>
+              <span>Client: <strong className="text-[#06244B]">{row.clientName}</strong></span>
+            </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: 'practiceAreaName',
@@ -113,26 +129,36 @@ export function MattersList() {
       key: 'actions',
       label: 'Actions',
       align: 'right',
-      render: (val, row) => (
-        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => navigate(`/matters/${row.id}`)}
-            className="p-1 rounded text-[#06244B] hover:bg-[#F5F0E5] hover:text-[#A4432B]"
-            title="Open Matter Workspace"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          {permissions.canCreateMatter && (
+      render: (val, row) => {
+        const isActive = activeMatter?.id === row.id;
+        return (
+          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={() => setEditingMatter(row)}
-              className="p-1 rounded text-[#667085] hover:bg-[#F5F0E5] hover:text-[#06244B]"
-              title="Edit Matter"
+              onClick={() => {
+                setActiveMatter(row);
+                navigate(`/matters/${row.id}`);
+              }}
+              className={`p-1.5 rounded transition-colors ${
+                isActive
+                  ? 'bg-[#06244B] text-white shadow-xs'
+                  : 'text-[#06244B] hover:bg-[#F5F0E5] hover:text-[#A4432B]'
+              }`}
+              title={isActive ? 'Active Matter Workspace' : 'Open & Set as Active Context'}
             >
-              <Edit className="w-4 h-4" />
+              <FolderOpen className="w-4 h-4" />
             </button>
-          )}
-        </div>
-      ),
+            {permissions.canCreateMatter && (
+              <button
+                onClick={() => setEditingMatter(row)}
+                className="p-1.5 rounded text-[#667085] hover:bg-[#F5F0E5] hover:text-[#06244B]"
+                title="Edit Matter"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 

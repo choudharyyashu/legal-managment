@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
+import { useMatters } from '../../../context/MatterContext';
 
 export const PI_NAV_ITEMS = [
   { label: 'PI Dashboard', path: '/personal-injury/dashboard', icon: LayoutDashboard },
@@ -37,8 +38,30 @@ export function PINavigationHeader({
   actions
 }) {
   const location = useLocation();
+  const { activeMatter, setActiveMatter } = useMatters();
 
-  const selectedCase = cases.find(c => c.id === activeCaseId) || cases[0];
+  // If a global activeMatter is set and exists in cases, automatically align activeCaseId if currently default
+  useEffect(() => {
+    if (activeMatter && onCaseChange && (!activeCaseId || activeCaseId === 'ALL')) {
+      const match = cases.find(c => c.id === activeMatter.id || c.matterNumber === activeMatter.matterNumber);
+      if (match) {
+        onCaseChange(match.id);
+      }
+    }
+  }, [activeMatter, cases, onCaseChange, activeCaseId]);
+
+  const effectiveCaseId = activeCaseId || (activeMatter ? cases.find(c => c.id === activeMatter.id || c.matterNumber === activeMatter.matterNumber)?.id : 'ALL');
+  const selectedCase = cases.find(c => c.id === effectiveCaseId) || cases[0];
+
+  const handleCaseSelect = (val) => {
+    onCaseChange?.(val);
+    if (val !== 'ALL') {
+      const match = cases.find(c => c.id === val);
+      if (match) {
+        setActiveMatter(match.id);
+      }
+    }
+  };
 
   return (
     <div className="mb-6 space-y-4">
@@ -68,8 +91,8 @@ export function PINavigationHeader({
                 <FolderOpen className="w-4 h-4 text-[#A4432B]" />
                 <span className="font-semibold text-slate-300">Active PI Matter:</span>
                 <select
-                  value={activeCaseId || ''}
-                  onChange={(e) => onCaseChange(e.target.value)}
+                  value={effectiveCaseId || ''}
+                  onChange={(e) => handleCaseSelect(e.target.value)}
                   className="bg-transparent text-white font-medium focus:outline-none cursor-pointer pr-1 max-w-[210px] truncate"
                 >
                   <option value="ALL" className="bg-[#06244B] text-white">All Active PI Matters ({cases.length})</option>

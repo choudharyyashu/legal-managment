@@ -1,14 +1,31 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { matterService } from '../services/matterService';
 import { useAuth } from '../hooks/useAuth';
 
 const MatterContext = createContext();
 
+const ACTIVE_MATTER_STORAGE_KEY = 'hb_active_matter_id';
+
 export function MatterProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
   const [matters, setMatters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Active persistent matter context state
+  const [activeMatterId, setActiveMatterId] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlMatterId = urlParams.get('matterId');
+        if (urlMatterId) return urlMatterId;
+        return sessionStorage.getItem(ACTIVE_MATTER_STORAGE_KEY) || null;
+      }
+    } catch {
+      // Fallback
+    }
+    return null;
+  });
 
   const normalizeMatter = (m) => ({
     ...m,
@@ -30,7 +47,18 @@ export function MatterProvider({ children }) {
     totalBilled: m.totalBilled ? Number(m.totalBilled) : 0,
     unbilledHours: m.unbilledHours ? Number(m.unbilledHours) : 0,
     openDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    isEthicalWallEnabled: Boolean(m.isEthicalWallEnabled),
+    ethicalWallExcludedRole: m.ethicalWallExcludedRole || null,
   });
+
+  // Verify whether the currently authenticated user is locked out by Utah RPC 1.10 Ethical Wall
+  const isEthicalWallRestricted = useCallback((matter) => {
+    if (!matter || !currentUser) return false;
+    if (matter.isEthicalWallEnabled && matter.ethicalWallExcludedRole && currentUser.role === matter.ethicalWallExcludedRole) {
+      return true;
+    }
+    return false;
+  }, [currentUser]);
 
   const refreshMatters = useCallback(async (params = {}) => {
     if (!isAuthenticated) return;
@@ -53,8 +81,77 @@ export function MatterProvider({ children }) {
       refreshMatters();
     } else {
       setMatters([]);
+      setActiveMatterId(null);
+      try {
+        sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+      } catch {}
     }
   }, [isAuthenticated, refreshMatters]);
+
+  // Resolve active matter object from list
+  const activeMatter = useMemo(() => {
+    if (!activeMatterId || matters.length === 0) return null;
+    const match = matters.find((m) => m.id === activeMatterId || m.matterNumber === activeMatterId);
+    if (!match) return null;
+    if (isEthicalWallRestricted(match)) return null;
+    return match;
+  }, [activeMatterId, matters, isEthicalWallRestricted]);
+
+  // Validate activeMatterId persistence against loaded matters list
+  useEffect(() => {
+    if (activeMatterId && matters.length > 0) {
+      const match = matters.find((m) => m.id === activeMatterId || m.matterNumber === activeMatterId);
+      if (!match || isEthicalWallRestricted(match)) {
+        // Clear invalid or ethically walled matter from session
+        setActiveMatterId(null);
+        try {
+          sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+        } catch {}
+      }
+    }
+  }, [activeMatterId, matters, isEthicalWallRestricted]);
+
+  // Explicitly select an active matter
+  const setActiveMatter = useCallback((matterOrId) => {
+    if (!matterOrId) {
+      setActiveMatterId(null);
+      try {
+        sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+      } catch {}
+      return;
+    }
+
+    const id = typeof matterOrId === 'object' ? (matterOrId.id || matterOrId.matterNumber) : matterOrId;
+    const candidate = matters.find((m) => m.id === id || m.matterNumber === id) || (typeof matterOrId === 'object' ? matterOrId : null);
+
+    if (candidate && isEthicalWallRestricted(candidate)) {
+      console.warn(`[Ethical Wall Alert - Utah RPC 1.10] Access to matter ${id} is restricted for role: ${currentUser?.role}`);
+      return false;
+    }
+
+    setActiveMatterId(id);
+    try {
+      sessionStorage.setItem(ACTIVE_MATTER_STORAGE_KEY, id);
+    } catch {}
+    return true;
+  }, [matters, isEthicalWallRestricted, currentUser?.role]);
+
+  // Clear active context back to firm-wide All-Matters Mode
+  const clearActiveMatter = useCallback(() => {
+    setActiveMatterId(null);
+    try {
+      sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+    } catch {}
+  }, []);
+
+  // Derive client metadata associated with the active matter
+  const activeClient = useMemo(() => {
+    if (!activeMatter) return null;
+    return {
+      id: activeMatter.clientId,
+      name: activeMatter.clientName,
+    };
+  }, [activeMatter]);
 
   const addMatter = async (matterData) => {
     try {
@@ -122,6 +219,11 @@ export function MatterProvider({ children }) {
         matters,
         loading,
         error,
+        activeMatter,
+        activeMatterId,
+        activeClient,
+        setActiveMatter,
+        clearActiveMatter,
         refreshMatters,
         addMatter,
         updateMatter,

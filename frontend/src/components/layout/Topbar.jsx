@@ -28,7 +28,7 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
   const { currentUser, logout } = useAuth();
   const permissions = usePermissions();
   const { clients } = useClients();
-  const { matters } = useMatters();
+  const { matters, setActiveMatter } = useMatters();
   const { tasks } = useTasks();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -199,6 +199,7 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
                         <div
                           key={m.id}
                           onClick={() => {
+                            setActiveMatter(m);
                             navigate(`/matters/${m.id}`);
                             setIsSearchOpen(false);
                             setSearchQuery('');

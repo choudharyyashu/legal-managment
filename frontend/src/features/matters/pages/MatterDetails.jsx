@@ -251,7 +251,7 @@ export function MatterDetails() {
   const { matterId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { matters, updateMatter } = useMatters();
+  const { matters, updateMatter, activeMatter, setActiveMatter } = useMatters();
   const { tasks, addTask, updateTaskStatus } = useTasks();
   const { timeEntries } = useTime();
   const { currentUser } = useAuth();
@@ -322,8 +322,13 @@ export function MatterDetails() {
       setRequestFilter('All');
       setReviewingApproval(null);
       setActiveTab('overview');
+
+      // Sync as active persistent context when viewing matter details
+      if (activeMatter?.id !== matter.id) {
+        setActiveMatter(matter);
+      }
     }
-  }, [matter?.id]);
+  }, [matter?.id, activeMatter?.id, setActiveMatter]);
 
   const isLitigationActive = Boolean(
     matter?.isLitigationContested ??

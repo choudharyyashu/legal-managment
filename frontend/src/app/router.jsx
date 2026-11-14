@@ -263,6 +263,10 @@ export const router = createBrowserRouter([
         element: <IncidentLiability />,
       },
       {
+        path: 'personal-injury/incident',
+        element: <Navigate to="/personal-injury/incident-liability" replace />,
+      },
+      {
         path: 'personal-injury/client-damages',
         element: <ClientDamages />,
       },
@@ -275,20 +279,40 @@ export const router = createBrowserRouter([
         element: <MedicalTreatment />,
       },
       {
+        path: 'personal-injury/medical',
+        element: <Navigate to="/personal-injury/medical-treatment" replace />,
+      },
+      {
         path: 'personal-injury/vendor-assignments',
         element: <VendorAssignments />,
+      },
+      {
+        path: 'personal-injury/vendors',
+        element: <Navigate to="/personal-injury/vendor-assignments" replace />,
       },
       {
         path: 'personal-injury/demand-packages',
         element: <DemandPackages />,
       },
       {
+        path: 'personal-injury/demands',
+        element: <Navigate to="/personal-injury/demand-packages" replace />,
+      },
+      {
         path: 'personal-injury/lien-register',
         element: <LienRegister />,
       },
       {
+        path: 'personal-injury/liens',
+        element: <Navigate to="/personal-injury/lien-register" replace />,
+      },
+      {
         path: 'personal-injury/settlement-calculator',
         element: <PISettlementCalculator />,
+      },
+      {
+        path: 'personal-injury/settlement',
+        element: <Navigate to="/personal-injury/settlement-calculator" replace />,
       },
       // Specialty Practice: Civil & Commercial Litigation Workspace (Sections 3-8)
       {
