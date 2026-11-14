@@ -142,6 +142,50 @@ export class DraftDataResolver {
       };
     }
 
+    if (sEntity === 'demand' || sField.includes('demand') || sField.includes('policylimit')) {
+      return {
+        recordType: 'Settlement Demand Package',
+        navigationUrl: '/personal-injury/demand',
+        suggestedTitle: sField.includes('amount')
+          ? 'Follow-up: Missing Settlement Demand Amount'
+          : sField.includes('carrier')
+          ? 'Follow-up: Missing Recipient Insurance Carrier'
+          : 'Follow-up: Incomplete Settlement Demand Specification',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is required for settlement demand package generation. Please complete the demand package details.`,
+        priority: 'Critical',
+      };
+    }
+
+    if (sEntity === 'damages' || sEntity === 'injuries' || sField.includes('injury') || sField.includes('futuremedical')) {
+      return {
+        recordType: 'PI Damages & Injury Ledger',
+        navigationUrl: '/personal-injury/damages',
+        suggestedTitle: 'Follow-up: Incomplete Injury & Damages Documentation',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is needed to substantiate bodily injury damages in settlement demand.`,
+        priority: 'High',
+      };
+    }
+
+    if (sEntity === 'wageloss' || sField.includes('wage') || sField.includes('lostwages') || sField.includes('payrate')) {
+      return {
+        recordType: 'Wage Loss & Economic Damages',
+        navigationUrl: '/personal-injury/damages',
+        suggestedTitle: 'Follow-up: Missing Wage Loss & Lost Earnings Documentation',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is needed to substantiate lost earning capacity. Please update employer verification.`,
+        priority: 'Medium',
+      };
+    }
+
+    if (sEntity === 'medicalbilling' || sEntity === 'billing' || sField.includes('billed') || sField.includes('balanceowed')) {
+      return {
+        recordType: 'Medical Billing Summary',
+        navigationUrl: '/personal-injury/medical',
+        suggestedTitle: 'Follow-up: Incomplete Medical Billing Summary',
+        suggestedDescription: `Missing ${sourceEntity}.${sourceField} is required to calculate total special damages. Please update billing balances.`,
+        priority: 'High',
+      };
+    }
+
     if (sEntity === 'client') {
       return {
         recordType: 'Client Profile',
@@ -197,6 +241,32 @@ export class DraftDataResolver {
     const incidentRecord = matter.incidents?.[0] || {};
     const policyRecord = matter.insurancePolicies?.[0] || {};
     const providerRecord = matter.medicalProviders?.[0] || {};
+    const demandPackage = matter.demandPackages?.[0] || {};
+    const damagesRecord = matter.damagesRecords?.[0] || {};
+    const wageLossRecord = matter.wageLossRecords?.[0] || {};
+    const billingSummary = matter.medicalBillingSummaries?.[0] || {};
+
+    // Calculate aggregate totals from related collections
+    const totalMedicalBilled = (matter.medicalBillingSummaries || []).reduce(
+      (sum: number, b: any) => sum + Number(b.totalBilled || 0),
+      0
+    );
+    const totalMedicalBalance = (matter.medicalBillingSummaries || []).reduce(
+      (sum: number, b: any) => sum + Number(b.cachedBalanceOwed || 0),
+      0
+    );
+    const totalLostWages = (matter.wageLossRecords || []).reduce(
+      (sum: number, w: any) => sum + Number(w.totalLostWages || 0),
+      0
+    );
+    const totalFutureMedical = (matter.damagesRecords || []).reduce(
+      (sum: number, d: any) => sum + Number(d.futureMedicalEstimatedCost || 0),
+      0
+    );
+    const calculatedSpecials =
+      (totalMedicalBilled > 0 ? totalMedicalBilled : Number(billingSummary.totalBilled || 0)) +
+      (totalLostWages > 0 ? totalLostWages : Number(wageLossRecord.totalLostWages || 0)) +
+      (totalFutureMedical > 0 ? totalFutureMedical : Number(damagesRecord.futureMedicalEstimatedCost || 0));
 
     const now = new Date();
 

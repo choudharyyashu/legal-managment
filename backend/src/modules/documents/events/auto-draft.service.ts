@@ -16,6 +16,7 @@ import {
   AccidentSavedPayload,
   ProviderAddedPayload,
   MissingRecordsPayload,
+  DemandReadyPayload,
   AutoDraftTriggerResult,
 } from './event.types.js';
 import { DocumentEventBus, DomainEventContext } from './event-bus.js';
@@ -49,6 +50,16 @@ export class AutoDraftService {
       DOCUMENT_EVENT.PI_MISSING_RECORDS,
       async (payload, context) => {
         await AutoDraftService.handleMissingRecords(payload, context.user, {
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      }
+    );
+
+    DocumentEventBus.subscribe<DemandReadyPayload>(
+      DOCUMENT_EVENT.PI_DEMAND_READY,
+      async (payload, context) => {
+        await AutoDraftService.handleDemandReady(payload, context.user, {
           ipAddress: context.ipAddress,
           userAgent: context.userAgent,
         });
@@ -554,6 +565,149 @@ export class AutoDraftService {
 
       // Assign attorney review task
       await this.createDraftReviewTask(matter, draft116, template116.templateName, user, context);
+    } catch (err: any) {
+      result.success = false;
+      result.errors.push(err.message || String(err));
+    }
+
+    return result;
+  }
+
+  /**
+   * EVENT 4: PI Demand Package / Demand Ready Event
+   * Target Document: 140 ("Personal Injury Settlement Demand Letter")
+   * Canonical Code: UT-PI-DEM-140 / PI-DOC-005
+   */
+  static async handleDemandReady(
+    payload: DemandReadyPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.PI_DEMAND_READY,
+      matterId: payload.matterId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    try {
+      const matter = await this.verifyPIMatter(payload.matterId, user);
+      if (!matter) {
+        result.skipped.push({ reason: `Matter '${payload.matterId}' not found or access restricted.` });
+        return result;
+      }
+
+      // Check practice area
+      const isPI =
+        matter.practiceArea?.code === 'PI' ||
+        matter.practiceArea?.name?.toLowerCase().includes('personal injury') ||
+        matter.title?.toLowerCase().includes('pi') ||
+        matter.matterNumber?.startsWith('PI-');
+
+      if (!isPI) {
+        result.skipped.push({
+          reason: `Matter '${matter.matterNumber}' practice area is '${matter.practiceArea?.name || 'General'}', not Personal Injury.`,
+        });
+        return result;
+      }
+
+      // Find template for Document 140 (Personal Injury Settlement Demand Letter)
+      const template140 = await this.findTemplate(
+        ['UT-PI-DEM-140', 'PI-DOC-005', 'TPL-PI-140', 'UT-PI-140', '140'],
+        'Demand'
+      );
+
+      if (!template140) {
+        result.skipped.push({
+          templateCode: '140',
+          reason: 'Template for Personal Injury Settlement Demand Letter (140) is unavailable or has no active version.',
+        });
+        return result;
+      }
+
+      // Idempotency check:
+      const existingDraft140 = await prisma.documentDraft.findFirst({
+        where: {
+          matterId: matter.id,
+          templateId: template140.id,
+          ...(payload.demandPackageId
+            ? { title: { contains: payload.demandPackageId } }
+            : { title: { contains: 'Demand' } }),
+        },
+      });
+
+      if (existingDraft140) {
+        result.skipped.push({
+          templateCode: template140.templateCode,
+          reason: `Settlement demand draft '${existingDraft140.draftCode}' already exists for this matter (Idempotent trigger).`,
+        });
+        return result;
+      }
+
+      // Populate custom overrides from demand payload
+      const customOverrides: Record<string, any> = {
+        demand_package_id: payload.demandPackageId,
+        settlement_demand_id: payload.settlementDemandId,
+        insurance_claim_id: payload.insuranceClaimId,
+        demand_title: payload.demandTitle || 'Settlement Demand Letter',
+        demand_amount: payload.demandAmount,
+        policy_limit: payload.policyLimit,
+        recipient_carrier: payload.recipientCarrier,
+        claim_number: payload.claimNumber,
+        deadline_date: payload.deadlineDate,
+        total_specials: payload.totalSpecialDamages,
+        total_generals: payload.totalGeneralDamages,
+        ...payload.customOverrides,
+      };
+
+      const draftTitle = payload.demandTitle
+        ? payload.demandTitle
+        : payload.demandPackageId
+        ? `Settlement Demand Letter - ${payload.demandPackageId}`
+        : `Settlement Demand Letter - ${payload.recipientCarrier || 'Adverse Carrier'}`;
+
+      const draft140 = await DraftService.generateDraft(
+        {
+          matterId: matter.id,
+          templateId: template140.id,
+          title: draftTitle,
+          allowIncomplete: true,
+          customOverrides,
+        },
+        user,
+        context
+      );
+
+      result.draftsCreated.push({
+        id: draft140.id,
+        draftCode: draft140.draftCode,
+        templateCode: template140.templateCode,
+        templateName: template140.templateName,
+        title: draft140.title,
+        missingFieldsCount: draft140.missingFieldsFlags.length,
+        filePath: draft140.docxStorageKey || '',
+      });
+
+      // Assign attorney review task
+      await this.createDraftReviewTask(matter, draft140, template140.templateName, user, context);
+
+      await createAuditLog({
+        userId: user.id,
+        action: 'CREATE',
+        resourceType: 'document_drafts',
+        resourceId: draft140.id,
+        details: {
+          event: DOCUMENT_EVENT.PI_DEMAND_READY,
+          matterId: matter.id,
+          draftCode: draft140.draftCode,
+          templateCode: template140.templateCode,
+          demandPackageId: payload.demandPackageId,
+        },
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      });
     } catch (err: any) {
       result.success = false;
       result.errors.push(err.message || String(err));

@@ -8,6 +8,7 @@ export const DOCUMENT_EVENT = {
   PI_ACCIDENT_SAVED: 'pi.accident.saved',
   PI_PROVIDER_ADDED: 'pi.provider.added',
   PI_MISSING_RECORDS: 'pi.missing.records',
+  PI_DEMAND_READY: 'pi.demand.ready',
 } as const;
 
 export type DocumentEventType = typeof DOCUMENT_EVENT[keyof typeof DOCUMENT_EVENT];
@@ -55,6 +56,23 @@ export interface MissingRecordsPayload {
   outstandingRecords?: string[];
   lastFollowUpDate?: string;
   followUpNotes?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface DemandReadyPayload {
+  matterId: string;
+  demandPackageId?: string;
+  settlementDemandId?: string;
+  insuranceClaimId?: string;
+  requestedBy?: string;
+  demandTitle?: string;
+  totalSpecialDamages?: number;
+  totalGeneralDamages?: number;
+  demandAmount?: number;
+  policyLimit?: number;
+  recipientCarrier?: string;
+  claimNumber?: string;
+  deadlineDate?: string;
   customOverrides?: Record<string, any>;
 }
 
