@@ -66,30 +66,39 @@ export function IntakeList() {
     practiceSpecificDetail: '',
   });
 
-  const handleCreateIntake = (e) => {
+  const handleCreateIntake = async (e) => {
     e.preventDefault();
     if (!formData.prospectiveClient.trim() || !formData.email.trim()) {
       addToast('Please complete all required intake fields.', 'error');
       return;
     }
 
-    const pa = PRACTICE_AREAS.find(p => p.id === formData.practiceAreaId);
-    const created = addIntake({
-      ...formData,
-      practiceAreaName: pa?.name || 'General Legal Practice',
-    });
+    try {
+      const pa = PRACTICE_AREAS.find(p => p.id === formData.practiceAreaId);
+      const payload = {
+        ...formData,
+        disputeAmount: Number(formData.disputeAmount) || 0,
+        practiceAreaName: pa?.name || 'General Legal Practice',
+      };
+      await addIntake(payload);
 
-    addToast(`New intake file created for "${formData.prospectiveClient}". Ready for Conflict Check.`, 'success');
-    setIsAddModalOpen(false);
-    setFormData({
-      prospectiveClient: '',
-      contactPerson: '',
-      email: '',
-      phone: '',
-      practiceAreaId: PRACTICE_AREAS[0]?.id || '',
-      adverseParties: '',
-      matterSummary: '',
-    });
+      addToast(`New intake file created for "${formData.prospectiveClient}". Ready for Conflict Check.`, 'success');
+      setIsAddModalOpen(false);
+      setFormData({
+        prospectiveClient: '',
+        contactPerson: '',
+        email: '',
+        phone: '',
+        practiceAreaId: PRACTICE_AREAS[0]?.id || '',
+        adverseParties: '',
+        matterSummary: '',
+        disputeAmount: '75000',
+        jurisdictionVenue: 'Utah Third Judicial District Court (Salt Lake County)',
+        practiceSpecificDetail: '',
+      });
+    } catch (err) {
+      addToast(err?.message || 'Failed to create intake record. Please verify all fields.', 'error');
+    }
   };
 
   const handleSetConflictStatus = (intakeId, status) => {
@@ -123,7 +132,7 @@ export function IntakeList() {
       key: 'id',
       label: 'Intake ID',
       sortable: true,
-      render: (val) => <span className="text-xs font-bold text-[#A4432B]">{val}</span>,
+      render: (val, row) => <span className="text-xs font-bold text-[#A4432B]">{row.intakeNumber || val}</span>,
     },
     {
       key: 'prospectiveClient',
