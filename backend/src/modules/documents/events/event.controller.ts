@@ -33,9 +33,9 @@ export class DocumentEventController {
           },
           {
             event: DOCUMENT_EVENT.PI_MISSING_RECORDS,
-            description: 'Triggered when medical records are flagged as overdue or missing.',
-            targetDocumentCode: '115',
-            targetDocumentTitle: 'Medical Records Deficiency Follow-up Letter',
+            description: 'Triggered when received medical records packet is marked incomplete or deficient.',
+            targetDocumentCode: '116',
+            targetDocumentTitle: 'Incomplete Medical Records Follow-up',
             idempotencyScope: 'One per provider per calendar day',
           },
         ],

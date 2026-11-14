@@ -227,6 +227,10 @@ model Matter {
   documents             Document[]
   originatingIntakes    Intake[]                @relation("ConvertedMatter")
   documentDrafts        DocumentDraft[]
+  incidents             Incident[]
+  insurancePolicies     InsurancePolicy[]
+  medicalProviders      MedicalProvider[]
+  medicalRecordRequests MedicalRecordRequest[]
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -745,4 +749,104 @@ model DocumentDraft {
   @@index([clientId], name: "idx_doc_drafts_client")
   @@index([isStale, status], name: "idx_doc_drafts_stale")
   @@map("document_drafts")
+}
+
+model Incident {
+  id                       String            @id @default(uuid()) @db.VarChar(36)
+  matterId                 String            @map("matter_id") @db.VarChar(36)
+  incidentDate             DateTime?         @map("incident_date") @db.Date
+  incidentTime             String?           @map("incident_time") @db.VarChar(20)
+  incidentLocation         String?           @map("incident_location") @db.VarChar(255)
+  accidentType             String?           @map("accident_type") @db.VarChar(100)
+  description              String?           @db.Text
+  policeAgency             String?           @map("police_agency") @db.VarChar(150)
+  reportNumber             String?           @map("report_number") @db.VarChar(100)
+  investigatingOfficer     String?           @map("investigating_officer") @db.VarChar(150)
+  liabilityAssessment      String?           @map("liability_assessment") @db.VarChar(50)
+  plaintiffFaultPercentage Decimal?          @map("plaintiff_fault_percentage") @db.Decimal(5, 2)
+  adverseFaultPercentage   Decimal?          @map("adverse_fault_percentage") @db.Decimal(5, 2)
+  notes                    String?           @db.Text
+  createdAt                DateTime          @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                DateTime          @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                   Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  insurancePolicies        InsurancePolicy[]
+
+  @@index([matterId], name: "idx_incidents_matter")
+  @@map("pi_incidents")
+}
+
+model InsurancePolicy {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  matterId         String    @map("matter_id") @db.VarChar(36)
+  incidentId       String?   @map("incident_id") @db.VarChar(36)
+  coverageType     String    @map("coverage_type") @db.VarChar(50)
+  insuranceCompany String    @map("insurance_company") @db.VarChar(200)
+  policyNumber     String?   @map("policy_number") @db.VarChar(100)
+  claimNumber      String?   @map("claim_number") @db.VarChar(100)
+  adjusterName     String?   @map("adjuster_name") @db.VarChar(150)
+  adjusterPhone    String?   @map("adjuster_phone") @db.VarChar(50)
+  adjusterEmail    String?   @map("adjuster_email") @db.VarChar(150)
+  adjusterFax      String?   @map("adjuster_fax") @db.VarChar(50)
+  insuredName      String?   @map("insured_name") @db.VarChar(150)
+  policyLimits     String?   @map("policy_limits") @db.VarChar(100)
+  status           String    @default("Active") @db.VarChar(30)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter           Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  incident         Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+
+  @@index([matterId], name: "idx_policies_matter")
+  @@map("pi_insurance_policies")
+}
+
+model MedicalProvider {
+  id                 String                 @id @default(uuid()) @db.VarChar(36)
+  matterId           String                 @map("matter_id") @db.VarChar(36)
+  providerName       String                 @map("provider_name") @db.VarChar(200)
+  providerType       String?                @map("provider_type") @db.VarChar(100)
+  facilityAddress    String?                @map("facility_address") @db.VarChar(255)
+  phone              String?                @db.VarChar(50)
+  fax                String?                @db.VarChar(50)
+  email              String?                @db.VarChar(150)
+  treatmentStartDate DateTime?              @map("treatment_start_date") @db.Date
+  treatmentEndDate   DateTime?              @map("treatment_end_date") @db.Date
+  notes              String?                @db.Text
+  createdAt          DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter             Matter                 @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  recordRequests     MedicalRecordRequest[]
+
+  @@index([matterId], name: "idx_providers_matter")
+  @@map("pi_medical_providers")
+}
+
+model MedicalRecordRequest {
+  id                      String          @id @default(uuid()) @db.VarChar(36)
+  matterId                String          @map("matter_id") @db.VarChar(36)
+  providerId              String          @map("provider_id") @db.VarChar(36)
+  requestCode             String          @unique @map("request_code") @db.VarChar(50)
+  status                  String          @default("Drafted") @db.VarChar(50)
+  authorizationSigned     Boolean         @default(false) @map("authorization_signed")
+  authorizationDate       DateTime?       @map("authorization_date") @db.Date
+  authorizationDocumentId String?         @map("authorization_document_id") @db.VarChar(36)
+  requestDocumentId       String?         @map("request_document_id") @db.VarChar(36)
+  requestSentDate         DateTime?       @map("request_sent_date") @db.Date
+  requestDueDate          DateTime?       @map("request_due_date") @db.Date
+  recordsReceivedDate     DateTime?       @map("records_received_date") @db.Date
+  isComplete              Boolean         @default(false) @map("is_complete")
+  deficiencyNotes         String?         @map("deficiency_notes") @db.Text
+  followUpDocumentId      String?         @map("follow_up_document_id") @db.VarChar(36)
+  followUpSentDate        DateTime?       @map("follow_up_sent_date") @db.Date
+  createdAt               DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt               DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                  Matter          @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  provider                MedicalProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([matterId], name: "idx_record_requests_matter")
+  @@index([providerId], name: "idx_record_requests_provider")
+  @@map("pi_medical_record_requests")
 }

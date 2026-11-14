@@ -194,6 +194,9 @@ export class DraftDataResolver {
     const attorney = matter.responsibleAttorney || {};
     const pa = matter.practiceArea || {};
     const intake = matter.originatingIntakes?.[0] || {};
+    const incidentRecord = matter.incidents?.[0] || {};
+    const policyRecord = matter.insurancePolicies?.[0] || {};
+    const providerRecord = matter.medicalProviders?.[0] || {};
 
     const now = new Date();
 
@@ -264,29 +267,29 @@ export class DraftDataResolver {
         jurisdictionVenue: intake.jurisdictionVenue,
       },
       Incident: {
-        accidentDate: customOverrides?.accident_date || customOverrides?.incident_date || customOverrides?.['Incident.accidentDate'] || null,
-        accidentType: customOverrides?.accident_type || customOverrides?.['Incident.accidentType'] || null,
-        incidentLocation: customOverrides?.incident_location || customOverrides?.['Incident.incidentLocation'] || null,
-        policeAgency: customOverrides?.police_agency || customOverrides?.['Incident.policeAgency'] || null,
-        reportNumber: customOverrides?.report_number || customOverrides?.['Incident.reportNumber'] || null,
-        investigatingOfficer: customOverrides?.investigating_officer || null,
-        description: customOverrides?.accident_description || customOverrides?.description || null,
+        accidentDate: customOverrides?.accident_date || customOverrides?.incident_date || incidentRecord.incidentDate || customOverrides?.['Incident.accidentDate'] || null,
+        accidentType: customOverrides?.accident_type || incidentRecord.accidentType || customOverrides?.['Incident.accidentType'] || null,
+        incidentLocation: customOverrides?.incident_location || incidentRecord.incidentLocation || customOverrides?.['Incident.incidentLocation'] || null,
+        policeAgency: customOverrides?.police_agency || incidentRecord.policeAgency || customOverrides?.['Incident.policeAgency'] || null,
+        reportNumber: customOverrides?.report_number || incidentRecord.reportNumber || customOverrides?.['Incident.reportNumber'] || null,
+        investigatingOfficer: customOverrides?.investigating_officer || incidentRecord.investigatingOfficer || null,
+        description: customOverrides?.accident_description || customOverrides?.description || incidentRecord.description || null,
         mechanismOfInjury: customOverrides?.mechanism_of_injury || null,
       },
       Insurance: {
-        insuranceCompany: customOverrides?.insurance_company || customOverrides?.['Insurance.insuranceCompany'] || null,
-        claimNumber: customOverrides?.claim_number || customOverrides?.['Insurance.claimNumber'] || null,
-        policyNumber: customOverrides?.policy_number || customOverrides?.['Insurance.policyNumber'] || null,
-        adjusterName: customOverrides?.adjuster_name || customOverrides?.['Insurance.adjusterName'] || null,
-        adjusterPhone: customOverrides?.adjuster_phone || customOverrides?.['Insurance.adjusterPhone'] || null,
-        adjusterEmail: customOverrides?.adjuster_email || customOverrides?.['Insurance.adjusterEmail'] || null,
+        insuranceCompany: customOverrides?.insurance_company || policyRecord.insuranceCompany || customOverrides?.['Insurance.insuranceCompany'] || null,
+        claimNumber: customOverrides?.claim_number || policyRecord.claimNumber || customOverrides?.['Insurance.claimNumber'] || null,
+        policyNumber: customOverrides?.policy_number || policyRecord.policyNumber || customOverrides?.['Insurance.policyNumber'] || null,
+        adjusterName: customOverrides?.adjuster_name || policyRecord.adjusterName || customOverrides?.['Insurance.adjusterName'] || null,
+        adjusterPhone: customOverrides?.adjuster_phone || policyRecord.adjusterPhone || customOverrides?.['Insurance.adjusterPhone'] || null,
+        adjusterEmail: customOverrides?.adjuster_email || policyRecord.adjusterEmail || customOverrides?.['Insurance.adjusterEmail'] || null,
       },
       MedicalProvider: {
-        providerName: customOverrides?.provider_name || customOverrides?.['MedicalProvider.providerName'] || null,
-        providerType: customOverrides?.provider_type || customOverrides?.['MedicalProvider.providerType'] || null,
-        facilityAddress: customOverrides?.facility_address || customOverrides?.provider_address || null,
-        phone: customOverrides?.provider_phone || customOverrides?.phone || null,
-        fax: customOverrides?.provider_fax || customOverrides?.fax || null,
+        providerName: customOverrides?.provider_name || providerRecord.providerName || customOverrides?.['MedicalProvider.providerName'] || null,
+        providerType: customOverrides?.provider_type || providerRecord.providerType || customOverrides?.['MedicalProvider.providerType'] || null,
+        facilityAddress: customOverrides?.facility_address || customOverrides?.provider_address || providerRecord.facilityAddress || null,
+        phone: customOverrides?.provider_phone || customOverrides?.phone || providerRecord.phone || null,
+        fax: customOverrides?.provider_fax || customOverrides?.fax || providerRecord.fax || null,
         treatmentDates: customOverrides?.treatment_dates || customOverrides?.dates_of_service || null,
       },
       MedicalRecords: {

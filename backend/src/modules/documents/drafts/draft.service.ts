@@ -98,6 +98,9 @@ export class DraftService {
         responsibleAttorney: true,
         practiceArea: true,
         originatingIntakes: { take: 1 },
+        incidents: { take: 1, orderBy: { createdAt: 'desc' } },
+        insurancePolicies: { take: 1, orderBy: { createdAt: 'desc' } },
+        medicalProviders: { take: 1, orderBy: { createdAt: 'desc' } },
       },
     });
 
@@ -191,6 +194,9 @@ export class DraftService {
         responsibleAttorney: true,
         practiceArea: true,
         originatingIntakes: { take: 1 },
+        incidents: { take: 1, orderBy: { createdAt: 'desc' } },
+        insurancePolicies: { take: 1, orderBy: { createdAt: 'desc' } },
+        medicalProviders: { take: 1, orderBy: { createdAt: 'desc' } },
       },
     });
 
