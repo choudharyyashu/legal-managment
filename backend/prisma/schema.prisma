@@ -57,8 +57,15 @@ model User {
   auditLogs               AuditLog[]
   templatesCreated        DocumentTemplate[]       @relation("TemplateCreator")
   templateVersionsUpload  TemplateVersion[]        @relation("TemplateVersionCreator")
-  draftsGenerated         DocumentDraft[]          @relation("DraftGenerator")
-  draftsReviewed          DocumentDraft[]          @relation("DraftReviewer")
+  draftsGenerated          DocumentDraft[]                  @relation("DraftGenerator")
+  draftsReviewed           DocumentDraft[]                  @relation("DraftReviewer")
+  piVendorStaffAssignments PIVendorAssignment[]              @relation("VendorStaffAssignee")
+  piDemandsApproved        PIDemandPackage[]                 @relation("DemandApprover")
+  piLienNegotiations       PILienNegotiation[]               @relation("LienNegotiator")
+  piSettlementVersionsMade PISettlementDisbursementVersion[] @relation("SettlementVersionCreator")
+  piSettlementsApproved    PISettlementDisbursementVersion[] @relation("SettlementAttorneyApprover")
+  piSettlementsExecuted    PISettlementExecution[]           @relation("SettlementDisbursementExecutor")
+  piMedicalPaymentsCreated MedicalPaymentRecord[]            @relation("MedicalPaymentCreator")
 
   @@map("users")
 }
@@ -228,9 +235,17 @@ model Matter {
   originatingIntakes    Intake[]                @relation("ConvertedMatter")
   documentDrafts        DocumentDraft[]
   incidents             Incident[]
-  insurancePolicies     InsurancePolicy[]
-  medicalProviders      MedicalProvider[]
-  medicalRecordRequests MedicalRecordRequest[]
+  insurancePolicies       InsurancePolicy[]
+  medicalProviders        MedicalProvider[]
+  medicalRecordRequests   MedicalRecordRequest[]
+  medicalBillingSummaries MedicalBillingSummary[]
+  vendorAssignments       PIVendorAssignment[]
+  demandPackages          PIDemandPackage[]
+  liens                   PILien[]
+  settlementDisbursements PISettlementDisbursement[]
+  damagesRecords          PIDamagesRecord[]
+  diagnosticStudies       PIDiagnosticStudy[]
+  wageLossRecords         PIWageLossRecord[]
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -405,9 +420,10 @@ model Expense {
   status            String   @default("Unbilled") @db.VarChar(30)
   createdAt         DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
-  matter           Matter            @relation(fields: [matterId], references: [id], onDelete: Restrict)
-  incurredByUser   User              @relation(fields: [incurredByUserId], references: [id], onDelete: Restrict)
-  invoiceLineItems InvoiceLineItem[]
+  matter              Matter               @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  incurredByUser      User                 @relation(fields: [incurredByUserId], references: [id], onDelete: Restrict)
+  invoiceLineItems    InvoiceLineItem[]
+  piVendorAssignments PIVendorAssignment[]
 
   @@map("expenses")
 }
@@ -492,9 +508,10 @@ model TrustSubLedger {
   createdAt     DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
-  client       Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
-  matter       Matter             @relation(fields: [matterId], references: [id], onDelete: Restrict)
-  transactions TrustTransaction[]
+  client               Client                  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  matter               Matter                  @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  transactions         TrustTransaction[]
+  settlementExecutions PISettlementExecution[]
 
   @@map("trust_sub_ledgers")
 }
@@ -510,9 +527,11 @@ model TrustTransaction {
   purpose            String   @db.Text
   createdAt          DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
-  trustSubLedger   TrustSubLedger @relation(fields: [trustSubLedgerId], references: [id], onDelete: Restrict)
-  authorizedByUser User           @relation(fields: [authorizedByUserId], references: [id], onDelete: Restrict)
+  trustSubLedger          TrustSubLedger             @relation(fields: [trustSubLedgerId], references: [id], onDelete: Restrict)
+  authorizedByUser        User                       @relation(fields: [authorizedByUserId], references: [id], onDelete: Restrict)
+  settlementExecutionLine PISettlementExecutionLine?
 
+  @@unique([id, trustSubLedgerId], name: "uq_tx_subledger")
   @@map("trust_transactions")
 }
 
@@ -599,7 +618,15 @@ model Document {
   matter   Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
   client   Client            @relation(fields: [clientId], references: [id], onDelete: Restrict)
   versions          DocumentVersion[]
-  originatingDrafts DocumentDraft[]   @relation("FinalizedDraftDocument")
+  originatingDrafts        DocumentDraft[]                   @relation("FinalizedDraftDocument")
+  piBillingLedgers         MedicalBillingSummary[]           @relation("BillingLedgerDoc")
+  piPaymentEOBs            MedicalPaymentRecord[]            @relation("PaymentEOBDoc")
+  piVendorReports          PIVendorAssignment[]              @relation("VendorReportDoc")
+  piDemandDrafts           PIDemandPackage[]                 @relation("DemandDraftDoc")
+  piLienPayoffLetters      PILien[]                          @relation("LienPayoffDoc")
+  piClosingStatements      PISettlementDisbursementVersion[] @relation("ClosingStatementDoc")
+  piDiagnosticReports      PIDiagnosticStudy[]               @relation("DiagnosticReportDoc")
+  piWageLossVerifications  PIWageLossRecord[]                @relation("WageLossDoc")
 
   @@map("documents")
 }
@@ -771,6 +798,7 @@ model Incident {
 
   matter                   Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
   insurancePolicies        InsurancePolicy[]
+  parties                  IncidentParty[]
 
   @@index([matterId], name: "idx_incidents_matter")
   @@map("pi_incidents")
@@ -794,8 +822,9 @@ model InsurancePolicy {
   createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
 
-  matter           Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
-  incident         Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  matter           Matter            @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  incident         Incident?         @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+  demandPackages   PIDemandPackage[]
 
   @@index([matterId], name: "idx_policies_matter")
   @@map("pi_insurance_policies")
@@ -816,9 +845,12 @@ model MedicalProvider {
   createdAt          DateTime               @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt          DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
 
-  matter             Matter                 @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  matter             Matter                  @relation(fields: [matterId], references: [id], onDelete: Cascade)
   recordRequests     MedicalRecordRequest[]
+  billingSummaries   MedicalBillingSummary[]
+  liens              PILien[]
 
+  @@unique([id, matterId], name: "uq_provider_matter")
   @@index([matterId], name: "idx_providers_matter")
   @@map("pi_medical_providers")
 }
@@ -849,4 +881,364 @@ model MedicalRecordRequest {
   @@index([matterId], name: "idx_record_requests_matter")
   @@index([providerId], name: "idx_record_requests_provider")
   @@map("pi_medical_record_requests")
+}
+
+model IncidentParty {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  incidentId       String    @map("incident_id") @db.VarChar(36)
+  partyType        String    @map("party_type") @db.VarChar(50)
+  fullName         String    @map("full_name") @db.VarChar(150)
+  phone            String?   @db.VarChar(50)
+  insuranceCarrier String?   @map("insurance_carrier") @db.VarChar(150)
+  policyNumber     String?   @map("policy_number") @db.VarChar(100)
+  claimNumber      String?   @map("claim_number") @db.VarChar(100)
+  vehicleMake      String?   @map("vehicle_make") @db.VarChar(50)
+  vehicleModel     String?   @map("vehicle_model") @db.VarChar(50)
+  vehicleYear      Int?      @map("vehicle_year")
+  vehiclePlate     String?   @map("vehicle_plate") @db.VarChar(20)
+  vehicleState     String?   @map("vehicle_state") @db.VarChar(10)
+  citationsIssued  String?   @map("citations_issued") @db.VarChar(255)
+  admittedFault    Boolean   @default(false) @map("admitted_fault")
+  faultPercentage  Decimal?  @map("fault_percentage") @db.Decimal(5, 2)
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  incident         Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId], name: "idx_parties_incident")
+  @@map("pi_incident_parties")
+}
+
+model MedicalBillingSummary {
+  id                      String                 @id @default(uuid()) @db.VarChar(36)
+  matterId                String                 @map("matter_id") @db.VarChar(36)
+  providerId              String                 @map("provider_id") @db.VarChar(36)
+  accountNumber           String                 @default("PRIMARY") @map("account_number") @db.VarChar(100)
+  serviceCategory         String?                @map("service_category") @db.VarChar(150)
+  totalBilled             Decimal                @default(0.00) @map("total_billed") @db.Decimal(12, 2)
+  cachedBalanceOwed       Decimal                @default(0.00) @map("cached_balance_owed") @db.Decimal(12, 2)
+  billingLedgerDocumentId String?                @map("billing_ledger_document_id") @db.VarChar(36)
+  treatmentStatus         String                 @default("ACTIVE") @map("treatment_status") @db.VarChar(50)
+  notes                   String?                @db.Text
+  createdAt               DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt               DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                  Matter                 @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  provider                MedicalProvider        @relation(fields: [providerId, matterId], references: [id, matterId], onDelete: Restrict)
+  billingLedgerDocument   Document?              @relation("BillingLedgerDoc", fields: [billingLedgerDocumentId], references: [id], onDelete: Restrict)
+  payments                MedicalPaymentRecord[]
+
+  @@unique([providerId, accountNumber], name: "uq_provider_account_billing")
+  @@index([matterId], name: "idx_med_billing_matter")
+  @@index([providerId], name: "idx_med_billing_provider")
+  @@map("pi_medical_billing_summaries")
+}
+
+model MedicalPaymentRecord {
+  id                     String                @id @default(uuid()) @db.VarChar(36)
+  billingSummaryId       String                @map("billing_summary_id") @db.VarChar(36)
+  transactionType        String                @map("transaction_type") @db.VarChar(50)
+  paymentSource          String                @map("payment_source") @db.VarChar(50)
+  amount                 Decimal               @db.Decimal(12, 2)
+  paymentDate            DateTime              @map("payment_date") @db.Date
+  checkOrReferenceNumber String?               @map("check_or_reference_number") @db.VarChar(50)
+  eobDocumentId          String?               @map("eob_document_id") @db.VarChar(36)
+  reversalOfRecordId     String?               @unique @map("reversal_of_record_id") @db.VarChar(36)
+  reasonNotes            String?               @map("reason_notes") @db.Text
+  createdByUserId        String                @map("created_by_user_id") @db.VarChar(36)
+  createdAt              DateTime              @default(now()) @map("created_at") @db.DateTime(3)
+
+  billingSummary         MedicalBillingSummary @relation(fields: [billingSummaryId], references: [id], onDelete: Restrict)
+  eobDocument            Document?             @relation("PaymentEOBDoc", fields: [eobDocumentId], references: [id], onDelete: Restrict)
+  createdByUser          User                  @relation("MedicalPaymentCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  reversalOfRecord       MedicalPaymentRecord? @relation("PaymentReversals", fields: [reversalOfRecordId], references: [id], onDelete: Restrict)
+  reversedByRecords      MedicalPaymentRecord[] @relation("PaymentReversals")
+
+  @@index([billingSummaryId], name: "idx_payments_summary")
+  @@map("pi_medical_payment_records")
+}
+
+model PIVendor {
+  id            String               @id @default(uuid()) @db.VarChar(36)
+  vendorName    String               @map("vendor_name") @db.VarChar(200)
+  category      String               @db.VarChar(100)
+  contactPerson String?              @map("contact_person") @db.VarChar(150)
+  phone         String?              @db.VarChar(50)
+  email         String?              @db.VarChar(150)
+  hourlyRate    Decimal?             @map("hourly_rate") @db.Decimal(10, 2)
+  taxId         String?              @map("tax_id") @db.VarChar(50)
+  isActive      Boolean              @default(true) @map("is_active")
+  createdAt     DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+
+  assignments   PIVendorAssignment[]
+
+  @@map("pi_vendors")
+}
+
+model PIVendorAssignment {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  matterId         String    @map("matter_id") @db.VarChar(36)
+  vendorId         String    @map("vendor_id") @db.VarChar(36)
+  assignedStaffId  String    @map("assigned_staff_id") @db.VarChar(36)
+  expenseId        String?   @map("expense_id") @db.VarChar(36)
+  serviceScope     String    @map("service_scope") @db.Text
+  status           String    @default("ASSIGNED") @db.VarChar(50)
+  assignedDate     DateTime  @map("assigned_date") @db.Date
+  dueDate          DateTime? @map("due_date") @db.Date
+  authorizedAmount Decimal   @default(0.00) @map("authorized_amount") @db.Decimal(12, 2)
+  invoicedAmount   Decimal   @default(0.00) @map("invoiced_amount") @db.Decimal(12, 2)
+  reportDocumentId String?   @map("report_document_id") @db.VarChar(36)
+  notes            String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter           Matter    @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  vendor           PIVendor  @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  assignedStaff    User      @relation("VendorStaffAssignee", fields: [assignedStaffId], references: [id], onDelete: Restrict)
+  expense          Expense?  @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  reportDocument   Document? @relation("VendorReportDoc", fields: [reportDocumentId], references: [id], onDelete: Restrict)
+
+  @@index([matterId], name: "idx_vendor_assign_matter")
+  @@index([vendorId], name: "idx_vendor_assign_vendor")
+  @@map("pi_vendor_assignments")
+}
+
+model PIDemandPackage {
+  id                   String           @id @default(uuid()) @db.VarChar(36)
+  matterId             String           @map("matter_id") @db.VarChar(36)
+  insurancePolicyId    String?          @map("insurance_policy_id") @db.VarChar(36)
+  draftDocumentId      String?          @map("draft_document_id") @db.VarChar(36)
+  approvedByAttorneyId String?          @map("approved_by_attorney_id") @db.VarChar(36)
+  demandTitle          String           @map("demand_title") @db.VarChar(255)
+  recipientCarrier     String           @map("recipient_carrier") @db.VarChar(200)
+  claimNumber          String?          @map("claim_number") @db.VarChar(100)
+  demandedAmount       Decimal          @map("demanded_amount") @db.Decimal(12, 2)
+  policyLimitAmount    Decimal?         @map("policy_limit_amount") @db.Decimal(12, 2)
+  isPolicyLimitDemand  Boolean          @default(false) @map("is_policy_limit_demand")
+  status               String           @default("DRAFTING") @db.VarChar(50)
+  sentDate             DateTime?        @map("sent_date") @db.Date
+  deadlineDate         DateTime         @map("deadline_date") @db.Date
+  responseReceivedDate DateTime?        @map("response_received_date") @db.Date
+  checklistState       Json?            @map("checklist_state")
+  counterOfferAmount   Decimal?         @map("counter_offer_amount") @db.Decimal(12, 2)
+  notes                String?          @db.Text
+  createdAt            DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt            DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter               Matter           @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  insurancePolicy      InsurancePolicy? @relation(fields: [insurancePolicyId], references: [id], onDelete: SetNull)
+  draftDocument        Document?        @relation("DemandDraftDoc", fields: [draftDocumentId], references: [id], onDelete: Restrict)
+  approvedByAttorney   User?            @relation("DemandApprover", fields: [approvedByAttorneyId], references: [id], onDelete: Restrict)
+
+  @@index([matterId], name: "idx_demand_matter")
+  @@index([insurancePolicyId], name: "idx_demand_policy")
+  @@map("pi_demand_packages")
+}
+
+model PILien {
+  id                          String              @id @default(uuid()) @db.VarChar(36)
+  matterId                    String              @map("matter_id") @db.VarChar(36)
+  providerId                  String?             @map("provider_id") @db.VarChar(36)
+  lienholderName              String              @map("lienholder_name") @db.VarChar(200)
+  category                    String              @db.VarChar(50)
+  accountReference            String?             @map("account_reference") @db.VarChar(100)
+  assertedAmount              Decimal             @map("asserted_amount") @db.Decimal(12, 2)
+  verifiedAmount              Decimal             @default(0.00) @map("verified_amount") @db.Decimal(12, 2)
+  negotiatedAmount            Decimal             @default(0.00) @map("negotiated_amount") @db.Decimal(12, 2)
+  commonFundReductionRate     Decimal?            @map("common_fund_reduction_rate") @db.Decimal(5, 2)
+  procurementCostDeduction    Decimal             @default(0.00) @map("procurement_cost_deduction") @db.Decimal(12, 2)
+  finalPayoffAmount           Decimal             @default(0.00) @map("final_payoff_amount") @db.Decimal(12, 2)
+  status                      String              @default("ASSERTED") @db.VarChar(50)
+  finalPayoffLetterDocumentId String?             @map("final_payoff_letter_document_id") @db.VarChar(36)
+  isERISAQualified            Boolean             @default(false) @map("is_erisa_qualified")
+  notes                       String?             @db.Text
+  createdAt                   DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                   DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                      Matter              @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  provider                    MedicalProvider?    @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  finalPayoffLetterDocument   Document?           @relation("LienPayoffDoc", fields: [finalPayoffLetterDocumentId], references: [id], onDelete: Restrict)
+  negotiations                PILienNegotiation[]
+  executionLines              PISettlementExecutionLine[]
+
+  @@index([matterId], name: "idx_liens_matter")
+  @@index([providerId], name: "idx_liens_provider")
+  @@map("pi_liens")
+}
+
+model PILienNegotiation {
+  id                 String   @id @default(uuid()) @db.VarChar(36)
+  lienId             String   @map("lien_id") @db.VarChar(36)
+  conductedByUserId  String   @map("conducted_by_user_id") @db.VarChar(36)
+  negotiationDate    DateTime @map("negotiation_date") @db.Date
+  offeredAmount      Decimal  @map("offered_amount") @db.Decimal(12, 2)
+  responseAmount     Decimal? @map("response_amount") @db.Decimal(12, 2)
+  outcome            String   @db.VarChar(50)
+  notes              String?  @db.Text
+  createdAt          DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  lien               PILien   @relation(fields: [lienId], references: [id], onDelete: Restrict)
+  conductedByUser    User     @relation("LienNegotiator", fields: [conductedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([lienId], name: "idx_negotiations_lien")
+  @@map("pi_lien_negotiations")
+}
+
+model PISettlementDisbursement {
+  id                   String                             @id @default(uuid()) @db.VarChar(36)
+  matterId             String                             @map("matter_id") @db.VarChar(36)
+  settlementTitle      String                             @map("settlement_title") @db.VarChar(255)
+  currentVersionNumber Int                                @default(1) @map("current_version_number")
+  status               String                             @default("DRAFT") @db.VarChar(50)
+  createdAt            DateTime                           @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt            DateTime                           @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter               Matter                             @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  versions             PISettlementDisbursementVersion[]
+
+  @@index([matterId], name: "idx_settlements_matter")
+  @@map("pi_settlement_disbursements")
+}
+
+model PISettlementDisbursementVersion {
+  id                          String                 @id @default(uuid()) @db.VarChar(36)
+  settlementDisbursementId    String                 @map("settlement_disbursement_id") @db.VarChar(36)
+  versionNumber               Int                    @map("version_number")
+  grossSettlementAmount       Decimal                @map("gross_settlement_amount") @db.Decimal(12, 2)
+  contingencyFeePercentage    Decimal                @map("contingency_fee_percentage") @db.Decimal(5, 2)
+  calculatedAttorneyFee       Decimal                @map("calculated_attorney_fee") @db.Decimal(12, 2)
+  totalLitigationCosts        Decimal                @map("total_litigation_costs") @db.Decimal(12, 2)
+  totalClientAdvances         Decimal                @default(0.00) @map("total_client_advances") @db.Decimal(12, 2)
+  totalMedicalLiens           Decimal                @map("total_medical_liens") @db.Decimal(12, 2)
+  otherDeductions             Decimal                @default(0.00) @map("other_deductions") @db.Decimal(12, 2)
+  netClientRecovery           Decimal                @map("net_client_recovery") @db.Decimal(12, 2)
+  versionStatus               String                 @default("DRAFT") @map("version_status") @db.VarChar(50)
+  isImmutable                 Boolean                @default(false) @map("is_immutable")
+  signedClosingStatementDocId String?                @map("signed_closing_statement_doc_id") @db.VarChar(36)
+  clientApprovalDate          DateTime?              @map("client_approval_date") @db.Date
+  clientApprovalEvidence      String?                @map("client_approval_evidence") @db.VarChar(255)
+  approvedByAttorneyId        String?                @map("approved_by_attorney_id") @db.VarChar(36)
+  approvedAt                  DateTime?              @map("approved_at") @db.DateTime(3)
+  createdByUserId             String                 @map("created_by_user_id") @db.VarChar(36)
+  notes                       String?                @db.Text
+  createdAt                   DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+
+  settlementDisbursement      PISettlementDisbursement @relation(fields: [settlementDisbursementId], references: [id], onDelete: Restrict)
+  signedClosingStatementDoc   Document?              @relation("ClosingStatementDoc", fields: [signedClosingStatementDocId], references: [id], onDelete: Restrict)
+  approvedByAttorney          User?                  @relation("SettlementAttorneyApprover", fields: [approvedByAttorneyId], references: [id], onDelete: Restrict)
+  createdByUser               User                   @relation("SettlementVersionCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  executionRecord             PISettlementExecution?
+
+  @@unique([settlementDisbursementId, versionNumber], name: "uq_settlement_version")
+  @@map("pi_settlement_disbursement_versions")
+}
+
+model PISettlementExecution {
+  id                    String                          @id @default(uuid()) @db.VarChar(36)
+  settlementVersionId   String                          @unique @map("settlement_version_id") @db.VarChar(36)
+  trustSubLedgerId      String                          @map("trust_sub_ledger_id") @db.VarChar(36)
+  idempotencyKey        String                          @unique @map("idempotency_key") @db.VarChar(100)
+  executedByUserId      String                          @map("executed_by_user_id") @db.VarChar(36)
+  executedAt            DateTime                        @default(now()) @map("executed_at") @db.DateTime(3)
+
+  settlementVersion     PISettlementDisbursementVersion @relation(fields: [settlementVersionId], references: [id], onDelete: Restrict)
+  trustSubLedger        TrustSubLedger                  @relation(fields: [trustSubLedgerId], references: [id], onDelete: Restrict)
+  executedByUser        User                            @relation("SettlementDisbursementExecutor", fields: [executedByUserId], references: [id], onDelete: Restrict)
+  lines                 PISettlementExecutionLine[]
+
+  @@unique([id, trustSubLedgerId], name: "uq_execution_subledger")
+  @@map("pi_settlement_executions")
+}
+
+model PISettlementExecutionLine {
+  id                    String                @id @default(uuid()) @db.VarChar(36)
+  settlementExecutionId String                @map("settlement_execution_id") @db.VarChar(36)
+  trustSubLedgerId      String                @map("trust_sub_ledger_id") @db.VarChar(36)
+  trustTransactionId    String                @unique @map("trust_transaction_id") @db.VarChar(36)
+  disbursementRole      String                @map("disbursement_role") @db.VarChar(50) // GROSS_DEPOSIT, ATTORNEY_FEE, LITIGATION_COSTS, LIEN_PAYOFF, CLIENT_NET
+  lineIdentifier        String                @map("line_identifier") @db.VarChar(100) // GROSS_DEPOSIT, ATTORNEY_FEE, LITIGATION_COSTS, CLIENT_NET, or LIEN:<lienId>
+  lienId                String?               @map("lien_id") @db.VarChar(36)
+  amount                Decimal               @db.Decimal(12, 2)
+  payeeName             String?               @map("payee_name") @db.VarChar(200)
+  createdAt             DateTime              @default(now()) @map("created_at") @db.DateTime(3)
+
+  settlementExecution   PISettlementExecution @relation(fields: [settlementExecutionId, trustSubLedgerId], references: [id, trustSubLedgerId], onDelete: Restrict)
+  trustTransaction      TrustTransaction      @relation(fields: [trustTransactionId, trustSubLedgerId], references: [id, trustSubLedgerId], onDelete: Restrict)
+  lien                  PILien?               @relation(fields: [lienId], references: [id], onDelete: Restrict)
+
+  @@unique([settlementExecutionId, lineIdentifier], name: "uq_execution_line_identifier")
+  @@unique([trustTransactionId, trustSubLedgerId], name: "uq_execution_line_tx_subledger")
+  @@index([trustSubLedgerId], name: "idx_execution_lines_subledger")
+  @@index([lienId], name: "idx_execution_lines_lien")
+  @@map("pi_settlement_execution_lines")
+}
+
+model PIDamagesRecord {
+  id                         String              @id @default(uuid()) @db.VarChar(36)
+  matterId                   String              @map("matter_id") @db.VarChar(36)
+  injuryCategory             String              @map("injury_category") @db.VarChar(50)
+  anatomicalLocation         String              @map("anatomical_location") @db.VarChar(150)
+  severityGrade              String              @map("severity_grade") @db.VarChar(50)
+  icdCode                    String?             @map("icd_code") @db.VarChar(30)
+  futureTreatmentProjected   Boolean             @default(false) @map("future_treatment_projected")
+  futureMedicalEstimatedCost Decimal             @default(0.00) @map("future_medical_estimated_cost") @db.Decimal(12, 2)
+  treatmentSummary           String?             @map("treatment_summary") @db.Text
+  createdAt                  DateTime            @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                  DateTime            @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                     Matter              @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  diagnosticStudies          PIDiagnosticStudy[]
+
+  @@index([matterId], name: "idx_damages_matter")
+  @@map("pi_damages_records")
+}
+
+model PIDiagnosticStudy {
+  id                         String           @id @default(uuid()) @db.VarChar(36)
+  matterId                   String           @map("matter_id") @db.VarChar(36)
+  damagesRecordId            String?          @map("damages_record_id") @db.VarChar(36)
+  imagingReportDocumentId    String?          @map("imaging_report_document_id") @db.VarChar(36)
+  studyType                  String           @map("study_type") @db.VarChar(50)
+  bodyRegion                 String           @map("body_region") @db.VarChar(100)
+  studyDate                  DateTime         @map("study_date") @db.Date
+  facilityName               String           @map("facility_name") @db.VarChar(200)
+  radiologistImpression      String           @map("radiologist_impression") @db.Text
+  isPositiveFinding          Boolean          @default(true) @map("is_positive_finding")
+  createdAt                  DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                  DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                     Matter           @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  damagesRecord              PIDamagesRecord? @relation(fields: [damagesRecordId], references: [id], onDelete: SetNull)
+  imagingReportDocument      Document?        @relation("DiagnosticReportDoc", fields: [imagingReportDocumentId], references: [id], onDelete: Restrict)
+
+  @@index([matterId], name: "idx_diagnostics_matter")
+  @@index([damagesRecordId], name: "idx_diagnostics_damage")
+  @@map("pi_diagnostic_studies")
+}
+
+model PIWageLossRecord {
+  id                     String    @id @default(uuid()) @db.VarChar(36)
+  matterId               String    @map("matter_id") @db.VarChar(36)
+  verificationDocumentId String?   @map("verification_document_id") @db.VarChar(36)
+  employerName           String    @map("employer_name") @db.VarChar(200)
+  jobTitle               String    @map("job_title") @db.VarChar(150)
+  payRateType            String    @default("HOURLY") @map("pay_rate_type") @db.VarChar(50)
+  basePayRate            Decimal   @map("base_pay_rate") @db.Decimal(10, 2)
+  hoursLost              Decimal?  @map("hours_lost") @db.Decimal(8, 2)
+  daysLost               Int?      @map("days_lost")
+  startDate              DateTime  @map("start_date") @db.Date
+  endDate                DateTime? @map("end_date") @db.Date
+  totalLostWages         Decimal   @map("total_lost_wages") @db.Decimal(12, 2)
+  isVerifiedByEmployer   Boolean   @default(false) @map("is_verified_by_employer")
+  notes                  String?   @db.Text
+  createdAt              DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                 Matter    @relation(fields: [matterId], references: [id], onDelete: Restrict)
+  verificationDocument   Document? @relation("WageLossDoc", fields: [verificationDocumentId], references: [id], onDelete: Restrict)
+
+  @@index([matterId], name: "idx_wageloss_matter")
+  @@map("pi_wage_loss_records")
 }

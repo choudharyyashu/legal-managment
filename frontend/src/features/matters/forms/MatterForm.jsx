@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMatters } from '../../../context/MatterContext';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
