@@ -17,4 +17,10 @@ piRouter.post('/matters/:matterId/incident', PersonalInjuryController.saveIncide
 piRouter.get('/matters/:matterId/providers', PersonalInjuryController.getProviders);
 piRouter.post('/matters/:matterId/providers', PersonalInjuryController.addProvider);
 
+piRouter.get('/matters/:matterId/insurance', PersonalInjuryController.getInsurance);
+piRouter.post('/matters/:matterId/insurance', PersonalInjuryController.createInsurance);
+
+piRouter.get('/matters/:matterId/demands', PersonalInjuryController.getDemands);
+piRouter.post('/matters/:matterId/demands', PersonalInjuryController.createDemand);
+
 piRouter.post('/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);

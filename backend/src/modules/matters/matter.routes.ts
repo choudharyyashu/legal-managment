@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { MatterController } from './matter.controller.js';
+import { PersonalInjuryController } from '../personal-injury/pi.controller.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -60,5 +61,30 @@ matterRouter.delete(
   '/:id/staff/:userId',
   requirePermission('matters:edit'),
   MatterController.removeStaff
+);
+
+// Personal Injury Insurance & Demand Management Sub-Endpoints
+matterRouter.get(
+  '/:matterId/insurance',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getInsurance
+);
+
+matterRouter.post(
+  '/:matterId/insurance',
+  requirePermission('matters:edit'),
+  PersonalInjuryController.createInsurance
+);
+
+matterRouter.get(
+  '/:matterId/demands',
+  requirePermission('matters:view'),
+  PersonalInjuryController.getDemands
+);
+
+matterRouter.post(
+  '/:matterId/demands',
+  requirePermission('matters:edit'),
+  PersonalInjuryController.createDemand
 );
 

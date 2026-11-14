@@ -20,6 +20,7 @@ export interface IncidentInput {
 }
 
 export interface InsurancePolicyInput {
+  incidentId?: string | null;
   coverageType?: string | null;
   insuranceCompany: string;
   policyNumber?: string | null;
@@ -51,4 +52,20 @@ export interface MarkIncompleteInput {
   deficiencyNotes: string;
   outstandingRecords?: string[];
   daysOverdue?: number;
+}
+
+export interface DemandPackageInput {
+  demandTitle: string;
+  recipientCarrier: string;
+  claimNumber?: string | null;
+  insurancePolicyId?: string | null;
+  demandedAmount: number | string;
+  policyLimitAmount?: number | string | null;
+  isPolicyLimitDemand?: boolean;
+  deadlineDate: string;
+  status?: string;
+  counterOfferAmount?: number | string | null;
+  checklistState?: Record<string, any> | null;
+  notes?: string | null;
+  emitDemandReady?: boolean;
 }

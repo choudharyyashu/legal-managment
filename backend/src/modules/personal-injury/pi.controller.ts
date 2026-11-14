@@ -7,8 +7,10 @@ import { Request, Response, NextFunction } from 'express';
 import { PersonalInjuryService } from './pi.service.js';
 import {
   incidentSchema,
+  insurancePolicySchema,
   medicalProviderSchema,
   markIncompleteSchema,
+  demandPackageSchema,
 } from './pi.validation.js';
 
 export class PersonalInjuryController {
@@ -80,6 +82,66 @@ export class PersonalInjuryController {
 
       const result = await PersonalInjuryService.markRecordsIncomplete(id, validated, user, context);
       res.status(200).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getInsurance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const result = await PersonalInjuryService.getInsurancePolicies(matterId, user);
+      res.status(200).json({ success: true, data: result.policies, totalCount: result.totalCount });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createInsurance(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const validated = insurancePolicySchema.parse(req.body);
+      const context = {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const result = await PersonalInjuryService.createInsurancePolicy(matterId, validated, user, context);
+      res.status(201).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getDemands(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const result = await PersonalInjuryService.getDemandPackages(matterId, user);
+      res.status(200).json({ success: true, data: result.demands, totalCount: result.totalCount });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createDemand(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const validated = demandPackageSchema.parse(req.body);
+      const context = {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const result = await PersonalInjuryService.createDemandPackage(matterId, validated, user, context);
+      res.status(201).json({
+        success: true,
+        data: result.demandPackage,
+        eventDispatched: result.eventDispatched,
+      });
     } catch (err) {
       next(err);
     }
