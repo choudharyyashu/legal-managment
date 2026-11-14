@@ -19,6 +19,7 @@ import {
   MarkIncompleteInput,
   DemandPackageInput,
 } from './pi.types.js';
+import { SignAuthorizationInput } from './pi.validation.js';
 
 export class PersonalInjuryService {
   private static async generateRequestCode(): Promise<string> {
@@ -647,6 +648,170 @@ export class PersonalInjuryService {
     return {
       demandPackage,
       eventDispatched,
+    };
+  }
+
+  /**
+   * Records verified client signature evidence for a MedicalRecordRequest (Utah RPC 1.1 / 1.6)
+   * Links a finalized medical authorization document from the same matter.
+   */
+  static async recordAuthorizationSignature(
+    matterId: string,
+    requestId: string,
+    input: SignAuthorizationInput,
+    currentUser: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string } = {}
+  ) {
+    // 1. Authorize matter access with Ethical Wall screening (Utah RPC 1.10)
+    await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+
+    // 2. Fetch the Medical Record Request
+    const recordRequest = await prisma.medicalRecordRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        provider: true,
+        matter: true,
+      },
+    });
+
+    if (!recordRequest) {
+      throw AppError.notFound(`Medical record request '${requestId}' not found.`, 'REQUEST_NOT_FOUND');
+    }
+
+    // 3. Verify Matter association
+    if (recordRequest.matterId !== matterId) {
+      throw AppError.badRequest(
+        `Medical record request '${recordRequest.requestCode}' does not belong to matter '${matterId}'.`,
+        'REQUEST_MATTER_MISMATCH'
+      );
+    }
+
+    // 4. Verify Authorization Document existence
+    const authDoc = await prisma.document.findUnique({
+      where: { id: input.authorizationDocumentId },
+      include: {
+        versions: { orderBy: { uploadedAt: 'desc' }, take: 1 },
+        originatingDrafts: { include: { template: true } },
+      },
+    });
+
+    if (!authDoc) {
+      throw AppError.notFound(
+        `Authorization document '${input.authorizationDocumentId}' not found.`,
+        'DOCUMENT_NOT_FOUND'
+      );
+    }
+
+    // 5. Cross-Matter Document Isolation
+    if (authDoc.matterId !== recordRequest.matterId) {
+      throw AppError.forbidden(
+        `Document '${authDoc.documentCode}' belongs to a different legal matter. Cross-matter document linking is strictly prohibited.`,
+        'CROSS_MATTER_DOCUMENT_ACCESS'
+      );
+    }
+
+    // 6. Verify Correct Document Type / Category
+    const titleLower = authDoc.title.toLowerCase();
+    const categoryLower = (authDoc.category || '').toLowerCase();
+    const templateCodes = authDoc.originatingDrafts?.map((d: any) => d.template?.templateCode) || [];
+
+    const isAuthCategory =
+      categoryLower.includes('authorization') ||
+      categoryLower.includes('release') ||
+      categoryLower.includes('medical') ||
+      categoryLower.includes('legal draft') ||
+      categoryLower.includes('correspondence');
+
+    const isAuthTitle =
+      titleLower.includes('authorization') ||
+      titleLower.includes('auth') ||
+      titleLower.includes('hipaa') ||
+      titleLower.includes('medical release');
+
+    const is112Template = templateCodes.some((code: string) =>
+      ['112', 'UT-PI-MED-112', 'TPL-PI-112'].includes(code)
+    );
+
+    if (!isAuthTitle && !is112Template && !isAuthCategory) {
+      throw AppError.badRequest(
+        `Document '${authDoc.title}' (${authDoc.category}) is not a recognized Medical Authorization document.`,
+        'INVALID_DOCUMENT_TYPE'
+      );
+    }
+
+    // 7. Check for duplicate / conflicting evidence
+    if (recordRequest.authorizationSigned && recordRequest.authorizationDocumentId) {
+      if (recordRequest.authorizationDocumentId === authDoc.id) {
+        return {
+          recordRequest,
+          authorizationDocument: authDoc,
+          evidence: {
+            requestId: recordRequest.id,
+            requestCode: recordRequest.requestCode,
+            matterId: recordRequest.matterId,
+            authorizationDocumentId: authDoc.id,
+            authorizationDocumentCode: authDoc.documentCode,
+            authorizationDocumentTitle: authDoc.title,
+            signatureDate: recordRequest.authorizationDate?.toISOString().split('T')[0] || input.signatureDate,
+            recordedByUserId: currentUser.id,
+            recordedAt: new Date().toISOString(),
+            notes: input.notes || null,
+            isDuplicate: true,
+          },
+        };
+      }
+      throw AppError.conflict(
+        `Medical record request '${recordRequest.requestCode}' already has signature evidence linked to document '${recordRequest.authorizationDocumentId}'. Conflicting evidence is rejected.`,
+        'DUPLICATE_AUTHORIZATION_EVIDENCE'
+      );
+    }
+
+    // 8. Update Medical Record Request with Signature Evidence
+    const sigDate = new Date(input.signatureDate);
+    const updatedRequest = await prisma.medicalRecordRequest.update({
+      where: { id: requestId },
+      data: {
+        authorizationSigned: true,
+        authorizationDate: sigDate,
+        authorizationDocumentId: authDoc.id,
+        status: recordRequest.status === 'Drafted' ? 'Ready to Send' : recordRequest.status,
+      },
+      include: {
+        provider: true,
+        matter: true,
+      },
+    });
+
+    const evidence = {
+      requestId: updatedRequest.id,
+      requestCode: updatedRequest.requestCode,
+      matterId: updatedRequest.matterId,
+      authorizationDocumentId: authDoc.id,
+      authorizationDocumentCode: authDoc.documentCode,
+      authorizationDocumentTitle: authDoc.title,
+      signatureDate: input.signatureDate,
+      recordedByUserId: currentUser.id,
+      recordedAt: new Date().toISOString(),
+      notes: input.notes || null,
+      isDuplicate: false,
+    };
+
+    // 9. Immutable Audit Log (Utah RPC 1.6)
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'MEDICAL_AUTHORIZATION_SIGNED',
+      resourceType: 'MEDICAL_RECORD_REQUEST',
+      resourceId: updatedRequest.id,
+      details: evidence,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return {
+      recordRequest: updatedRequest,
+      authorizationDocument: authDoc,
+      evidence,
     };
   }
 }

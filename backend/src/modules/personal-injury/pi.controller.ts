@@ -146,4 +146,32 @@ export class PersonalInjuryController {
       next(err);
     }
   }
+
+  static async signAuthorization(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const matterId = req.params.matterId;
+      const requestId = req.params.requestId || req.params.id;
+      const user = (req as any).user;
+      const context = {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] as string | undefined,
+      };
+
+      const result = await PersonalInjuryService.recordAuthorizationSignature(
+        matterId,
+        requestId,
+        req.body,
+        user,
+        context
+      );
+
+      res.status(200).json({
+        success: true,
+        message: `Medical authorization signature evidence successfully linked to request '${result.recordRequest.requestCode}'.`,
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }

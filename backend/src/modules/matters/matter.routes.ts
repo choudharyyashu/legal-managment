@@ -10,6 +10,7 @@ import {
   assignStaffSchema,
   matterQuerySchema,
 } from './matter.validation.js';
+import { signAuthorizationSchema } from '../personal-injury/pi.validation.js';
 
 export const matterRouter = Router();
 
@@ -86,5 +87,13 @@ matterRouter.post(
   '/:matterId/demands',
   requirePermission('matters:edit'),
   PersonalInjuryController.createDemand
+);
+
+// Medical Authorization Signature Evidence Endpoint
+matterRouter.post(
+  '/:matterId/records-requests/:requestId/sign-authorization',
+  requirePermission('matters:edit'),
+  validateRequest({ body: signAuthorizationSchema }),
+  PersonalInjuryController.signAuthorization
 );
 

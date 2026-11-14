@@ -4,8 +4,10 @@
  */
 
 import { Router } from 'express';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requirePermission } from '../../middleware/auth.js';
+import { validateRequest } from '../../middleware/validate.js';
 import { PersonalInjuryController } from './pi.controller.js';
+import { signAuthorizationSchema } from './pi.validation.js';
 
 export const piRouter = Router();
 
@@ -24,3 +26,11 @@ piRouter.get('/matters/:matterId/demands', PersonalInjuryController.getDemands);
 piRouter.post('/matters/:matterId/demands', PersonalInjuryController.createDemand);
 
 piRouter.post('/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);
+
+// Medical Authorization Signature Evidence Endpoint
+piRouter.post(
+  '/matters/:matterId/records-requests/:requestId/sign-authorization',
+  requirePermission('matters:edit'),
+  validateRequest({ body: signAuthorizationSchema }),
+  PersonalInjuryController.signAuthorization
+);

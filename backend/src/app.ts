@@ -156,6 +156,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/clients', clientRouter);
 app.use('/api/v1/matters', matterRouter);
+app.use('/matters', matterRouter);
 app.use('/api/v1/intakes', intakeRouter);
 app.use('/api/v1/tasks', taskRouter);
 app.use('/api/v1/calendar', calendarRouter);
