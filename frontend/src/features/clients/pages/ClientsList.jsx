@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Search, Filter, Eye, Edit, Building2, User, Phone, Mail, FolderOpen, RotateCcw } from 'lucide-react';
+import { UserPlus, Search, Filter, Eye, Edit, Building2, User, Phone, Mail, FolderOpen, RotateCcw, ShieldAlert, ArrowRight } from 'lucide-react';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -232,18 +232,42 @@ export function ClientsList() {
         emptyMessage="No clients found matching the applied search or filters."
       />
 
-      {/* Add Client Modal */}
+      {/* Add Client Modal - Utah RPC 1.7 Conflict Gate */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Add New Client"
-        subtitle="Enter client contact, representation details, and relationship counsel."
-        maxWidth="max-w-2xl"
+        title="Client Onboarding: Conflict Check Required"
+        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        maxWidth="max-w-lg"
       >
-        <ClientForm
-          onSuccess={() => setIsAddModalOpen(false)}
-          onCancel={() => setIsAddModalOpen(false)}
-        />
+        <div className="space-y-4 py-1">
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <span className="font-bold block text-sm pb-1 text-amber-950">Conflict Screening Required Before Creation</span>
+              Under Utah Rule of Professional Conduct 1.7, no new Client or Matter can be established without first screening prospective client entities and adverse parties for direct conflicts of interest. Direct creation without clearance is restricted.
+            </div>
+          </div>
+          <p className="text-xs text-[#667085] leading-relaxed">
+            Please initiate a <strong>Prospective Client Intake</strong> to record the prospective client entity, primary contact, and adverse parties. Once the RPC 1.7 conflict search is completed and cleared, the client record and matter will be generated automatically.
+          </p>
+          <div className="flex justify-end items-center gap-2 pt-3 border-t border-[#D9D6CF]">
+            <Button variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={ArrowRight}
+              onClick={() => {
+                setIsAddModalOpen(false);
+                navigate('/intake?openIntake=true');
+              }}
+            >
+              Start Intake &amp; Conflict Check
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Edit Client Modal */}
