@@ -155,16 +155,40 @@ export class TemplateService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (query.practiceAreaId) where.practiceAreaId = query.practiceAreaId;
-    if (query.category) where.category = query.category;
-    if (query.isActive !== undefined) where.isActive = query.isActive;
+    const andConditions: any[] = [];
+
+    if (query.practiceAreaId) {
+      andConditions.push({
+        OR: [
+          { practiceAreaId: query.practiceAreaId },
+          { isSystemDefault: true },
+          { templateCode: '001' },
+          { category: 'Engagement' },
+        ],
+      });
+    }
+
+    if (query.category) {
+      andConditions.push({ category: query.category });
+    }
+
+    if (query.isActive !== undefined) {
+      andConditions.push({ isActive: query.isActive });
+    }
+
     if (query.search) {
       const s = query.search.trim();
-      where.OR = [
-        { templateCode: { contains: s } },
-        { templateName: { contains: s } },
-        { description: { contains: s } },
-      ];
+      andConditions.push({
+        OR: [
+          { templateCode: { contains: s } },
+          { templateName: { contains: s } },
+          { description: { contains: s } },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     const [total, records] = await Promise.all([

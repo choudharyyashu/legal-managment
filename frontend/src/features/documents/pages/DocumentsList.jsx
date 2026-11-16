@@ -33,6 +33,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { GenerateDraftModal } from '../components/GenerateDraftModal';
 import { DraftReviewModal } from '../components/DraftReviewModal';
 import { formatDate } from '../../../utils/formatDate';
+import { createLegalDocumentPdf } from '../../../utils/pdfGenerator';
 
 export function DocumentsList() {
   const { matters } = useMatters();
@@ -272,21 +273,30 @@ export function DocumentsList() {
     try {
       if (doc.isDbRecord) {
         addToast(`Downloading "${doc.fileName || doc.title}" from vault...`, 'info');
-        await documentService.downloadDocument(doc.id);
+        await documentService.downloadDocument(doc.id, doc);
         addToast(`Document "${doc.fileName || doc.title}" downloaded.`, 'success');
       } else {
-        // Mock fallback simulation
-        const sampleText = `Heugly & Bludworth Legal Document: ${doc.title}\nMatter: ${doc.matterTitle}\nClient: ${doc.clientName}\nStatus: Certified Legal Instrument.`;
-        const blob = new Blob([sampleText], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
+        // High-fidelity client-side PDF document generation
+        const pdfBlob = createLegalDocumentPdf({
+          title: doc.title || 'Legal Document Instrument',
+          draftCode: doc.id ? `DOC-${doc.id.slice(0, 8)}` : 'DOC-CERT',
+          client: doc.clientName || 'Client Records',
+          matter: doc.matterTitle || 'Legal Matter Records',
+          attorney: 'Thomas Bludworth, Esq.',
+          date: doc.uploadedAt || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        });
+        const url = window.URL.createObjectURL(pdfBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = doc.fileName || `${doc.title}.txt`;
+        const filename = (doc.fileName && doc.fileName.toLowerCase().endsWith('.pdf'))
+          ? doc.fileName
+          : `${(doc.title || 'Legal_Document').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        addToast(`Document "${doc.title}" downloaded.`, 'success');
+        addToast(`Document "${filename}" downloaded as PDF.`, 'success');
       }
     } catch (err) {
       addToast(err?.message || 'Failed to download document from vault.', 'error');
