@@ -142,7 +142,7 @@ export function EndToEndDemoWizard({ isOpen, onClose }) {
     }));
 
     addToast(
-      `Complete Onboarding Executed: Client (${newClient.id}), Matter (${newMatter.id}), and initial tasks created!`,
+      `Complete Onboarding Executed: Client (${newClient.clientNumber || newClient.id}), Matter (${newMatter.matterNumber || newMatter.id}), and initial tasks created!`,
       'success'
     );
     setCurrentStep(6);

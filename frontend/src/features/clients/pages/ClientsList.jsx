@@ -59,7 +59,7 @@ export function ClientsList() {
             <span className="font-semibold text-[#06244B] hover:text-[#A4432B] block cursor-pointer">
               {row.name}
             </span>
-            <span className="text-[11px] text-[#667085]">{row.id} • {row.type}</span>
+            <span className="text-[11px] text-[#667085]">{row.clientNumber || row.id} • {row.type}</span>
           </div>
         </div>
       ),
