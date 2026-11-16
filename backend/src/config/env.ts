@@ -48,7 +48,7 @@ export const config = {
   dbName: parsedEnv.data.DB_NAME,
   jwtAccessSecret: parsedEnv.data.JWT_ACCESS_SECRET,
   jwtRefreshSecret: parsedEnv.data.JWT_REFRESH_SECRET,
-  jwtAccessExpiresIn: parsedEnv.data.JWT_ACCESS_EXPIRES_IN || parsedEnv.data.JWT_ACCESS_EXPIRY || '15m',
-  jwtRefreshExpiresIn: parsedEnv.data.JWT_REFRESH_EXPIRES_IN || parsedEnv.data.JWT_REFRESH_EXPIRY || '7d',
+  jwtAccessExpiresIn: parsedEnv.data.JWT_ACCESS_EXPIRES_IN || parsedEnv.data.JWT_ACCESS_EXPIRY || '7d',
+  jwtRefreshExpiresIn: parsedEnv.data.JWT_REFRESH_EXPIRES_IN || parsedEnv.data.JWT_REFRESH_EXPIRY || '30d',
   logLevel: parsedEnv.data.LOG_LEVEL,
 };
