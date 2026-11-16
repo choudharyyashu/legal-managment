@@ -79,9 +79,9 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen w-screen overflow-y-auto md:overflow-hidden flex flex-col md:flex-row bg-[#F8F9FA] select-none">
-      {/* LEFT PANEL: Deep Navy Brand Showcase (Static 100vh) */}
-      <div className="hidden md:flex md:w-[40%] lg:w-[36%] xl:w-[33%] bg-[#06244B] text-white flex-col justify-between p-6 lg:p-8 relative overflow-hidden flex-shrink-0 h-full">
+    <div className="min-h-screen w-full md:h-screen md:overflow-hidden flex flex-col md:flex-row bg-[#F8F9FA] select-none">
+      {/* LEFT PANEL: Deep Navy Brand Showcase (Full Height 100vh - Zero Gap) */}
+      <div className="hidden md:flex md:w-[40%] lg:w-[36%] xl:w-[33%] bg-[#06244B] text-white flex-col justify-between p-6 lg:p-8 relative overflow-hidden flex-shrink-0 h-full self-stretch">
         {/* Subtle decorative background circles */}
         <div className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full bg-white/[0.03] pointer-events-none" />
         <div className="absolute -left-12 -top-12 w-48 h-48 rounded-full bg-[#A4432B]/15 pointer-events-none" />
@@ -145,7 +145,7 @@ export function Login() {
       </div>
 
       {/* RIGHT PANEL: Centered Form Card (Responsive Scroll on Mobile) */}
-      <div className="flex-1 min-h-full overflow-y-auto flex flex-col justify-between items-center p-4 sm:p-6 lg:p-8 w-full">
+      <div className="flex-1 h-full min-h-screen md:min-h-0 overflow-y-auto flex flex-col justify-between items-center p-4 sm:p-6 lg:p-8 w-full bg-[#F8F9FA]">
         {/* Mobile Header (Only visible on small mobile screens) */}
         <div className="w-full flex items-center justify-between md:hidden pb-2 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">

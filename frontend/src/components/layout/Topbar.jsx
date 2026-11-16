@@ -6,7 +6,6 @@ import {
   Bell,
   User,
   Shield,
-  Clock,
   CheckCircle2,
   AlertTriangle,
   X,
@@ -259,22 +258,8 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
         </div>
       </div>
 
-      {/* Right: Quick Actions, Notifications & User Profile */}
+      {/* Right: Notifications & User Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Quick action: Log Time */}
-        {permissions.canLogTime && (
-          <div className="flex items-center border-r border-[#D9D6CF] pr-3">
-            <Button
-              variant="primary"
-              size="sm"
-              icon={Clock}
-              onClick={onOpenLogTime}
-            >
-              Log Time
-            </Button>
-          </div>
-        )}
-
         {/* Notifications Icon with Dropdown */}
         <div className="relative">
           <button
