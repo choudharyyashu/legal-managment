@@ -10,10 +10,15 @@ import {
   Building,
   CheckCircle2,
   AlertTriangle,
-  Receipt
+  Receipt,
+  FileCheck2,
+  Send,
+  ShieldCheck,
 } from 'lucide-react';
 import { PINavigationHeader } from '../components/PINavigationHeader';
 import { MedicalProviderModal } from '../components/MedicalProviderModal';
+import { RecordSignatureModal } from '../components/RecordSignatureModal';
+import { UpdateRequestStatusModal } from '../components/UpdateRequestStatusModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
@@ -34,6 +39,29 @@ export function MedicalTreatment() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [targetProviderForModal, setTargetProviderForModal] = useState(null);
+
+  const handleOpenSignatureModal = (provider) => {
+    setTargetProviderForModal(provider);
+    setIsSignatureModalOpen(true);
+  };
+
+  const handleOpenStatusModal = (provider) => {
+    setTargetProviderForModal(provider);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleProviderUpdated = (updatedProvider) => {
+    setProviders((prev) => {
+      const updated = prev.map((p) =>
+        p.id === updatedProvider.id ? { ...p, ...updatedProvider } : p
+      );
+      mockStorage.set('pi_medical', updated);
+      return updated;
+    });
+  };
 
   React.useEffect(() => {
     if (activeMatter?.id) {
@@ -170,23 +198,60 @@ export function MedicalTreatment() {
     },
     {
       key: 'recordsStatus',
-      label: 'Medical Records Status',
+      label: 'Medical Records Request & Auth (112/113)',
       render: (val, p) => {
-        const status = p?.recordsStatus || val || 'Pending Request';
+        const status = p?.recordsStatus || val || 'Drafted';
+        const isSigned = Boolean(
+          p?.authorizationSigned ||
+            p?.authorizations?.toLowerCase().includes('signed')
+        );
         return (
-          <div>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
-                status.includes('Received')
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-amber-100 text-amber-800'
-              }`}
-            >
-              {status}
-            </span>
-            <span className="text-[10px] text-slate-500 block mt-0.5 truncate max-w-xs">
-              {p?.authorizations || 'Auth on file'}
-            </span>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                  status.includes('Received')
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : status.includes('Sent')
+                    ? 'bg-blue-100 text-blue-800'
+                    : status.includes('Ready')
+                    ? 'bg-purple-100 text-purple-800'
+                    : status.includes('Incomplete')
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {status}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleOpenStatusModal(p)}
+                className="text-[10px] text-[#06244B] hover:text-[#A4432B] font-semibold underline cursor-pointer"
+                title="Update Document 113 records request lifecycle status"
+              >
+                Change
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1 text-[10px]">
+              {isSigned ? (
+                <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span className="truncate max-w-[140px]">{p?.authorizations || 'Auth Signed'}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-amber-700 font-medium">Auth Unsigned</span>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenSignatureModal(p)}
+                    className="text-[#A4432B] hover:underline font-bold"
+                  >
+                    [Record Sig]
+                  </button>
+                </span>
+              )}
+            </div>
           </div>
         );
       },
@@ -233,14 +298,36 @@ export function MedicalTreatment() {
       label: 'Actions',
       align: 'right',
       render: (_, p) => (
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-xs py-1 text-[#06244B]"
-          onClick={() => openEditModal(p)}
-        >
-          <Edit className="w-3.5 h-3.5 mr-1" /> Edit
-        </Button>
+        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[11px] py-1 px-2 text-[#06244B] border-slate-300 hover:bg-slate-50"
+            onClick={() => handleOpenSignatureModal(p)}
+            title="Record Document 112 Medical Authorization signature evidence"
+          >
+            <FileCheck2 className="w-3 h-3 mr-1 text-[#A4432B]" /> Sign Auth
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[11px] py-1 px-2 text-[#06244B] border-slate-300 hover:bg-slate-50"
+            onClick={() => handleOpenStatusModal(p)}
+            title="Update Document 113 records request status & 30-day turnaround follow-up"
+          >
+            <Send className="w-3 h-3 mr-1 text-[#06244B]" /> Status
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[11px] py-1 px-2 text-[#06244B]"
+            onClick={() => openEditModal(p)}
+          >
+            <Edit className="w-3 h-3 mr-1" /> Edit
+          </Button>
+        </div>
       ),
     },
   ];
@@ -329,6 +416,25 @@ export function MedicalTreatment() {
         provider={selectedProvider}
         cases={cases}
         defaultCaseId={activeMatter?.id || activeCaseId}
+      />
+
+      {/* Document 112: Record Signature Evidence Modal */}
+      <RecordSignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => setIsSignatureModalOpen(false)}
+        provider={targetProviderForModal}
+        matter={cases.find((c) => c.id === targetProviderForModal?.matterId) || activeMatter}
+        onSignatureRecorded={handleProviderUpdated}
+      />
+
+      {/* Document 113: Update Request Status Modal */}
+      <UpdateRequestStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        provider={targetProviderForModal}
+        matter={cases.find((c) => c.id === targetProviderForModal?.matterId) || activeMatter}
+        onStatusUpdated={handleProviderUpdated}
+        onOpenSignatureModal={handleOpenSignatureModal}
       />
     </div>
   );
