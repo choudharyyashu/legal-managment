@@ -103,6 +103,12 @@ export function AuthProvider({ children }) {
     } finally {
       setIsAuthenticated(false);
       setCurrentUser(null);
+      try {
+        localStorage.removeItem('hb_cached_clients');
+        localStorage.removeItem('hb_cached_matters');
+        localStorage.removeItem('hb_cached_dashboard_metrics');
+        localStorage.removeItem('hb_cached_recent_docs_count');
+      } catch {}
     }
   };
 
