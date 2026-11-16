@@ -136,7 +136,11 @@ export function AuthProvider({ children }) {
   // Update existing user via backend /users/:id
   const updateUser = async (userId, updatedFields) => {
     try {
-      const updated = await userService.updateUser(userId, updatedFields);
+      const payload = { ...updatedFields };
+      if (payload.rate !== undefined && payload.billingRate === undefined) {
+        payload.billingRate = parseFloat(payload.rate) || 0;
+      }
+      const updated = await userService.updateUser(userId, payload);
       await refreshUsers();
       if (userId === currentUser?.id) {
         setCurrentUser((prev) => ({ ...prev, ...updated }));

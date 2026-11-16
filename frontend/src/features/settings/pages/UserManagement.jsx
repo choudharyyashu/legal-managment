@@ -130,28 +130,31 @@ export function UserManagement() {
   // Handlers for Edit User
   const handleOpenEditModal = (user) => {
     setEditingUser(user);
+    const rateVal = user.billingRate ?? user.rate ?? 450;
     setEditFormData({
       name: user.name,
       email: user.email,
       phone: user.phone || '(801) 555-0100',
       role: user.role,
-      title: user.title,
-      department: user.department,
-      rate: user.rate.toString(),
+      title: user.title || '',
+      department: user.department || 'Civil Litigation',
+      rate: rateVal.toString(),
       status: user.status,
     });
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!permissions.canManageUsers) {
       addToast('Super Admin authorization required to edit users.', 'error');
       return;
     }
 
-    const res = updateUser(editingUser.id, {
+    const rateNum = parseFloat(editFormData.rate) || 0;
+    const res = await updateUser(editingUser.id, {
       ...editFormData,
-      rate: parseFloat(editFormData.rate) || editingUser.rate,
+      billingRate: rateNum,
+      rate: rateNum,
     });
 
     if (!res.success) {
@@ -179,8 +182,8 @@ export function UserManagement() {
           ? 'Deactivated users will immediately lose workstation login access.'
           : 'Activated users will regain workstation access.'
       }`,
-      onConfirm: () => {
-        const res = toggleUserStatus(user.id);
+      onConfirm: async () => {
+        const res = await toggleUserStatus(user.id);
         if (res.success) {
           addToast(`Account for ${user.name} is now ${res.status}.`, 'info');
         } else {
@@ -216,8 +219,8 @@ export function UserManagement() {
       isOpen: true,
       title: `Delete Personnel Record: ${user.name}`,
       message: `Warning: This will permanently remove the personnel profile for ${user.name} from the firm directory. Historic billable hours and case filings remain preserved. Continue?`,
-      onConfirm: () => {
-        const res = deleteUser(user.id);
+      onConfirm: async () => {
+        const res = await deleteUser(user.id);
         if (res.success) {
           addToast(`User record for ${user.name} deleted.`, 'success');
         } else {
@@ -293,11 +296,14 @@ export function UserManagement() {
       render: (val) => <span className="text-xs text-[#202A35]">{val}</span>,
     },
     {
-      key: 'rate',
+      key: 'billingRate',
       label: 'Hourly Rate',
       sortable: true,
       align: 'right',
-      render: (val) => <span className="text-xs font-bold text-[#A4432B]">${val}/hr</span>,
+      render: (val, row) => {
+        const rate = Number(val ?? row.billingRate ?? row.rate ?? 0);
+        return <span className="text-xs font-bold text-[#A4432B] font-mono">${rate}/hr</span>;
+      },
     },
     {
       key: 'status',
@@ -409,7 +415,7 @@ export function UserManagement() {
         `"${(u.title || '').replace(/"/g, '""')}"`,
         `"${(u.department || '').replace(/"/g, '""')}"`,
         `"${(u.role || '').replace(/"/g, '""')}"`,
-        u.hourlyRate || 0,
+        Number(u.billingRate ?? u.rate ?? u.hourlyRate ?? 0),
         `"${(u.barNumber || 'N/A').replace(/"/g, '""')}"`,
         `"${(u.status || '').replace(/"/g, '""')}"`,
         `"${(u.lastActive || '').replace(/"/g, '""')}"`,
@@ -808,7 +814,7 @@ export function UserManagement() {
                         {roleDef.name}
                       </span>
                       <span className="text-gray-300">•</span>
-                      <span className="text-[11px] text-[#A4432B] font-semibold">${viewingUser.rate}/hr</span>
+                      <span className="text-[11px] text-[#A4432B] font-semibold font-mono">${Number(viewingUser.billingRate ?? viewingUser.rate ?? 0)}/hr</span>
                       <span className="text-gray-300">•</span>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold uppercase ${
                         viewingUser.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
