@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { CheckSquare, Plus, Search, Filter, Calendar, Clock, AlertTriangle, CheckCircle, Trash2, Edit, Lock, ArrowRight, Repeat, RotateCcw } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMatters } from '../../../context/MatterContext';
@@ -19,7 +19,7 @@ import { RecurringTaskModal } from '../../calendar/components/RecurringTaskModal
 
 export function MyTasks() {
   const { tasks, addTask, updateTaskStatus, deleteTask, updateTask } = useTasks();
-  const { matters } = useMatters();
+  const { matters, refreshMatters } = useMatters();
   const { currentUser } = useAuth();
   const { addToast } = useToast();
 
@@ -36,6 +36,18 @@ export function MyTasks() {
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [priority, setPriority] = useState('High');
   const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (matters.length === 0 && refreshMatters) {
+      refreshMatters();
+    }
+  }, [matters.length, refreshMatters]);
+
+  useEffect(() => {
+    if (!matterId && matters.length > 0) {
+      setMatterId(matters[0].id);
+    }
+  }, [matters, matterId]);
 
   // Helper to determine dependency status
   const getPredecessorInfo = (task) => {

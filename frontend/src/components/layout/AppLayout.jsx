@@ -68,8 +68,10 @@ export function AppLayout() {
       path.startsWith('/checklists')
     ) {
       refreshTasks();
+      refreshMatters();
     } else if (path.startsWith('/time')) {
       refreshTimeEntries();
+      refreshMatters();
     } else if (path.startsWith('/billing/invoices')) {
       refreshInvoices();
     } else if (path.startsWith('/billing/expenses')) {
