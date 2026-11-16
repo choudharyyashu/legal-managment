@@ -355,6 +355,7 @@ export function MobileNavigation({
                         <NavLink
                           key={sIdx}
                           to={sub.to}
+                          end={sub.to !== '/clients' && sub.to !== '/matters'}
                           onClick={onClose}
                           className={({ isActive }) =>
                             `flex items-center gap-2.5 px-3 py-2 rounded text-xs transition-colors min-h-[38px] ${
