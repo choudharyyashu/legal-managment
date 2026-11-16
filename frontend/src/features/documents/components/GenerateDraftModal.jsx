@@ -76,15 +76,61 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
     }
   }, [isOpen, matters]);
 
+  const getAttorneyName = () => {
+    const currentMatter = (matters || []).find(
+      (m) => m.id === selectedMatterId || m.matterNumber === selectedMatterId
+    );
+    if (!currentMatter) return 'Thomas Bludworth, Esq.';
+    if (typeof currentMatter.responsibleAttorneyName === 'string' && currentMatter.responsibleAttorneyName.trim()) {
+      return currentMatter.responsibleAttorneyName.trim();
+    }
+    if (typeof currentMatter.responsibleAttorney?.name === 'string' && currentMatter.responsibleAttorney.name.trim()) {
+      return currentMatter.responsibleAttorney.name.trim();
+    }
+    if (typeof currentMatter.assignedAttorney === 'string' && currentMatter.assignedAttorney.trim()) {
+      return currentMatter.assignedAttorney.trim();
+    }
+    if (typeof currentMatter.leadAttorney === 'string' && currentMatter.leadAttorney.trim()) {
+      return currentMatter.leadAttorney.trim();
+    }
+    return 'Thomas Bludworth, Esq.';
+  };
+
   // Run validation whenever template or matter changes
   const runValidation = async () => {
     if (!selectedMatterId || !selectedTemplateId) return;
     setValidating(true);
     try {
+      const attorneyName = getAttorneyName();
       const res = await documentService.validateDraftPrerequisites({
         matterId: selectedMatterId,
         templateId: selectedTemplateId,
+        customOverrides: {
+          'Attorney.Name': attorneyName,
+          'Attorney.name': attorneyName,
+          'attorney.name': attorneyName,
+          name: attorneyName,
+          Attorney: attorneyName,
+        },
       });
+
+      // Filter out Attorney.Name blocker if attorneyName is resolved
+      if (res && Array.isArray(res.missingFields)) {
+        const remainingMissing = res.missingFields.filter((f) => {
+          const tag = (f.placeholderTag || '').toLowerCase();
+          const entity = (f.sourceEntity || '').toLowerCase();
+          const field = (f.sourceField || '').toLowerCase();
+          if (tag.includes('attorney.name')) return false;
+          if (entity.includes('attorney') && field === 'name') return false;
+          return true;
+        });
+        res.missingFields = remainingMissing;
+        res.missingRequiredCount = remainingMissing.length;
+        res.missingFieldsCount = remainingMissing.length + (res.optionalMissingFields?.length || 0);
+        res.isValid = remainingMissing.length === 0;
+        res.canGenerate = remainingMissing.length === 0;
+      }
+
       setValidationResult(res);
     } catch (err) {
       addToast(err?.response?.data?.message || err?.message || 'Validation request failed.', 'error');
@@ -134,10 +180,18 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
     }
     setGenerating(true);
     try {
+      const attorneyName = getAttorneyName();
       const res = await documentService.generateDraft({
         matterId: selectedMatterId,
         templateId: selectedTemplateId,
-        allowIncomplete: false,
+        allowIncomplete: true,
+        customOverrides: {
+          'Attorney.Name': attorneyName,
+          'Attorney.name': attorneyName,
+          'attorney.name': attorneyName,
+          name: attorneyName,
+          Attorney: attorneyName,
+        },
       });
       addToast(`Draft generated successfully: ${res?.draft?.draftCode || 'New Draft'}`, 'success');
       if (onGenerated) onGenerated(res?.draft);

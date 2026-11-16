@@ -104,8 +104,8 @@ export function DraftReviewModal({ isOpen, onClose, draft, onStatusChanged }) {
 
   const handleDownload = async (format) => {
     try {
-      await documentService.downloadDraft(draft.id, format);
-      addToast(`Downloading ${format.toUpperCase()} draft...`, 'info');
+      await documentService.downloadDraft(draft.id, format, draft);
+      addToast(`Draft ${format.toUpperCase()} downloaded successfully!`, 'success');
     } catch (err) {
       addToast(err?.message || 'Download failed.', 'error');
     }

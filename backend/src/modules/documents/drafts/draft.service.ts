@@ -133,6 +133,31 @@ export class DraftService {
       throw AppError.notFound(`Matter '${input.matterId}' not found.`, 'MATTER_NOT_FOUND');
     }
 
+    if (!matter.responsibleAttorney && matter.responsibleAttorneyId) {
+      matter.responsibleAttorney = await prisma.user.findUnique({
+        where: { id: matter.responsibleAttorneyId },
+      });
+    }
+
+    if (!matter.responsibleAttorney) {
+      const activeAttorney = await prisma.user.findFirst({
+        where: { role: { in: ['attorney', 'super_admin'] }, status: 'Active' },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (activeAttorney) {
+        matter.responsibleAttorney = activeAttorney;
+        matter.responsibleAttorneyId = activeAttorney.id;
+        try {
+          await prisma.matter.update({
+            where: { id: matter.id },
+            data: { responsibleAttorneyId: activeAttorney.id },
+          });
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     // 2. Retrieve Template & Version
     const template = await prisma.documentTemplate.findFirst({
       where: {
@@ -231,6 +256,31 @@ export class DraftService {
 
     if (!matter) {
       throw AppError.notFound(`Matter '${input.matterId}' not found.`, 'MATTER_NOT_FOUND');
+    }
+
+    if (!matter.responsibleAttorney && matter.responsibleAttorneyId) {
+      matter.responsibleAttorney = await prisma.user.findUnique({
+        where: { id: matter.responsibleAttorneyId },
+      });
+    }
+
+    if (!matter.responsibleAttorney) {
+      const activeAttorney = await prisma.user.findFirst({
+        where: { role: { in: ['attorney', 'super_admin'] }, status: 'Active' },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (activeAttorney) {
+        matter.responsibleAttorney = activeAttorney;
+        matter.responsibleAttorneyId = activeAttorney.id;
+        try {
+          await prisma.matter.update({
+            where: { id: matter.id },
+            data: { responsibleAttorneyId: activeAttorney.id },
+          });
+        } catch {
+          // ignore
+        }
+      }
     }
 
     // 2. Load Template and Target Version

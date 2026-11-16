@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, DollarSign, Search, CheckCircle2, FileText, ArrowRight, Split } from 'lucide-react';
+import { Building, DollarSign, Search, CheckCircle2, FileText, ArrowRight, Split, Landmark, CreditCard } from 'lucide-react';
 import { useTime } from '../../../context/TimeContext';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -79,11 +79,45 @@ export function PaymentRecords() {
       key: 'method',
       label: 'Payment Method',
       sortable: true,
-      render: (val) => (
-        <span className="text-xs font-medium px-2 py-0.5 rounded bg-[#F5F0E5] text-[#06244B] border border-[#D9D6CF]">
-          {val}
-        </span>
-      ),
+      render: (val) => {
+        if (val === 'Trust Retainer Drawdown') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-purple-50 text-purple-900 border border-purple-200 shadow-2xs">
+              <Landmark className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+              Trust Retainer Drawdown
+            </span>
+          );
+        }
+        if (val === 'FedWire / ACH') {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-sky-50 text-sky-900 border border-sky-200 shadow-2xs">
+              <Building className="w-3.5 h-3.5 text-sky-700 shrink-0" />
+              FedWire / ACH
+            </span>
+          );
+        }
+        if (val?.toLowerCase().includes('check')) {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-slate-50 text-slate-800 border border-slate-200 shadow-2xs">
+              <FileText className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+              Check / Draft
+            </span>
+          );
+        }
+        if (val?.toLowerCase().includes('card')) {
+          return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs">
+              <CreditCard className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              Credit Card
+            </span>
+          );
+        }
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap bg-[#F5F0E5] text-[#06244B] border border-[#D9D6CF] shadow-2xs">
+            {val}
+          </span>
+        );
+      },
     },
     {
       key: 'referenceNumber',

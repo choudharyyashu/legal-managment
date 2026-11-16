@@ -304,7 +304,18 @@ export class DraftDataResolver {
       ResponsibleAttorney: {
         id: attorney.id,
         userCode: attorney.userCode,
-        name: attorney.name,
+        name: attorney.name || matter.responsibleAttorneyName || (matter.responsibleAttorney ? matter.responsibleAttorney.name : null),
+        email: attorney.email,
+        phone: attorney.phone,
+        title: attorney.title,
+        initials: attorney.initials,
+        department: attorney.department,
+        billingRate: attorney.billingRate,
+      },
+      Attorney: {
+        id: attorney.id,
+        userCode: attorney.userCode,
+        name: attorney.name || matter.responsibleAttorneyName || (matter.responsibleAttorney ? matter.responsibleAttorney.name : null),
         email: attorney.email,
         phone: attorney.phone,
         title: attorney.title,
@@ -314,7 +325,7 @@ export class DraftDataResolver {
       },
       User: {
         id: attorney.id,
-        name: attorney.name,
+        name: attorney.name || matter.responsibleAttorneyName || (matter.responsibleAttorney ? matter.responsibleAttorney.name : null),
         email: attorney.email,
         phone: attorney.phone,
         title: attorney.title,
@@ -459,8 +470,23 @@ export class DraftDataResolver {
 
     for (const mapping of mappings) {
       const cleanTag = mapping.placeholderTag.replace(/^\{\{|\}\}$/g, '').trim();
-      const entity = rawEntityLookup[mapping.sourceEntity] || {};
-      let val = entity[mapping.sourceField];
+      const sEntity = (mapping.sourceEntity || '').toLowerCase();
+      let entity = rawEntityLookup[mapping.sourceEntity];
+      if (!entity) {
+        if (sEntity === 'attorney' || sEntity === 'responsibleattorney') {
+          entity = rawEntityLookup.Attorney || rawEntityLookup.ResponsibleAttorney;
+        } else {
+          const matchKey = Object.keys(rawEntityLookup).find(k => k.toLowerCase() === sEntity);
+          entity = matchKey ? rawEntityLookup[matchKey] : {};
+        }
+      }
+      let val = entity ? entity[mapping.sourceField] : undefined;
+
+      // Special fallback for Attorney.Name or any attorney name token
+      if ((val === null || val === undefined || val === '') && 
+          (cleanTag.toLowerCase() === 'attorney.name' || (sEntity.includes('attorney') && mapping.sourceField === 'name'))) {
+        val = rawEntityLookup.Attorney?.name || rawEntityLookup.ResponsibleAttorney?.name || attorney?.name || matter?.responsibleAttorneyName || matter?.responsibleAttorney?.name;
+      }
 
       // Check for user-provided custom overrides
       if (customOverrides && customOverrides[cleanTag] !== undefined) {
