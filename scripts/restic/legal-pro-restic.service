@@ -1,0 +1,14 @@
+[Unit]
+Description=Heugly & Bludworth Legal Practice Restic Automated Encrypted Backup Service
+Documentation=https://restic.net/
+After=network.target mysql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/legal-pro
+Environment="RESTIC_REPOSITORY=/var/backups/legal-pro-restic"
+Environment="RESTIC_PASSWORD=FirmSuperSecretKey2026!"
+ExecStart=/opt/legal-pro/scripts/restic/restic-backup.sh
+StandardOutput=journal+console
+StandardError=journal+console

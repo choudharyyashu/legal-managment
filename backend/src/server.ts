@@ -8,6 +8,7 @@ import {
 } from './config/database.js';
 import { logger } from './utils/logger.js';
 import { AutoDraftService } from './modules/documents/events/auto-draft.service.js';
+import { BackupService } from './modules/backup/backup.service.js';
 
 async function bootstrap() {
   console.log('================================================================');
@@ -49,6 +50,9 @@ async function bootstrap() {
 
   // Initialize Event-Driven Auto Draft Subscriptions (Phase 4)
   AutoDraftService.initSubscriptions();
+
+  // Initialize Automated Restic Encrypted Backup Daemon (Utah RPC 1.6)
+  BackupService.initResticDaemon();
 
   const server = app.listen(config.port, () => {
     logger.info(`API Server listening on http://localhost:${config.port}`, {
