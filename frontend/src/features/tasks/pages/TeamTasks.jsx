@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Users, Plus, Search, Filter, CheckSquare, Calendar, UserCheck, RotateCcw } from 'lucide-react';
 import { useTasks } from '../../../context/TaskContext';
 import { useMatters } from '../../../context/MatterContext';
@@ -18,7 +18,7 @@ import { formatDate } from '../../../utils/formatDate';
 
 export function TeamTasks() {
   const { tasks, addTask, updateTaskStatus, updateTask } = useTasks();
-  const { matters } = useMatters();
+  const { matters, refreshMatters } = useMatters();
   const { allUsers, currentUser } = useAuth();
   const { addToast } = useToast();
 
@@ -35,6 +35,18 @@ export function TeamTasks() {
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [priority, setPriority] = useState('High');
   const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (matters.length === 0 && refreshMatters) {
+      refreshMatters();
+    }
+  }, [matters.length, refreshMatters]);
+
+  useEffect(() => {
+    if (!matterId && matters.length > 0) {
+      setMatterId(matters[0].id);
+    }
+  }, [matters, matterId]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
