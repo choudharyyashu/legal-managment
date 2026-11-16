@@ -31,6 +31,7 @@ import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { Modal } from '../../../components/ui/Modal';
 import { GenerateDraftModal } from '../components/GenerateDraftModal';
+import { DraftReviewModal } from '../components/DraftReviewModal';
 import { formatDate } from '../../../utils/formatDate';
 
 export function DocumentsList() {
@@ -110,9 +111,26 @@ export function DocumentsList() {
     }
   }, []);
 
+  const [viewMode, setViewMode] = useState('documents'); // 'documents' | 'drafts'
+  const [drafts, setDrafts] = useState([]);
+  const [selectedReviewDraft, setSelectedReviewDraft] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const loadDrafts = useCallback(async () => {
+    try {
+      const res = await documentService.getDrafts({ limit: 100 });
+      if (Array.isArray(res) && res.length > 0) {
+        setDrafts(res);
+      }
+    } catch (err) {
+      console.warn('Could not load drafts from API:', err?.message);
+    }
+  }, []);
+
   useEffect(() => {
     loadDocuments();
-  }, [loadDocuments]);
+    loadDrafts();
+  }, [loadDocuments, loadDrafts]);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -331,6 +349,39 @@ export function DocumentsList() {
           </div>
         }
       />
+
+      {/* View Mode Segmented Tab Switcher */}
+      <div className="flex items-center gap-2 border-b border-[#EAECF0] pb-2 text-xs">
+        <button
+          type="button"
+          onClick={() => setViewMode('documents')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+            viewMode === 'documents'
+              ? 'bg-[#06244B] text-white shadow-sm'
+              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 hover:text-slate-900 border border-[#D0D5DD]'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Repository Documents ({documents.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('drafts')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+            viewMode === 'drafts'
+              ? 'bg-[#06244B] text-white shadow-sm'
+              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 hover:text-slate-900 border border-[#D0D5DD]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-300" />
+          <span>PI Automation Workflows &amp; Drafts ({drafts.length})</span>
+          {drafts.some((d) => d.status === 'Drafted') && (
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#A4432B] text-white">
+              {drafts.filter((d) => d.status === 'Drafted').length} Pending Review
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Search, Filters & OCR Toggle Toolbar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#EAECF0] shadow-sm space-y-3">

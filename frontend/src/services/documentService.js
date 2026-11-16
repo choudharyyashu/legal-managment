@@ -86,4 +86,62 @@ export const documentService = {
     const res = await apiClient.post('/documents/drafts/tasks/followup', data);
     return res?.data;
   },
+
+  async getDrafts(params = {}) {
+    const res = await apiClient.get('/documents/drafts', params);
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.data?.drafts)) return res.data.drafts;
+    if (Array.isArray(res?.drafts)) return res.drafts;
+    return [];
+  },
+
+  async getDraftById(id) {
+    const res = await apiClient.get(`/documents/drafts/${id}`);
+    return res?.data?.draft || res?.data;
+  },
+
+  async approveDraft(id, data = {}) {
+    const res = await apiClient.post(`/documents/drafts/${id}/approve`, data);
+    return res?.data;
+  },
+
+  async rejectDraft(id, data = {}) {
+    const res = await apiClient.post(`/documents/drafts/${id}/reject`, data);
+    return res?.data;
+  },
+
+  async sendDraft(id, data = {}) {
+    const res = await apiClient.post(`/documents/drafts/${id}/send`, data);
+    return res?.data;
+  },
+
+  async downloadDraft(id, format = 'docx') {
+    const token = tokenStorage.get();
+    const baseUrl = apiClient.getBaseUrl().replace(/\/+$/, '');
+    const url = `${baseUrl}/documents/drafts/${id}/download?format=${format}`;
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+      throw new Error(`Failed to download draft: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('Content-Disposition');
+    let filename = `draft-${id}.${format}`;
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) filename = match[1];
+    }
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(blobUrl);
+    document.body.removeChild(a);
+    return true;
+  },
 };

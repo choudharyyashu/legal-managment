@@ -26,6 +26,7 @@ piRouter.get('/matters/:matterId/demands', PersonalInjuryController.getDemands);
 piRouter.post('/matters/:matterId/demands', PersonalInjuryController.createDemand);
 
 piRouter.post('/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);
+piRouter.post('/matters/:matterId/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);
 
 // Medical Authorization Signature Evidence Endpoint
 piRouter.post(

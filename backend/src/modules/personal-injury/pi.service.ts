@@ -447,7 +447,56 @@ export class PersonalInjuryService {
       userAgent: context.userAgent,
     });
 
-    return policy;
+    // Trigger Document 096 Auto-Draft (Representation Letter for this Insurer)
+    let autoDraftResult = null;
+    try {
+      const isPI =
+        (matter as any).practiceArea?.code === 'PI' ||
+        (matter as any).practiceArea?.name?.toLowerCase().includes('personal injury') ||
+        matter.practiceAreaId === 'pa-pi' ||
+        matter.title?.toLowerCase().includes('pi') ||
+        matter.matterNumber?.startsWith('PI-');
+
+      if (isPI) {
+        const primaryIncident = await prisma.incident.findFirst({
+          where: validatedIncidentId ? { id: validatedIncidentId } : { matterId: matter.id },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        autoDraftResult = await AutoDraftService.handleAccidentSaved(
+          {
+            matterId: matter.id,
+            incidentDate: primaryIncident?.incidentDate
+              ? primaryIncident.incidentDate.toISOString().split('T')[0]
+              : undefined,
+            incidentTime: primaryIncident?.incidentTime || undefined,
+            incidentLocation: primaryIncident?.incidentLocation || undefined,
+            accidentType: primaryIncident?.accidentType || undefined,
+            description: primaryIncident?.description || undefined,
+            policeAgency: primaryIncident?.policeAgency || undefined,
+            reportNumber: primaryIncident?.reportNumber || undefined,
+            investigatingOfficer: primaryIncident?.investigatingOfficer || undefined,
+            insuranceCompany: policy.insuranceCompany,
+            claimNumber: policy.claimNumber || undefined,
+            adjusterName: policy.adjusterName || undefined,
+            adjusterPhone: policy.adjusterPhone || undefined,
+            adjusterEmail: policy.adjusterEmail || undefined,
+            liabilityAssessment: primaryIncident?.liabilityAssessment || undefined,
+            customOverrides: {
+              insurance_policy_id: policy.id,
+              insured_name: policy.insuredName || undefined,
+              policy_number: policy.policyNumber || undefined,
+            },
+          },
+          currentUser,
+          context
+        );
+      }
+    } catch (draftErr: any) {
+      console.warn('[PI Service] Could not auto-draft representation letter for insurer:', draftErr.message);
+    }
+
+    return Object.assign(policy, { autoDraftResult });
   }
 
   /**
