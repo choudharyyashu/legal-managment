@@ -7,6 +7,59 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 
 export function FinancialReports() {
   const { addToast } = useToast();
+
+  const handleExportFinancialPackage = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `Executive_Financial_Summary_Package_${today}.csv`;
+
+      const lines = [
+        ['HEUGLY & BLUDWORTH ATTORNEYS AT LAW - EXECUTIVE FINANCIAL PACKAGE'],
+        [`Generated: ${today}`, 'Jurisdiction: Utah State Bar Compliant', 'Accounting Standard: Modified Cash Basis'],
+        [''],
+        ['SECTION 1: YEAR-TO-DATE (YTD) FINANCIAL KPI SUMMARY'],
+        ['Metric Category', 'Key Performance Indicator', 'YTD Amount / Ratio', 'Benchmark / Target', 'Audit Status'],
+        ['Revenue & Billings', 'Gross Fees Billed (YTD)', '$485,250.00', '$450,000.00 (Ahead)', 'Reconciled against Time Ledger'],
+        ['Cash Realization', 'Gross Collections (YTD)', '$438,900.00', '90.0% Target', 'Cleared Operating Account'],
+        ['Efficiency', 'Overall Realization Rate', '90.4%', '88.0% Benchmark', 'Optimal Realization'],
+        ['Hourly Rate', 'Average Partner Billable Rate', '$516.00 / hr', '$500.00 Target', 'Reflects 2026 Rate Schedule'],
+        [''],
+        ['SECTION 2: ACCOUNTS RECEIVABLE (AR) AGING BREAKDOWN'],
+        ['Aging Bucket', 'Outstanding Balance ($)', 'Percentage of AR (%)', 'Risk Assessment', 'Action Required'],
+        ['Current (0 - 30 Days)', '$48,200.00', '66.2%', 'Low Risk / Normal Billing Cycle', 'Standard 30-day invoice reminders active'],
+        ['31 - 60 Days', '$18,400.00', '25.3%', 'Moderate Risk / Follow-up Needed', 'Automated portal statement reminder sent'],
+        ['61 - 90 Days', '$6,250.00', '8.5%', 'Elevated Risk / Partner Review', 'Assigned to billing coordinator for outreach'],
+        ['90+ Days Past Due', '$0.00', '0.0%', 'Zero Delinquency / Perfect Standing', 'No write-offs required'],
+        ['Total Outstanding AR', '$72,850.00', '100.0%', 'Healthy Firm Liquidity', 'Total Firm Uncollected Invoices'],
+        [''],
+        ['SECTION 3: IOLTA TRUST ACCOUNT FIDUCIARY OVERSIGHT (UTAH RPC 1.15)'],
+        ['Fiduciary Category', 'Account Balance ($)', 'Variance / Overdraft', '3-Way Reconciliation Status'],
+        ['Zions Bank Pooled IOLTA Trust Checking', '$345,850.00', '$0.00 Variance', 'Reconciled to Bank Statement'],
+        ['Individual Client Trust Sub-Ledgers Sum', '$345,850.00', '$0.00 Variance', 'Exact 1:1 Parity Maintained'],
+        ['Trust Account Liability to Clients', '$345,850.00', '$0.00 Commingling', 'Strict Anti-Commingling Compliant'],
+      ];
+
+      const csvContent = lines.map(row => 
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+      ).join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Executive Financial Package exported and downloaded successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to export financial package:', err);
+      addToast('Failed to export executive financial package.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,7 +71,7 @@ export function FinancialReports() {
             variant="outline"
             size="sm"
             icon={Download}
-            onClick={() => addToast('Executive Financial Package (CSV & PDF Ledger) exported.', 'success')}
+            onClick={handleExportFinancialPackage}
           >
             Export Executive Package
           </Button>

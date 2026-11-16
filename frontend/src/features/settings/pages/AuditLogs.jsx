@@ -227,6 +227,60 @@ export function AuditLogs() {
     },
   ];
 
+  const handleExportAuditLogs = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let csvContent = '';
+      let filename = '';
+
+      if (activeLogTab === 'security') {
+        filename = `Security_Audit_Logs_${today}.csv`;
+        const headers = ['Log ID', 'Timestamp', 'User Name', 'Role', 'Security Action Code', 'Operation Target', 'Network IP', 'Status'];
+        const rows = filteredLogs.map(l => [
+          `"${(l.id || '').replace(/"/g, '""')}"`,
+          `"${(l.timestamp || '').replace(/"/g, '""')}"`,
+          `"${(l.user || '').replace(/"/g, '""')}"`,
+          `"${(l.role || '').replace(/"/g, '""')}"`,
+          `"${(l.action || '').replace(/"/g, '""')}"`,
+          `"${(l.target || '').replace(/"/g, '""')}"`,
+          `"${(l.ipAddress || '').replace(/"/g, '""')}"`,
+          `"${(l.status || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      } else {
+        filename = `Workflow_Execution_Audit_Logs_${today}.csv`;
+        const headers = ['Log ID', 'Timestamp', 'Rule Name', 'Trigger Type', 'Matter', 'Triggered By', 'Spawned Tasks', 'Engine Status', 'Details'];
+        const rows = filteredWorkflowLogs.map(l => [
+          `"${(l.id || '').replace(/"/g, '""')}"`,
+          `"${(l.timestamp || '').replace(/"/g, '""')}"`,
+          `"${(l.ruleName || '').replace(/"/g, '""')}"`,
+          `"${(l.triggerType || '').replace(/"/g, '""')}"`,
+          `"${(l.matter || '').replace(/"/g, '""')}"`,
+          `"${(l.triggeredBy || '').replace(/"/g, '""')}"`,
+          l.spawnedTasks || 0,
+          `"${(l.status || '').replace(/"/g, '""')}"`,
+          `"${(l.details || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      }
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast(`Audit logs (${activeLogTab}) exported to CSV successfully!`, 'success');
+    } catch (err) {
+      console.error('Failed to export audit logs:', err);
+      addToast('Failed to export audit logs.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -250,6 +304,14 @@ export function AuditLogs() {
             >
               <Layers className="w-3.5 h-3.5 mr-1" />
               Workflow Execution Logs
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Download}
+              onClick={handleExportAuditLogs}
+            >
+              Export Logs (CSV)
             </Button>
           </div>
         }

@@ -99,6 +99,57 @@ export function RolesPermissions() {
     ? PERMISSION_GROUPS
     : PERMISSION_GROUPS.filter(g => g.id === selectedGroupFilter);
 
+  const handleExportRBACMatrix = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `RBAC_Security_Permissions_Matrix_${today}.csv`;
+
+      const headers = [
+        'Permission Group',
+        'Functional Permission Name',
+        'Permission Key',
+        'Action Category',
+        ...ROLE_LIST.map(r => r.name)
+      ];
+
+      const rows = [];
+      PERMISSION_GROUPS.forEach(group => {
+        group.permissions.forEach(p => {
+          const roleStatus = ROLE_LIST.map(role => {
+            if (role.id === 'super_admin') return 'GRANTED (Full)';
+            const hasPerm = (rolePermissions[role.id] || []).includes(p.key);
+            return hasPerm ? 'GRANTED' : 'DENIED';
+          });
+
+          rows.push([
+            `"${group.name.replace(/"/g, '""')}"`,
+            `"${p.label.replace(/"/g, '""')}"`,
+            `"${p.key.replace(/"/g, '""')}"`,
+            `"${p.action.replace(/"/g, '""')}"`,
+            ...roleStatus.map(s => `"${s}"`)
+          ]);
+        });
+      });
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('RBAC Security Permissions Matrix downloaded successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to export RBAC matrix:', err);
+      addToast('Failed to export RBAC matrix.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -111,7 +162,7 @@ export function RolesPermissions() {
               variant="outline"
               size="sm"
               icon={Download}
-              onClick={() => addToast('Exporting RBAC Matrix (CSV with Utah Bar compliance mapping)...', 'success')}
+              onClick={handleExportRBACMatrix}
             >
               Export Matrix
             </Button>
