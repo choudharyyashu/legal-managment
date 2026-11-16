@@ -194,7 +194,6 @@ export function BillingReports() {
         subtitle="Practice group fee generation, realization metrics, and accounts receivable aging summaries."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'Billing Reports' }]}
         actions={
-<<<<<<< HEAD
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -209,21 +208,11 @@ export function BillingReports() {
               variant="outline"
               size="sm"
               icon={Download}
-              onClick={() => addToast('Exporting Billing Summary to CSV/Excel format...', 'info')}
+              onClick={handleExportCSV}
             >
               Export Report (CSV)
             </Button>
           </div>
-=======
-          <Button
-            variant="outline"
-            size="sm"
-            icon={Download}
-            onClick={handleExportCSV}
-          >
-            Export Report (CSV)
-          </Button>
->>>>>>> 3adcb1a8abe2f1a42ae16f0b4cf1c9da04528b52
         }
       />
 
