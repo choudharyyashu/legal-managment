@@ -8,8 +8,11 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { DatePicker } from '../../../components/ui/DatePicker';
+import { parsePIIntakeData, getCleanMatterSummary } from '../../intake/utils/piIntakeHelper';
+import { piService } from '../../../services/piService';
+import { AlertCircle } from 'lucide-react';
 
-export function MatterForm({ initialData = null, defaultClientId = null, onSuccess, onCancel }) {
+export function MatterForm({ initialData = null, defaultClientId = null, initialIntake = null, onSuccess, onCancel }) {
   const { addMatter, updateMatter } = useMatters();
   const { clients, refreshClients } = useClients();
   const { allUsers } = useAuth();
@@ -25,30 +28,81 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
   const attorneys = allUsers.filter(u => u.role === 'attorney' || u.role === 'super_admin');
   const staff = allUsers.filter(u => u.role === 'paralegal' || u.role === 'billing');
 
-  const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const validUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const defaultAttorney = attorneys.find(a => validUuidPattern.test(a.id)) || attorneys[0];
+  const defaultStaff = staff.find(s => validUuidPattern.test(s.id)) || staff[0];
+
+  // Resolve practice area and intake-carried data
+  const intakePaId = initialIntake?.practiceAreaId;
+  const isIntakePI = intakePaId === 'pa-pi' || intakePaId === 'pa-7' || initialIntake?.practiceAreaName?.toLowerCase().includes('personal injury');
+  const initialPracticeAreaId = initialData?.practiceAreaId || (isIntakePI ? 'pa-pi' : (intakePaId || PRACTICE_AREAS[0]?.id || 'pa-civ'));
+
+  const intakePiData = initialIntake ? parsePIIntakeData(initialIntake.matterSummary) : {};
+
+  let initialTitle = initialData?.title || '';
+  if (!initialTitle && initialIntake) {
+    const adverse = initialIntake.adverseParties || intakePiData.opposingParties || 'Adverse Parties';
+    initialTitle = `${initialIntake.prospectiveClient} v. ${adverse}`;
+  }
+
+  const initialDescription = initialData?.description || getCleanMatterSummary(initialIntake?.matterSummary) || '';
+
+  // In Utah, general personal injury statute of limitations is 4 years from the accident date (Utah Code § 78B-2-307)
+  let calculatedSOL = initialData?.statuteOfLimitations || '';
+  if (!calculatedSOL && intakePiData.accidentDate) {
+    try {
+      const accDate = new Date(intakePiData.accidentDate);
+      if (!isNaN(accDate.getTime())) {
+        accDate.setFullYear(accDate.getFullYear() + 4);
+        calculatedSOL = accDate.toISOString().split('T')[0];
+      }
+    } catch {}
+  }
+
+  const isPI = initialPracticeAreaId === 'pa-pi' || initialPracticeAreaId === 'pa-7';
 
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
+    title: initialTitle,
     clientId: initialData?.clientId || defaultClientId || clients[0]?.id || '',
-    practiceAreaId: initialData?.practiceAreaId || PRACTICE_AREAS[0]?.id || '',
-    responsibleAttorneyId: initialData?.responsibleAttorneyId || defaultAttorney?.id || '8640f71a-0142-42f4-a4c0-732537dcd9b7',
-    assignedStaffId: initialData?.assignedStaffIds?.[0] || staff[0]?.id || 'a0b374d7-a8b4-4d42-b4c1-909094f4598b',
+    practiceAreaId: initialPracticeAreaId,
+    responsibleAttorneyId: initialData?.responsibleAttorneyId || defaultAttorney?.id || '',
+    assignedStaffId: initialData?.assignedStaffIds?.[0] || defaultStaff?.id || '',
     status: initialData?.status || 'Active',
-    billingType: initialData?.billingType || 'Hourly',
-    hourlyRate: initialData?.hourlyRate || 500,
-    flatFeeAmount: initialData?.flatFeeAmount || 25000,
-    budget: initialData?.budget || 50000,
-    courtName: initialData?.courtName || 'Utah Third Judicial District Court - Salt Lake City',
-    judge: initialData?.judge || 'Hon. Elizabeth A. Hruby-Mills',
+    billingType: initialData?.billingType || (isPI ? 'Contingency' : 'Hourly'),
+    hourlyRate: initialData?.hourlyRate || (isPI ? '' : ''),
+    flatFeeAmount: initialData?.flatFeeAmount || '',
+    contingencyPercentage: initialData?.contingencyPercentage || (isPI ? '33.33' : ''),
+    budget: initialData?.budget || '',
+    courtName: initialData?.courtName || '',
+    judge: initialData?.judge || '',
     nextCourtDate: initialData?.nextCourtDate || '',
-    statuteOfLimitations: initialData?.statuteOfLimitations || '',
-    description: initialData?.description || '',
+    statuteOfLimitations: calculatedSOL,
+    description: initialDescription,
     isEthicalWallEnabled: initialData?.isEthicalWallEnabled || false,
     ethicalWallExcludedRole: initialData?.ethicalWallExcludedRole || 'Paralegal Staff',
   });
 
+  const [paChangeWarning, setPaChangeWarning] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const handlePracticeAreaChange = (newPaId) => {
+    const newPa = PRACTICE_AREAS.find(p => p.id === newPaId || p.legacyId === newPaId);
+    const isNowPI = newPaId === 'pa-pi' || newPaId === 'pa-7';
+
+    if (initialIntake && newPaId !== initialPracticeAreaId) {
+      const origPa = PRACTICE_AREAS.find(p => p.id === initialPracticeAreaId || p.legacyId === initialPracticeAreaId);
+      setPaChangeWarning(`Practice Area changed from "${origPa?.name || 'Intake Practice Area'}" to "${newPa?.name}". Notice: This modifies required litigation workflow stages, Utah bar compliance checklists, and standard billing arrangements.`);
+    } else {
+      setPaChangeWarning(null);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      practiceAreaId: newPaId,
+      billingType: isNowPI ? 'Contingency' : (prev.billingType === 'Contingency' ? 'Hourly' : prev.billingType),
+      contingencyPercentage: isNowPI ? (prev.contingencyPercentage || '33.33') : prev.contingencyPercentage,
+    }));
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -76,14 +130,14 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
       let attorneyUuid = formData.responsibleAttorneyId;
       if (!validUuidPattern.test(attorneyUuid)) {
         const found = attorneys.find(a => (a.id === attorneyUuid || a.legacyId === attorneyUuid) && validUuidPattern.test(a.id));
-        attorneyUuid = found?.id || '8640f71a-0142-42f4-a4c0-732537dcd9b7'; // Thomas Bludworth, Esq.
+        attorneyUuid = found?.id || defaultAttorney?.id;
       }
 
       // Resolve valid Staff UUID
       let staffUuid = formData.assignedStaffId;
       if (staffUuid && !validUuidPattern.test(staffUuid)) {
         const found = staff.find(s => (s.id === staffUuid || s.legacyId === staffUuid) && validUuidPattern.test(s.id));
-        staffUuid = found?.id || 'a0b374d7-a8b4-4d42-b4c1-909094f4598b'; // Marcus Vance
+        staffUuid = found?.id || defaultStaff?.id;
       }
 
       const payload = {
@@ -91,10 +145,13 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
         clientId: selectedClient?.id || formData.clientId,
         practiceAreaId: selectedPracticeArea?.id || 'pa-civ',
         responsibleAttorneyId: attorneyUuid,
-        assignedStaffId: staffUuid,
-        hourlyRate: formData.billingType === 'Hourly' ? Number(formData.hourlyRate || 350) : null,
-        flatFeeAmount: formData.billingType === 'Flat Fee' ? Number(formData.flatFeeAmount || 25000) : null,
-        budget: Number(formData.budget) || 25000,
+        assignedStaffId: staffUuid || null,
+        hourlyRate: formData.billingType === 'Hourly' ? (formData.hourlyRate ? Number(formData.hourlyRate) : null) : null,
+        flatFeeAmount: formData.billingType === 'Flat Fee' ? (formData.flatFeeAmount ? Number(formData.flatFeeAmount) : null) : null,
+        contingencyPercentage: formData.billingType === 'Contingency' ? (formData.contingencyPercentage ? Number(formData.contingencyPercentage) : 33.33) : null,
+        budget: formData.budget ? Number(formData.budget) : 0,
+        courtName: formData.courtName?.trim() || null,
+        judge: formData.judge?.trim() || null,
       };
 
       if (initialData?.id) {
@@ -104,6 +161,35 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
       } else {
         const created = await addMatter(payload);
         addToast(`Matter "${formData.title}" created (${created.matterNumber || created.id}).`, 'success');
+
+        // Requirement 7: First Document Automation - Template 096 Letter of Representation
+        const createdIsPI = selectedPracticeArea?.id === 'pa-pi' || selectedPracticeArea?.code === 'PI';
+        if (createdIsPI && (intakePiData.accidentDate || intakePiData.insuranceCompany || initialIntake?.adverseParties)) {
+          try {
+            await piService.saveIncident(created.id, {
+              incidentDate: intakePiData.accidentDate || undefined,
+              accidentType: intakePiData.accidentType || 'Motor Vehicle Collision',
+              incidentLocation: intakePiData.accidentLocation || undefined,
+              description: intakePiData.incidentDescription || payload.description,
+              notes: intakePiData.additionalNotes || undefined,
+              insurancePolicy: intakePiData.insuranceCompany ? {
+                coverageType: 'Liability',
+                insuranceCompany: intakePiData.insuranceCompany,
+                insuredName: intakePiData.insuredName || undefined,
+                claimNumber: intakePiData.claimNumber || undefined,
+                policyNumber: intakePiData.policyNumber || undefined,
+                adjusterName: intakePiData.adjusterName || undefined,
+                adjusterPhone: intakePiData.adjusterPhone || undefined,
+                adjusterEmail: intakePiData.adjusterEmail || undefined,
+                status: 'Active',
+              } : undefined,
+            });
+            addToast('Template 096 Letter of Representation draft generated & attorney review task created.', 'success');
+          } catch (piErr) {
+            console.warn('PI Incident Auto-Draft notification:', piErr?.message);
+          }
+        }
+
         if (onSuccess) onSuccess(created);
       }
     } catch (err) {
@@ -127,6 +213,22 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
           />
         </div>
 
+        {paChangeWarning && (
+          <div className="sm:col-span-2 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-start justify-between gap-2">
+            <div>
+              <span className="font-bold block">Practice Area Alteration Warning:</span>
+              {paChangeWarning}
+            </div>
+            <button
+              type="button"
+              onClick={() => setPaChangeWarning(null)}
+              className="text-amber-700 hover:text-amber-900 font-bold ml-2 text-sm leading-none"
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
         <div>
           <Select
             label="Client Entity"
@@ -143,7 +245,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
             label="Practice Area (9 Confirmed)"
             required
             value={formData.practiceAreaId}
-            onChange={(e) => setFormData({ ...formData, practiceAreaId: e.target.value })}
+            onChange={(e) => handlePracticeAreaChange(e.target.value)}
             options={PRACTICE_AREAS.map(pa => ({ value: pa.id, label: pa.name }))}
             error={errors.practiceAreaId}
           />
@@ -202,6 +304,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
             <Input
               label="Standard Hourly Rate ($/hr)"
               type="number"
+              placeholder="e.g. 350"
               value={formData.hourlyRate}
               onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
             />
@@ -211,6 +314,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
             <Input
               label="Agreed Flat Fee Amount ($)"
               type="number"
+              placeholder="e.g. 25000"
               value={formData.flatFeeAmount}
               onChange={(e) => setFormData({ ...formData, flatFeeAmount: e.target.value })}
             />
@@ -218,10 +322,15 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
         ) : (
           <div>
             <Input
-              label="Estimated Recovery Budget ($)"
+              label="Contingency Fee Rate (%)"
               type="number"
-              value={formData.budget}
-              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+              step="0.01"
+              min="0"
+              max="100"
+              placeholder="33.33"
+              value={formData.contingencyPercentage}
+              onChange={(e) => setFormData({ ...formData, contingencyPercentage: e.target.value })}
+              helperText="Standard contingency fee under Utah RPC 1.5(c)"
             />
           </div>
         )}
@@ -230,6 +339,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
           <Input
             label="Matter Budget ($)"
             type="number"
+            placeholder="0"
             value={formData.budget}
             onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
           />
@@ -241,6 +351,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
             value={formData.courtName}
             onChange={(e) => setFormData({ ...formData, courtName: e.target.value })}
             placeholder="e.g. Utah Third District Court"
+            helperText={isPI && !formData.courtName ? 'Pre-litigation phase (court not yet assigned)' : ''}
           />
         </div>
 
@@ -249,7 +360,8 @@ export function MatterForm({ initialData = null, defaultClientId = null, onSucce
             label="Presiding Judge / Magistrate"
             value={formData.judge}
             onChange={(e) => setFormData({ ...formData, judge: e.target.value })}
-            placeholder="e.g. Hon. Elizabeth A. Hruby-Mills"
+            placeholder="e.g. Presiding Judge"
+            helperText={isPI && !formData.judge ? 'Pre-litigation phase (judge not yet assigned)' : ''}
           />
         </div>
 

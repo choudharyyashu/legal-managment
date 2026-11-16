@@ -993,27 +993,41 @@ export class DraftService {
       // Non-blocking
     }
 
-    // 7. Create correction task for paralegal/drafter
+    // 7. Create or reuse correction task for paralegal/drafter (idempotent)
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 2);
 
-    const correctionTask = await TaskService.createTask(
-      {
+    let correctionTask: any = await prisma.task.findFirst({
+      where: {
         matterId: draft.matterId,
-        assignedToUserId: draft.generatedByUserId || currentUser.id,
-        title: `Draft Correction Required: ${draft.title}`,
-        description: `Draft '${draft.draftCode}' (${draft.template?.templateName || 'Document'}) was REJECTED by attorney ${(currentUser as any).name || currentUser.email || currentUser.id}.\nReason: "${rejectionReason}"\n\nPlease correct missing/inaccurate information and regenerate the draft.`,
-        dueDate: dueDate.toISOString().split('T')[0],
-        priority: 'High',
-        reminderSetting: '1 day prior',
+        status: { not: 'Completed' },
+        OR: [
+          { description: { contains: `[IDEMPOTENCY_KEY: DRAFT_CORRECTION_${draft.draftCode}]` } },
+          { description: { contains: draft.draftCode } },
+          { title: `Draft Correction Required: ${draft.title}` },
+        ],
       },
-      {
-        userId: currentUser.id,
-        userRole: currentUser.role,
-        ipAddress: context.ipAddress,
-        userAgent: context.userAgent,
-      }
-    );
+    });
+
+    if (!correctionTask) {
+      correctionTask = await TaskService.createTask(
+        {
+          matterId: draft.matterId,
+          assignedToUserId: draft.generatedByUserId || currentUser.id,
+          title: `Draft Correction Required: ${draft.title}`,
+          description: `Draft '${draft.draftCode}' (${draft.template?.templateName || 'Document'}) was REJECTED by attorney ${(currentUser as any).name || currentUser.email || currentUser.id}.\nReason: "${rejectionReason}"\n\nPlease correct missing/inaccurate information and regenerate the draft. [IDEMPOTENCY_KEY: DRAFT_CORRECTION_${draft.draftCode}]`,
+          dueDate: dueDate.toISOString().split('T')[0],
+          priority: 'High',
+          reminderSetting: '1 day prior',
+        },
+        {
+          userId: currentUser.id,
+          userRole: currentUser.role,
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        }
+      );
+    }
 
     // 8. Audit Logging
     await createAuditLog({

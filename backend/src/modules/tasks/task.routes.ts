@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { TaskController } from './task.controller.js';
+import { PersonalInjuryController } from '../personal-injury/pi.controller.js';
 import { requireAuth, requirePermission, requireAnyPermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -18,6 +19,18 @@ taskRouter.get(
   requireAnyPermission(['tasks:view_own', 'tasks:view_team']),
   validateRequest({ query: taskQuerySchema }),
   TaskController.getTasks
+);
+
+taskRouter.post(
+  '/process-reminders',
+  requirePermission('tasks:edit'),
+  PersonalInjuryController.processScheduledReminders
+);
+
+taskRouter.post(
+  '/process-overdue',
+  requirePermission('tasks:edit'),
+  PersonalInjuryController.processOverdueTasks
 );
 
 taskRouter.get(

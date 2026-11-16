@@ -19,7 +19,8 @@ import {
   MarkIncompleteInput,
   DemandPackageInput,
 } from './pi.types.js';
-import { SignAuthorizationInput } from './pi.validation.js';
+import { SignAuthorizationInput, UpdateRecordsRequestStatusInput } from './pi.validation.js';
+import { PIWorkflowAutomationService } from './pi.workflow.js';
 
 export class PersonalInjuryService {
   private static async generateRequestCode(): Promise<string> {
@@ -229,12 +230,24 @@ export class PersonalInjuryService {
         matterId: matter.id,
         providerId: provider.id,
         requestCode,
-        status: 'Requested',
-        authorizationSigned: Boolean(input.requestAuthorization),
-        requestSentDate: new Date(),
+        status: 'Drafted',
+        authorizationSigned: false,
+        requestSentDate: null,
         requestDueDate: dueDate,
       },
     });
+
+    // Create workflow task to obtain client signed authorization if requested (Sub-Stage E)
+    let authorizationTask = null;
+    if (input.requestAuthorization !== false) {
+      authorizationTask = await PIWorkflowAutomationService.onMissingAuthorizationDetected(
+        matter,
+        recordRequest,
+        provider.providerName,
+        currentUser,
+        context
+      );
+    }
 
     // Trigger Document 113 & 112 Auto-Drafts
     const autoDraftResult = await AutoDraftService.handleProviderAdded(
@@ -260,6 +273,7 @@ export class PersonalInjuryService {
       provider,
       recordRequest,
       autoDraftResult,
+      authorizationTask,
     };
   }
 
@@ -310,9 +324,20 @@ export class PersonalInjuryService {
       context
     );
 
+    // Create actionable follow-up task on the Matter (Sub-Stage E)
+    const followUpTask = await PIWorkflowAutomationService.onIncompleteRecordsFollowUpRequired(
+      recordRequest.matter,
+      recordRequest,
+      recordRequest.provider.providerName,
+      input.deficiencyNotes,
+      currentUser,
+      context
+    );
+
     return {
       recordRequest: updatedRequest,
       autoDraftResult,
+      followUpTask,
     };
   }
 
@@ -796,7 +821,17 @@ export class PersonalInjuryService {
       isDuplicate: false,
     };
 
-    // 9. Immutable Audit Log (Utah RPC 1.6)
+    // 9. Automate workflow transitions (Sub-Stage E):
+    // Auto-complete open "Obtain Signed Authorization" tasks & create transmission task
+    const workflowTransition = await PIWorkflowAutomationService.onAuthorizationSigned(
+      updatedRequest.matter,
+      updatedRequest,
+      updatedRequest.provider.providerName,
+      currentUser,
+      context
+    );
+
+    // 10. Immutable Audit Log (Utah RPC 1.6)
     await createAuditLog({
       userId: currentUser.id,
       userRole: currentUser.role,
@@ -812,6 +847,98 @@ export class PersonalInjuryService {
       recordRequest: updatedRequest,
       authorizationDocument: authDoc,
       evidence,
+      workflowTransition,
+    };
+  }
+
+  /**
+   * Updates status of a MedicalRecordRequest with strict authorization transmission readiness enforcement (Sub-Stage E).
+   * Prevents transitioning to 'Ready to Send' or 'Sent' if authorization has not been signed.
+   */
+  static async updateRecordRequestStatus(
+    matterId: string,
+    requestId: string,
+    input: UpdateRecordsRequestStatusInput,
+    currentUser: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+
+    const recordRequest = await prisma.medicalRecordRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        provider: true,
+        matter: true,
+      },
+    });
+
+    if (!recordRequest) {
+      throw AppError.notFound(`Medical record request '${requestId}' not found.`, 'REQUEST_NOT_FOUND');
+    }
+
+    if (recordRequest.matterId !== matter.id) {
+      throw AppError.badRequest(
+        `Medical record request '${requestId}' does not belong to matter '${matterId}'.`,
+        'REQUEST_MATTER_MISMATCH'
+      );
+    }
+
+    // Enforce Authorization Transmission Readiness Gate (Sub-Stage E)
+    if (input.status === 'Ready to Send' || input.status === 'Sent') {
+      PIWorkflowAutomationService.validateTransmissionReadiness(recordRequest);
+    }
+
+    const updateData: any = {
+      status: input.status,
+    };
+
+    let followUpTask = null;
+    if (input.status === 'Sent') {
+      const sentDate = input.sentDate ? new Date(input.sentDate) : new Date();
+      const dueDate = new Date(sentDate);
+      dueDate.setDate(dueDate.getDate() + 30); // 30-day statutory turnaround standard
+
+      updateData.requestSentDate = sentDate;
+      updateData.requestDueDate = dueDate;
+
+      // Schedule automated 30-day statutory turnaround follow-up task
+      followUpTask = await PIWorkflowAutomationService.onRecordsRequestTransmitted(
+        matter,
+        recordRequest,
+        recordRequest.provider.providerName,
+        currentUser,
+        context
+      );
+    }
+
+    const updated = await prisma.medicalRecordRequest.update({
+      where: { id: requestId },
+      data: updateData,
+      include: {
+        provider: true,
+        matter: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'MEDICAL_RECORD_REQUEST_STATUS_UPDATED',
+      resourceType: 'MEDICAL_RECORD_REQUEST',
+      resourceId: updated.id,
+      details: {
+        requestCode: updated.requestCode,
+        previousStatus: recordRequest.status,
+        newStatus: input.status,
+        notes: input.notes || null,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return {
+      recordRequest: updated,
+      followUpTask,
     };
   }
 }

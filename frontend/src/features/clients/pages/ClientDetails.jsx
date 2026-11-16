@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
   Building2,
   User,
@@ -49,10 +49,14 @@ import { clientService } from '../../../services/clientService';
 export function ClientDetails() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  const { clients } = useClients();
+  const { clients, intakes = [] } = useClients();
   const { getMattersByClient } = useMatters();
   const permissions = usePermissions();
   const { addToast } = useToast();
+
+  const [searchParams] = useSearchParams();
+  const intakeId = searchParams.get('intakeId');
+  const shouldOpenMatter = searchParams.get('openMatter') === 'true';
 
   const [activeTab, setActiveTab] = useState('matters');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -70,8 +74,16 @@ export function ClientDetails() {
     return () => { isMounted = false; };
   }, [clientId, clients]);
 
-  const client = clients.find(c => c.id === clientId || c.clientNumber === clientId) || fetchedClient || clients[0];
+  useEffect(() => {
+    if (shouldOpenMatter) {
+      setIsNewMatterModalOpen(true);
+    }
+  }, [shouldOpenMatter]);
+
+  const client = clients.find(c => c.id === clientId || c.clientNumber === clientId) || fetchedClient;
   const clientMatters = client ? getMattersByClient(client.id) : [];
+
+  const linkedIntake = intakeId ? intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId) : null;
 
   // 360° Financials & Invoices for this client
   const clientInvoices = MOCK_INVOICES.filter(
@@ -81,13 +93,14 @@ export function ClientDetails() {
   const totalPaid = clientInvoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
   const totalOutstanding = clientInvoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
 
-  // Client Trust Ledger mock data
-  const clientTrustBalance = client?.id === 'CLI-1001' ? 25000 : (client?.id === 'CLI-1002' ? 12500 : (client?.id === 'CLI-1008' ? 1440 : 5000));
+  // Client Trust Ledger: strictly isolated per client (0 for new clients)
+  const clientTrustBalance = client?.id === 'CLI-1001' ? 25000 : (client?.id === 'CLI-1002' ? 12500 : (client?.id === 'CLI-1008' ? 1440 : 0));
 
-  // Client Communications mock data
-  const clientComms = [
+  // Client Communications: strictly isolated per client (0 for new clients)
+  const ALL_MOCK_COMMS = [
     {
       id: 'comm-1',
+      clientId: 'CLI-1001',
       type: 'Email',
       subject: 'Discovery Protocol & Cold-Chain Telemetry Log Production',
       sender: 'Thomas Bludworth, Esq.',
@@ -97,6 +110,7 @@ export function ClientDetails() {
     },
     {
       id: 'comm-2',
+      clientId: 'CLI-1001',
       type: 'Telephone Call',
       subject: 'Monthly Case Status & Deposition Scheduling Conference',
       sender: 'Thomas Bludworth, Esq.',
@@ -106,6 +120,7 @@ export function ClientDetails() {
     },
     {
       id: 'comm-3',
+      clientId: 'CLI-1001',
       type: 'Portal Notice',
       subject: 'Formal Request: 2024 Corporate Tax Returns & W-2 Records',
       sender: 'Marcus Vance (Paralegal)',
@@ -114,6 +129,7 @@ export function ClientDetails() {
       summary: 'Official document upload request issued through the secure client portal.',
     },
   ];
+  const clientComms = ALL_MOCK_COMMS.filter(c => c.clientId === client?.id || c.clientId === client?.clientNumber);
 
   if (!client) {
     return (
@@ -133,7 +149,7 @@ export function ClientDetails() {
     { id: 'communications', label: 'Communications & Calls', count: clientComms.length, icon: MessageSquare },
     { id: 'related-parties', label: 'Related Entities & Adversaries', icon: User },
     { id: 'contact', label: 'Contact & Addresses', icon: User },
-    { id: 'documents', label: 'Client Documents', count: 3, icon: FileText },
+    { id: 'documents', label: 'Client Documents', count: 0, icon: FileText },
     { id: 'notes', label: 'Internal Notes', icon: MessageSquare },
     { id: 'activity', label: 'Activity History', icon: Clock },
   ];
@@ -689,7 +705,13 @@ export function ClientDetails() {
       >
         <MatterForm
           defaultClientId={client.id}
-          onSuccess={() => setIsNewMatterModalOpen(false)}
+          initialIntake={linkedIntake}
+          onSuccess={(created) => {
+            setIsNewMatterModalOpen(false);
+            if (created?.id) {
+              navigate(`/matters/${created.id}`);
+            }
+          }}
           onCancel={() => setIsNewMatterModalOpen(false)}
         />
       </Modal>

@@ -288,6 +288,26 @@ async function runSubstageDTests() {
     },
   };
 
+  (prisma as any).task = {
+    findMany: async () => [],
+    findFirst: async () => null,
+    findUnique: async () => null,
+    count: async () => 0,
+    create: async ({ data }: any) => ({
+      id: `tsk-mock-${Date.now()}`,
+      taskCode: data.taskCode || 'TSK-26-0001',
+      ...data,
+      dueDate: new Date(data.dueDate),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    update: async ({ data }: any) => data,
+  };
+
+  (prisma as any).user = {
+    findUnique: async () => ({ id: 'usr-atty-01', status: 'Active' }),
+  };
+
   // ---------------------------------------------------------------------------
   // TEST 1: Valid Signed Authorization Linking
   // ---------------------------------------------------------------------------

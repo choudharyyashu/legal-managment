@@ -186,6 +186,28 @@ async function runConcurrencyTestSuite() {
   };
 
   // Mock TaskService.createTask
+  (prisma as any).task = {
+    findMany: async () => [],
+    findFirst: async () => null,
+    findUnique: async () => null,
+    count: async () => 0,
+    create: async ({ data }: any) => ({
+      id: `task-${Date.now()}`,
+      taskCode: data.taskCode || 'TSK-26-0001',
+      ...data,
+      dueDate: new Date(data.dueDate),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }),
+    update: async ({ data }: any) => data,
+  };
+  (prisma as any).user = {
+    findUnique: async () => ({ id: 'usr-atty-conc', status: 'Active' }),
+  };
+  (prisma.matter as any).findUnique = async ({ where }: any) => {
+    return store.matters.get(where.id) || null;
+  };
+
   (AutoDraftService as any).createDraftReviewTask = async (_matter: any, draft: any) => {
     store.reviewTasks.push({ id: `task-${Date.now()}`, draftId: draft.id });
   };

@@ -19,6 +19,8 @@ import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../components/ui/Toast';
 import { useAuth } from '../../../hooks/useAuth';
+import { useClients } from '../../../context/ClientContext';
+import { useMatters } from '../../../context/MatterContext';
 import { mockStorage } from '../../../services/mockStorage';
 import { MOCK_CLIENTS } from '../../../data/mockClients';
 import { MOCK_MATTERS } from '../../../data/mockMatters';
@@ -33,6 +35,8 @@ export function ConflictSearchModal({
 }) {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
+  const { clients = [] } = useClients();
+  const { matters = [] } = useMatters();
 
   const [query, setQuery] = useState(initialQuery);
   const [activeTab, setActiveTab] = useState('search'); // 'search' | 'history' | 'certificate'
@@ -78,40 +82,54 @@ export function ConflictSearchModal({
     }
 
     const hits = [];
+    const seenIds = new Set();
 
-    // 1. Search Clients
-    MOCK_CLIENTS.forEach(client => {
-      const nameMatch = client.name.toLowerCase().includes(q);
+    // Pool clients (live + mock fallback)
+    const combinedClients = [...clients, ...MOCK_CLIENTS];
+    combinedClients.forEach(client => {
+      if (seenIds.has(`client-${client.id}`)) return;
+      const nameMatch = client.name?.toLowerCase().includes(q);
       const contactMatch = client.primaryContact && client.primaryContact.toLowerCase().includes(q);
-      if (nameMatch || contactMatch) {
+      const emailMatch = client.email && client.email.toLowerCase().includes(q);
+      if (nameMatch || contactMatch || emailMatch) {
+        seenIds.add(`client-${client.id}`);
         hits.push({
           type: 'Existing Active Client',
           name: client.name,
-          detail: `Client ID: ${client.id} • Lead Counsel: ${client.assignedAttorneyName}`,
+          detail: `Client ID: ${client.clientNumber || client.id} • Lead Counsel: ${client.assignedAttorneyName || 'Thomas Bludworth, Esq.'}`,
           confidence: nameMatch ? 96 : 78,
           severity: 'Critical Conflict',
           status: 'Direct Adverse Conflict under Utah RPC 1.7(a)(1)',
+          matchReason: `Search query "${q}" matched client records directly.`,
         });
       }
     });
 
-    // 2. Search Matters & Adverse Parties
-    MOCK_MATTERS.forEach(matter => {
-      if (matter.title.toLowerCase().includes(q) || (matter.description && matter.description.toLowerCase().includes(q))) {
+    // Pool matters (live + mock fallback)
+    const combinedMatters = [...matters, ...MOCK_MATTERS];
+    combinedMatters.forEach(matter => {
+      if (seenIds.has(`matter-${matter.id}`)) return;
+      const titleMatch = matter.title?.toLowerCase().includes(q);
+      const descMatch = matter.description && matter.description.toLowerCase().includes(q);
+      if (titleMatch || descMatch) {
+        seenIds.add(`matter-${matter.id}`);
         hits.push({
           type: 'Active Matter Docket',
           name: matter.title,
-          detail: `Matter: ${matter.matterNumber} (${matter.practiceAreaName})`,
+          detail: `Matter: ${matter.matterNumber || matter.id} (${matter.practiceAreaName || 'Litigation'})`,
           confidence: 88,
           severity: 'Potential Conflict',
           status: 'Substantially Related Matter under Utah RPC 1.9',
+          matchReason: `Search query "${q}" matched matter case title or pleadings summary.`,
         });
       }
     });
 
-    // 3. Search Related Parties
+    // Search Related Parties
     MOCK_RELATED_PARTIES.forEach(party => {
+      if (seenIds.has(`party-${party.name}`)) return;
       if (party.name.toLowerCase().includes(q) || (party.firmName && party.firmName.toLowerCase().includes(q))) {
+        seenIds.add(`party-${party.name}`);
         hits.push({
           type: `Related Entity: ${party.roleLabel}`,
           name: party.name,
@@ -119,6 +137,7 @@ export function ConflictSearchModal({
           confidence: 94,
           severity: party.roleId === 'opposing_party' ? 'Direct Adversary' : 'Informational Hit',
           status: party.roleId === 'opposing_party' ? 'Adverse Litigant in Pending Action' : 'Witness / Affiliated Entity',
+          matchReason: `Party listed as ${party.roleLabel || 'related entity'} in firm records.`,
         });
       }
     });
@@ -128,10 +147,10 @@ export function ConflictSearchModal({
 
     if (hits.length > 0) {
       setDisposition('Conflict Identified');
-      setAnalysisNotes(`Search returned ${hits.length} matching entity records. Review required against Utah RPC 1.7 adverse party prohibitions.`);
+      setAnalysisNotes(`Search query "${q}" returned ${hits.length} matching entity record(s). Review required against Utah RPC 1.7 adverse party prohibitions.`);
     } else {
       setDisposition('Cleared');
-      setAnalysisNotes('Zero adverse party or prior representation conflicts identified across active rosters, closed files, and corporate affiliates.');
+      setAnalysisNotes(`Zero adverse party or prior representation conflicts identified across active rosters, closed files, and corporate affiliates for query "${q}". Cleared under Utah RPC 1.7.`);
     }
   };
 
@@ -146,7 +165,7 @@ export function ConflictSearchModal({
     e.preventDefault();
 
     const certData = {
-      certificateNumber: `UT-RPC1.7-${Date.now().toString().slice(-6)}`,
+      certificateNumber: `HB-RPC1.7-${Date.now().toString().slice(-6)}`,
       queryEntity: query,
       intakeId: intakeId || 'PROSP-INTAKE',
       reviewer,
@@ -183,7 +202,7 @@ export function ConflictSearchModal({
       onConflictResolved(disposition, reviewer, analysisNotes);
     }
 
-    addToast(`Utah RPC 1.7 Conflict Certificate issued: "${disposition}".`, disposition === 'Cleared' ? 'success' : 'warning');
+    addToast(`Internal Utah RPC 1.7 Conflict Review recorded: "${disposition}".`, disposition === 'Cleared' ? 'success' : 'warning');
     setActiveTab('certificate');
   };
 
@@ -345,10 +364,9 @@ export function ConflictSearchModal({
                         onChange={(e) => setDisposition(e.target.value)}
                         className="w-full text-xs p-2 bg-white border border-[#D9D6CF] rounded text-[#202A35] font-semibold"
                       >
-                        <option value="Cleared">Cleared (No Conflict Identified)</option>
-                        <option value="Conflict Identified">Conflict Identified (Representation Declined)</option>
-                        <option value="Ethical Wall Erected">Ethical Wall Erected (Utah RPC 1.10)</option>
-                        <option value="Client Waiver Obtained">Client Informed Waiver Obtained (Utah RPC 1.7(b))</option>
+                        <option value="Cleared">Cleared (No Adverse Conflict Identified)</option>
+                        <option value="Conflict Identified">Conflict Identified (POTENTIAL_MATCH)</option>
+                        <option value="Waiver Obtained">Client Informed Waiver Obtained (Utah RPC 1.7(b))</option>
                       </select>
                     </div>
                   </div>
@@ -369,11 +387,11 @@ export function ConflictSearchModal({
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-[10px] text-[#667085]">
-                      Generates Utah Bar compliant clearance memorandum.
+                      Internal Utah RPC 1.7 mandatory ethical recordkeeping.
                     </span>
                     <Button type="submit" variant="primary" size="sm">
                       <FileCheck className="w-3.5 h-3.5 mr-1.5" />
-                      Issue Clearance Certificate
+                      Record Ethical Determination
                     </Button>
                   </div>
                 </form>
@@ -437,7 +455,7 @@ export function ConflictSearchModal({
 
               <div className="text-center py-1">
                 <h4 className="font-serif font-bold text-base text-[#06244B] uppercase tracking-wider">
-                  Conflict of Interest Clearance Certificate
+                  Internal Utah RPC 1.7 Conflict Review Record
                 </h4>
                 <p className="text-[11px] text-[#667085]">Pursuant to Utah Rules of Professional Conduct 1.6, 1.7, 1.9 &amp; 1.10</p>
               </div>
@@ -475,7 +493,7 @@ export function ConflictSearchModal({
                 </div>
                 <div className="flex items-center gap-1 text-emerald-700 font-bold">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Utah State Bar Compliance Logged</span>
+                  <span>Internal Firm Ethical Determination Logged under Utah RPC 1.7</span>
                 </div>
               </div>
             </div>
@@ -484,10 +502,10 @@ export function ConflictSearchModal({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => addToast('Conflict certificate printed / saved to matter document repository.', 'info')}
+                onClick={() => addToast('Conflict review record printed / saved to file.', 'info')}
               >
                 <Printer className="w-3.5 h-3.5 mr-1" />
-                Print Certificate
+                Print Review Record
               </Button>
               <Button
                 variant="primary"

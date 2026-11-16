@@ -103,3 +103,28 @@ export const signAuthorizationSchema = z.object({
 });
 
 export type SignAuthorizationInput = z.infer<typeof signAuthorizationSchema>;
+
+export const updateRecordsRequestStatusSchema = z.object({
+  status: z.enum(['Drafted', 'Ready to Send', 'Sent', 'Received', 'Incomplete', 'Cancelled'], {
+    required_error: 'status is required',
+  }),
+  sentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'sentDate must be YYYY-MM-DD').optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+export type UpdateRecordsRequestStatusInput = z.infer<typeof updateRecordsRequestStatusSchema>;
+
+export const processRemindersSchema = z.object({
+  asOfDate: z.string().optional(),
+  matterId: z.string().uuid().optional(),
+});
+
+export type ProcessRemindersInput = z.infer<typeof processRemindersSchema>;
+
+export const processOverdueSchema = z.object({
+  asOfDate: z.string().optional(),
+  matterId: z.string().uuid().optional(),
+});
+
+export type ProcessOverdueInput = z.infer<typeof processOverdueSchema>;
+
