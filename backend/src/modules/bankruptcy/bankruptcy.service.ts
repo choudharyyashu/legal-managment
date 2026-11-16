@@ -138,10 +138,10 @@ export class BankruptcyService {
   }
 
   static async createCreditor(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const bkCase = await this.getBankruptcyCase(matterId);
-    if (!data.creditorName || !data.claimType || data.claimAmount === undefined) {
+    if (!data || !data.creditorName || !data.claimType || data.claimAmount === undefined) {
       throw AppError.badRequest('Creditor name, claim type, and claim amount are required');
     }
+    const bkCase = await this.getBankruptcyCase(matterId);
 
     const creditor = await prisma.bankruptcyCreditor.create({
       data: {
@@ -182,10 +182,10 @@ export class BankruptcyService {
   }
 
   static async createScheduleItem(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const bkCase = await this.getBankruptcyCase(matterId);
-    if (!data.scheduleCode || !data.description || data.valueAmount === undefined) {
+    if (!data || !data.scheduleCode || !data.description || data.valueAmount === undefined) {
       throw AppError.badRequest('Schedule code, description, and value amount are required');
     }
+    const bkCase = await this.getBankruptcyCase(matterId);
 
     const item = await prisma.bankruptcyScheduleItem.create({
       data: {

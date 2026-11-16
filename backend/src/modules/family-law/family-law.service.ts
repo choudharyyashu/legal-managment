@@ -111,10 +111,10 @@ export class FamilyLawService {
   }
 
   static async createOrder(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const famCase = await this.getFamilyLawCase(matterId);
-    if (!data.orderTitle || !data.orderType) {
+    if (!data || !data.orderTitle || !data.orderType) {
       throw AppError.badRequest('Order title and order type are required');
     }
+    const famCase = await this.getFamilyLawCase(matterId);
 
     const order = await prisma.familyLawOrder.create({
       data: {

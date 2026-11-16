@@ -118,10 +118,10 @@ export class ProbateService {
   }
 
   static async createBeneficiary(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const probateCase = await this.getProbateCase(matterId);
-    if (!data.name || !data.relationship) {
+    if (!data || !data.name || !data.relationship) {
       throw AppError.badRequest('Beneficiary name and relationship are required');
     }
+    const probateCase = await this.getProbateCase(matterId);
 
     const item = await prisma.probateBeneficiary.create({
       data: {
@@ -155,10 +155,10 @@ export class ProbateService {
   }
 
   static async createAsset(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const probateCase = await this.getProbateCase(matterId);
-    if (!data.assetType || !data.description || data.estimatedValue === undefined) {
+    if (!data || !data.assetType || !data.description || data.estimatedValue === undefined) {
       throw AppError.badRequest('Asset type, description, and estimated value are required');
     }
+    const probateCase = await this.getProbateCase(matterId);
 
     const item = await prisma.probateAsset.create({
       data: {

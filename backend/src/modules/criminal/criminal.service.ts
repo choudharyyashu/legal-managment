@@ -115,10 +115,10 @@ export class CriminalService {
   }
 
   static async createCharge(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const crimCase = await this.getCriminalCase(matterId);
-    if (!data.statuteCode || !data.chargeTitle || !data.severityClass) {
+    if (!data || !data.statuteCode || !data.chargeTitle || !data.severityClass) {
       throw AppError.badRequest('Statute code, charge title, and severity class are required');
     }
+    const crimCase = await this.getCriminalCase(matterId);
 
     const charge = await prisma.criminalCharge.create({
       data: {

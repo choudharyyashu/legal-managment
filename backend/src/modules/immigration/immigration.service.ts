@@ -121,10 +121,10 @@ export class ImmigrationService {
   }
 
   static async createReceipt(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const immCase = await this.getImmigrationCase(matterId);
-    if (!data.receiptNumber || !data.formType || !data.filingDate) {
+    if (!data || !data.receiptNumber || !data.formType || !data.filingDate) {
       throw AppError.badRequest('Receipt number, form type, and filing date are required');
     }
+    const immCase = await this.getImmigrationCase(matterId);
 
     const receipt = await prisma.uSCISReceiptRecord.create({
       data: {
@@ -165,10 +165,10 @@ export class ImmigrationService {
   }
 
   static async createParty(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const immCase = await this.getImmigrationCase(matterId);
-    if (!data.name || !data.relationshipRole) {
+    if (!data || !data.name || !data.relationshipRole) {
       throw AppError.badRequest('Party name and relationship role are required');
     }
+    const immCase = await this.getImmigrationCase(matterId);
 
     const party = await prisma.immigrationParty.create({
       data: {

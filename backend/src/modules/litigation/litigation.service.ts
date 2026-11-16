@@ -130,10 +130,10 @@ export class LitigationService {
   }
 
   static async createHearing(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const litCase = await this.getLitigationCase(matterId);
-    if (!data.hearingType || !data.hearingDate) {
+    if (!data || !data.hearingType || !data.hearingDate) {
       throw AppError.badRequest('Hearing type and hearing date are required');
     }
+    const litCase = await this.getLitigationCase(matterId);
 
     const hearing = await prisma.courtHearing.create({
       data: {
@@ -169,10 +169,10 @@ export class LitigationService {
   }
 
   static async createDiscovery(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const litCase = await this.getLitigationCase(matterId);
-    if (!data.title || !data.category || !data.dueDate) {
+    if (!data || !data.title || !data.category || !data.dueDate) {
       throw AppError.badRequest('Title, category, and due date are required');
     }
+    const litCase = await this.getLitigationCase(matterId);
 
     const discovery = await prisma.discoveryRequest.create({
       data: {
@@ -211,10 +211,10 @@ export class LitigationService {
   }
 
   static async createPleading(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const litCase = await this.getLitigationCase(matterId);
-    if (!data.title || !data.pleadingType) {
+    if (!data || !data.title || !data.pleadingType) {
       throw AppError.badRequest('Title and pleading type are required');
     }
+    const litCase = await this.getLitigationCase(matterId);
 
     const pleading = await prisma.pleadingRecord.create({
       data: {
@@ -252,10 +252,10 @@ export class LitigationService {
   }
 
   static async createTrialNotebookItem(matterId: string, data: any, currentUser: AuthenticatedUser) {
-    const litCase = await this.getLitigationCase(matterId);
-    if (!data.section || !data.title) {
+    if (!data || !data.section || !data.title) {
       throw AppError.badRequest('Section and title are required');
     }
+    const litCase = await this.getLitigationCase(matterId);
 
     const item = await prisma.trialNotebookItem.create({
       data: {

@@ -66,7 +66,7 @@ async function runMasterAudit() {
   console.log('--- 1. PRISMA SCHEMA & GENERATED CLIENT VERIFICATION ---');
 
   const schemaPath = path.resolve('backend/prisma/schema.prisma');
-  const clientDtsPath = path.resolve('backend/node_modules/@prisma/client/index.d.ts');
+  const clientDtsPath = path.resolve('backend/node_modules/.prisma/client/index.d.ts');
 
   const schemaExists = fs.existsSync(schemaPath);
   assert('Prisma', 'Schema', 'schema.prisma exists on disk', schemaExists);
@@ -78,33 +78,33 @@ async function runMasterAudit() {
   const dtsContent = dtsExists ? fs.readFileSync(clientDtsPath, 'utf8') : '';
 
   const requiredModels = [
-    { name: 'PILienRecord', module: 'Personal Injury' },
-    { name: 'PIDamageRecord', module: 'Personal Injury' },
-    { name: 'PISettlementCalculation', module: 'Personal Injury' },
-    { name: 'PIVendor', module: 'Personal Injury' },
-    { name: 'PIVendorAssignment', module: 'Personal Injury' },
-    { name: 'Communication', module: 'Communications' },
-    { name: 'UnmatchedCommunication', module: 'Communications' },
-    { name: 'LitigationCase', module: 'Litigation' },
-    { name: 'CourtHearing', module: 'Litigation' },
-    { name: 'DiscoveryRequest', module: 'Litigation' },
-    { name: 'PleadingRecord', module: 'Litigation' },
-    { name: 'TrialNotebookItem', module: 'Litigation' },
-    { name: 'BankruptcyCase', module: 'Bankruptcy' },
-    { name: 'BankruptcyCreditor', module: 'Bankruptcy' },
-    { name: 'BankruptcyScheduleItem', module: 'Bankruptcy' },
-    { name: 'ImmigrationCase', module: 'Immigration' },
-    { name: 'USCISReceiptRecord', module: 'Immigration' },
-    { name: 'ImmigrationParty', module: 'Immigration' },
-    { name: 'ProbateCase', module: 'Probate' },
-    { name: 'ProbateBeneficiary', module: 'Probate' },
-    { name: 'ProbateAsset', module: 'Probate' },
-    { name: 'FamilyLawCase', module: 'Family Law' },
-    { name: 'FamilyLawOrder', module: 'Family Law' },
-    { name: 'CriminalCase', module: 'Criminal Defense' },
-    { name: 'CriminalCharge', module: 'Criminal Defense' },
-    { name: 'AppealsCase', module: 'Appeals' },
-    { name: 'EvictionsCase', module: 'Evictions' },
+    { name: 'PILien', delegate: 'pILien', module: 'Personal Injury' },
+    { name: 'PIDamagesRecord', delegate: 'pIDamagesRecord', module: 'Personal Injury' },
+    { name: 'PISettlementDisbursement', delegate: 'pISettlementDisbursement', module: 'Personal Injury' },
+    { name: 'PIVendor', delegate: 'pIVendor', module: 'Personal Injury' },
+    { name: 'PIVendorAssignment', delegate: 'pIVendorAssignment', module: 'Personal Injury' },
+    { name: 'Communication', delegate: 'communication', module: 'Communications' },
+    { name: 'UnmatchedCommunication', delegate: 'unmatchedCommunication', module: 'Communications' },
+    { name: 'LitigationCase', delegate: 'litigationCase', module: 'Litigation' },
+    { name: 'CourtHearing', delegate: 'courtHearing', module: 'Litigation' },
+    { name: 'DiscoveryRequest', delegate: 'discoveryRequest', module: 'Litigation' },
+    { name: 'PleadingRecord', delegate: 'pleadingRecord', module: 'Litigation' },
+    { name: 'TrialNotebookItem', delegate: 'trialNotebookItem', module: 'Litigation' },
+    { name: 'BankruptcyCase', delegate: 'bankruptcyCase', module: 'Bankruptcy' },
+    { name: 'BankruptcyCreditor', delegate: 'bankruptcyCreditor', module: 'Bankruptcy' },
+    { name: 'BankruptcyScheduleItem', delegate: 'bankruptcyScheduleItem', module: 'Bankruptcy' },
+    { name: 'ImmigrationCase', delegate: 'immigrationCase', module: 'Immigration' },
+    { name: 'USCISReceiptRecord', delegate: 'uSCISReceiptRecord', module: 'Immigration' },
+    { name: 'ImmigrationParty', delegate: 'immigrationParty', module: 'Immigration' },
+    { name: 'ProbateCase', delegate: 'probateCase', module: 'Probate' },
+    { name: 'ProbateBeneficiary', delegate: 'probateBeneficiary', module: 'Probate' },
+    { name: 'ProbateAsset', delegate: 'probateAsset', module: 'Probate' },
+    { name: 'FamilyLawCase', delegate: 'familyLawCase', module: 'Family Law' },
+    { name: 'FamilyLawOrder', delegate: 'familyLawOrder', module: 'Family Law' },
+    { name: 'CriminalCase', delegate: 'criminalCase', module: 'Criminal Defense' },
+    { name: 'CriminalCharge', delegate: 'criminalCharge', module: 'Criminal Defense' },
+    { name: 'AppealsCase', delegate: 'appealsCase', module: 'Appeals' },
+    { name: 'EvictionsCase', delegate: 'evictionsCase', module: 'Evictions' },
   ];
 
   for (const item of requiredModels) {
@@ -112,7 +112,10 @@ async function runMasterAudit() {
     assert('Prisma', item.module, `Model ${item.name} defined in schema.prisma`, inSchema);
 
     const inClient = dtsContent.includes(`${item.name}Delegate<`) || dtsContent.includes(`export type ${item.name}`);
-    assert('Prisma', item.module, `Model ${item.name} compiled in @prisma/client`, inClient);
+    assert('Prisma', item.module, `Model ${item.name} compiled in .prisma/client`, inClient);
+
+    const hasDelegateOnPrisma = typeof (prisma as any)[item.delegate] !== 'undefined';
+    assert('Prisma', item.module, `prisma.${item.delegate} delegate exposed on PrismaClient`, hasDelegateOnPrisma);
   }
 
   // Verify foreign key relations & matter links
@@ -184,10 +187,10 @@ async function runMasterAudit() {
 
   const testUser: AuthenticatedUser = {
     id: 'usr-audit-001',
+    userCode: 'AUDIT01',
     email: 'audit@heuglylaw.com',
     role: 'ADMIN',
-    firstName: 'Audit',
-    lastName: 'Officer',
+    permissions: ['*'],
   };
 
   // Verify PersonalInjuryService methods
@@ -195,10 +198,10 @@ async function runMasterAudit() {
   assert('Service', 'Personal Injury', 'PersonalInjuryService.createLien exists', typeof PersonalInjuryService.createLien === 'function');
   assert('Service', 'Personal Injury', 'PersonalInjuryService.getDamages exists', typeof PersonalInjuryService.getDamages === 'function');
   assert('Service', 'Personal Injury', 'PersonalInjuryService.createDamage exists', typeof PersonalInjuryService.createDamage === 'function');
-  assert('Service', 'Personal Injury', 'PersonalInjuryService.getSettlementCalculations exists', typeof PersonalInjuryService.getSettlementCalculations === 'function');
-  assert('Service', 'Personal Injury', 'PersonalInjuryService.createSettlementCalculation exists', typeof PersonalInjuryService.createSettlementCalculation === 'function');
+  assert('Service', 'Personal Injury', 'PersonalInjuryService.getSettlements exists', typeof PersonalInjuryService.getSettlements === 'function');
+  assert('Service', 'Personal Injury', 'PersonalInjuryService.createSettlement exists', typeof PersonalInjuryService.createSettlement === 'function');
   assert('Service', 'Personal Injury', 'PersonalInjuryService.getVendors exists', typeof PersonalInjuryService.getVendors === 'function');
-  assert('Service', 'Personal Injury', 'PersonalInjuryService.getDashboardMetrics exists', typeof PersonalInjuryService.getDashboardMetrics === 'function');
+  assert('Service', 'Personal Injury', 'PersonalInjuryService.getPIDashboardMetrics exists', typeof PersonalInjuryService.getPIDashboardMetrics === 'function');
 
   // Verify Communications service
   assert('Service', 'Communications', 'CommunicationService.getCommunications exists', typeof CommunicationService.getCommunications === 'function');
