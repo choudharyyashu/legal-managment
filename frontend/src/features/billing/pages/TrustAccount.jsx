@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
@@ -17,6 +17,8 @@ import {
   Scale
 } from 'lucide-react';
 import { trustService } from '../../../services/trustService';
+import { useMatters } from '../../../context/MatterContext';
+import { useClients } from '../../../context/ClientContext';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
@@ -27,6 +29,8 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 export function TrustAccount() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { matters, refreshMatters } = useMatters();
+  const { clients, refreshClients } = useClients();
 
   const [ledgers, setLedgers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,20 +64,64 @@ export function TrustAccount() {
 
   useEffect(() => {
     loadLedgers();
+    if (matters.length === 0) refreshMatters();
+    if (clients.length === 0) refreshClients();
   }, []);
+
+  // Merge live database trust sub-ledgers with all active matter files
+  const combinedLedgers = useMemo(() => {
+    const existingMatterIds = new Set();
+    const result = [];
+
+    (ledgers || []).forEach((l) => {
+      if (l.matterId) existingMatterIds.add(l.matterId);
+      result.push(l);
+    });
+
+    (matters || []).forEach((m) => {
+      if (!existingMatterIds.has(m.id)) {
+        const clientObj = clients.find((c) => c.id === m.clientId || c.clientNumber === m.clientId);
+        result.push({
+          id: m.id,
+          matterId: m.id,
+          clientId: m.clientId,
+          clientName: clientObj?.name || m.client?.name || m.clientName || 'Client Entity',
+          clientNumber: clientObj?.clientNumber || m.clientId,
+          matterNumber: m.matterNumber || 'Matter',
+          matterTitle: m.title || 'Legal Matter',
+          balance: 0,
+          escrowPurpose: 'General Retainer & Expert Deposition Reserve (IOLTA)',
+          lastTransactionDate: 'Pending Deposit',
+          status: 'In Compliance',
+        });
+      }
+    });
+
+    return result;
+  }, [ledgers, matters, clients]);
 
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isDisburseOpen, setIsDisburseOpen] = useState(false);
-  const [selectedLedgerId, setSelectedLedgerId] = useState('TR-1001');
+  const [selectedLedgerId, setSelectedLedgerId] = useState('');
   const [amount, setAmount] = useState(1000);
   const [reference, setReference] = useState('');
 
-  const totalTrustBalance = ledgers.reduce((sum, item) => sum + item.balance, 0);
+  useEffect(() => {
+    if (!selectedLedgerId && combinedLedgers.length > 0) {
+      setSelectedLedgerId(combinedLedgers[0].id);
+    }
+  }, [combinedLedgers, selectedLedgerId]);
+
+  const totalTrustBalance = combinedLedgers.reduce((sum, item) => sum + item.balance, 0);
 
   const handleDeposit = async (e) => {
     e.preventDefault();
     if (amount <= 0) return;
-    const target = ledgers.find((l) => l.id === selectedLedgerId);
+    const target = combinedLedgers.find((l) => l.id === selectedLedgerId) || combinedLedgers[0];
+    if (!target) {
+      addToast('Please select a valid client trust sub-ledger.', 'error');
+      return;
+    }
     try {
       if (target?.matterId) {
         await trustService.deposit({
@@ -100,7 +148,7 @@ export function TrustAccount() {
   const handleDisburse = async (e) => {
     e.preventDefault();
     if (amount <= 0) return;
-    const target = ledgers.find((l) => l.id === selectedLedgerId);
+    const target = combinedLedgers.find((l) => l.id === selectedLedgerId) || combinedLedgers[0];
     if (target && target.balance < amount) {
       addToast('Cannot disburse more than the individual client ledger balance (Utah Rule 1.15 anti-commingling).', 'error');
       return;
@@ -189,7 +237,7 @@ export function TrustAccount() {
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Segregated Client Ledgers</span>
           <span className="text-2xl font-bold text-[#06244B] mt-1 block">
-            {ledgers.length} Active Accounts
+            {combinedLedgers.length} Active Accounts
           </span>
           <span className="text-[11px] text-[#667085]">Zero commingling between client funds</span>
         </div>
@@ -239,11 +287,11 @@ export function TrustAccount() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9D6CF]">
-              {ledgers.map(item => (
+              {combinedLedgers.map(item => (
                 <tr key={item.id} className="hover:bg-slate-50">
                   <td className="p-3 font-semibold text-[#06244B]">
                     <span className="block">{item.clientName}</span>
-                    <span className="text-[11px] text-[#667085]">{item.clientId}</span>
+                    <span className="text-[11px] text-[#667085]">{item.clientNumber || item.clientId}</span>
                   </td>
                   <td className="p-3">
                     <span className="font-mono text-[11px] text-[#A4432B] font-bold block">{item.matterNumber}</span>
@@ -280,11 +328,11 @@ export function TrustAccount() {
               Select Client Trust Sub-Ledger
             </label>
             <select
-              value={selectedLedgerId}
+              value={selectedLedgerId || combinedLedgers[0]?.id || ''}
               onChange={(e) => setSelectedLedgerId(e.target.value)}
-              className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white"
+              className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white cursor-pointer"
             >
-              {ledgers.map(l => (
+              {combinedLedgers.map(l => (
                 <option key={l.id} value={l.id}>
                   {l.clientName} — {l.matterNumber} ({formatCurrency(l.balance)})
                 </option>
@@ -340,11 +388,11 @@ export function TrustAccount() {
               Client Trust Sub-Ledger Source
             </label>
             <select
-              value={selectedLedgerId}
+              value={selectedLedgerId || combinedLedgers[0]?.id || ''}
               onChange={(e) => setSelectedLedgerId(e.target.value)}
-              className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white"
+              className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white cursor-pointer"
             >
-              {ledgers.map(l => (
+              {combinedLedgers.map(l => (
                 <option key={l.id} value={l.id}>
                   {l.clientName} — Balance: {formatCurrency(l.balance)}
                 </option>

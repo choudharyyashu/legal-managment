@@ -21,6 +21,42 @@ export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Inter
     window.print();
   };
 
+  const handleDownloadStatement = () => {
+    try {
+      const timestamp = new Date().toISOString().split('T')[0];
+      const csvLines = [
+        `"HEUGLY & BLUDWORTH, PLLC - CONTINGENCY SETTLEMENT STATEMENT"`,
+        `"Matter Caption:","${matterTitle.replace(/"/g, '""')}"`,
+        `"Governing Standard:","Utah Rule of Professional Conduct 1.5(c)"`,
+        `"Date of Statement:","${timestamp}"`,
+        `""`,
+        `"Item Category","Description / Provider","Amount ($)"`,
+        `"1. Gross Settlement Proceeds","Policy Limits / Defense Award","${grossSettlement.toFixed(2)}"`,
+        `"2. Attorney Contingency Fee","Heugly & Bludworth PLLC (${contingencyFeePct}%)","-${attorneyFee.toFixed(2)}"`,
+        `"3. Litigation Costs","Accident Reconstruction / Medical Experts","-${expertWitnessFees.toFixed(2)}"`,
+        `"3. Litigation Costs","Certified Deposition Transcripts & Filing Fees","-${depositionTranscripts.toFixed(2)}"`,
+        `"3. Subrogation Liens","Resolved Healthcare / Provider Liens","-${medicalLiens.toFixed(2)}"`,
+        `""`,
+        `"4. NET CLIENT PAYOUT","Check / Wire Transfer to Client Escrow","${netClientPayout.toFixed(2)}"`
+      ];
+
+      const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Settlement_Closing_Statement_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Settlement statement CSV downloaded successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to download settlement statement.', 'error');
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -102,8 +138,8 @@ export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Inter
             Close
           </Button>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" icon={Download} onClick={() => addToast('Settlement statement PDF downloaded.', 'success')}>
-              Download PDF
+            <Button size="sm" variant="outline" icon={Download} onClick={handleDownloadStatement}>
+              Download Statement (.CSV)
             </Button>
             <Button size="sm" variant="primary" icon={Printer} onClick={handlePrint}>
               Print Settlement Sheet

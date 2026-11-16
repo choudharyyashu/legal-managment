@@ -125,7 +125,65 @@ export function GeneralLedgerView() {
   const totalCredits = filteredEntries.reduce((s, e) => s + e.credit, 0);
 
   const handleExportJournal = () => {
-    addToast('General Ledger Journal exported to CSV format.', 'success');
+    try {
+      const headers = [
+        'Journal Entry #',
+        'Date',
+        'Source Reference',
+        'Transaction Narrative',
+        'Debit Account',
+        'Debit Amount ($)',
+        'Credit Account',
+        'Credit Amount ($)',
+        'Authorized By'
+      ];
+
+      const rows = filteredEntries.map(e => [
+        `"${e.id}"`,
+        `"${e.date}"`,
+        `"${e.ref || ''}"`,
+        `"${(e.description || '').replace(/"/g, '""')}"`,
+        `"${(e.accountDebit || '').replace(/"/g, '""')}"`,
+        Number(e.debit).toFixed(2),
+        `"${(e.accountCredit || '').replace(/"/g, '""')}"`,
+        Number(e.credit).toFixed(2),
+        `"${(e.postedBy || '').replace(/"/g, '""')}"`
+      ]);
+
+      // Summary totals row
+      rows.push([
+        '"TOTAL / BALANCED SUMMARY"',
+        '""',
+        '""',
+        '"Trial Balance Verification (Utah Bar Rule 1.15 Double-Entry Audit)"',
+        '"Total Debits"',
+        totalDebits.toFixed(2),
+        '"Total Credits"',
+        totalCredits.toFixed(2),
+        `"Variance: $${(totalDebits - totalCredits).toFixed(2)}"`
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.join(','))
+      ].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.setAttribute('download', `General_Ledger_Double_Entry_Journal_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('General Ledger Journal exported successfully as CSV!', 'success');
+    } catch (err) {
+      console.error('Failed to export journal:', err);
+      addToast('Failed to export journal. Please try again.', 'error');
+    }
   };
 
   return (

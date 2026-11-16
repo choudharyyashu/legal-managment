@@ -117,6 +117,101 @@ export function MatterReports() {
       };
     });
 
+  const handleExportReport = () => {
+    try {
+      let csvContent = '';
+      let filename = '';
+      const today = new Date().toISOString().split('T')[0];
+
+      if (activeReportTab === 'stalled') {
+        filename = `Stalled_Matters_Audit_Report_${today}.csv`;
+        const headers = ['Matter Number', 'Matter Caption / Title', 'Client Name', 'Practice Area', 'Lead Attorney', 'Current Stage', 'Days Inactive', 'Last Activity Date', 'Stalled Reason'];
+        const rows = stalledMatters.map(m => [
+          `"${(m.matterNumber || '').replace(/"/g, '""')}"`,
+          `"${(m.title || '').replace(/"/g, '""')}"`,
+          `"${(m.clientName || '').replace(/"/g, '""')}"`,
+          `"${(m.practiceArea || '').replace(/"/g, '""')}"`,
+          `"${(m.leadAttorney || '').replace(/"/g, '""')}"`,
+          `"${(m.currentStage || '').replace(/"/g, '""')}"`,
+          m.daysInactive || 0,
+          `"${m.lastActivityDate || ''}"`,
+          `"${(m.stalledReason || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      } else if (activeReportTab === 'missing-docs') {
+        filename = `Missing_Gatekeeper_Documents_Report_${today}.csv`;
+        const headers = ['Matter Number', 'Matter Title', 'Client Name', 'Missing Document', 'Category', 'Responsible Staff', 'Days Pending', 'Severity'];
+        const rows = missingDocMatters.map(m => [
+          `"${(m.matterNumber || '').replace(/"/g, '""')}"`,
+          `"${(m.matterTitle || '').replace(/"/g, '""')}"`,
+          `"${(m.clientName || '').replace(/"/g, '""')}"`,
+          `"${(m.missingDocument || '').replace(/"/g, '""')}"`,
+          `"${(m.category || '').replace(/"/g, '""')}"`,
+          `"${(m.responsibleStaff || '').replace(/"/g, '""')}"`,
+          m.daysPending || 0,
+          `"${(m.severity || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      } else if (activeReportTab === 'deadlines') {
+        filename = `Approaching_Court_Deadlines_Report_${today}.csv`;
+        const headers = ['Matter Number', 'Matter Title', 'Deadline / Motion Cutoff', 'Rule / Statutory Citation', 'Due Date', 'Days Remaining', 'Responsible Counsel', 'Risk Level'];
+        const rows = approachingDeadlines.map(m => [
+          `"${(m.matterNumber || '').replace(/"/g, '""')}"`,
+          `"${(m.matterTitle || '').replace(/"/g, '""')}"`,
+          `"${(m.deadlineTitle || '').replace(/"/g, '""')}"`,
+          `"${(m.ruleCitation || '').replace(/"/g, '""')}"`,
+          `"${m.dueDate || ''}"`,
+          m.daysRemaining || 0,
+          `"${(m.responsibleCounsel || '').replace(/"/g, '""')}"`,
+          `"${(m.riskLevel || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      } else if (activeReportTab === 'overdue') {
+        filename = `Overdue_Tasks_Workload_Report_${today}.csv`;
+        const headers = ['Task Title', 'Linked Matter Docket', 'Assigned To', 'Role', 'Due Date', 'Days Overdue', 'Priority'];
+        const rows = overdueTasks.map(t => [
+          `"${(t.title || '').replace(/"/g, '""')}"`,
+          `"${(t.matterTitle || '').replace(/"/g, '""')}"`,
+          `"${(t.assignedTo || '').replace(/"/g, '""')}"`,
+          `"${(t.role || '').replace(/"/g, '""')}"`,
+          `"${t.dueDate || ''}"`,
+          t.daysOverdue || 0,
+          `"${(t.priority || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      } else {
+        filename = `Master_Matter_Portfolio_Report_${today}.csv`;
+        const headers = ['Matter Number', 'Matter Caption', 'Client Name', 'Practice Area', 'Stage', 'Budget ($)', 'Billed to Date ($)', 'Status'];
+        const rows = matters.map(m => [
+          `"${(m.matterNumber || '').replace(/"/g, '""')}"`,
+          `"${(m.title || '').replace(/"/g, '""')}"`,
+          `"${(m.clientName || '').replace(/"/g, '""')}"`,
+          `"${(m.practiceAreaName || m.practiceArea || '').replace(/"/g, '""')}"`,
+          `"${(m.stage || '').replace(/"/g, '""')}"`,
+          m.budget || 0,
+          m.totalBilled || 0,
+          `"${(m.status || '').replace(/"/g, '""')}"`,
+        ]);
+        csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      }
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast(`Operational Report (${activeReportTab.toUpperCase()}) exported and downloaded!`, 'success');
+    } catch (err) {
+      console.error('Failed to export operational report:', err);
+      addToast('Failed to export operational report.', 'error');
+    }
+  };
+
   // Master Roster Columns
   const masterColumns = [
     {
@@ -200,7 +295,7 @@ export function MatterReports() {
               variant="outline"
               size="sm"
               icon={Download}
-              onClick={() => addToast(`Operational Report (${activeReportTab.toUpperCase()}) exported to CSV.`, 'success')}
+              onClick={handleExportReport}
             >
               Export Report
             </Button>

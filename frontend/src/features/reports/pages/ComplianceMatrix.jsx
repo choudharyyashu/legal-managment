@@ -161,6 +161,54 @@ export function ComplianceMatrix() {
     return matchesSearch && matchesCat;
   });
 
+  const handleExportComplianceMatrix = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `RFP_Compliance_Verification_Matrix_${today}.csv`;
+
+      const headers = [
+        'Requirement #',
+        'Functional Category',
+        'RFP Mandate Title',
+        'Compliance Status',
+        'Live UI Route',
+        'Technical Implementation Architecture',
+        'Utah Bar & Federal Legal Citations',
+        'Zero CosmoLex Dependency Strategy',
+        'Auditor Verification Test Steps'
+      ];
+
+      const rows = COMPLIANCE_REQUIREMENTS_DATA.map(item => [
+        `"${(item.reqNum || '').replace(/"/g, '""')}"`,
+        `"${(item.category || '').replace(/"/g, '""')}"`,
+        `"${(item.title || '').replace(/"/g, '""')}"`,
+        `"${(item.status || '').replace(/"/g, '""')}"`,
+        `"${(item.routeLabel || item.route || '').replace(/"/g, '""')}"`,
+        `"${(item.techDetails || '').replace(/"/g, '""')}"`,
+        `"${(item.citations || '').replace(/"/g, '""')}"`,
+        `"${(item.cosmolexStrategy || '').replace(/"/g, '""')}"`,
+        `"${(item.testSteps || '').replace(/"/g, '""')}"`,
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('RFP Compliance Verification Matrix downloaded successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to export compliance matrix:', err);
+      addToast('Failed to export compliance matrix.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -187,9 +235,7 @@ export function ComplianceMatrix() {
               variant="primary"
               size="sm"
               icon={Download}
-              onClick={() => {
-                addToast('Compliance Matrix exported as markdown/PDF!', 'success');
-              }}
+              onClick={handleExportComplianceMatrix}
               className="bg-[#A4432B] hover:bg-[#8B3824]"
             >
               Export Verification Matrix

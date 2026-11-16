@@ -82,6 +82,66 @@ export function StaffReports() {
     },
   ];
 
+  const handleExportCSV = () => {
+    try {
+      const headers = [
+        'Staff Member',
+        'Title',
+        'Department',
+        'Standard Rate ($/hr)',
+        'Logged Hours',
+        'Billable Hours',
+        'Generated Revenue ($)',
+        'Monthly Target (h)',
+        'Target Progress (%)'
+      ];
+
+      const rows = staffReportData.map(u => [
+        `"${u.name.replace(/"/g, '""')}"`,
+        `"${(u.title || '').replace(/"/g, '""')}"`,
+        `"${(u.department || '').replace(/"/g, '""')}"`,
+        u.hourlyRate,
+        u.totalHours.toFixed(1),
+        u.totalBillable.toFixed(1),
+        u.totalFees.toFixed(2),
+        u.targetHours,
+        `"${u.progress}%"`
+      ]);
+
+      const totalLogged = staffReportData.reduce((s, u) => s + u.totalHours, 0).toFixed(1);
+      const totalRev = staffReportData.reduce((s, u) => s + u.totalFees, 0).toFixed(2);
+
+      rows.push([
+        '"TOTAL FIRM STAFF SUMMARY"',
+        '""',
+        '""',
+        '""',
+        totalLogged,
+        '""',
+        totalRev,
+        '""',
+        '""'
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.setAttribute('download', `Attorney_Staff_Productivity_Report_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Staff productivity report exported successfully as CSV!', 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to export staff report.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -93,7 +153,7 @@ export function StaffReports() {
             variant="outline"
             size="sm"
             icon={Download}
-            onClick={() => addToast('Exporting Staff Productivity Report to CSV...', 'info')}
+            onClick={handleExportCSV}
           >
             Export CSV
           </Button>

@@ -21,7 +21,8 @@ import {
   Layers,
   ChevronRight,
   ShieldCheck,
-  Lock
+  Lock,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -381,6 +382,58 @@ export function UserManagement() {
     },
   ];
 
+  const handleExportUsers = () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const filename = `Firm_Personnel_User_Roster_${today}.csv`;
+
+      const headers = [
+        'User ID',
+        'Full Name',
+        'Email Address',
+        'Phone Number',
+        'Job Title',
+        'Department / Practice Group',
+        'Assigned Role',
+        'Standard Hourly Rate ($)',
+        'Bar Number',
+        'Account Status',
+        'Last Active Date'
+      ];
+
+      const rows = allUsers.map(u => [
+        `"${(u.id || '').replace(/"/g, '""')}"`,
+        `"${(u.name || '').replace(/"/g, '""')}"`,
+        `"${(u.email || '').replace(/"/g, '""')}"`,
+        `"${(u.phone || '').replace(/"/g, '""')}"`,
+        `"${(u.title || '').replace(/"/g, '""')}"`,
+        `"${(u.department || '').replace(/"/g, '""')}"`,
+        `"${(u.role || '').replace(/"/g, '""')}"`,
+        u.hourlyRate || 0,
+        `"${(u.barNumber || 'N/A').replace(/"/g, '""')}"`,
+        `"${(u.status || '').replace(/"/g, '""')}"`,
+        `"${(u.lastActive || '').replace(/"/g, '""')}"`,
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Firm personnel user roster exported to CSV successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to export user roster:', err);
+      addToast('Failed to export user roster.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -388,16 +441,26 @@ export function UserManagement() {
         subtitle="Manage firm attorneys, litigation paralegals, accounting staff, and security accounts across all 5 predefined roles."
         breadcrumbs={[{ label: 'Reports & Settings', to: '/settings/users' }, { label: 'User Management' }]}
         actions={
-          permissions.canManageUsers && (
+          <div className="flex items-center gap-2">
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
-              icon={UserPlus}
-              onClick={handleOpenAddModal}
+              icon={Download}
+              onClick={handleExportUsers}
             >
-              Add New User
+              Export Roster (CSV)
             </Button>
-          )
+            {permissions.canManageUsers && (
+              <Button
+                variant="primary"
+                size="sm"
+                icon={UserPlus}
+                onClick={handleOpenAddModal}
+              >
+                Add New User
+              </Button>
+            )}
+          </div>
         }
       />
 
