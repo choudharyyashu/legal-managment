@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Trigger for Legal Practice Restic Automated Backup (02:00 UTC)
+RefersTo=legal-pro-restic.service
+
+[Timer]
+# Run every day at 02:00:00 UTC (Utah RPC 1.6 compliance)
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

@@ -139,14 +139,14 @@ export function SecuritySettings() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-serif font-bold text-base text-[#06244B]">
-                  Automated Daily Backups &amp; Disaster Recovery Architecture
+                  Automated Restic Daily Backups &amp; Disaster Recovery Architecture
                 </h3>
                 <span className="text-[10px] font-bold font-mono bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded">
                   RPO: 24h • RTO: &lt;4h
                 </span>
               </div>
               <p className="text-xs text-[#667085] mt-0.5">
-                Automated multi-region replication, AES-256 GCM encryption, and point-in-time recovery for Utah RPC 1.6 compliance.
+                Restic AES-256-GCM encrypted snapshots, automated server cron daemon (02:00 UTC), and point-in-time recovery for Utah RPC 1.6 compliance.
               </p>
             </div>
           </div>
