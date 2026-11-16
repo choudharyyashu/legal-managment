@@ -34,6 +34,13 @@ import { ConflictSearchModal } from '../components/ConflictSearchModal';
 import { EngagementLetterModal } from '../../clients/components/EngagementLetterModal';
 import { SignatureTrackingModal } from '../../documents/components/SignatureTrackingModal';
 import { EndToEndDemoWizard } from '../components/EndToEndDemoWizard';
+import { PIIntakeQuestionnaire } from '../components/PIIntakeQuestionnaire';
+import {
+  serializePIIntakeData,
+  parsePIIntakeData,
+  EMPTY_PI_DATA,
+  getCleanMatterSummary,
+} from '../utils/piIntakeHelper';
 
 export function IntakeList() {
   const navigate = useNavigate();
@@ -66,6 +73,10 @@ export function IntakeList() {
     practiceSpecificDetail: '',
   });
 
+  const [piData, setPiData] = useState({ ...EMPTY_PI_DATA });
+
+  const isPI = formData.practiceAreaId === 'pa-pi' || formData.practiceAreaId === 'pa-7';
+
   const handleCreateIntake = async (e) => {
     e.preventDefault();
     if (!formData.prospectiveClient.trim() || !formData.email.trim()) {
@@ -74,10 +85,31 @@ export function IntakeList() {
     }
 
     try {
-      const pa = PRACTICE_AREAS.find(p => p.id === formData.practiceAreaId);
+      const pa = PRACTICE_AREAS.find(p => p.id === formData.practiceAreaId || p.legacyId === formData.practiceAreaId);
+      
+      let finalAdverse = formData.adverseParties.trim();
+      if (isPI) {
+        const adverseList = [];
+        if (formData.adverseParties.trim()) adverseList.push(formData.adverseParties.trim());
+        if (piData.opposingParties && !finalAdverse.includes(piData.opposingParties)) {
+          adverseList.push(piData.opposingParties);
+        }
+        if (piData.insuranceCompany && !finalAdverse.includes(piData.insuranceCompany)) {
+          adverseList.push(piData.insuranceCompany);
+        }
+        finalAdverse = adverseList.join(', ');
+      }
+
+      const finalMatterSummary = isPI
+        ? serializePIIntakeData(piData, formData.matterSummary)
+        : formData.matterSummary;
+
       const payload = {
         ...formData,
+        adverseParties: finalAdverse || 'None identified',
+        matterSummary: finalMatterSummary || 'Prospective client intake record.',
         disputeAmount: Number(formData.disputeAmount) || 0,
+        practiceAreaId: pa?.id || formData.practiceAreaId,
         practiceAreaName: pa?.name || 'General Legal Practice',
       };
       await addIntake(payload);
@@ -96,36 +128,44 @@ export function IntakeList() {
         jurisdictionVenue: 'Utah Third Judicial District Court (Salt Lake County)',
         practiceSpecificDetail: '',
       });
+      setPiData({ ...EMPTY_PI_DATA });
     } catch (err) {
       addToast(err?.message || 'Failed to create intake record. Please verify all fields.', 'error');
     }
   };
 
-  const handleSetConflictStatus = (intakeId, status) => {
-    updateConflictCheck(intakeId, status, currentUser.name);
-    addToast(`Conflict check marked as "${status}" by ${currentUser.name}.`, status === 'Cleared' ? 'success' : 'warning');
+  const handleSetConflictStatus = (intakeId, status, reviewerName, notes) => {
+    updateConflictCheck(intakeId, status, reviewerName || currentUser.name, notes);
+    addToast(`Conflict check marked as "${status}" by ${reviewerName || currentUser.name}.`, status === 'Cleared' ? 'success' : 'warning');
     if (selectedIntake?.id === intakeId) {
-      setSelectedIntake(prev => ({ ...prev, conflictStatus: status, reviewedBy: currentUser.name }));
+      setSelectedIntake(prev => ({
+        ...prev,
+        conflictStatus: status,
+        reviewedBy: reviewerName || currentUser.name,
+        reviewedByName: reviewerName || currentUser.name,
+        conflictNotes: notes,
+      }));
     }
   };
 
   const handleConvertClient = async (intake) => {
     try {
+      const isPIIntake = intake.practiceAreaId === 'pa-pi' || intake.practiceAreaId === 'pa-7' || intake.practiceAreaName?.toLowerCase().includes('personal injury');
       const newClient = await addClient({
         name: intake.prospectiveClient,
         primaryContact: intake.contactPerson || null,
         email: intake.email,
         phone: intake.phone,
-        type: 'Organization',
+        type: isPIIntake ? 'Individual' : 'Organization',
         assignedAttorneyId: currentUser?.id || null,
         assignedAttorneyName: currentUser?.name || null,
         status: 'Active',
-        notes: `Converted from Intake ${intake.intakeNumber || intake.id}. Adverse Parties cleared: ${intake.adverseParties}`,
+        notes: `Converted from Intake ${intake.intakeNumber || intake.id}. Adverse Parties screened: ${intake.adverseParties}`,
       });
 
-      addToast(`Client record created: ${newClient.name} (${newClient.clientNumber || newClient.id}). Opening client dossier...`, 'success');
+      addToast(`Client record created: ${newClient.name} (${newClient.clientNumber || newClient.id}). Opening matter creation...`, 'success');
       setSelectedIntake(null);
-      navigate(`/clients/${newClient.id || newClient.clientNumber}`);
+      navigate(`/clients/${newClient.id || newClient.clientNumber}?intakeId=${intake.id}&openMatter=true`);
     } catch (err) {
       addToast(err?.message || 'Failed to convert intake to client.', 'error');
     }
@@ -290,9 +330,47 @@ export function IntakeList() {
             <div>
               <span className="text-[#667085] font-semibold block uppercase text-[10px]">Matter Summary &amp; Scope:</span>
               <p className="p-3 bg-white border border-[#D9D6CF] rounded mt-1 leading-relaxed">
-                {selectedIntake.matterSummary || 'No details provided.'}
+                {getCleanMatterSummary(selectedIntake.matterSummary) || 'No details provided.'}
               </p>
             </div>
+
+            {/* If Structured PI Data is present, display full 5-section breakdown */}
+            {selectedIntake.matterSummary?.includes('[PI_INTAKE_DATA:') && (() => {
+              const pi = parsePIIntakeData(selectedIntake.matterSummary);
+              return (
+                <div className="p-3 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] space-y-2 text-xs">
+                  <span className="text-[#06244B] font-bold block uppercase text-[11px] border-b border-[#D9D6CF] pb-1">
+                    Structured Personal Injury Intake Questionnaire (Utah RPC 1.1)
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-[#667085] font-semibold block">Incident / Collision:</span>
+                      <p className="text-[#06244B] font-medium">{pi.accidentType || 'Accident'} on {pi.accidentDate || 'Date Unverified'}</p>
+                      <p className="text-[#667085]">{pi.accidentLocation || 'Location Pending'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[#667085] font-semibold block">Adverse Driver &amp; Insurer:</span>
+                      <p className="text-[#06244B] font-medium">{pi.opposingParties || 'None identified'}</p>
+                      <p className="text-[#667085]">{pi.insuranceCompany ? `${pi.insuranceCompany} (Claim #: ${pi.claimNumber || 'Pending'})` : 'Insurer Pending'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[#667085] font-semibold block">Reported Injuries:</span>
+                      <p className="text-[#06244B]">{pi.knownInjuries || 'Under medical evaluation'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[#667085] font-semibold block">Treating Providers &amp; Facilities:</span>
+                      <p className="text-[#06244B]">{pi.treatingProviders || pi.medicalFacilities || 'Records requested'}</p>
+                    </div>
+                    {pi.outstandingInformation && (
+                      <div className="sm:col-span-2 p-2 bg-amber-50 rounded border border-amber-200 text-amber-900">
+                        <span className="font-bold block text-[10px] uppercase">Missing / Outstanding Records:</span>
+                        <p>{pi.outstandingInformation}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="p-3 rounded border border-[#D9D6CF] bg-white flex items-center justify-between">
               <div>
@@ -433,32 +511,44 @@ export function IntakeList() {
               />
             </div>
 
-            {/* Dynamic Practice-Specific Questionnaire Block (PA-02, PA-03, PA-04) */}
-            <div className="sm:col-span-2 p-3 bg-[#F5F0E5]/80 rounded border border-[#D9D6CF] space-y-2">
-              <span className="font-bold text-xs text-[#06244B] block">
-                {formData.practiceAreaId === 'pa-2' && 'Family Law Specialized Intake: Minor Children & Custody'}
-                {formData.practiceAreaId === 'pa-3' && 'Criminal Defense Intake: Charges, Arraignment & Bail Status'}
-                {formData.practiceAreaId === 'pa-4' && 'Estate Planning Intake: Beneficiaries & Asset Inventory'}
-                {formData.practiceAreaId === 'pa-5' && 'Commercial / Corporate Intake: Entity Structure & Governance'}
-                {formData.practiceAreaId === 'pa-6' && 'Real Estate & Water Rights Intake: Parcel PIN & Water Decrees'}
-                {formData.practiceAreaId === 'pa-7' && 'Personal Injury Intake: Incident Date, Insurer & Liens'}
-                {!['pa-2', 'pa-3', 'pa-4', 'pa-5', 'pa-6', 'pa-7'].includes(formData.practiceAreaId) && 'Specialized Practice Intake Questionnaire'}
-              </span>
-              <Input
-                label={
-                  formData.practiceAreaId === 'pa-2' ? 'Children Details (Names, DOBs, Current Custody)' :
-                  formData.practiceAreaId === 'pa-3' ? 'Arresting Agency, Citation # & Arraignment Date' :
-                  formData.practiceAreaId === 'pa-4' ? 'Primary Fiduciary / Trustee & Real Property Addresses' :
-                  formData.practiceAreaId === 'pa-5' ? 'State of Incorporation & Ownership % Split' :
-                  formData.practiceAreaId === 'pa-6' ? 'Utah County Parcel # (PIN) & Water Right # (e.g. 55-1234)' :
-                  formData.practiceAreaId === 'pa-7' ? 'Accident Date, Insurer Claim # & Hospital / Medical Lienholders' :
-                  'Practice Area Custom Attributes & Statutory Notes'
-                }
-                value={formData.practiceSpecificDetail}
-                onChange={(e) => setFormData({ ...formData, practiceSpecificDetail: e.target.value })}
-                placeholder="Enter practice-specific intake responses..."
-              />
-            </div>
+            {/* Dynamic Practice-Specific Questionnaire Block */}
+            {isPI ? (
+              <div className="sm:col-span-2">
+                <PIIntakeQuestionnaire
+                  piData={piData}
+                  onChange={(newPiData) => {
+                    setPiData(newPiData);
+                    if (newPiData.opposingParties && !formData.adverseParties) {
+                      setFormData(prev => ({ ...prev, adverseParties: newPiData.opposingParties }));
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="sm:col-span-2 p-3 bg-[#F5F0E5]/80 rounded border border-[#D9D6CF] space-y-2">
+                <span className="font-bold text-xs text-[#06244B] block">
+                  {formData.practiceAreaId === 'pa-2' && 'Family Law Specialized Intake: Minor Children & Custody'}
+                  {formData.practiceAreaId === 'pa-3' && 'Criminal Defense Intake: Charges, Arraignment & Bail Status'}
+                  {formData.practiceAreaId === 'pa-4' && 'Estate Planning Intake: Beneficiaries & Asset Inventory'}
+                  {formData.practiceAreaId === 'pa-5' && 'Commercial / Corporate Intake: Entity Structure & Governance'}
+                  {formData.practiceAreaId === 'pa-6' && 'Real Estate & Water Rights Intake: Parcel PIN & Water Decrees'}
+                  {!['pa-2', 'pa-3', 'pa-4', 'pa-5', 'pa-6', 'pa-7', 'pa-pi'].includes(formData.practiceAreaId) && 'Specialized Practice Intake Questionnaire'}
+                </span>
+                <Input
+                  label={
+                    formData.practiceAreaId === 'pa-2' ? 'Children Details (Names, DOBs, Current Custody)' :
+                    formData.practiceAreaId === 'pa-3' ? 'Arresting Agency, Citation # & Arraignment Date' :
+                    formData.practiceAreaId === 'pa-4' ? 'Primary Fiduciary / Trustee & Real Property Addresses' :
+                    formData.practiceAreaId === 'pa-5' ? 'State of Incorporation & Ownership % Split' :
+                    formData.practiceAreaId === 'pa-6' ? 'Utah County Parcel # (PIN) & Water Right # (e.g. 55-1234)' :
+                    'Practice Area Custom Attributes & Statutory Notes'
+                  }
+                  value={formData.practiceSpecificDetail}
+                  onChange={(e) => setFormData({ ...formData, practiceSpecificDetail: e.target.value })}
+                  placeholder="Enter practice-specific intake responses..."
+                />
+              </div>
+            )}
 
             <div className="sm:col-span-2">
               <Input
@@ -505,7 +595,7 @@ export function IntakeList() {
           intakeId={selectedIntake?.id}
           onConflictResolved={(disposition, reviewer, notes) => {
             if (selectedIntake) {
-              handleSetConflictStatus(selectedIntake.id, disposition);
+              handleSetConflictStatus(selectedIntake.id, disposition, reviewer, notes);
             }
           }}
         />

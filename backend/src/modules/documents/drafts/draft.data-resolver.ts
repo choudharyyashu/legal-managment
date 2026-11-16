@@ -93,8 +93,8 @@ export class DraftDataResolver {
     suggestedDescription: string;
     priority: 'Low' | 'Medium' | 'High' | 'Critical';
   } {
-    const sField = sourceField.toLowerCase();
-    const sEntity = sourceEntity.toLowerCase();
+    const sField = (sourceField || '').toLowerCase();
+    const sEntity = (sourceEntity || '').toLowerCase();
 
     if (sEntity === 'insurance' || sField.includes('claim') || sField.includes('adjuster') || sField.includes('policy')) {
       return {

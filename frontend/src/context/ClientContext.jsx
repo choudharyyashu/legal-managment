@@ -122,9 +122,13 @@ export function ClientProvider({ children }) {
     }
   };
 
-  const updateConflictCheck = async (id, status, reviewerName) => {
+  const updateConflictCheck = async (id, status, reviewerName, notes) => {
     try {
-      await intakeService.clearConflict(id, { waiverNotes: `Conflict reviewed by ${reviewerName || 'Counsel'}` });
+      const payload = {
+        status: status || 'Cleared',
+        notes: notes || `Utah RPC 1.7 Conflict review completed by ${reviewerName || 'Counsel'}.`,
+      };
+      await intakeService.clearConflict(id, payload);
       await refreshIntakes();
     } catch (err) {
       console.warn('Failed to clear conflict on API:', err?.message);
@@ -136,6 +140,8 @@ export function ClientProvider({ children }) {
                 ...item,
                 conflictStatus: status,
                 reviewedBy: reviewerName,
+                reviewedByName: reviewerName,
+                conflictNotes: notes,
                 reviewedAt: new Date().toISOString().split('T')[0],
               }
             : item

@@ -25,7 +25,16 @@ export const updateIntakeSchema = z.object({
 });
 
 export const clearConflictSchema = z.object({
-  status: z.enum(['Cleared', 'Conflict Identified', 'Waiver Obtained']),
+  status: z.enum([
+    'Cleared',
+    'Conflict Identified',
+    'Waiver Obtained',
+    'NOT_SEARCHED',
+    'POTENTIAL_MATCH',
+    'REVIEW_COMPLETED',
+    'Not Started',
+    'Review Completed',
+  ]),
   notes: z.string().min(3),
 });
 

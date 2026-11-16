@@ -374,6 +374,53 @@ export class IntakeService {
       include: { practiceArea: true, reviewedByUser: true },
     });
 
+    // If Personal Injury, automatically extract structured intake data and save incident + trigger Document 096 Auto-Draft
+    const isPI = intake.practiceAreaId === 'pa-pi' || intake.practiceAreaId === 'pa-7';
+    if (isPI && intake.matterSummary.includes('[PI_INTAKE_DATA:')) {
+      try {
+        const match = intake.matterSummary.match(/\[PI_INTAKE_DATA:\s*([\s\S]*?)\]/);
+        if (match && match[1]) {
+          const piData = JSON.parse(match[1]);
+          const { PersonalInjuryService } = await import('../personal-injury/pi.service.js');
+          await PersonalInjuryService.saveIncident(
+            matter.id,
+            {
+              incidentDate: piData.accidentDate || undefined,
+              accidentType: piData.accidentType || undefined,
+              incidentLocation: piData.accidentLocation || undefined,
+              description: piData.incidentDescription || intake.matterSummary,
+              notes: piData.additionalNotes || undefined,
+              insurancePolicy: piData.insuranceCompany
+                ? {
+                    coverageType: 'Liability',
+                    insuranceCompany: piData.insuranceCompany,
+                    insuredName: piData.insuredName || undefined,
+                    claimNumber: piData.claimNumber || undefined,
+                    policyNumber: piData.policyNumber || undefined,
+                    adjusterName: piData.adjusterName || undefined,
+                    adjusterPhone: piData.adjusterPhone || undefined,
+                    adjusterEmail: piData.adjusterEmail || undefined,
+                    status: 'Active',
+                  }
+                : undefined,
+            },
+            {
+              id: context.userId,
+              name: context.userName || 'Responsible Attorney',
+              email: 'attorney@firm.com',
+              role: context.userRole,
+            } as any,
+            {
+              ipAddress: context.ipAddress,
+              userAgent: context.userAgent,
+            }
+          );
+        }
+      } catch (err: any) {
+        console.warn('[IntakeService] Non-fatal error while triggering PI incident auto-draft on conversion:', err?.message);
+      }
+    }
+
     return { matter, intake: this.formatResponse(updatedIntake) };
   }
 }
