@@ -80,6 +80,18 @@ export function Sidebar({ collapsed, setCollapsed }) {
       location.pathname.startsWith('/bankruptcy')
     ) {
       setExpandedMenus(prev => ({ ...prev, clients: true }));
+    } else if (
+      location.pathname.startsWith('/tasks') ||
+      location.pathname.startsWith('/calendar') ||
+      location.pathname.startsWith('/deadlines') ||
+      location.pathname.startsWith('/time') ||
+      location.pathname.startsWith('/checklists')
+    ) {
+      setExpandedMenus(prev => ({ ...prev, tasks: true }));
+    } else if (location.pathname.startsWith('/billing')) {
+      setExpandedMenus(prev => ({ ...prev, billing: true }));
+    } else if (location.pathname.startsWith('/reports') || location.pathname.startsWith('/settings')) {
+      setExpandedMenus(prev => ({ ...prev, settings: true }));
     }
   }, [location.pathname]);
 
@@ -306,8 +318,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
               <div key={item.id} className="relative group/direct">
                 <NavLink
                   to={item.to}
+                  end
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-150 group cursor-pointer ${isActive
+                    `flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-150 group cursor-pointer focus:outline-none ${isActive
                       ? 'bg-[#A4432B] text-white shadow-sm font-semibold'
                       : 'text-[#B8C0C4] hover:bg-white/10 hover:text-white'
                     } ${collapsed ? 'justify-center' : ''}`
@@ -432,8 +445,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                               <NavLink
                                                 key={dIdx}
                                                 to={deep.to}
+                                                end={deep.exact !== undefined ? deep.exact : true}
                                                 className={({ isActive }) =>
-                                                  `flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 ${isActive
+                                                  `flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
                                                     ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
                                                     : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
                                                   }`
@@ -455,8 +469,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                   <NavLink
                                     key={nIdx}
                                     to={nested.to}
+                                    end={nested.exact !== undefined ? nested.exact : true}
                                     className={({ isActive }) =>
-                                      `flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded transition-all duration-150 ${isActive
+                                      `flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
                                         ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
                                         : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
                                       }`
@@ -478,8 +493,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
                       <NavLink
                         key={sIdx}
                         to={sub.to}
+                        end={sub.exact !== undefined ? sub.exact : (sub.to !== '/clients' && sub.to !== '/matters')}
                         className={({ isActive }) =>
-                          `flex items-center gap-2.5 px-3 py-2 text-xs rounded transition-all duration-150 ${isActive
+                          `flex items-center gap-2.5 px-3 py-2 text-xs rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
                             ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
                             : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
                           }`
@@ -571,7 +587,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
                       }
 
                       const SubIcon = sub.icon;
-                      const isSubCurrent = location.pathname === sub.to;
+                      const isSubCurrent = sub.to === '/clients' || sub.to === '/matters'
+                        ? (location.pathname === sub.to || location.pathname.startsWith(sub.to + '/'))
+                        : location.pathname === sub.to;
                       return (
                         <NavLink
                           key={sIdx}
