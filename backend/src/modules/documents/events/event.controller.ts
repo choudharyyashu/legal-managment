@@ -38,6 +38,13 @@ export class DocumentEventController {
             targetDocumentTitle: 'Incomplete Medical Records Follow-up',
             idempotencyScope: 'One per provider per calendar day',
           },
+          {
+            event: DOCUMENT_EVENT.PI_DEMAND_READY,
+            description: 'Triggered when a settlement demand package is completed and ready for adverse carrier transmission.',
+            targetDocumentCode: '140',
+            targetDocumentTitle: 'Personal Injury Settlement Demand Letter',
+            idempotencyScope: 'One per demand package',
+          },
         ],
       },
     });
@@ -81,6 +88,14 @@ export class DocumentEventController {
 
         case DOCUMENT_EVENT.PI_MISSING_RECORDS:
           result = await AutoDraftService.handleMissingRecords(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.PI_DEMAND_READY:
+          result = await AutoDraftService.handleDemandReady(
             { matterId, ...payload },
             user,
             context

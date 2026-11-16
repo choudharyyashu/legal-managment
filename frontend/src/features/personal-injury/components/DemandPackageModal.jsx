@@ -118,17 +118,31 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
 
     const selectedMatter = cases.find(c => c.id === formData.matterId);
 
+    const carrierName = formData.carrierRecipient || 'Adverse Liability Carrier';
+    const deadlineVal = formData.responseDeadline || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const amountVal = Number(formData.demandAmount) || 350000;
+    const titleVal = selectedMatter?.matterTitle
+      ? `Settlement Demand Letter - ${selectedMatter.matterTitle}`
+      : `Settlement Demand Letter - ${carrierName}`;
+
     const savedRecord = {
       id: demandPackage?.id || `DMD-${Date.now()}`,
       matterId: formData.matterId,
       matterTitle: selectedMatter?.matterTitle || formData.matterTitle,
-      demandAmount: Number(formData.demandAmount),
-      policyLimitsDemand: formData.policyLimitsDemand,
-      datePrepared: formData.datePrepared,
-      responseDeadline: formData.responseDeadline,
-      carrierRecipient: formData.carrierRecipient,
-      packageStatus: formData.packageStatus,
-      attorneyReviewStatus: formData.attorneyReviewStatus,
+      demandTitle: titleVal,
+      recipientCarrier: carrierName,
+      carrierRecipient: carrierName,
+      demandedAmount: amountVal,
+      demandAmount: amountVal,
+      policyLimitsDemand: Boolean(formData.policyLimitsDemand),
+      isPolicyLimitDemand: Boolean(formData.policyLimitsDemand),
+      datePrepared: formData.datePrepared || new Date().toISOString().split('T')[0],
+      deadlineDate: deadlineVal,
+      responseDeadline: deadlineVal,
+      status: 'READY',
+      emitDemandReady: true,
+      packageStatus: formData.packageStatus || 'Ready for Transmission',
+      attorneyReviewStatus: formData.attorneyReviewStatus || 'Under Partner Review',
       checklist: formData.checklist,
       narrative: formData.narrative,
       exhibits: demandPackage?.exhibits || [

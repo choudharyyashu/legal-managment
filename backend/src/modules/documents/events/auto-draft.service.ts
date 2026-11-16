@@ -413,6 +413,10 @@ export class AutoDraftService {
                 customOverrides: {
                   provider_name: payload.providerName,
                   facility_address: payload.facilityAddress,
+                  'MedicalProvider.Name': payload.providerName,
+                  'MedicalProvider.name': payload.providerName,
+                  'MedicalProvider.Address': payload.facilityAddress,
+                  'MedicalProvider.address': payload.facilityAddress,
                   provider_phone: payload.phone,
                   provider_fax: payload.fax,
                   dates_of_service: payload.treatmentDates,
@@ -475,6 +479,10 @@ export class AutoDraftService {
                 customOverrides: {
                   provider_name: payload.providerName,
                   facility_address: payload.facilityAddress,
+                  'MedicalProvider.Name': payload.providerName,
+                  'MedicalProvider.name': payload.providerName,
+                  'MedicalProvider.Address': payload.facilityAddress,
+                  'MedicalProvider.address': payload.facilityAddress,
                   ...payload.customOverrides,
                 },
               },

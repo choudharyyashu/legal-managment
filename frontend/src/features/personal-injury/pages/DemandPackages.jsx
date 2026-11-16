@@ -19,6 +19,7 @@ import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { piService } from '../../../services/piService';
+import { documentService } from '../../../services/documentService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
@@ -90,8 +91,9 @@ export function DemandPackages() {
 
   const handleSaveDemand = async (savedRecord) => {
     try {
+      let created = null;
       if (savedRecord.matterId) {
-        await piService.createDemand(savedRecord.matterId, savedRecord);
+        created = await piService.createDemand(savedRecord.matterId, savedRecord);
       }
       setDemandPackages((prev) => {
         const exists = prev.some((d) => d.id === savedRecord.id);
@@ -102,6 +104,25 @@ export function DemandPackages() {
         }
       });
       addToast('Demand package saved to database successfully.', 'success');
+
+      // Auto-Draft Event Trigger: Template 140 Settlement Demand Package
+      if (savedRecord.matterId) {
+        documentService
+          .triggerDocumentEvent('pi.demand.ready', savedRecord.matterId, {
+            demandTitle: savedRecord.demandTitle || 'Settlement Demand Letter',
+            recipientCarrier: savedRecord.recipientCarrier || savedRecord.carrierRecipient,
+            demandAmount: savedRecord.demandedAmount || savedRecord.demandAmount,
+            deadlineDate: savedRecord.deadlineDate || savedRecord.responseDeadline,
+            demandPackageId: created?.id || savedRecord.id,
+          })
+          .then((res) => {
+            if (res?.draftsCreated?.length > 0) {
+              const titles = res.draftsCreated.map((d) => d.title).join(', ');
+              addToast(`Template 140 auto-draft generated & queued for partner review: ${titles}`, 'info');
+            }
+          })
+          .catch(() => {});
+      }
     } catch (err) {
       addToast(err?.message || 'Failed to save demand package.', 'error');
     }
