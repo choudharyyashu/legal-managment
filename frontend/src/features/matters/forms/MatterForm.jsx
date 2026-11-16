@@ -60,6 +60,11 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
   }
 
   const isPI = initialPracticeAreaId === 'pa-pi' || initialPracticeAreaId === 'pa-7';
+  const initialBillingType = initialData?.billingType || (isPI ? 'Contingency' : (
+    initialPracticeAreaId === 'pa-bk' || initialPracticeAreaId === 'pa-imm' || initialPracticeAreaId === 'pa-crim' || initialPracticeAreaId === 'pa-evict'
+      ? 'Flat Fee'
+      : 'Hourly'
+  ));
 
   const [formData, setFormData] = useState({
     title: initialTitle,
@@ -68,8 +73,8 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
     responsibleAttorneyId: initialData?.responsibleAttorneyId || defaultAttorney?.id || '',
     assignedStaffId: initialData?.assignedStaffIds?.[0] || defaultStaff?.id || '',
     status: initialData?.status || 'Active',
-    billingType: initialData?.billingType || (isPI ? 'Contingency' : 'Hourly'),
-    hourlyRate: initialData?.hourlyRate || (isPI ? '' : ''),
+    billingType: initialBillingType,
+    hourlyRate: initialData?.hourlyRate || '',
     flatFeeAmount: initialData?.flatFeeAmount || '',
     contingencyPercentage: initialData?.contingencyPercentage || (isPI ? '33.33' : ''),
     budget: initialData?.budget || '',
@@ -82,12 +87,64 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
     ethicalWallExcludedRole: initialData?.ethicalWallExcludedRole || 'Paralegal Staff',
   });
 
+  // Re-synchronize when initialIntake loads or arrives asynchronously
+  useEffect(() => {
+    if (initialIntake) {
+      const intakePaId = initialIntake.practiceAreaId;
+      const isIntakePIResolved = intakePaId === 'pa-pi' || intakePaId === 'pa-7' || initialIntake.practiceAreaName?.toLowerCase().includes('personal injury');
+      const resolvedPaId = isIntakePIResolved ? 'pa-pi' : (intakePaId || 'pa-civ');
+      const piData = parsePIIntakeData(initialIntake.matterSummary);
+      const adverse = initialIntake.adverseParties || piData.opposingParties || 'Adverse Parties';
+      const resolvedTitle = initialData?.title || `${initialIntake.prospectiveClient} v. ${adverse}`;
+      const resolvedDesc = initialData?.description || getCleanMatterSummary(initialIntake.matterSummary) || '';
+
+      let calculatedIntakeSOL = initialData?.statuteOfLimitations || '';
+      if (!calculatedIntakeSOL && piData.accidentDate) {
+        try {
+          const accDate = new Date(piData.accidentDate);
+          if (!isNaN(accDate.getTime())) {
+            accDate.setFullYear(accDate.getFullYear() + 4);
+            calculatedIntakeSOL = accDate.toISOString().split('T')[0];
+          }
+        } catch {}
+      }
+
+      const defaultBilling = isIntakePIResolved ? 'Contingency' : (
+        resolvedPaId === 'pa-bk' || resolvedPaId === 'pa-imm' || resolvedPaId === 'pa-crim' || resolvedPaId === 'pa-evict'
+          ? 'Flat Fee'
+          : 'Hourly'
+      );
+
+      setFormData(prev => ({
+        ...prev,
+        practiceAreaId: resolvedPaId,
+        title: prev.title || resolvedTitle,
+        description: prev.description || resolvedDesc,
+        billingType: defaultBilling,
+        contingencyPercentage: isIntakePIResolved ? (prev.contingencyPercentage || '33.33') : '',
+        hourlyRate: isIntakePIResolved ? '' : prev.hourlyRate,
+        courtName: isIntakePIResolved ? '' : prev.courtName,
+        judge: isIntakePIResolved ? '' : prev.judge,
+        statuteOfLimitations: calculatedIntakeSOL || prev.statuteOfLimitations,
+        clientId: prev.clientId || defaultClientId || '',
+      }));
+    } else if (defaultClientId) {
+      setFormData(prev => ({
+        ...prev,
+        clientId: prev.clientId || defaultClientId,
+      }));
+    }
+  }, [initialIntake, initialData, defaultClientId]);
+
   const [paChangeWarning, setPaChangeWarning] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const isCurrentPI = formData.practiceAreaId === 'pa-pi' || formData.practiceAreaId === 'pa-7';
 
   const handlePracticeAreaChange = (newPaId) => {
     const newPa = PRACTICE_AREAS.find(p => p.id === newPaId || p.legacyId === newPaId);
     const isNowPI = newPaId === 'pa-pi' || newPaId === 'pa-7';
+    const isFlatFee = newPaId === 'pa-bk' || newPaId === 'pa-imm' || newPaId === 'pa-crim' || newPaId === 'pa-evict';
 
     if (initialIntake && newPaId !== initialPracticeAreaId) {
       const origPa = PRACTICE_AREAS.find(p => p.id === initialPracticeAreaId || p.legacyId === initialPracticeAreaId);
@@ -96,12 +153,26 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
       setPaChangeWarning(null);
     }
 
-    setFormData(prev => ({
-      ...prev,
-      practiceAreaId: newPaId,
-      billingType: isNowPI ? 'Contingency' : (prev.billingType === 'Contingency' ? 'Hourly' : prev.billingType),
-      contingencyPercentage: isNowPI ? (prev.contingencyPercentage || '33.33') : prev.contingencyPercentage,
-    }));
+    setFormData(prev => {
+      let nextBilling = prev.billingType;
+      if (isNowPI) {
+        nextBilling = 'Contingency';
+      } else if (isFlatFee) {
+        nextBilling = 'Flat Fee';
+      } else if (prev.billingType === 'Contingency') {
+        nextBilling = 'Hourly';
+      }
+
+      return {
+        ...prev,
+        practiceAreaId: newPaId,
+        billingType: nextBilling,
+        contingencyPercentage: isNowPI ? (prev.contingencyPercentage || '33.33') : '',
+        hourlyRate: isNowPI ? '' : prev.hourlyRate,
+        courtName: isNowPI ? '' : prev.courtName,
+        judge: isNowPI ? '' : prev.judge,
+      };
+    });
   };
 
   const validate = () => {
@@ -235,7 +306,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             required
             value={formData.clientId}
             onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-            options={clients.map(c => ({ value: c.id, label: `${c.name} (${c.id})` }))}
+            options={clients.map(c => ({ value: c.id, label: `${c.name} (${c.clientNumber || c.id})` }))}
             error={errors.clientId}
           />
         </div>
@@ -351,7 +422,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             value={formData.courtName}
             onChange={(e) => setFormData({ ...formData, courtName: e.target.value })}
             placeholder="e.g. Utah Third District Court"
-            helperText={isPI && !formData.courtName ? 'Pre-litigation phase (court not yet assigned)' : ''}
+            helperText={isCurrentPI && !formData.courtName ? 'Pre-litigation phase (court not yet assigned)' : ''}
           />
         </div>
 
@@ -361,7 +432,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             value={formData.judge}
             onChange={(e) => setFormData({ ...formData, judge: e.target.value })}
             placeholder="e.g. Presiding Judge"
-            helperText={isPI && !formData.judge ? 'Pre-litigation phase (judge not yet assigned)' : ''}
+            helperText={isCurrentPI && !formData.judge ? 'Pre-litigation phase (judge not yet assigned)' : ''}
           />
         </div>
 

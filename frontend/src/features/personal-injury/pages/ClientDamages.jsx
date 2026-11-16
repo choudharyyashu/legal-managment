@@ -24,6 +24,7 @@ import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { piService } from '../../../services/piService';
 
 export function ClientDamages() {
   const { addToast } = useToast();
@@ -34,6 +35,7 @@ export function ClientDamages() {
     );
   }, [matters]);
   const [damagesList, setDamagesList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDamage, setSelectedDamage] = useState(null);
@@ -46,6 +48,56 @@ export function ClientDamages() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getDamages(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const data = res?.data || res || {};
+            const records = (data.damages || []).map((d) => ({
+              id: d.id,
+              matterId: d.matterId,
+              matterTitle: `Damages Record - ${d.anatomicalLocation}`,
+              injuries: [
+                {
+                  id: d.id,
+                  bodyArea: d.anatomicalLocation,
+                  diagnosis: d.injuryCategory,
+                  severity: d.severityGrade,
+                  icdCode: d.icdCode,
+                  futureCare: d.futureTreatmentProjected,
+                  treatmentSummary: d.treatmentSummary,
+                },
+              ],
+              diagnostics: (d.diagnosticStudies || []).map((s) => ({
+                id: s.id,
+                type: s.studyType,
+                finding: s.radiologistImpression,
+                date: s.studyDate,
+              })),
+              employment: {
+                totalLostWages: (data.wageLoss || []).reduce((acc, w) => acc + Number(w.totalLostWages || 0), 0),
+                daysMissed: (data.wageLoss || []).reduce((acc, w) => acc + Number(w.daysLost || 0), 0),
+              },
+            }));
+            setDamagesList(records);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load damages from API:', err?.message);
+          if (isMounted) setDamagesList([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setDamagesList([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
@@ -73,19 +125,30 @@ export function ClientDamages() {
   const totalDaysMissed = filteredDamages.reduce((sum, d) => sum + (d?.employment?.daysMissed || 0), 0);
   const totalInjuries = filteredDamages.reduce((sum, d) => sum + (d?.injuries?.length || 0), 0);
 
-  const handleSaveDamage = (savedRecord) => {
-    setDamagesList((prev) => {
-      const exists = prev.some((d) => d.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((d) => (d.id === savedRecord.id ? savedRecord : d));
-        addToast('Damages & injury record updated.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New injury & economic damages profile created.', 'success');
+  const handleSaveDamage = async (savedRecord) => {
+    try {
+      if (activeCaseId && activeCaseId !== 'ALL') {
+        const payload = {
+          injuryCategory: savedRecord.injuries?.[0]?.diagnosis || savedRecord.category || 'ORTHOPEDIC',
+          anatomicalLocation: savedRecord.injuries?.[0]?.bodyArea || savedRecord.bodyPart || 'General',
+          severityGrade: savedRecord.injuries?.[0]?.severity || 'MODERATE',
+          futureTreatmentProjected: Boolean(savedRecord.injuries?.[0]?.futureCare),
+          treatmentSummary: savedRecord.injuries?.[0]?.treatmentSummary || savedRecord.description,
+        };
+        const created = await piService.createDamage(activeCaseId, payload);
+        savedRecord = created ? { ...savedRecord, id: created.id } : savedRecord;
+        addToast('New injury & economic damages profile saved to database.', 'success');
       }
-      return updated;
-    });
+      setDamagesList((prev) => {
+        const exists = prev.some((d) => d.id === savedRecord.id);
+        if (exists) {
+          return prev.map((d) => (d.id === savedRecord.id ? savedRecord : d));
+        }
+        return [savedRecord, ...prev];
+      });
+    } catch (err) {
+      addToast(err?.response?.data?.message || err?.message || 'Error saving damages record', 'error');
+    }
   };
 
   const openAddModal = () => {

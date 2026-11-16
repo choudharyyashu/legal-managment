@@ -23,6 +23,7 @@ import { Input } from '../../../components/ui/Input';
 import { LitigationNavigationHeader } from '../components/LitigationNavigationHeader';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { litigationService } from '../../../services/litigationService';
 
 export function DiscoveryManagement() {
   const { matters } = useMatters();
@@ -62,7 +63,7 @@ export function DiscoveryManagement() {
   const [privBasis, setPrivBasis] = useState('Attorney-Client Communication (Utah R. Evid. 504)');
   const [privRedaction, setPrivRedaction] = useState('Withheld in Entirety');
 
-  const handleAddPrivilegeEntry = (e) => {
+  const handleAddPrivilegeEntry = async (e) => {
     e.preventDefault();
     const newEntry = {
       batesNum: privBates,
@@ -74,9 +75,24 @@ export function DiscoveryManagement() {
       redactionType: privRedaction
     };
 
+    if (activeCase?.id) {
+      try {
+        await litigationService.createDiscovery(activeCase.id, {
+          title: privSubject,
+          category: 'Privilege Log',
+          propoundingParty: privAuthor,
+          respondingParty: privRecipients,
+          dueDate: privDate || new Date().toISOString().split('T')[0],
+          notes: `${privBates} - ${privBasis} (${privRedaction})`,
+        });
+      } catch (err) {
+        console.warn('Could not persist discovery item to API:', err?.message);
+      }
+    }
+
     setActiveCase(prev => ({
       ...prev,
-      privilegeLog: [newEntry, ...(prev.privilegeLog || [])]
+      privilegeLog: [newEntry, ...(prev?.privilegeLog || [])]
     }));
 
     addToast(`Document ${privBates} added to Utah RPC 1.6 Privilege Log!`, 'success');

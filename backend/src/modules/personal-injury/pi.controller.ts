@@ -275,4 +275,153 @@ export class PersonalInjuryController {
       next(err);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // LIEN CONTROLLERS
+  // ---------------------------------------------------------------------------
+
+  static async getLiens(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getLiens(matterId, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createLien(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.createLien(matterId, req.body, user);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateLien(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId, lienId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.updateLien(matterId, lienId, req.body, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // DAMAGES CONTROLLERS
+  // ---------------------------------------------------------------------------
+
+  static async getDamages(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getDamages(matterId, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createDamage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.createDamage(matterId, req.body, user);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // SETTLEMENT CONTROLLERS
+  // ---------------------------------------------------------------------------
+
+  static async getSettlements(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getSettlements(matterId, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createSettlement(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.createSettlement(matterId, req.body, user);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // VENDOR CONTROLLERS
+  // ---------------------------------------------------------------------------
+
+  static async getVendors(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getVendors(user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createVendor(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.createVendor(req.body, user);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getVendorAssignments(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getVendorAssignments(matterId, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async createVendorAssignment(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { matterId } = req.params;
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.createVendorAssignment(matterId, req.body, user);
+      res.status(201).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // DASHBOARD METRICS
+  // ---------------------------------------------------------------------------
+
+  static async getPIDashboardMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const data = await PersonalInjuryService.getPIDashboardMetrics(user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
 }

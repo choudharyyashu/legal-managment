@@ -63,4 +63,64 @@ export const piService = {
     const res = await apiClient.post(url, data);
     return res?.data;
   },
+
+  async getLiens(matterId) {
+    const res = await apiClient.get(`/pi/matters/${matterId}/liens`);
+    return res?.data;
+  },
+
+  async createLien(matterId, data) {
+    const res = await apiClient.post(`/pi/matters/${matterId}/liens`, data);
+    return res?.data;
+  },
+
+  async updateLien(matterId, lienId, data) {
+    const res = await apiClient.patch(`/pi/matters/${matterId}/liens/${lienId}`, data);
+    return res?.data;
+  },
+
+  async getDamages(matterId) {
+    const res = await apiClient.get(`/pi/matters/${matterId}/damages`);
+    return res?.data;
+  },
+
+  async createDamage(matterId, data) {
+    const res = await apiClient.post(`/pi/matters/${matterId}/damages`, data);
+    return res?.data;
+  },
+
+  async getSettlements(matterId) {
+    const res = await apiClient.get(`/pi/matters/${matterId}/settlements`);
+    return res?.data;
+  },
+
+  async createSettlement(matterId, data) {
+    const res = await apiClient.post(`/pi/matters/${matterId}/settlements`, data);
+    return res?.data;
+  },
+
+  async getVendors() {
+    const res = await apiClient.get('/pi/vendors');
+    return res?.data;
+  },
+
+  async createVendor(data) {
+    const res = await apiClient.post('/pi/vendors', data);
+    return res?.data;
+  },
+
+  async getVendorAssignments(matterId) {
+    const res = await apiClient.get(`/pi/matters/${matterId}/vendors`);
+    return res?.data;
+  },
+
+  async createVendorAssignment(matterId, data) {
+    const res = await apiClient.post(`/pi/matters/${matterId}/vendors`, data);
+    return res?.data;
+  },
+
+  async getDashboardMetrics() {
+    const res = await apiClient.get('/pi/dashboard-metrics');
+    return res?.data;
+  },
 };

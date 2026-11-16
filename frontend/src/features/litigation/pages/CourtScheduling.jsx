@@ -18,6 +18,7 @@ import { Input } from '../../../components/ui/Input';
 import { LitigationNavigationHeader } from '../components/LitigationNavigationHeader';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { litigationService } from '../../../services/litigationService';
 
 export function CourtScheduling() {
   const { matters } = useMatters();
@@ -93,7 +94,7 @@ export function CourtScheduling() {
     }
   ]);
 
-  const handleApplyRecalculation = () => {
+  const handleApplyRecalculation = async () => {
     // Dynamically shift all dates by +34 days (difference between Oct 14 and Nov 17)
     const shifted = [
       { id: 'dd-1', event: 'Fact Discovery Cutoff (URCP 26)', currentDate: '2026-06-18', rule: '150 days before trial setting', type: 'Statutory Discovery Cutoff', status: 'Recalculated ✓' },
@@ -103,6 +104,17 @@ export function CourtScheduling() {
       { id: 'dd-5', event: 'Pretrial Conference & Motions in Limine', currentDate: '2026-10-27', rule: '21 days before trial setting', type: 'Court Hearing Setting', status: 'Recalculated ✓' },
       { id: 'dd-6', event: 'Jury Trial Setting (4 Days Estimated)', currentDate: newTrialDate, rule: 'Amended Trial Order', type: 'Court Trial Setting', status: 'Recalculated ✓' }
     ];
+
+    if (activeCase?.id) {
+      try {
+        await litigationService.saveLitigationCase(activeCase.id, {
+          trialDate: newTrialDate,
+          notes: recalcReason,
+        });
+      } catch (err) {
+        console.warn('Could not persist updated trial date to API:', err?.message);
+      }
+    }
 
     setDeadlines(shifted);
     setIsRecalcModalOpen(false);

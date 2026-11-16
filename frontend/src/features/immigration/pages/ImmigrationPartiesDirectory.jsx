@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { Modal } from '../../../components/ui/Modal';
 import { PartyModal } from '../components/PartyModal';
+import { immigrationService } from '../../../services/immigrationService';
 
 export function ImmigrationPartiesDirectory() {
   const [parties, setParties] = useState([]);

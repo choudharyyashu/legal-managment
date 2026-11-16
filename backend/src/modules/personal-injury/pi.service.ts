@@ -990,4 +990,345 @@ export class PersonalInjuryService {
       followUpTask,
     };
   }
+
+  // ---------------------------------------------------------------------------
+  // LIEN MANAGEMENT & RESOLUTION
+  // ---------------------------------------------------------------------------
+
+  static async getLiens(matterId: string, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    return prisma.pILien.findMany({
+      where: { matterId: matter.id },
+      include: {
+        provider: true,
+        negotiations: {
+          orderBy: { negotiationDate: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  static async createLien(matterId: string, input: any, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const lien = await prisma.pILien.create({
+      data: {
+        matterId: matter.id,
+        providerId: input.providerId || null,
+        lienholderName: input.lienholderName || input.lienHolder || 'Unknown Lienholder',
+        category: input.category || input.lienType || 'HEALTHCARE_PROVIDER',
+        accountReference: input.accountReference || null,
+        assertedAmount: new Prisma.Decimal(input.assertedAmount || input.originalLienAmount || 0),
+        verifiedAmount: new Prisma.Decimal(input.verifiedAmount || input.verifiedLienAmount || 0),
+        negotiatedAmount: new Prisma.Decimal(input.negotiatedAmount || 0),
+        finalPayoffAmount: new Prisma.Decimal(input.finalPayoffAmount || input.verifiedAmount || input.assertedAmount || 0),
+        status: input.status || input.confirmationStatus || 'ASSERTED',
+        isERISAQualified: Boolean(input.isERISAQualified),
+        notes: input.notes || null,
+      },
+      include: {
+        provider: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'LIEN_RECORD_CREATED',
+      resourceType: 'PI_LIEN',
+      resourceId: lien.id,
+      details: { matterId: matter.id, lienholder: lien.lienholderName, amount: lien.assertedAmount },
+    });
+
+    return lien;
+  }
+
+  static async updateLien(matterId: string, lienId: string, input: any, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const updated = await prisma.pILien.update({
+      where: { id: lienId },
+      data: {
+        lienholderName: input.lienholderName || input.lienHolder,
+        category: input.category || input.lienType,
+        assertedAmount: input.assertedAmount !== undefined ? new Prisma.Decimal(input.assertedAmount) : undefined,
+        verifiedAmount: input.verifiedAmount !== undefined ? new Prisma.Decimal(input.verifiedAmount) : undefined,
+        negotiatedAmount: input.negotiatedAmount !== undefined ? new Prisma.Decimal(input.negotiatedAmount) : undefined,
+        finalPayoffAmount: input.finalPayoffAmount !== undefined ? new Prisma.Decimal(input.finalPayoffAmount) : undefined,
+        status: input.status || input.confirmationStatus,
+        notes: input.notes !== undefined ? input.notes : undefined,
+      },
+      include: {
+        provider: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'LIEN_RECORD_UPDATED',
+      resourceType: 'PI_LIEN',
+      resourceId: updated.id,
+      details: { matterId: matter.id, status: updated.status, finalPayoff: updated.finalPayoffAmount },
+    });
+
+    return updated;
+  }
+
+  // ---------------------------------------------------------------------------
+  // CLIENT DAMAGES, DIAGNOSTICS & WAGE LOSS
+  // ---------------------------------------------------------------------------
+
+  static async getDamages(matterId: string, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const [damages, diagnosticStudies, wageLoss] = await Promise.all([
+      prisma.pIDamagesRecord.findMany({
+        where: { matterId: matter.id },
+        include: { diagnosticStudies: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.pIDiagnosticStudy.findMany({
+        where: { matterId: matter.id },
+        orderBy: { studyDate: 'desc' },
+      }),
+      prisma.pIWageLossRecord.findMany({
+        where: { matterId: matter.id },
+        orderBy: { startDate: 'desc' },
+      }),
+    ]);
+
+    return { damages, diagnosticStudies, wageLoss };
+  }
+
+  static async createDamage(matterId: string, input: any, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const record = await prisma.pIDamagesRecord.create({
+      data: {
+        matterId: matter.id,
+        injuryCategory: input.injuryCategory || input.category || 'ORTHOPEDIC',
+        anatomicalLocation: input.anatomicalLocation || input.bodyPart || 'General',
+        severityGrade: input.severityGrade || input.severity || 'MODERATE',
+        icdCode: input.icdCode || null,
+        futureTreatmentProjected: Boolean(input.futureTreatmentProjected),
+        futureMedicalEstimatedCost: new Prisma.Decimal(input.futureMedicalEstimatedCost || 0),
+        treatmentSummary: input.treatmentSummary || input.description || null,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'DAMAGES_RECORD_CREATED',
+      resourceType: 'PI_DAMAGES',
+      resourceId: record.id,
+      details: { matterId: matter.id, location: record.anatomicalLocation },
+    });
+
+    return record;
+  }
+
+  // ---------------------------------------------------------------------------
+  // SETTLEMENT CALCULATOR & DISBURSEMENTS
+  // ---------------------------------------------------------------------------
+
+  static async getSettlements(matterId: string, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    return prisma.pISettlementDisbursement.findMany({
+      where: { matterId: matter.id },
+      include: {
+        versions: {
+          orderBy: { versionNumber: 'desc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  static async createSettlement(matterId: string, input: any, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const gross = new Prisma.Decimal(input.grossSettlementAmount || input.grossSettlement || 0);
+    const feePct = new Prisma.Decimal(input.contingencyFeePercentage || input.attorneyFeePercent || 33.33);
+    const feeAmount = new Prisma.Decimal(input.calculatedAttorneyFee || input.attorneyFee || (Number(gross) * Number(feePct) / 100));
+    const costs = new Prisma.Decimal(input.totalLitigationCosts || input.costs || 0);
+    const liens = new Prisma.Decimal(input.totalMedicalLiens || input.liens || 0);
+    const advances = new Prisma.Decimal(input.totalClientAdvances || 0);
+    const deductions = new Prisma.Decimal(input.otherDeductions || 0);
+    const net = new Prisma.Decimal(
+      input.netClientRecovery ||
+      (Number(gross) - Number(feeAmount) - Number(costs) - Number(liens) - Number(advances) - Number(deductions))
+    );
+
+    const settlement = await prisma.pISettlementDisbursement.create({
+      data: {
+        matterId: matter.id,
+        settlementTitle: input.settlementTitle || `Settlement Disbursement - ${matter.title}`,
+        status: input.status || 'DRAFT',
+        versions: {
+          create: {
+            versionNumber: 1,
+            grossSettlementAmount: gross,
+            contingencyFeePercentage: feePct,
+            calculatedAttorneyFee: feeAmount,
+            totalLitigationCosts: costs,
+            totalClientAdvances: advances,
+            totalMedicalLiens: liens,
+            otherDeductions: deductions,
+            netClientRecovery: net,
+            versionStatus: 'DRAFT',
+            createdByUserId: currentUser.id,
+            notes: input.notes || null,
+          },
+        },
+      },
+      include: {
+        versions: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'SETTLEMENT_RECORD_CREATED',
+      resourceType: 'PI_SETTLEMENT',
+      resourceId: settlement.id,
+      details: { matterId: matter.id, gross: String(gross), net: String(net) },
+    });
+
+    return settlement;
+  }
+
+  // ---------------------------------------------------------------------------
+  // VENDORS & VENDOR ASSIGNMENTS
+  // ---------------------------------------------------------------------------
+
+  static async getVendors(_currentUser: AuthenticatedUser) {
+    return prisma.pIVendor.findMany({
+      where: { isActive: true },
+      orderBy: { vendorName: 'asc' },
+    });
+  }
+
+  static async createVendor(input: any, currentUser: AuthenticatedUser) {
+    const vendor = await prisma.pIVendor.create({
+      data: {
+        vendorName: input.vendorName || input.name,
+        category: input.category || 'EXPERT_WITNESS',
+        contactPerson: input.contactPerson || null,
+        phone: input.phone || null,
+        email: input.email || null,
+        hourlyRate: input.hourlyRate ? new Prisma.Decimal(input.hourlyRate) : null,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'PI_VENDOR_CREATED',
+      resourceType: 'PI_VENDOR',
+      resourceId: vendor.id,
+      details: { name: vendor.vendorName, category: vendor.category },
+    });
+
+    return vendor;
+  }
+
+  static async getVendorAssignments(matterId: string, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    return prisma.pIVendorAssignment.findMany({
+      where: { matterId: matter.id },
+      include: {
+        vendor: true,
+        assignedStaff: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: { assignedDate: 'desc' },
+    });
+  }
+
+  static async createVendorAssignment(matterId: string, input: any, currentUser: AuthenticatedUser) {
+    const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
+    const assignment = await prisma.pIVendorAssignment.create({
+      data: {
+        matterId: matter.id,
+        vendorId: input.vendorId,
+        assignedStaffId: input.assignedStaffId || currentUser.id,
+        serviceScope: input.serviceScope || input.scopeOfWork || 'General Expert/Vendor Assignment',
+        status: input.status || 'ASSIGNED',
+        assignedDate: input.assignedDate ? new Date(input.assignedDate) : new Date(),
+        dueDate: input.dueDate ? new Date(input.dueDate) : null,
+        authorizedAmount: new Prisma.Decimal(input.authorizedAmount || 0),
+        invoicedAmount: new Prisma.Decimal(input.invoicedAmount || 0),
+        notes: input.notes || null,
+      },
+      include: {
+        vendor: true,
+      },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userRole: currentUser.role,
+      action: 'PI_VENDOR_ASSIGNMENT_CREATED',
+      resourceType: 'PI_VENDOR_ASSIGNMENT',
+      resourceId: assignment.id,
+      details: { matterId: matter.id, vendorId: assignment.vendorId },
+    });
+
+    return assignment;
+  }
+
+  // ---------------------------------------------------------------------------
+  // PI DASHBOARD AGGREGATED METRICS
+  // ---------------------------------------------------------------------------
+
+  static async getPIDashboardMetrics(currentUser: AuthenticatedUser) {
+    const piMatters = await prisma.matter.findMany({
+      where: {
+        practiceAreaId: 'pa-pi',
+        status: { not: 'Concluded' },
+      },
+      include: {
+        client: true,
+        incidents: true,
+        insurancePolicies: true,
+        medicalProviders: {
+          include: { recordRequests: true },
+        },
+        demandPackages: true,
+        liens: true,
+      },
+    });
+
+    const activeCasesCount = piMatters.length;
+    let pendingRecordsCount = 0;
+    let demandsInProgressCount = 0;
+    let readyForSettlementCount = 0;
+    let totalLienAmount = 0;
+
+    piMatters.forEach((m) => {
+      m.medicalProviders.forEach((p) => {
+        p.recordRequests.forEach((r) => {
+          if (!r.isComplete && r.status !== 'Received') pendingRecordsCount++;
+        });
+      });
+
+      m.demandPackages.forEach((d) => {
+        if (d.status === 'DRAFTING' || d.status === 'READY_FOR_REVIEW') demandsInProgressCount++;
+        if (d.status === 'SENT' || d.status === 'NEGOTIATION') readyForSettlementCount++;
+      });
+
+      m.liens.forEach((l) => {
+        totalLienAmount += Number(l.finalPayoffAmount || l.assertedAmount || 0);
+      });
+    });
+
+    return {
+      activeCasesCount,
+      pendingRecordsCount,
+      demandsInProgressCount,
+      readyForSettlementCount,
+      totalLienAmount,
+      totalCases: activeCasesCount,
+    };
+  }
 }

@@ -122,6 +122,7 @@ model Client {
   convertedIntakes Intake[]         @relation("ConvertedClient")
   paymentRecords   PaymentRecord[]
   documentDrafts   DocumentDraft[]
+  communications   Communication[]
 
   @@index([name, email, clientNumber], name: "idx_clients_search")
   @@map("clients")
@@ -246,6 +247,15 @@ model Matter {
   damagesRecords          PIDamagesRecord[]
   diagnosticStudies       PIDiagnosticStudy[]
   wageLossRecords         PIWageLossRecord[]
+  communications          Communication[]
+  litigationCase          LitigationCase?
+  bankruptcyCase          BankruptcyCase?
+  immigrationCase         ImmigrationCase?
+  probateCase             ProbateCase?
+  familyLawCase           FamilyLawCase?
+  criminalCase            CriminalCase?
+  appealsCase             AppealsCase?
+  evictionsCase           EvictionsCase?
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -1241,4 +1251,516 @@ model PIWageLossRecord {
 
   @@index([matterId], name: "idx_wageloss_matter")
   @@map("pi_wage_loss_records")
+}
+
+// -----------------------------------------------------------------------------
+// 10. COMMUNICATIONS & MESSAGING LOGS
+// -----------------------------------------------------------------------------
+
+model Communication {
+  id               String    @id @default(uuid()) @db.VarChar(36)
+  clientId         String?   @map("client_id") @db.VarChar(36)
+  matterId         String?   @map("matter_id") @db.VarChar(36)
+  type             String    @db.VarChar(50) // Email, Phone Call, Mobile Message, Written Notice, Internal Note
+  subject          String    @db.VarChar(255)
+  sender           String    @db.VarChar(255)
+  recipient        String    @db.VarChar(255)
+  summary          String    @db.Text
+  direction        String    @default("OUTBOUND") @db.VarChar(20) // INBOUND, OUTBOUND, INTERNAL
+  date             DateTime  @default(now()) @db.DateTime(3)
+  durationMinutes  Int?      @map("duration_minutes")
+  status           String    @default("Filed") @db.VarChar(50)
+  sourceIdentifier String?   @map("source_identifier") @db.VarChar(255)
+  createdById      String?   @map("created_by_id") @db.VarChar(36)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  client           Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  matter           Matter?   @relation(fields: [matterId], references: [id], onDelete: SetNull)
+
+  @@index([clientId], name: "idx_comms_client")
+  @@index([matterId], name: "idx_comms_matter")
+  @@map("communications")
+}
+
+model UnmatchedCommunication {
+  id                   String    @id @default(uuid()) @db.VarChar(36)
+  type                 String    @db.VarChar(50) // email, message, call
+  senderName           String    @map("sender_name") @db.VarChar(200)
+  senderEmail          String?   @map("sender_email") @db.VarChar(200)
+  contactNumber        String?   @map("contact_number") @db.VarChar(50)
+  subject              String    @db.VarChar(255)
+  preview              String    @db.Text
+  receivedAt           DateTime  @map("received_at") @db.DateTime(3)
+  suggestedClientId    String?   @map("suggested_client_id") @db.VarChar(36)
+  suggestedMatterId    String?   @map("suggested_matter_id") @db.VarChar(36)
+  suggestedClientName  String?   @map("suggested_client_name") @db.VarChar(200)
+  suggestedMatterLabel String?   @map("suggested_matter_label") @db.VarChar(255)
+  matchingStatus       String    @default("Unmatched") @map("matching_status") @db.VarChar(50)
+  reviewNotes          String?   @map("review_notes") @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  @@map("unmatched_communications")
+}
+
+// -----------------------------------------------------------------------------
+// 11. LITIGATION & COURT PROCEEDINGS
+// -----------------------------------------------------------------------------
+
+model LitigationCase {
+  id                  String    @id @default(uuid()) @db.VarChar(36)
+  matterId            String    @unique @map("matter_id") @db.VarChar(36)
+  courtJurisdiction   String?   @map("court_jurisdiction") @db.VarChar(150)
+  courtName           String?   @map("court_name") @db.VarChar(255)
+  caseDocketNumber    String?   @map("case_docket_number") @db.VarChar(100)
+  presidingJudge      String?   @map("presiding_judge") @db.VarChar(150)
+  juryDemand          Boolean   @default(false) @map("jury_demand")
+  litigationStage     String    @default("Pre-Filing") @map("litigation_stage") @db.VarChar(50)
+  filingDate          DateTime? @map("filing_date") @db.Date
+  trialDate           DateTime? @map("trial_date") @db.Date
+  discoveryCutoffDate DateTime? @map("discovery_cutoff_date") @db.Date
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter              Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  hearings            CourtHearing[]
+  discoveryRequests   DiscoveryRequest[]
+  pleadings           PleadingRecord[]
+  trialNotebooks      TrialNotebookItem[]
+
+  @@map("litigation_cases")
+}
+
+model CourtHearing {
+  id               String         @id @default(uuid()) @db.VarChar(36)
+  litigationCaseId String         @map("litigation_case_id") @db.VarChar(36)
+  hearingType      String         @map("hearing_type") @db.VarChar(100)
+  hearingDate      DateTime       @map("hearing_date") @db.DateTime(3)
+  courtroom        String?        @db.VarChar(100)
+  judgeName        String?        @map("judge_name") @db.VarChar(150)
+  status           String         @default("Scheduled") @db.VarChar(50)
+  notes            String?        @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  litigationCase   LitigationCase @relation(fields: [litigationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([litigationCaseId], name: "idx_hearings_lit_case")
+  @@map("court_hearings")
+}
+
+model DiscoveryRequest {
+  id               String         @id @default(uuid()) @db.VarChar(36)
+  litigationCaseId String         @map("litigation_case_id") @db.VarChar(36)
+  title            String         @db.VarChar(255)
+  category         String         @db.VarChar(50) // Interrogatories, Production, Admissions, Deposition
+  propoundingParty String         @map("propounding_party") @db.VarChar(150)
+  respondingParty  String         @map("responding_party") @db.VarChar(150)
+  servedDate       DateTime?      @map("served_date") @db.Date
+  dueDate          DateTime       @map("due_date") @db.Date
+  status           String         @default("Pending") @db.VarChar(50)
+  completedDate    DateTime?      @map("completed_date") @db.Date
+  notes            String?        @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  litigationCase   LitigationCase @relation(fields: [litigationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([litigationCaseId], name: "idx_discovery_lit_case")
+  @@map("discovery_requests")
+}
+
+model PleadingRecord {
+  id               String         @id @default(uuid()) @db.VarChar(36)
+  litigationCaseId String         @map("litigation_case_id") @db.VarChar(36)
+  title            String         @db.VarChar(255)
+  pleadingType     String         @map("pleading_type") @db.VarChar(100)
+  filingParty      String         @map("filing_party") @db.VarChar(150)
+  filedDate        DateTime?      @map("filed_date") @db.Date
+  responseDueDate  DateTime?      @map("response_due_date") @db.Date
+  status           String         @default("Draft") @db.VarChar(50)
+  ecfDocketNumber  String?        @map("ecf_docket_number") @db.VarChar(50)
+  notes            String?        @db.Text
+  createdAt        DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  litigationCase   LitigationCase @relation(fields: [litigationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([litigationCaseId], name: "idx_pleadings_lit_case")
+  @@map("pleadings_records")
+}
+
+model TrialNotebookItem {
+  id               String         @id @default(uuid()) @db.VarChar(36)
+  litigationCaseId String         @map("litigation_case_id") @db.VarChar(36)
+  section          String         @db.VarChar(100) // Pleadings, Exhibits, Witness Lists, Motions, Jury Instructions
+  title            String         @db.VarChar(255)
+  description      String?        @db.Text
+  admissibility    String?        @db.VarChar(50)
+  orderIndex       Int            @default(0) @map("order_index")
+  createdAt        DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  litigationCase   LitigationCase @relation(fields: [litigationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([litigationCaseId], name: "idx_trial_nb_lit_case")
+  @@map("trial_notebook_items")
+}
+
+// -----------------------------------------------------------------------------
+// 12. BANKRUPTCY & INSOLVENCY
+// -----------------------------------------------------------------------------
+
+model BankruptcyCase {
+  id                 String                   @id @default(uuid()) @db.VarChar(36)
+  matterId           String                   @unique @map("matter_id") @db.VarChar(36)
+  chapter            String                   @db.VarChar(20) // Chapter 7, Chapter 11, Chapter 13
+  caseNumber         String?                  @map("case_number") @db.VarChar(50)
+  courtDistrict      String?                  @default("District of Utah") @map("court_district") @db.VarChar(150)
+  courtDivision      String?                  @default("Salt Lake City") @map("court_division") @db.VarChar(100)
+  assignedJudge      String?                  @map("assigned_judge") @db.VarChar(150)
+  trusteeName        String?                  @map("trustee_name") @db.VarChar(150)
+  debtorType         String                   @default("Individual") @map("debtor_type") @db.VarChar(50)
+  filingDate         DateTime?                @map("filing_date") @db.Date
+  meeting341Date     DateTime?                @map("meeting_341_date") @db.DateTime(3)
+  confirmationDate   DateTime?                @map("confirmation_date") @db.Date
+  dischargeDate      DateTime?                @map("discharge_date") @db.Date
+  status             String                   @default("Pre-Filing") @db.VarChar(50)
+  householdSize      Int?                     @default(1) @map("household_size")
+  monthlyGrossIncome Decimal?                 @map("monthly_gross_income") @db.Decimal(12, 2)
+  meansTestStatus    String?                  @map("means_test_status") @db.VarChar(100)
+  totalSecuredDebt   Decimal?                 @default(0.00) @map("total_secured_debt") @db.Decimal(12, 2)
+  totalUnsecuredDebt Decimal?                 @default(0.00) @map("total_unsecured_debt") @db.Decimal(12, 2)
+  totalPriorityDebt  Decimal?                 @default(0.00) @map("total_priority_debt") @db.Decimal(12, 2)
+  totalAssets        Decimal?                 @default(0.00) @map("total_assets") @db.Decimal(12, 2)
+  notes              String?                  @db.Text
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime                 @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter             Matter                   @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  creditors          BankruptcyCreditor[]
+  schedules          BankruptcyScheduleItem[]
+
+  @@map("bankruptcy_cases")
+}
+
+model BankruptcyCreditor {
+  id                    String         @id @default(uuid()) @db.VarChar(36)
+  bankruptcyCaseId      String         @map("bankruptcy_case_id") @db.VarChar(36)
+  creditorName          String         @map("creditor_name") @db.VarChar(200)
+  claimType             String         @map("claim_type") @db.VarChar(50) // Secured, Unsecured Nonpriority, Priority
+  accountNumber         String?        @map("account_number") @db.VarChar(100)
+  claimAmount           Decimal        @map("claim_amount") @db.Decimal(12, 2)
+  collateralDescription String?        @map("collateral_description") @db.VarChar(255)
+  collateralValue       Decimal?       @map("collateral_value") @db.Decimal(12, 2)
+  address               String?        @db.VarChar(255)
+  city                  String?        @db.VarChar(100)
+  state                 String?        @db.VarChar(10)
+  zip                   String?        @db.VarChar(20)
+  isNoticeOnly          Boolean        @default(false) @map("is_notice_only")
+  createdAt             DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  bankruptcyCase        BankruptcyCase @relation(fields: [bankruptcyCaseId], references: [id], onDelete: Cascade)
+
+  @@index([bankruptcyCaseId], name: "idx_creditors_bk_case")
+  @@map("bankruptcy_creditors")
+}
+
+model BankruptcyScheduleItem {
+  id                    String         @id @default(uuid()) @db.VarChar(36)
+  bankruptcyCaseId      String         @map("bankruptcy_case_id") @db.VarChar(36)
+  scheduleCode          String         @map("schedule_code") @db.VarChar(10) // A/B, C, D, E/F, G, H, I, J
+  description           String         @db.Text
+  valueAmount           Decimal        @map("value_amount") @db.Decimal(12, 2)
+  exemptAmount          Decimal?       @default(0.00) @map("exempt_amount") @db.Decimal(12, 2)
+  statutoryExemptionLaw String?        @map("statutory_exemption_law") @db.VarChar(150)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt             DateTime       @updatedAt @map("updated_at") @db.DateTime(3)
+
+  bankruptcyCase        BankruptcyCase @relation(fields: [bankruptcyCaseId], references: [id], onDelete: Cascade)
+
+  @@index([bankruptcyCaseId], name: "idx_schedules_bk_case")
+  @@map("bankruptcy_schedules")
+}
+
+// -----------------------------------------------------------------------------
+// 13. IMMIGRATION & NATIONALITY LAW
+// -----------------------------------------------------------------------------
+
+model ImmigrationCase {
+  id                       String               @id @default(uuid()) @db.VarChar(36)
+  matterId                 String               @unique @map("matter_id") @db.VarChar(36)
+  visaCategory             String?              @map("visa_category") @db.VarChar(100) // Family-Based (AOS), Employment (EB-2/NIW), Humanitarian, Asylum, Removal Defense
+  alienRegistrationNum     String?              @map("alien_registration_num") @db.VarChar(50)
+  usCISOnlineAccountNum    String?              @map("uscis_online_account_num") @db.VarChar(50)
+  beneficiaryName          String?              @map("beneficiary_name") @db.VarChar(200)
+  beneficiaryDob           DateTime?            @map("beneficiary_dob") @db.Date
+  countryOfCitizenship     String?              @map("country_of_citizenship") @db.VarChar(100)
+  countryOfBirth           String?              @map("country_of_birth") @db.VarChar(100)
+  currentImmigrationStatus String?              @map("current_immigration_status") @db.VarChar(100)
+  classOfAdmission         String?              @map("class_of_admission") @db.VarChar(50)
+  i94Number                String?              @map("i94_number") @db.VarChar(50)
+  priorityDate             DateTime?            @map("priority_date") @db.Date
+  status                   String               @default("Preparation") @db.VarChar(50)
+  notes                    String?              @db.Text
+  createdAt                DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                   Matter               @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  receipts                 USCISReceiptRecord[]
+  parties                  ImmigrationParty[]
+
+  @@map("immigration_cases")
+}
+
+model USCISReceiptRecord {
+  id                String          @id @default(uuid()) @db.VarChar(36)
+  immigrationCaseId String          @map("immigration_case_id") @db.VarChar(36)
+  receiptNumber     String          @unique @map("receipt_number") @db.VarChar(50) // e.g. IOE9821401928, LIN..., EAC...
+  formType          String          @map("form_type") @db.VarChar(50) // I-130, I-485, I-765, I-131, etc.
+  filingDate        DateTime        @map("filing_date") @db.Date
+  noticeDate        DateTime?       @map("notice_date") @db.Date
+  serviceCenter     String?         @map("service_center") @db.VarChar(100)
+  currentStatus     String          @default("Case Was Received") @map("current_status") @db.VarChar(150)
+  biometricsDate    DateTime?       @map("biometrics_date") @db.DateTime(3)
+  rfeDueDate        DateTime?       @map("rfe_due_date") @db.Date
+  interviewDate     DateTime?       @map("interview_date") @db.DateTime(3)
+  decisionDate      DateTime?       @map("decision_date") @db.Date
+  notes             String?         @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+
+  immigrationCase   ImmigrationCase @relation(fields: [immigrationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([immigrationCaseId], name: "idx_receipts_imm_case")
+  @@map("uscis_receipts")
+}
+
+model ImmigrationParty {
+  id                String          @id @default(uuid()) @db.VarChar(36)
+  immigrationCaseId String          @map("immigration_case_id") @db.VarChar(36)
+  name              String          @db.VarChar(200)
+  relationshipRole  String          @map("relationship_role") @db.VarChar(100) // Petitioner, Principal Beneficiary, Derivative Beneficiary, Joint Sponsor
+  citizenship       String?         @db.VarChar(100)
+  phone             String?         @db.VarChar(50)
+  email             String?         @db.VarChar(150)
+  address           String?         @db.VarChar(255)
+  isSigner          Boolean         @default(false) @map("is_signer")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.DateTime(3)
+
+  immigrationCase   ImmigrationCase @relation(fields: [immigrationCaseId], references: [id], onDelete: Cascade)
+
+  @@index([immigrationCaseId], name: "idx_parties_imm_case")
+  @@map("immigration_parties")
+}
+
+// -----------------------------------------------------------------------------
+// 14. PROBATE & ESTATE ADMINISTRATION
+// -----------------------------------------------------------------------------
+
+model ProbateCase {
+  id                 String               @id @default(uuid()) @db.VarChar(36)
+  matterId           String               @unique @map("matter_id") @db.VarChar(36)
+  decedentName       String               @map("decedent_name") @db.VarChar(200)
+  dateOfDeath        DateTime             @map("date_of_death") @db.Date
+  countyJurisdiction String?              @default("Salt Lake County") @map("county_jurisdiction") @db.VarChar(100)
+  courtCaseNumber    String?              @map("court_case_number") @db.VarChar(100)
+  probateType        String               @default("Informal Probate") @map("probate_type") @db.VarChar(100) // Formal, Informal, Small Estate
+  hasWill            Boolean              @default(true) @map("has_will")
+  personalRepName    String?              @map("personal_rep_name") @db.VarChar(200)
+  personalRepRole    String?              @default("Executor") @map("personal_rep_role") @db.VarChar(100)
+  inventoryValue     Decimal?             @default(0.00) @map("inventory_value") @db.Decimal(12, 2)
+  status             String               @default("Opened") @db.VarChar(50)
+  noticeDeadline     DateTime?            @map("notice_deadline") @db.Date
+  notes              String?              @db.Text
+  createdAt          DateTime             @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter             Matter               @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  beneficiaries      ProbateBeneficiary[]
+  assets             ProbateAsset[]
+
+  @@map("probate_cases")
+}
+
+model ProbateBeneficiary {
+  id            String      @id @default(uuid()) @db.VarChar(36)
+  probateCaseId String      @map("probate_case_id") @db.VarChar(36)
+  name          String      @db.VarChar(200)
+  relationship  String      @db.VarChar(100) // Child, Spouse, Sibling, Devisee
+  sharePercent  Decimal?    @map("share_percent") @db.Decimal(5, 2)
+  specificGift  String?     @map("specific_gift") @db.Text
+  isNoticeSent  Boolean     @default(false) @map("is_notice_sent")
+  createdAt     DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  probateCase   ProbateCase @relation(fields: [probateCaseId], references: [id], onDelete: Cascade)
+
+  @@index([probateCaseId], name: "idx_beneficiaries_probate")
+  @@map("probate_beneficiaries")
+}
+
+model ProbateAsset {
+  id             String      @id @default(uuid()) @db.VarChar(36)
+  probateCaseId  String      @map("probate_case_id") @db.VarChar(36)
+  assetType      String      @map("asset_type") @db.VarChar(100) // Real Estate, Bank Account, Vehicle, Personal Property
+  description    String      @db.Text
+  estimatedValue Decimal     @map("estimated_value") @db.Decimal(12, 2)
+  appraisalValue Decimal?    @map("appraisal_value") @db.Decimal(12, 2)
+  isDisposed     Boolean     @default(false) @map("is_disposed")
+  createdAt      DateTime    @default(now()) @map("created_at") @db.DateTime(3)
+
+  probateCase    ProbateCase @relation(fields: [probateCaseId], references: [id], onDelete: Cascade)
+
+  @@index([probateCaseId], name: "idx_assets_probate")
+  @@map("probate_assets")
+}
+
+// -----------------------------------------------------------------------------
+// 15. DOMESTIC RELATIONS & FAMILY LAW
+// -----------------------------------------------------------------------------
+
+model FamilyLawCase {
+  id                  String           @id @default(uuid()) @db.VarChar(36)
+  matterId            String           @unique @map("matter_id") @db.VarChar(36)
+  caseType            String           @map("case_type") @db.VarChar(100) // Divorce / Dissolution, Child Custody, Paternity, Adoption, Protective Order
+  courtDocketNumber   String?          @map("court_docket_number") @db.VarChar(100)
+  marriageDate        DateTime?        @map("marriage_date") @db.Date
+  separationDate      DateTime?        @map("separation_date") @db.Date
+  hasMinorChildren    Boolean          @default(false) @map("has_minor_children")
+  custodyArrangement  String?          @map("custody_arrangement") @db.VarChar(150)
+  monthlyChildSupport Decimal?         @default(0.00) @map("monthly_child_support") @db.Decimal(10, 2)
+  monthlyAlimony      Decimal?         @default(0.00) @map("monthly_alimony") @db.Decimal(10, 2)
+  status              String           @default("Filing Pending") @db.VarChar(50)
+  mediationDate       DateTime?        @map("mediation_date") @db.DateTime(3)
+  notes               String?          @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt           DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter              Matter           @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  orders              FamilyLawOrder[]
+
+  @@map("family_law_cases")
+}
+
+model FamilyLawOrder {
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  familyLawCaseId String        @map("family_law_case_id") @db.VarChar(36)
+  orderTitle      String        @map("order_title") @db.VarChar(200)
+  orderType       String        @map("order_type") @db.VarChar(100) // Temporary Order, Decree of Divorce, Protective Order, Parenting Plan
+  entryDate       DateTime?     @map("entry_date") @db.Date
+  effectiveDate   DateTime?     @map("effective_date") @db.Date
+  signedByJudge   String?       @map("signed_by_judge") @db.VarChar(150)
+  status          String        @default("Active") @db.VarChar(50)
+  summaryTerms    String?       @map("summary_terms") @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at") @db.DateTime(3)
+
+  familyLawCase   FamilyLawCase @relation(fields: [familyLawCaseId], references: [id], onDelete: Cascade)
+
+  @@index([familyLawCaseId], name: "idx_orders_family_law")
+  @@map("family_law_orders")
+}
+
+// -----------------------------------------------------------------------------
+// 16. CRIMINAL DEFENSE
+// -----------------------------------------------------------------------------
+
+model CriminalCase {
+  id                     String           @id @default(uuid()) @db.VarChar(36)
+  matterId               String           @unique @map("matter_id") @db.VarChar(36)
+  defendantName          String           @map("defendant_name") @db.VarChar(200)
+  courtJurisdiction      String?          @map("court_jurisdiction") @db.VarChar(150)
+  caseDocketNumber       String?          @map("case_docket_number") @db.VarChar(100)
+  presidingJudge         String?          @map("presiding_judge") @db.VarChar(150)
+  prosecutingAgency      String?          @map("prosecuting_agency") @db.VarChar(150)
+  bailAmount             Decimal?         @default(0.00) @map("bail_amount") @db.Decimal(12, 2)
+  custodyStatus          String           @default("Released on Bail") @map("custody_status") @db.VarChar(50)
+  arraignmentDate        DateTime?        @map("arraignment_date") @db.DateTime(3)
+  preliminaryHearingDate DateTime?        @map("preliminary_hearing_date") @db.DateTime(3)
+  trialDate              DateTime?        @map("trial_date") @db.DateTime(3)
+  status                 String           @default("Arraignment Scheduled") @db.VarChar(50)
+  notes                  String?          @db.Text
+  createdAt              DateTime         @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt              DateTime         @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                 Matter           @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  charges                CriminalCharge[]
+
+  @@map("criminal_cases")
+}
+
+model CriminalCharge {
+  id             String       @id @default(uuid()) @db.VarChar(36)
+  criminalCaseId String       @map("criminal_case_id") @db.VarChar(36)
+  countNumber    Int          @map("count_number")
+  statuteCode    String       @map("statute_code") @db.VarChar(100)
+  chargeTitle    String       @map("charge_title") @db.VarChar(255)
+  severityClass  String       @map("severity_class") @db.VarChar(50) // Class A Misdemeanor, 2nd Degree Felony, etc.
+  plea           String?      @default("Not Guilty") @db.VarChar(50)
+  disposition    String?      @db.VarChar(100)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.DateTime(3)
+
+  criminalCase   CriminalCase @relation(fields: [criminalCaseId], references: [id], onDelete: Cascade)
+
+  @@index([criminalCaseId], name: "idx_charges_criminal")
+  @@map("criminal_charges")
+}
+
+// -----------------------------------------------------------------------------
+// 17. APPEALS & APPELLATE PRACTICE
+// -----------------------------------------------------------------------------
+
+model AppealsCase {
+  id                     String    @id @default(uuid()) @db.VarChar(36)
+  matterId               String    @unique @map("matter_id") @db.VarChar(36)
+  appellateCourt         String    @default("Utah Court of Appeals") @map("appellate_court") @db.VarChar(150)
+  appellateDocketNumber  String?   @map("appellate_docket_number") @db.VarChar(100)
+  lowerCourtName         String?   @map("lower_court_name") @db.VarChar(150)
+  lowerCourtDocketNumber String?   @map("lower_court_docket_number") @db.VarChar(100)
+  noticeOfAppealDate     DateTime? @map("notice_of_appeal_date") @db.Date
+  recordDueDeadline      DateTime? @map("record_due_deadline") @db.Date
+  openingBriefDeadline   DateTime? @map("opening_brief_deadline") @db.Date
+  replyBriefDeadline     DateTime? @map("reply_brief_deadline") @db.Date
+  oralArgumentDate       DateTime? @map("oral_argument_date") @db.DateTime(3)
+  status                 String    @default("Notice Filed") @db.VarChar(50)
+  appellantRole          String    @default("Appellant") @map("appellant_role") @db.VarChar(50)
+  notes                  String?   @db.Text
+  createdAt              DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter                 Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
+
+  @@map("appeals_cases")
+}
+
+// -----------------------------------------------------------------------------
+// 18. EVICTIONS & UNLAWFUL DETAINER
+// -----------------------------------------------------------------------------
+
+model EvictionsCase {
+  id                   String    @id @default(uuid()) @db.VarChar(36)
+  matterId             String    @unique @map("matter_id") @db.VarChar(36)
+  propertyAddress      String    @map("property_address") @db.VarChar(255)
+  unitNumber           String?   @map("unit_number") @db.VarChar(50)
+  tenantName           String    @map("tenant_name") @db.VarChar(200)
+  landlordName         String    @map("landlord_name") @db.VarChar(200)
+  leaseStartDate       DateTime? @map("lease_start_date") @db.Date
+  monthlyRent          Decimal   @map("monthly_rent") @db.Decimal(10, 2)
+  outstandingBalance   Decimal   @default(0.00) @map("outstanding_balance") @db.Decimal(10, 2)
+  noticeType           String?   @map("notice_type") @db.VarChar(100) // 3-Day Notice to Pay or Quit, 3-Day Nuisance, 15-Day No Cause
+  noticeServedDate     DateTime? @map("notice_served_date") @db.Date
+  summonsIssuedDate    DateTime? @map("summons_issued_date") @db.Date
+  occupancyHearingDate DateTime? @map("occupancy_hearing_date") @db.DateTime(3)
+  writOfRestitutionDate DateTime? @map("writ_of_restitution_date") @db.Date
+  status               String    @default("Notice Phase") @db.VarChar(50)
+  notes                String?   @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter               Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
+
+  @@map("evictions_cases")
 }

@@ -27,12 +27,14 @@ import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { matterService } from '../../../services/matterService';
+import { piService } from '../../../services/piService';
 import { useMatters } from '../../../context/MatterContext';
 
 export function PIDashboard() {
   const navigate = useNavigate();
   const { activeMatter, setActiveMatter } = useMatters();
   const [cases, setCases] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,16 +77,25 @@ export function PIDashboard() {
       .finally(() => {
         if (isMounted) setLoading(false);
       });
+
+    piService.getDashboardMetrics()
+      .then((data) => {
+        if (isMounted && data) setMetrics(data);
+      })
+      .catch((err) => {
+        console.warn('Could not load PI metrics:', err?.message);
+      });
+
     return () => { isMounted = false; };
   }, []);
 
   // KPI Calculations
-  const totalCases = cases.length;
-  const activeCases = cases.filter(c => c.status !== 'Closed').length;
-  const pendingRecords = cases.filter(c => c.awaitingRecords).length;
+  const totalCases = metrics?.totalCases !== undefined ? metrics.totalCases : cases.length;
+  const activeCases = metrics?.activeCasesCount !== undefined ? metrics.activeCasesCount : cases.filter(c => c.status !== 'Closed').length;
+  const pendingRecords = metrics?.pendingRecordsCount !== undefined ? metrics.pendingRecordsCount : cases.filter(c => c.awaitingRecords).length;
   const pendingInsurance = cases.filter(c => c.awaitingInsurance).length;
-  const demandsInProgress = cases.filter(c => c.status === 'Demand In Progress').length;
-  const readyForSettlement = cases.filter(c => c.status === 'Ready for Settlement').length;
+  const demandsInProgress = metrics?.demandsInProgressCount !== undefined ? metrics.demandsInProgressCount : cases.filter(c => c.status === 'Demand In Progress').length;
+  const readyForSettlement = metrics?.readyForSettlementCount !== undefined ? metrics.readyForSettlementCount : cases.filter(c => c.status === 'Ready for Settlement').length;
 
   const filteredCases = cases.filter(c => {
     const matchesSearch =

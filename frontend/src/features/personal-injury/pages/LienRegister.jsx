@@ -19,6 +19,7 @@ import { StatCard } from '../../../components/shared/StatCard';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { piService } from '../../../services/piService';
 
 export function LienRegister() {
   const { addToast } = useToast();
@@ -29,6 +30,7 @@ export function LienRegister() {
     );
   }, [matters]);
   const [liens, setLiens] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLien, setSelectedLien] = useState(null);
@@ -40,6 +42,38 @@ export function LienRegister() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getLiens(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const list = Array.isArray(res) ? res : (res?.data || []);
+            setLiens(list.map((l) => ({
+              ...l,
+              lienHolder: l.lienholderName || l.lienHolder,
+              lienType: l.category || l.lienType,
+              originalLienAmount: Number(l.assertedAmount || l.originalLienAmount || 0),
+              verifiedLienAmount: Number(l.verifiedAmount || l.verifiedLienAmount || 0),
+              finalPayoffAmount: Number(l.finalPayoffAmount || 0),
+              confirmationStatus: l.status || l.confirmationStatus || 'ASSERTED',
+            })));
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load liens from API:', err?.message);
+          if (isMounted) setLiens([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setLiens([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
@@ -67,19 +101,28 @@ export function LienRegister() {
   const totalPayoff = filteredLiens.reduce((sum, l) => sum + (l.finalPayoffAmount || 0), 0);
   const totalSavings = Math.max(0, totalOriginal - totalPayoff);
 
-  const handleSaveLien = (savedRecord) => {
-    setLiens((prev) => {
-      const exists = prev.some((l) => l.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((l) => (l.id === savedRecord.id ? savedRecord : l));
-        addToast('Healthcare lien updated.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New healthcare lien registered.', 'success');
+  const handleSaveLien = async (savedRecord) => {
+    try {
+      if (activeCaseId && activeCaseId !== 'ALL') {
+        if (savedRecord.id && liens.some((l) => l.id === savedRecord.id)) {
+          await piService.updateLien(activeCaseId, savedRecord.id, savedRecord);
+          addToast('Healthcare lien updated persistently in database.', 'success');
+        } else {
+          const created = await piService.createLien(activeCaseId, savedRecord);
+          savedRecord = created || savedRecord;
+          addToast('New healthcare lien registered in database.', 'success');
+        }
       }
-      return updated;
-    });
+      setLiens((prev) => {
+        const exists = prev.some((l) => l.id === savedRecord.id);
+        if (exists) {
+          return prev.map((l) => (l.id === savedRecord.id ? { ...l, ...savedRecord } : l));
+        }
+        return [savedRecord, ...prev];
+      });
+    } catch (err) {
+      addToast(err?.response?.data?.message || err?.message || 'Error saving lien', 'error');
+    }
   };
 
   const openAddModal = () => {

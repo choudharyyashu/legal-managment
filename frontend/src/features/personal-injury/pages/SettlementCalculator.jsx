@@ -11,7 +11,8 @@ import {
   PieChart,
   Percent,
   TrendingUp,
-  Scale
+  Scale,
+  Save,
 } from 'lucide-react';
 import { PINavigationHeader } from '../components/PINavigationHeader';
 import { ClosingStatementModal } from '../components/ClosingStatementModal';
@@ -21,6 +22,7 @@ import { Select } from '../../../components/ui/Select';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { piService } from '../../../services/piService';
 
 export function SettlementCalculator() {
   const { addToast } = useToast();
@@ -133,6 +135,28 @@ export function SettlementCalculator() {
     statementDate: new Date().toISOString().split('T')[0],
   };
 
+  const handleSaveSettlement = async () => {
+    try {
+      if (activeCaseId && activeCaseId !== 'ALL') {
+        await piService.createSettlement(activeCaseId, {
+          settlementTitle: `Settlement Disbursement - ${activeCase?.title || activeCase?.clientName || 'Matter'}`,
+          grossSettlementAmount: numericGross,
+          contingencyFeePercentage: Number(feeRate),
+          calculatedAttorneyFee: contingencyFeeAmount,
+          totalLitigationCosts: totalCaseExpenses,
+          totalMedicalLiens,
+          otherDeductions: totalOtherDeductions,
+          netClientRecovery: netClientProceeds,
+        });
+        addToast('Settlement disbursement calculation saved to database.', 'success');
+      } else {
+        addToast('Please select a specific matter to save this settlement.', 'warning');
+      }
+    } catch (err) {
+      addToast(err?.response?.data?.message || err?.message || 'Error saving settlement', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PINavigationHeader
@@ -142,14 +166,24 @@ export function SettlementCalculator() {
         title="Settlement Disbursement Modeling & Calculator"
         subtitle="Real-time Utah RPC 1.5 contingency fee modeling, litigation disbursement accounting, healthcare lien holdbacks, and official client closing statement generator."
         actions={
-          <Button
-            size="sm"
-            variant="primary"
-            icon={Printer}
-            onClick={() => setIsClosingModalOpen(true)}
-          >
-            Generate Closing Statement
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Save}
+              onClick={handleSaveSettlement}
+            >
+              Save to Database
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              icon={Printer}
+              onClick={() => setIsClosingModalOpen(true)}
+            >
+              Generate Closing Statement
+            </Button>
+          </div>
         }
       />
 
