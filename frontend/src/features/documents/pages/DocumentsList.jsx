@@ -18,7 +18,8 @@ import {
   Clock,
   Sparkles,
   ArrowRight,
-  RotateCcw
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { documentService } from '../../../services/documentService';
 import { useClients } from '../../../context/ClientContext';
