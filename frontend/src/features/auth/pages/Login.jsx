@@ -79,7 +79,7 @@ export function Login() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col md:flex-row bg-[#F8F9FA] select-none">
+    <div className="min-h-screen w-screen overflow-y-auto md:overflow-hidden flex flex-col md:flex-row bg-[#F8F9FA] select-none">
       {/* LEFT PANEL: Deep Navy Brand Showcase (Static 100vh) */}
       <div className="hidden md:flex md:w-[40%] lg:w-[36%] xl:w-[33%] bg-[#06244B] text-white flex-col justify-between p-6 lg:p-8 relative overflow-hidden flex-shrink-0 h-full">
         {/* Subtle decorative background circles */}
@@ -144,8 +144,8 @@ export function Login() {
         </div>
       </div>
 
-      {/* RIGHT PANEL: Static Centered Card (Zero Scroll) */}
-      <div className="flex-1 h-full overflow-hidden flex flex-col justify-between items-center p-4 sm:p-6 lg:p-8">
+      {/* RIGHT PANEL: Centered Form Card (Responsive Scroll on Mobile) */}
+      <div className="flex-1 min-h-full overflow-y-auto flex flex-col justify-between items-center p-4 sm:p-6 lg:p-8 w-full">
         {/* Mobile Header (Only visible on small mobile screens) */}
         <div className="w-full flex items-center justify-between md:hidden pb-2 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">

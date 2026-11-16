@@ -205,7 +205,20 @@ export function TimeProvider({ children }) {
         dueDate: invoiceData.dueDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         notes: invoiceData.notes || undefined,
         lineItems: Array.isArray(invoiceData.lineItems) && invoiceData.lineItems.length > 0
-          ? invoiceData.lineItems
+          ? invoiceData.lineItems.map(li => {
+              const qty = Number(li.quantity ?? li.hours ?? 1);
+              const rate = Number(li.unitRate ?? li.rate ?? (li.amount ? Number(li.amount) / (qty || 1) : 0));
+              const validTypes = ['Time', 'Expense', 'FlatFee', 'Adjustment'];
+              const itemType = validTypes.includes(li.itemType) ? li.itemType : (li.hours ? 'Time' : 'FlatFee');
+              return {
+                itemType,
+                timeEntryId: li.timeEntryId || undefined,
+                expenseId: li.expenseId || undefined,
+                description: li.description || 'Legal services rendered',
+                quantity: qty > 0 ? qty : 1,
+                unitRate: rate >= 0 ? rate : 0,
+              };
+            })
           : [
               {
                 itemType: 'FlatFee',

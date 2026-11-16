@@ -24,13 +24,34 @@ import { usePermissions } from '../../../hooks/usePermissions';
 import { MfaSetupModal } from '../components/MfaSetupModal';
 import { BackupRestoreModal } from '../components/BackupRestoreModal';
 
+const SECURITY_STORAGE_KEY = 'hb_security_policy_config';
+
+const DEFAULT_SECURITY = {
+  mfaEnforced: true,
+  sessionTimeout: '30',
+  ipRestricted: false,
+};
+
 export function SecuritySettings() {
   const { addToast } = useToast();
   const permissions = usePermissions();
 
-  const [mfaEnforced, setMfaEnforced] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState('30');
-  const [ipRestricted, setIpRestricted] = useState(false);
+  const [policy, setPolicy] = useState(() => {
+    try {
+      const saved = localStorage.getItem(SECURITY_STORAGE_KEY);
+      return saved ? { ...DEFAULT_SECURITY, ...JSON.parse(saved) } : DEFAULT_SECURITY;
+    } catch {
+      return DEFAULT_SECURITY;
+    }
+  });
+
+  const mfaEnforced = policy.mfaEnforced;
+  const setMfaEnforced = (val) => setPolicy(prev => ({ ...prev, mfaEnforced: typeof val === 'function' ? val(prev.mfaEnforced) : val }));
+  const sessionTimeout = policy.sessionTimeout;
+  const setSessionTimeout = (val) => setPolicy(prev => ({ ...prev, sessionTimeout: typeof val === 'function' ? val(prev.sessionTimeout) : val }));
+  const ipRestricted = policy.ipRestricted;
+  const setIpRestricted = (val) => setPolicy(prev => ({ ...prev, ipRestricted: typeof val === 'function' ? val(prev.ipRestricted) : val }));
+
   const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
 
@@ -71,7 +92,12 @@ export function SecuritySettings() {
       addToast('Super Admin authorization required to modify firm security policy.', 'error');
       return;
     }
-    addToast('Firm security policy updated.', 'success');
+    try {
+      localStorage.setItem(SECURITY_STORAGE_KEY, JSON.stringify(policy));
+      addToast('Firm security policy updated and saved successfully.', 'success');
+    } catch {
+      addToast('Firm security policy updated.', 'success');
+    }
   };
 
   return (

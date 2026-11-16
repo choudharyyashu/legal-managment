@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
-import { FileText, Plus, Search, Filter, Printer, DollarSign, CheckCircle2, Download, Eye, Send, Scale } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  FileText, 
+  Plus, 
+  Search, 
+  Filter, 
+  Printer, 
+  DollarSign, 
+  CheckCircle2, 
+  Download, 
+  Eye, 
+  Send, 
+  Scale, 
+  Trash2, 
+  AlertTriangle, 
+  Check, 
+  Clock, 
+  Building 
+} from 'lucide-react';
 import { useTime } from '../../../context/TimeContext';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
@@ -15,10 +32,16 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 import { SettlementStatementModal } from '../components/SettlementStatementModal';
 
 export function InvoicesList() {
-  const { invoices, addInvoice, recordPayment } = useTime();
+  const { invoices, addInvoice, recordPayment, refreshInvoices } = useTime();
   const { clients } = useClients();
   const { matters } = useMatters();
   const { addToast } = useToast();
+
+  useEffect(() => {
+    if (typeof refreshInvoices === 'function') {
+      refreshInvoices();
+    }
+  }, [refreshInvoices]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -28,11 +51,117 @@ export function InvoicesList() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('FedWire / ACH');
 
-  const filteredInvoices = invoices.filter(i =>
-    i.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.matterTitle.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Create Invoice Modal State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newMatterId, setNewMatterId] = useState('');
+  const [newIssueDate, setNewIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [newDueDate, setNewDueDate] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]);
+  const [newNotes, setNewNotes] = useState('Professional legal services rendered pursuant to legal representation agreement.');
+  const [newLineItems, setNewLineItems] = useState([
+    { id: 'item-1', itemType: 'Time', description: 'Legal counsel, pleadings drafting, and court filings', quantity: 10, unitRate: 450 },
+    { id: 'item-2', itemType: 'Expense', description: 'Court filing fees & service of process statutory costs', quantity: 1, unitRate: 350 },
+  ]);
+  const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
+
+  // Set default selected matter when opening modal
+  const handleOpenCreateInvoice = () => {
+    if (matters.length > 0 && !newMatterId) {
+      setNewMatterId(matters[0].id);
+    }
+    setIsCreateModalOpen(true);
+  };
+
+  const handleAddLineItem = () => {
+    setNewLineItems(prev => [
+      ...prev,
+      {
+        id: `item-${Date.now()}`,
+        itemType: 'Time',
+        description: 'Case analysis and litigation discovery review',
+        quantity: 1,
+        unitRate: 350
+      }
+    ]);
+  };
+
+  const handleRemoveLineItem = (id) => {
+    if (newLineItems.length <= 1) {
+      addToast('An invoice must contain at least one line item.', 'warning');
+      return;
+    }
+    setNewLineItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleLineItemChange = (id, field, value) => {
+    setNewLineItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          [field]: field === 'quantity' || field === 'unitRate' ? (parseFloat(value) || 0) : value
+        };
+      }
+      return item;
+    }));
+  };
+
+  // Calculate invoice live total
+  const calculatedInvoiceTotal = newLineItems.reduce((sum, item) => {
+    return sum + (Number(item.quantity || 0) * Number(item.unitRate || 0));
+  }, 0);
+
+  // Submit and create invoice with backend validation
+  const handleCreateInvoiceSubmit = async (e) => {
+    e.preventDefault();
+    const selectedMatter = matters.find(m => m.id === newMatterId) || matters[0];
+
+    if (!selectedMatter) {
+      addToast('Please select an active legal matter first.', 'error');
+      return;
+    }
+
+    if (newLineItems.length === 0) {
+      addToast('Please include at least one billing line item.', 'error');
+      return;
+    }
+
+    setIsSubmittingInvoice(true);
+    try {
+      await addInvoice({
+        clientId: selectedMatter.clientId,
+        matterId: selectedMatter.id,
+        issueDate: newIssueDate,
+        dueDate: newDueDate,
+        notes: newNotes,
+        lineItems: newLineItems.map(item => ({
+          itemType: item.itemType,
+          description: item.description,
+          quantity: Number(item.quantity) || 1,
+          unitRate: Number(item.unitRate) || 0,
+        })),
+      });
+
+      addToast(`Invoice generated successfully for ${selectedMatter.title}!`, 'success');
+      setIsCreateModalOpen(false);
+      // Reset line items for next invoice
+      setNewLineItems([
+        { id: 'item-1', itemType: 'Time', description: 'Legal counsel, pleadings drafting, and court filings', quantity: 10, unitRate: 450 },
+        { id: 'item-2', itemType: 'Expense', description: 'Court filing fees & service of process statutory costs', quantity: 1, unitRate: 350 },
+      ]);
+    } catch (err) {
+      console.error('Invoice creation error:', err);
+      addToast(err?.response?.data?.message || err?.message || 'Failed to create invoice.', 'error');
+    } finally {
+      setIsSubmittingInvoice(false);
+    }
+  };
+
+  const filteredInvoices = invoices.filter(i => {
+    const invNum = i.invoiceNumber || '';
+    const cName = i.clientName || '';
+    const mTitle = i.matterTitle || i.matterName || '';
+    const q = searchQuery.toLowerCase();
+    return invNum.toLowerCase().includes(q) || cName.toLowerCase().includes(q) || mTitle.toLowerCase().includes(q);
+  });
 
   const handleOpenPayment = (inv) => {
     setSelectedInvoice(inv);
@@ -77,7 +206,7 @@ export function InvoicesList() {
     {
       key: 'matterTitle',
       label: 'Related Case Matter',
-      render: (val) => <span className="text-xs text-[#202A35] max-w-xs block truncate">{val}</span>,
+      render: (val, row) => <span className="text-xs text-[#202A35] max-w-xs block truncate">{val || row.matterName || 'Legal Representation'}</span>,
     },
     {
       key: 'issueDate',
@@ -164,26 +293,7 @@ export function InvoicesList() {
               variant="primary"
               size="sm"
               icon={Plus}
-              onClick={() => {
-                const defaultMatter = matters[0];
-                addInvoice({
-                  clientId: defaultMatter.clientId,
-                  clientName: defaultMatter.clientName,
-                  matterId: defaultMatter.id,
-                  matterTitle: defaultMatter.title,
-                  dueDate: '2026-12-15',
-                  subtotalFees: 8500.00,
-                  subtotalExpenses: 450.00,
-                  totalAmount: 8950.00,
-                  billingArrangement: 'Hourly',
-                  lineItems: [
-                    { id: 'li-new-1', description: 'Legal research & drafting appellate reply brief', hours: 17.0, rate: 500, amount: 8500.00 },
-                    { id: 'li-new-2', description: 'Disbursement: Utah court transcript copy fees', hours: null, rate: null, amount: 450.00 }
-                  ],
-                  notes: 'Invoice generated and ready for client delivery.',
-                });
-                addToast('New invoice record created and added to ledger.', 'success');
-              }}
+              onClick={handleOpenCreateInvoice}
             >
               Generate New Invoice
             </Button>
@@ -204,6 +314,211 @@ export function InvoicesList() {
         data={filteredInvoices}
         pageSize={8}
       />
+
+      {/* GENERATE NEW INVOICE MODAL */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Generate Client Invoice &amp; Statement"
+        subtitle="Create an official billing statement and record accounts receivable on firm general ledger."
+        maxWidth="max-w-3xl"
+        footer={
+          <div className="flex items-center justify-between w-full">
+            <div className="text-xs text-[#667085]">
+              Total Invoiced: <strong className="text-sm font-serif font-bold text-[#06244B]">{formatCurrency(calculatedInvoiceTotal)}</strong>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateModalOpen(false)}
+                disabled={isSubmittingInvoice}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleCreateInvoiceSubmit}
+                disabled={isSubmittingInvoice || matters.length === 0}
+              >
+                <Check className="w-4 h-4 mr-1.5" />
+                {isSubmittingInvoice ? 'Generating Invoice...' : 'Generate &amp; Issue Invoice'}
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        {matters.length === 0 ? (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <strong className="block font-bold text-sm mb-1">No Active Legal Matters Found</strong>
+              Before generating an invoice, please create a prospective client and open a legal matter in the Clients &amp; Matters section.
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleCreateInvoiceSubmit} className="space-y-4 py-1">
+            {/* Row 1: Linked Legal Matter */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[#06244B]">
+                Linked Legal Matter *
+              </label>
+              <select
+                value={newMatterId}
+                onChange={(e) => setNewMatterId(e.target.value)}
+                required
+                className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-2 px-3 text-[#202A35] font-semibold focus:border-[#06244B] focus:outline-none focus:ring-1 focus:ring-[#06244B]"
+              >
+                {matters.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.matterNumber} — {m.title} (Client: {m.clientName})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Row 2: Issue Date & Due Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#06244B]">
+                  Invoice Issue Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newIssueDate}
+                  onChange={(e) => setNewIssueDate(e.target.value)}
+                  className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-2 px-3 text-[#202A35] focus:border-[#06244B] focus:outline-none focus:ring-1 focus:ring-[#06244B]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[#06244B]">
+                  Payment Due Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={newDueDate}
+                  onChange={(e) => setNewDueDate(e.target.value)}
+                  className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-2 px-3 text-[#202A35] focus:border-[#06244B] focus:outline-none focus:ring-1 focus:ring-[#06244B]"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Billing Line Items Table */}
+            <div className="space-y-2 pt-2 border-t border-[#D9D6CF]/60">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#06244B]">
+                  Billing Line Items ({newLineItems.length})
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddLineItem}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Add Line Item
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {newLineItems.map((item, idx) => (
+                  <div key={item.id} className="p-3 bg-[#F5F0E5]/40 border border-[#D9D6CF] rounded-lg space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-bold text-[#A4432B]">
+                        Item #{idx + 1}
+                      </span>
+                      {newLineItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLineItem(item.id)}
+                          className="text-[#667085] hover:text-[#B42318] p-1"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                      <div className="sm:col-span-3">
+                        <select
+                          value={item.itemType}
+                          onChange={(e) => handleLineItemChange(item.id, 'itemType', e.target.value)}
+                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
+                        >
+                          <option value="Time">Time (Hourly)</option>
+                          <option value="Expense">Expense (Disbursement)</option>
+                          <option value="FlatFee">Flat Fee / Retainer</option>
+                          <option value="Adjustment">Adjustment / Discount</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-5">
+                        <input
+                          type="text"
+                          required
+                          value={item.description}
+                          onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)}
+                          placeholder="Description of legal services..."
+                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          required
+                          value={item.quantity}
+                          onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)}
+                          placeholder="Qty / Hrs"
+                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          required
+                          value={item.unitRate}
+                          onChange={(e) => handleLineItemChange(item.id, 'unitRate', e.target.value)}
+                          placeholder="Rate ($)"
+                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end text-[11px] text-[#667085] pt-1">
+                      Line Total: <strong className="text-[#06244B] ml-1 font-mono">{formatCurrency(Number(item.quantity || 0) * Number(item.unitRate || 0))}</strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Row 4: Notes */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[#06244B]">
+                Invoice Notes / Payment Instructions
+              </label>
+              <textarea
+                rows={2}
+                value={newNotes}
+                onChange={(e) => setNewNotes(e.target.value)}
+                placeholder="Include remittance information or payment instructions..."
+                className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-2 px-3 text-[#202A35] focus:border-[#06244B] focus:outline-none focus:ring-1 focus:ring-[#06244B]"
+              />
+            </div>
+          </form>
+        )}
+      </Modal>
 
       {/* Invoice Detail / Print Preview Modal */}
       <Modal

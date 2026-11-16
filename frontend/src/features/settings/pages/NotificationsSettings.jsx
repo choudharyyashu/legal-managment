@@ -4,17 +4,28 @@ import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
 
+const STORAGE_KEY = 'hb_notification_settings_config';
+
+const DEFAULT_SETTINGS = {
+  courtDeadlineEmail: true,
+  courtDeadlineSms: true,
+  courtDeadlineLeadTime: '48',
+  timeApprovalAlerts: true,
+  conflictCheckNotices: true,
+  dailyDigestEmail: false,
+  clientMessageNotification: true,
+};
+
 export function NotificationsSettings() {
   const { addToast } = useToast();
 
-  const [settings, setSettings] = useState({
-    courtDeadlineEmail: true,
-    courtDeadlineSms: true,
-    courtDeadlineLeadTime: '48',
-    timeApprovalAlerts: true,
-    conflictCheckNotices: true,
-    dailyDigestEmail: false,
-    clientMessageNotification: true,
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   });
 
   const handleToggle = (key) => {
@@ -23,7 +34,12 @@ export function NotificationsSettings() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    addToast('Notification preferences successfully saved.', 'success');
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      addToast('Notification preferences successfully saved.', 'success');
+    } catch (err) {
+      addToast('Failed to save notification preferences.', 'error');
+    }
   };
 
   return (

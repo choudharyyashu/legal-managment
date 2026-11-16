@@ -4,14 +4,11 @@ import {
   Menu,
   Search,
   Bell,
-  Plus,
   User,
   Shield,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  FolderPlus,
-  UserPlus,
   X,
   ExternalLink,
   LogOut
@@ -264,31 +261,9 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
 
       {/* Right: Quick Actions, Notifications & User Profile */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Desktop Quick action buttons (lg+) */}
-        <div className="hidden lg:flex items-center gap-2 border-r border-[#D9D6CF] pr-3">
-          {permissions.canCreateClient && (
-            <Button
-              variant="outline"
-              size="sm"
-              icon={UserPlus}
-              onClick={onOpenAddClient}
-            >
-              Add Client
-            </Button>
-          )}
-
-          {permissions.canCreateMatter && (
-            <Button
-              variant="outline"
-              size="sm"
-              icon={FolderPlus}
-              onClick={onOpenNewMatter}
-            >
-              New Matter
-            </Button>
-          )}
-
-          {permissions.canLogTime && (
+        {/* Quick action: Log Time */}
+        {permissions.canLogTime && (
+          <div className="flex items-center border-r border-[#D9D6CF] pr-3">
             <Button
               variant="primary"
               size="sm"
@@ -297,69 +272,6 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
             >
               Log Time
             </Button>
-          )}
-        </div>
-
-        {/* Mobile & Tablet Quick Actions Dropdown Menu (< lg) */}
-        {(permissions.canCreateClient || permissions.canCreateMatter || permissions.canLogTime) && (
-          <div className="relative lg:hidden">
-            <button
-              onClick={() => {
-                setIsQuickActionsOpen(!isQuickActionsOpen);
-                setIsNotificationsOpen(false);
-                setIsProfileOpen(false);
-              }}
-              className="px-2.5 py-1.5 rounded bg-[#A4432B] text-white hover:bg-[#8D3823] active:bg-[#752E1D] flex items-center gap-1.5 text-xs font-semibold shadow-xs transition-colors cursor-pointer min-h-[36px]"
-              title="Quick Actions Menu"
-              aria-label="Quick Actions"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Action</span>
-            </button>
-
-            {isQuickActionsOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-elevated border border-[#D9D6CF] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-                <div className="px-3 py-1 text-[10px] font-bold text-[#667085] uppercase tracking-wider border-b border-[#D9D6CF]/50 mb-1">
-                  Quick Actions
-                </div>
-                {permissions.canCreateClient && (
-                  <button
-                    onClick={() => {
-                      setIsQuickActionsOpen(false);
-                      onOpenAddClient();
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#202A35] hover:bg-[#F5F0E5] flex items-center gap-2 cursor-pointer"
-                  >
-                    <UserPlus className="w-3.5 h-3.5 text-[#06244B]" />
-                    <span>Add Client</span>
-                  </button>
-                )}
-                {permissions.canCreateMatter && (
-                  <button
-                    onClick={() => {
-                      setIsQuickActionsOpen(false);
-                      onOpenNewMatter();
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#202A35] hover:bg-[#F5F0E5] flex items-center gap-2 cursor-pointer"
-                  >
-                    <FolderPlus className="w-3.5 h-3.5 text-[#06244B]" />
-                    <span>New Matter</span>
-                  </button>
-                )}
-                {permissions.canLogTime && (
-                  <button
-                    onClick={() => {
-                      setIsQuickActionsOpen(false);
-                      onOpenLogTime();
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs text-[#202A35] hover:bg-[#F5F0E5] flex items-center gap-2 font-medium cursor-pointer"
-                  >
-                    <Clock className="w-3.5 h-3.5 text-[#A4432B]" />
-                    <span>Log Time</span>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         )}
 
