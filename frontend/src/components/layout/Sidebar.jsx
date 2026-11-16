@@ -389,17 +389,17 @@ export function Sidebar({ collapsed, setCollapsed }) {
                           <button
                             type="button"
                             onClick={(e) => toggleSubgroup(sub.id, e)}
-                            className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded transition-all duration-150 text-left cursor-pointer ${hasActiveChild
+                            className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded transition-all duration-150 text-left cursor-pointer group ${hasActiveChild
                                 ? 'text-white bg-white/10 font-semibold'
-                                : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
+                                : 'text-[#B8C0C4] hover:text-white hover:bg-white/15'
                               }`}
                           >
-                            <GroupIcon className={`w-3.5 h-3.5 flex-shrink-0 ${hasActiveChild ? 'text-[#A4432B]' : 'opacity-80'}`} />
+                            <GroupIcon className={`w-3.5 h-3.5 flex-shrink-0 ${hasActiveChild ? 'text-[#A4432B]' : 'opacity-80 group-hover:opacity-100'}`} />
                             <span className="flex-1 truncate">{sub.label}</span>
                             {isGroupExpanded ? (
-                              <ChevronDown className="w-3.5 h-3.5 text-[#B8C0C4]" />
+                              <ChevronDown className="w-3.5 h-3.5 text-[#B8C0C4] group-hover:text-white" />
                             ) : (
-                              <ChevronRight className="w-3.5 h-3.5 text-[#B8C0C4]" />
+                              <ChevronRight className="w-3.5 h-3.5 text-[#B8C0C4] group-hover:text-white" />
                             )}
                           </button>
 
@@ -418,12 +418,12 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                       <button
                                         type="button"
                                         onClick={(e) => toggleSubgroup(nested.id, e)}
-                                        className={`w-full flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 text-left cursor-pointer ${hasDeepActiveChild
+                                        className={`w-full flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 text-left cursor-pointer group ${hasDeepActiveChild
                                             ? 'text-white bg-[#A4432B]/30 font-semibold'
-                                            : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
+                                            : 'text-[#B8C0C4] hover:text-white hover:bg-white/15'
                                           }`}
                                       >
-                                        <DeepIcon className={`w-3.5 h-3.5 flex-shrink-0 ${hasDeepActiveChild ? 'text-[#A4432B]' : 'opacity-80'}`} />
+                                        <DeepIcon className={`w-3.5 h-3.5 flex-shrink-0 ${hasDeepActiveChild ? 'text-[#A4432B]' : 'opacity-80 group-hover:opacity-100'}`} />
                                         <span className="flex-1 truncate">{nested.label}</span>
                                         {nested.badge && (
                                           <span className="px-1.5 py-0.2 text-[9px] rounded-full bg-[#A4432B] text-white font-bold mr-1">
@@ -431,9 +431,9 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                           </span>
                                         )}
                                         {isDeepExpanded ? (
-                                          <ChevronDown className="w-3 h-3 text-[#B8C0C4]" />
+                                          <ChevronDown className="w-3 h-3 text-[#B8C0C4] group-hover:text-white" />
                                         ) : (
-                                          <ChevronRight className="w-3 h-3 text-[#B8C0C4]" />
+                                          <ChevronRight className="w-3 h-3 text-[#B8C0C4] group-hover:text-white" />
                                         )}
                                       </button>
 
@@ -447,13 +447,13 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                                 to={deep.to}
                                                 end={deep.exact !== undefined ? deep.exact : true}
                                                 className={({ isActive }) =>
-                                                  `flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
+                                                  `flex items-center gap-2 px-2 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none group ${isActive
                                                     ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
-                                                    : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
+                                                    : 'text-[#B8C0C4] hover:text-white hover:bg-white/15'
                                                   }`
                                                 }
                                               >
-                                                <DeepItemIcon className="w-3 h-3 flex-shrink-0 opacity-80" />
+                                                <DeepItemIcon className="w-3 h-3 flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:text-white transition-opacity" />
                                                 <span className="flex-1 truncate">{deep.label}</span>
                                               </NavLink>
                                             );
@@ -471,13 +471,13 @@ export function Sidebar({ collapsed, setCollapsed }) {
                                     to={nested.to}
                                     end={nested.exact !== undefined ? nested.exact : true}
                                     className={({ isActive }) =>
-                                      `flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
+                                      `flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded transition-all duration-150 cursor-pointer focus:outline-none group ${isActive
                                         ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
-                                        : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
+                                        : 'text-[#B8C0C4] hover:text-white hover:bg-white/15'
                                       }`
                                     }
                                   >
-                                    <NestedIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
+                                    <NestedIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:text-white transition-opacity" />
                                     <span className="flex-1 truncate">{nested.label}</span>
                                   </NavLink>
                                 );
@@ -495,13 +495,13 @@ export function Sidebar({ collapsed, setCollapsed }) {
                         to={sub.to}
                         end={sub.exact !== undefined ? sub.exact : (sub.to !== '/clients' && sub.to !== '/matters')}
                         className={({ isActive }) =>
-                          `flex items-center gap-2.5 px-3 py-2 text-xs rounded transition-all duration-150 cursor-pointer focus:outline-none ${isActive
+                          `flex items-center gap-2.5 px-3 py-2 text-xs rounded transition-all duration-150 cursor-pointer focus:outline-none group ${isActive
                             ? 'bg-[#A4432B] text-white font-semibold shadow-xs'
-                            : 'text-[#B8C0C4] hover:text-white hover:bg-white/5'
+                            : 'text-[#B8C0C4] hover:text-white hover:bg-white/15'
                           }`
                         }
                       >
-                        <SubIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
+                        <SubIcon className="w-3.5 h-3.5 flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:text-white transition-opacity" />
                         <span className="flex-1 truncate">{sub.label}</span>
                         {sub.badge && (
                           <span className="px-1.5 py-0.2 text-[9px] rounded-full bg-[#A4432B] text-white font-bold">

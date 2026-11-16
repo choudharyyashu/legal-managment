@@ -361,7 +361,7 @@ export function MobileNavigation({
                             `flex items-center gap-2.5 px-3 py-2 rounded text-xs transition-colors min-h-[38px] ${
                               isActive
                                 ? 'bg-[#A4432B] text-white font-bold shadow-xs'
-                                : 'text-[#B8C0C4] hover:text-white hover:bg-white/5 active:bg-white/10'
+                                : 'text-[#B8C0C4] hover:text-white hover:bg-white/15 active:bg-white/20'
                             }`
                           }
                         >
