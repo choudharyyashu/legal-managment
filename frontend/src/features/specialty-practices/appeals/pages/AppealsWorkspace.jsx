@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../../../components/ui/Toast';
 import { useMatters } from '../../../../context/MatterContext';
+import { appealsService } from '../../../../services/appealsService';
 
 export function AppealsWorkspace() {
   const { addToast } = useToast();
@@ -48,7 +49,7 @@ export function AppealsWorkspace() {
           <Scale className="w-12 h-12 text-[#175CD3] mx-auto mb-3 opacity-60" />
           <h2 className="text-xl font-serif font-bold text-[#06244B]">Appellate Practice Docket</h2>
           <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
-            No active appellate matters found in database. Specialized appeals workflows (Utah R. App. P. 24 Brief Word Count Certifications, Record on Appeal Transmission Trackers, and Standards of Review Matrices) are pending dedicated backend model deployment.
+            No active appellate matters found in database. To begin, create or open a matter assigned to the Appeals practice area.
           </p>
         </div>
       </div>

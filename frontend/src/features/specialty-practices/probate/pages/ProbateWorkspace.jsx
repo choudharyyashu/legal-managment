@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../../../components/ui/Toast';
 import { useMatters } from '../../../../context/MatterContext';
+import { probateService } from '../../../../services/probateService';
 
 export function ProbateWorkspace() {
   const { addToast } = useToast();
@@ -50,26 +51,49 @@ export function ProbateWorkspace() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [newAsset, setNewAsset] = useState({ category: 'Real Property', description: '', appraisedValue: '', probateType: 'Probate Asset' });
+  const [backendAssets, setBackendAssets] = useState([]);
 
   const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
 
-  const handleAddAsset = (e) => {
+  React.useEffect(() => {
+    if (!activeCase?.id) return;
+    probateService.getAssets(activeCase.id)
+      .then(assets => {
+        if (Array.isArray(assets)) setBackendAssets(assets);
+      })
+      .catch(() => setBackendAssets([]));
+  }, [activeCase?.id]);
+
+  const handleAddAsset = async (e) => {
     e.preventDefault();
     if (!newAsset.description || !newAsset.appraisedValue) {
       addToast('Please fill all required asset fields', 'error');
       return;
     }
-    activeCase.inventory.push({
-      id: `inv-${Date.now()}`,
-      category: newAsset.category,
-      description: newAsset.description,
-      appraisedValue: parseFloat(newAsset.appraisedValue) || 0,
-      probateType: newAsset.probateType,
-      status: 'Appraisal Confirmed'
-    });
-    setShowAddAssetModal(false);
-    setNewAsset({ category: 'Real Property', description: '', appraisedValue: '', probateType: 'Probate Asset' });
-    addToast('Asset added to Estate Inventory ledger', 'success');
+    const val = parseFloat(newAsset.appraisedValue) || 0;
+    try {
+      if (activeCase?.id) {
+        await probateService.createAsset(activeCase.id, {
+          assetType: newAsset.category,
+          description: newAsset.description,
+          estimatedValue: val,
+        });
+      }
+      setBackendAssets(prev => [
+        ...prev,
+        {
+          id: `inv-${Date.now()}`,
+          assetType: newAsset.category,
+          description: newAsset.description,
+          estimatedValue: val,
+        }
+      ]);
+      setShowAddAssetModal(false);
+      setNewAsset({ category: 'Real Property', description: '', appraisedValue: '', probateType: 'Probate Asset' });
+      addToast('Asset added to Estate Inventory ledger and saved to database', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save asset to database', 'error');
+    }
   };
 
   if (!activeCase) {
@@ -79,7 +103,7 @@ export function ProbateWorkspace() {
           <Landmark className="w-12 h-12 text-[#06244B] mx-auto mb-3 opacity-60" />
           <h2 className="text-xl font-serif font-bold text-[#06244B]">Probate &amp; Estate Administration Docket</h2>
           <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
-            No active probate or estate administration matters found in database. Specialized probate workflows (Fiduciary Inventory Form 1402, 90-Day Creditor Bar Tracking, and Supervised Accountings) are pending dedicated backend model deployment.
+            No active probate or estate administration matters found in database. To begin, create or open a matter assigned to the Probate &amp; Estate Administration practice area.
           </p>
         </div>
       </div>

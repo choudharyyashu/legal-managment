@@ -23,6 +23,15 @@ import { reconciliationRouter } from './modules/reconciliation/reconciliation.ro
 import { reportRouter } from './modules/reports/report.routes.js';
 import { templateRouter } from './modules/templates/template.routes.js';
 import { piRouter } from './modules/personal-injury/pi.routes.js';
+import { communicationRouter } from './modules/communications/communication.routes.js';
+import { litigationRouter } from './modules/litigation/litigation.routes.js';
+import { bankruptcyRouter } from './modules/bankruptcy/bankruptcy.routes.js';
+import { immigrationRouter } from './modules/immigration/immigration.routes.js';
+import { probateRouter } from './modules/probate/probate.routes.js';
+import { familyLawRouter } from './modules/family-law/family-law.routes.js';
+import { criminalRouter } from './modules/criminal/criminal.routes.js';
+import { appealsRouter } from './modules/appeals/appeals.routes.js';
+import { evictionsRouter } from './modules/evictions/evictions.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -171,6 +180,15 @@ app.use('/api/v1/reconciliation', reconciliationRouter);
 app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/templates', templateRouter);
 app.use('/api/v1/pi', piRouter);
+app.use('/api/v1/communications', communicationRouter);
+app.use('/api/v1/litigation', litigationRouter);
+app.use('/api/v1/bankruptcy', bankruptcyRouter);
+app.use('/api/v1/immigration', immigrationRouter);
+app.use('/api/v1/probate', probateRouter);
+app.use('/api/v1/family-law', familyLawRouter);
+app.use('/api/v1/criminal', criminalRouter);
+app.use('/api/v1/appeals', appealsRouter);
+app.use('/api/v1/evictions', evictionsRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

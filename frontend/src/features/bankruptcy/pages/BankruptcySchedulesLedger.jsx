@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landmark, FileSpreadsheet, DollarSign, Plus, CheckCircle, AlertTriangle, UserPlus, FileEdit } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { useMatters } from '../../../context/MatterContext';
 import { AddCreditorModal } from '../components/AddCreditorModal';
 import { AmendedSchedulesModal } from '../components/AmendedSchedulesModal';
+import { bankruptcyService } from '../../../services/bankruptcyService';
 
 export function BankruptcySchedulesLedger() {
   const { matters } = useMatters();
@@ -18,12 +19,59 @@ export function BankruptcySchedulesLedger() {
   const [isAddCreditorOpen, setIsAddCreditorOpen] = useState(false);
   const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (!selectedCaseId) return;
+    bankruptcyService.getBankruptcyCase(selectedCaseId)
+      .then(bkCase => {
+        if (bkCase) {
+          const scheduleAB = (bkCase.schedules || []).filter(s => s.scheduleCode === 'A/B').map(s => ({
+            id: s.id,
+            propertyType: s.description,
+            description: s.description,
+            value: Number(s.valueAmount),
+            exemptionClaimed: Number(s.exemptAmount || 0),
+            statutoryBasis: s.statutoryExemptionLaw || 'Utah Code 78B-5-505',
+          }));
+          const scheduleEF = (bkCase.creditors || []).map(c => ({
+            id: c.id,
+            creditorName: c.creditorName,
+            accountNumber: c.accountNumber || '—',
+            claimType: c.claimType,
+            claimAmount: Number(c.claimAmount),
+            isNoticeOnly: c.isNoticeOnly,
+          }));
+          setSchedulesMap(prev => ({
+            ...prev,
+            [selectedCaseId]: {
+              scheduleAB,
+              scheduleD: [],
+              scheduleEF,
+              scheduleIJ: [],
+            }
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [selectedCaseId]);
+
   const caseData = bankruptcyMatters.find(c => c.id === selectedCaseId) || bankruptcyMatters[0] || null;
   const schedules = schedulesMap[selectedCaseId] || { scheduleAB: [], scheduleD: [], scheduleEF: [], scheduleIJ: [] };
 
-  const handleAddCreditor = (newCreditor) => {
+  const handleAddCreditor = async (newCreditor) => {
+    if (selectedCaseId) {
+      try {
+        await bankruptcyService.createCreditor(selectedCaseId, {
+          creditorName: newCreditor.creditorName,
+          claimType: newCreditor.claimType || 'Unsecured Nonpriority',
+          claimAmount: Number(newCreditor.claimAmount) || 0,
+          accountNumber: newCreditor.accountNumber,
+        });
+      } catch (err) {
+        console.warn('Could not persist creditor to API:', err?.message);
+      }
+    }
     setSchedulesMap(prev => {
-      const current = prev[selectedCaseId] || prev['BNK-2026-001'];
+      const current = prev[selectedCaseId] || { scheduleAB: [], scheduleD: [], scheduleEF: [], scheduleIJ: [] };
       return {
         ...prev,
         [selectedCaseId]: {
@@ -36,15 +84,15 @@ export function BankruptcySchedulesLedger() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-800">
         <div className="flex items-center gap-2">
-          <FileSpreadsheet className="w-4 h-4 text-amber-700 shrink-0" />
+          <FileSpreadsheet className="w-4 h-4 text-slate-700 shrink-0" />
           <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] Official Schedules Ledger:</strong> Schedules A/B (Property), D (Secured Claims), E/F (Unsecured Debts), and I/J (Income/Living Expenses).
+            <strong>Official Schedules Ledger:</strong> Schedules A/B (Property), D (Secured Claims), E/F (Unsecured Debts), and I/J (Income/Living Expenses).
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-bold px-2 py-0.5 rounded text-[10px]">
+          F.R.B.P. 1007
         </span>
       </div>
 

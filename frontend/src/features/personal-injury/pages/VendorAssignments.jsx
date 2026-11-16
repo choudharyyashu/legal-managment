@@ -18,6 +18,7 @@ import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { piService } from '../../../services/piService';
 
 export function VendorAssignments() {
   const { addToast } = useToast();
@@ -28,6 +29,7 @@ export function VendorAssignments() {
     );
   }, [matters]);
   const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
@@ -40,6 +42,37 @@ export function VendorAssignments() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getVendorAssignments(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const list = Array.isArray(res) ? res : (res?.data || []);
+            setAssignments(list.map((a) => ({
+              ...a,
+              vendorName: a.vendor?.vendorName || a.vendorName || 'Outside Vendor',
+              vendorType: a.vendor?.category || a.vendorType || 'Expert Witness',
+              assignedMatter: a.serviceScope || 'PI Case Assignment',
+              status: a.status || 'ASSIGNED',
+              feeBudget: Number(a.authorizedAmount || 0),
+            })));
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load vendor assignments from API:', err?.message);
+          if (isMounted) setAssignments([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setAssignments([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
@@ -61,19 +94,28 @@ export function VendorAssignments() {
     return matchesSearch && matchesType && matchesCase;
   });
 
-  const handleSaveAssignment = (savedRecord) => {
-    setAssignments((prev) => {
-      const exists = prev.some((a) => a.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((a) => (a.id === savedRecord.id ? savedRecord : a));
-        addToast('Vendor assignment updated.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New outside vendor assignment dispatched.', 'success');
+  const handleSaveAssignment = async (savedRecord) => {
+    try {
+      if (activeCaseId && activeCaseId !== 'ALL') {
+        const payload = {
+          vendorId: savedRecord.vendorId || savedRecord.id,
+          serviceScope: savedRecord.assignedMatter || savedRecord.serviceScope || 'Case Assignment',
+          authorizedAmount: savedRecord.feeBudget || 0,
+        };
+        const created = await piService.createVendorAssignment(activeCaseId, payload);
+        savedRecord = created ? { ...savedRecord, id: created.id } : savedRecord;
+        addToast('New outside vendor assignment dispatched and saved to database.', 'success');
       }
-      return updated;
-    });
+      setAssignments((prev) => {
+        const exists = prev.some((a) => a.id === savedRecord.id);
+        if (exists) {
+          return prev.map((a) => (a.id === savedRecord.id ? savedRecord : a));
+        }
+        return [savedRecord, ...prev];
+      });
+    } catch (err) {
+      addToast(err?.response?.data?.message || err?.message || 'Error dispatching vendor', 'error');
+    }
   };
 
   const openAddModal = () => {

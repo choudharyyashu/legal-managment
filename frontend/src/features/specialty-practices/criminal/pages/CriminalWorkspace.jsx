@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../../../components/ui/Toast';
 import { useMatters } from '../../../../context/MatterContext';
+import { criminalService } from '../../../../services/criminalService';
 
 export function CriminalWorkspace() {
   const { addToast } = useToast();
@@ -49,7 +50,7 @@ export function CriminalWorkspace() {
           <Shield className="w-12 h-12 text-[#B42318] mx-auto mb-3 opacity-60" />
           <h2 className="text-xl font-serif font-bold text-[#06244B]">Criminal Defense Docket</h2>
           <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
-            No active criminal defense matters found in database. Specialized criminal defense workflows (Rule 16 Mandatory Discovery Trackers, Plea Agreement Collateral Consequence Checkers, and Utah Expungement Petitions) are pending dedicated backend model deployment.
+            No active criminal defense matters found in database. To begin, create or open a matter assigned to the Criminal Defense practice area.
           </p>
         </div>
       </div>

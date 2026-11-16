@@ -25,6 +25,28 @@ piRouter.post('/matters/:matterId/insurance', PersonalInjuryController.createIns
 piRouter.get('/matters/:matterId/demands', PersonalInjuryController.getDemands);
 piRouter.post('/matters/:matterId/demands', PersonalInjuryController.createDemand);
 
+// Liens & Subrogation
+piRouter.get('/matters/:matterId/liens', PersonalInjuryController.getLiens);
+piRouter.post('/matters/:matterId/liens', PersonalInjuryController.createLien);
+piRouter.patch('/matters/:matterId/liens/:lienId', PersonalInjuryController.updateLien);
+
+// Client Damages, Diagnostics & Wage Loss
+piRouter.get('/matters/:matterId/damages', PersonalInjuryController.getDamages);
+piRouter.post('/matters/:matterId/damages', PersonalInjuryController.createDamage);
+
+// Settlement Calculations & Disbursements
+piRouter.get('/matters/:matterId/settlements', PersonalInjuryController.getSettlements);
+piRouter.post('/matters/:matterId/settlements', PersonalInjuryController.createSettlement);
+
+// Vendors & Case Vendor Assignments
+piRouter.get('/vendors', PersonalInjuryController.getVendors);
+piRouter.post('/vendors', PersonalInjuryController.createVendor);
+piRouter.get('/matters/:matterId/vendors', PersonalInjuryController.getVendorAssignments);
+piRouter.post('/matters/:matterId/vendors', PersonalInjuryController.createVendorAssignment);
+
+// Aggregated PI Dashboard Metrics
+piRouter.get('/dashboard-metrics', PersonalInjuryController.getPIDashboardMetrics);
+
 piRouter.post('/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);
 piRouter.post('/matters/:matterId/records-requests/:id/incomplete', PersonalInjuryController.markRecordsIncomplete);
 

@@ -15,6 +15,7 @@ import { Select } from '../../../components/ui/Select';
 import { OutlookMailBridgeModal } from '../components/OutlookMailBridgeModal';
 import { TextMessageThreadModal } from '../components/TextMessageThreadModal';
 import { AppleSyncLimitationsPanel, UnmatchedCommunicationsQueue } from '../components/UnmatchedCommunicationsQueue';
+import { communicationService } from '../../../services/communicationService';
 
 export function CommunicationsList() {
   const { clients } = useClients();
@@ -23,6 +24,7 @@ export function CommunicationsList() {
   const { addToast } = useToast();
 
   const [communications, setCommunications] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('filed');
   const [unmatchedEmails, setUnmatchedEmails] = useState([]);
   const [unmatchedMessages, setUnmatchedMessages] = useState([]);
@@ -31,6 +33,44 @@ export function CommunicationsList() {
   const [isOutlookOpen, setIsOutlookOpen] = useState(false);
   const [isSmsOpen, setIsSmsOpen] = useState(false);
   const [selectedComm, setSelectedComm] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    communicationService.getCommunications()
+      .then((res) => {
+        if (isMounted) {
+          const list = Array.isArray(res) ? res : (res?.data || []);
+          setCommunications(list.map((c) => ({
+            ...c,
+            clientName: c.client?.name || c.clientName || 'Client',
+            matterTitle: c.matter?.title || c.matterTitle || 'Matter',
+            date: c.date ? new Date(c.date).toISOString().replace('T', ' ').substring(0, 16) : '',
+          })));
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch communications from API:', err?.message);
+        if (isMounted) setCommunications([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    communicationService.getUnmatchedQueue()
+      .then((res) => {
+        if (isMounted) {
+          const items = Array.isArray(res) ? res : (res?.data || []);
+          setUnmatchedEmails(items.filter((i) => i.type === 'email'));
+          setUnmatchedMessages(items.filter((i) => i.type !== 'email'));
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch unmatched queue:', err?.message);
+      });
+
+    return () => { isMounted = false; };
+  }, []);
 
   const handleMatchEmailToClient = (id, client) => {
     setUnmatchedEmails((prev) =>

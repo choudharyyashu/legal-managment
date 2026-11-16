@@ -22,6 +22,7 @@ import { Input } from '../../../components/ui/Input';
 import { LitigationNavigationHeader } from '../components/LitigationNavigationHeader';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { litigationService } from '../../../services/litigationService';
 
 export function TrialNotebook() {
   const { matters } = useMatters();
@@ -67,21 +68,35 @@ export function TrialNotebook() {
   const [exStatus, setExStatus] = useState('Stipulated Admissible');
   const [exObj, setExObj] = useState('None');
 
-  const handleAddWitness = (e) => {
+  const handleAddWitness = async (e) => {
     e.preventDefault();
     const newW = {
       name: wName,
-      order: (trial.plaintiffWitnesses?.length || 0) + 1,
+      order: (trial?.plaintiffWitnesses?.length || 0) + 1,
       willCall: wCall,
       estimateTime: wTime,
       purpose: wPurpose
     };
 
+    if (activeCase?.id) {
+      try {
+        await litigationService.createTrialNotebookItem(activeCase.id, {
+          section: 'Witness Lists',
+          title: wName,
+          description: `${wCall} (${wTime}) - ${wPurpose}`,
+          admissibility: 'Witness Subpoenaed',
+          orderIndex: newW.order,
+        });
+      } catch (err) {
+        console.warn('Could not persist witness to API:', err?.message);
+      }
+    }
+
     setActiveCase(prev => ({
       ...prev,
       trialPlan: {
-        ...prev.trialPlan,
-        plaintiffWitnesses: [...(prev.trialPlan?.plaintiffWitnesses || []), newW]
+        ...prev?.trialPlan,
+        plaintiffWitnesses: [...(prev?.trialPlan?.plaintiffWitnesses || []), newW]
       }
     }));
 
@@ -91,7 +106,7 @@ export function TrialNotebook() {
     setWPurpose('');
   };
 
-  const handleAddExhibit = (e) => {
+  const handleAddExhibit = async (e) => {
     e.preventDefault();
     const newEx = {
       num: exNum,
@@ -100,11 +115,24 @@ export function TrialNotebook() {
       objections: exObj
     };
 
+    if (activeCase?.id) {
+      try {
+        await litigationService.createTrialNotebookItem(activeCase.id, {
+          section: 'Exhibits',
+          title: `Exhibit ${exNum}: ${exDesc}`,
+          description: `Objections: ${exObj}`,
+          admissibility: exStatus,
+        });
+      } catch (err) {
+        console.warn('Could not persist exhibit to API:', err?.message);
+      }
+    }
+
     setActiveCase(prev => ({
       ...prev,
       trialPlan: {
-        ...prev.trialPlan,
-        exhibitBinder: [...(prev.trialPlan?.exhibitBinder || []), newEx]
+        ...prev?.trialPlan,
+        exhibitBinder: [...(prev?.trialPlan?.exhibitBinder || []), newEx]
       }
     }));
 
