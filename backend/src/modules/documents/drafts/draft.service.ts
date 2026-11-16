@@ -164,6 +164,7 @@ export class DraftService {
         OR: [{ id: input.templateId }, { templateCode: input.templateId }],
       },
       include: {
+        practiceArea: true,
         versions: {
           orderBy: { createdAt: 'desc' },
           include: { fieldMappings: true },
@@ -179,6 +180,21 @@ export class DraftService {
       throw AppError.badRequest(
         `Template '${template.templateCode}' is currently deactivated and cannot be used for generation.`,
         'INACTIVE_TEMPLATE'
+      );
+    }
+
+    // Validate Practice Area compatibility (Master/Retainer agreements apply globally)
+    const isGlobalTemplate =
+      template.isSystemDefault ||
+      template.templateCode === '001' ||
+      template.templateCode === 'UT-ENG-RET-001' ||
+      template.category === 'Engagement' ||
+      template.category === 'General';
+
+    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
+      throw AppError.badRequest(
+        `Template '${template.templateCode}' (${template.templateName}) is designated for '${template.practiceArea?.name || template.practiceAreaId}' matters and cannot be applied to matter '${matter.matterNumber}' (${matter.practiceArea?.name || matter.practiceAreaId}).`,
+        'INCOMPATIBLE_PRACTICE_AREA'
       );
     }
 
@@ -289,6 +305,7 @@ export class DraftService {
         OR: [{ id: input.templateId }, { templateCode: input.templateId }],
       },
       include: {
+        practiceArea: true,
         versions: {
           orderBy: { createdAt: 'desc' },
           include: { fieldMappings: true },
@@ -304,6 +321,21 @@ export class DraftService {
       throw AppError.badRequest(
         `Template '${template.templateCode}' is currently deactivated and cannot be used for generation.`,
         'INACTIVE_TEMPLATE'
+      );
+    }
+
+    // Validate Practice Area compatibility (Master/Retainer agreements apply globally)
+    const isGlobalTemplate =
+      template.isSystemDefault ||
+      template.templateCode === '001' ||
+      template.templateCode === 'UT-ENG-RET-001' ||
+      template.category === 'Engagement' ||
+      template.category === 'General';
+
+    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
+      throw AppError.badRequest(
+        `Template '${template.templateCode}' (${template.templateName}) is designated for '${template.practiceArea?.name || template.practiceAreaId}' matters and cannot be applied to matter '${matter.matterNumber}' (${matter.practiceArea?.name || matter.practiceAreaId}).`,
+        'INCOMPATIBLE_PRACTICE_AREA'
       );
     }
 
