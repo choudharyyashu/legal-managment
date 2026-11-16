@@ -138,6 +138,55 @@ export function BillingReports() {
     },
   ];
 
+  const handleExportCSV = () => {
+    try {
+      const headers = ['Practice Group', 'Billed Hours', 'Fees Billed ($)', 'Cash Collections ($)', 'Realization %'];
+      
+      const rows = reportRows.map(row => [
+        `"${row.practiceArea.replace(/"/g, '""')}"`,
+        row.hoursBilled.toFixed(1),
+        row.totalFees.toFixed(2),
+        row.collected.toFixed(2),
+        `"${row.realizationRate}"`,
+      ]);
+
+      // Calculate totals
+      const totalHours = reportRows.reduce((sum, r) => sum + r.hoursBilled, 0).toFixed(1);
+      const totalFees = reportRows.reduce((sum, r) => sum + r.totalFees, 0).toFixed(2);
+      const totalCollected = reportRows.reduce((sum, r) => sum + r.collected, 0).toFixed(2);
+      const overallRealization = '90.3%';
+
+      rows.push([
+        '"Total Firm Summary (YTD)"',
+        totalHours,
+        totalFees,
+        totalCollected,
+        `"${overallRealization}"`,
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.join(',')),
+      ].join('\r\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.href = url;
+      link.setAttribute('download', `Heugly_Bludworth_Billing_Report_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Billing report exported successfully as CSV!', 'success');
+    } catch (err) {
+      console.error('Failed to export CSV:', err);
+      addToast('Failed to export billing report. Please try again.', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -145,6 +194,7 @@ export function BillingReports() {
         subtitle="Practice group fee generation, realization metrics, and accounts receivable aging summaries."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'Billing Reports' }]}
         actions={
+<<<<<<< HEAD
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -164,6 +214,16 @@ export function BillingReports() {
               Export Report (CSV)
             </Button>
           </div>
+=======
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Download}
+            onClick={handleExportCSV}
+          >
+            Export Report (CSV)
+          </Button>
+>>>>>>> 3adcb1a8abe2f1a42ae16f0b4cf1c9da04528b52
         }
       />
 

@@ -18,7 +18,9 @@ import {
   FolderPlus,
   Scale,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -643,17 +645,42 @@ export function Dashboard() {
         )}
       </Modal>
 
-      {/* Quick Add Client Modal */}
+      {/* Quick Add Client Modal - Utah RPC 1.7 Conflict Gate */}
       <Modal
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
-        title="Add Client"
-        subtitle="Quick intake of a new prospective or active client."
+        title="Client Onboarding: Conflict Check Required"
+        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        maxWidth="max-w-lg"
       >
-        <ClientForm
-          onSuccess={() => setIsClientModalOpen(false)}
-          onCancel={() => setIsClientModalOpen(false)}
-        />
+        <div className="space-y-4 py-1">
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <span className="font-bold block text-sm pb-1 text-amber-950">Conflict Screening Required Before Creation</span>
+              Under Utah Rule of Professional Conduct 1.7, no new Client or Matter can be established without first screening prospective client entities and adverse parties for direct conflicts of interest. Direct creation without clearance is restricted.
+            </div>
+          </div>
+          <p className="text-xs text-[#667085] leading-relaxed">
+            Please initiate a <strong>Prospective Client Intake</strong> to record the prospective client entity, primary contact, and adverse parties. Once the RPC 1.7 conflict search is completed and cleared, the client record and matter will be generated automatically.
+          </p>
+          <div className="flex justify-end items-center gap-2 pt-3 border-t border-[#D9D6CF]">
+            <Button variant="outline" size="sm" onClick={() => setIsClientModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={ArrowRight}
+              onClick={() => {
+                setIsClientModalOpen(false);
+                navigate('/intake?openIntake=true');
+              }}
+            >
+              Start Intake &amp; Conflict Check
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Quick New Matter Modal */}

@@ -160,10 +160,16 @@ export class IntakeService {
   ): Promise<IntakeResponse> {
     const existing = await this.getIntakeByIdOrNumber(id);
 
+    // If prospectiveClient or adverseParties changed, invalidate previous conflict clearance (Utah RPC 1.7 stale check)
+    const partiesChanged =
+      (input.prospectiveClient && input.prospectiveClient.trim() !== existing.prospectiveClient.trim()) ||
+      (input.adverseParties && input.adverseParties.trim() !== existing.adverseParties.trim());
+
     const updated = await prisma.intake.update({
       where: { id: existing.id },
       data: {
         ...input,
+        ...(partiesChanged ? { conflictStatus: 'Not Started', reviewedByUserId: null, reviewedAt: null } : {}),
       },
       include: { practiceArea: true, reviewedByUser: true },
     });
@@ -293,6 +299,13 @@ export class IntakeService {
       throw AppError.conflict('Intake has already been converted to a client.', 'ALREADY_CONVERTED');
     }
 
+    if (!['Cleared', 'Waiver Obtained'].includes(intake.conflictStatus)) {
+      throw AppError.badRequest(
+        `Cannot onboard client: Conflict status is '${intake.conflictStatus}'. Utah RPC 1.7 requires conflict check to be Cleared or Waiver Obtained before client creation.`,
+        'CONFLICT_NOT_CLEARED'
+      );
+    }
+
     // Provision new client record using ClientService
     const client = await ClientService.createClient(
       {
@@ -333,6 +346,13 @@ export class IntakeService {
     context: { userId: string; userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<{ matter: any; intake: IntakeResponse }> {
     const intake = await this.getIntakeByIdOrNumber(id);
+
+    if (!['Cleared', 'Waiver Obtained'].includes(intake.conflictStatus)) {
+      throw AppError.badRequest(
+        `Cannot open matter: Conflict status is '${intake.conflictStatus}'. Utah RPC 1.7 requires conflict check to be Cleared or Waiver Obtained before matter creation.`,
+        'CONFLICT_NOT_CLEARED'
+      );
+    }
 
     let clientId = input.clientId || intake.convertedClientId;
     if (!clientId) {

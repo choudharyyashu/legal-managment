@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldAlert, ArrowRight } from 'lucide-react';
+import { Button } from '../ui/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { useClients } from '../../context/ClientContext';
 import { useMatters } from '../../context/MatterContext';
@@ -17,6 +19,7 @@ import { TimeEntryForm } from '../../features/time-tracking/forms/TimeEntryForm'
 export function AppLayout() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { refreshClients, refreshIntakes } = useClients();
   const { refreshMatters } = useMatters();
   const { refreshTasks } = useTasks();
@@ -156,18 +159,42 @@ export function AppLayout() {
         </footer>
       </div>
 
-      {/* Add Client Global Modal */}
+      {/* Add Client Global Modal - Utah RPC 1.7 Conflict Gate */}
       <Modal
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
-        title="Add New Client"
-        subtitle="Create a new client entity or individual representation record."
-        maxWidth="max-w-2xl"
+        title="Client Onboarding: Conflict Check Required"
+        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        maxWidth="max-w-lg"
       >
-        <ClientForm
-          onSuccess={() => setIsClientModalOpen(false)}
-          onCancel={() => setIsClientModalOpen(false)}
-        />
+        <div className="space-y-4 py-1">
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <span className="font-bold block text-sm pb-1 text-amber-950">Conflict Screening Required Before Creation</span>
+              Under Utah Rule of Professional Conduct 1.7, no new Client or Matter can be established without first screening prospective client entities and adverse parties for direct conflicts of interest. Direct creation without clearance is restricted.
+            </div>
+          </div>
+          <p className="text-xs text-[#667085] leading-relaxed">
+            Please initiate a <strong>Prospective Client Intake</strong> to record the prospective client entity, primary contact, and adverse parties. Once the RPC 1.7 conflict search is completed and cleared, the client record and matter will be generated automatically.
+          </p>
+          <div className="flex justify-end items-center gap-2 pt-3 border-t border-[#D9D6CF]">
+            <Button variant="outline" size="sm" onClick={() => setIsClientModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={ArrowRight}
+              onClick={() => {
+                setIsClientModalOpen(false);
+                navigate('/intake?openIntake=true');
+              }}
+            >
+              Start Intake &amp; Conflict Check
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* New Matter Global Modal */}

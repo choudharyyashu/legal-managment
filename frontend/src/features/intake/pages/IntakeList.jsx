@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UserCheck,
   ShieldAlert,
@@ -44,6 +44,7 @@ import {
 
 export function IntakeList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { intakes, addIntake, updateConflictCheck, addClient } = useClients();
   const { currentUser } = useAuth();
   const permissions = usePermissions();
@@ -51,6 +52,13 @@ export function IntakeList() {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedIntake, setSelectedIntake] = useState(null);
+
+  // Auto-open new intake modal if redirected from Header/Clients/Dashboard
+  useEffect(() => {
+    if (location.search.includes('openIntake=true') || location.search.includes('new=true')) {
+      setIsAddModalOpen(true);
+    }
+  }, [location.search]);
 
   // Phase 1 Enhanced Modals
   const [isConflictSearchOpen, setIsConflictSearchOpen] = useState(false);
