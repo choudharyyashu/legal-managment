@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Clock, Search, Download, Filter, Key, CheckCircle2, Sparkles, RefreshCw, AlertTriangle, Layers } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -7,107 +7,50 @@ import { SearchBar } from '../../../components/shared/SearchBar';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
 import { formatDate } from '../../../utils/formatDate';
+import { reportService } from '../../../services/reportService';
 
 export function AuditLogs() {
   const { addToast } = useToast();
   const [activeLogTab, setActiveLogTab] = useState('security'); // 'security' | 'workflow'
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [logs] = useState([
-    {
-      id: 'AUD-991',
-      timestamp: '2026-11-05 17:15',
-      user: 'Eleanor Heugly, Esq.',
-      role: 'Super Admin',
-      action: 'TIME_APPROVAL',
-      target: 'TIM-501 (Thomas Bludworth - 3.5 hrs)',
-      ipAddress: '192.168.1.104',
-      status: 'Success',
-    },
-    {
-      id: 'AUD-992',
-      timestamp: '2026-11-04 18:30',
-      user: 'Rachel Adams',
-      role: 'Billing Director',
-      action: 'COSMOLEX_BATCH_EXPORT',
-      target: 'Batch COSMO-2026-1101 (8 entries / $14,850.00)',
-      ipAddress: '192.168.1.112',
-      status: 'Success',
-    },
-    {
-      id: 'AUD-993',
-      timestamp: '2026-11-04 15:45',
-      user: 'Thomas Bludworth, Esq.',
-      role: 'Senior Partner',
-      action: 'CONFLICT_CHECK_REVIEW',
-      target: 'INT-902 (Vanguard Medical Devices - Adverse Identified)',
-      ipAddress: '192.168.1.108',
-      status: 'Conflict Flagged',
-    },
-    {
-      id: 'AUD-994',
-      timestamp: '2026-11-03 09:20',
-      user: 'David Sterling, Esq.',
-      role: 'Supervisor',
-      action: 'TASK_DELEGATION',
-      target: 'TSK-105 assigned to Marcus Vance',
-      ipAddress: '192.168.1.115',
-      status: 'Success',
-    },
-    {
-      id: 'AUD-995',
-      timestamp: '2026-11-02 11:00',
-      user: 'Eleanor Heugly, Esq.',
-      role: 'Super Admin',
-      action: 'ROLE_PERMISSION_UPDATE',
-      target: 'Updated Paralegal access to matter files',
-      ipAddress: '192.168.1.104',
-      status: 'Success',
-    }
-  ]);
+  const fetchLogs = () => {
+    setLoading(true);
+    reportService.getAuditLogs({ limit: 100 })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setLogs(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load audit logs:', err?.message);
+        setLogs([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
-  // Workflow Execution Logs (Filevine Reference)
-  const [workflowLogs, setWorkflowLogs] = useState([
-    {
-      id: 'WF-701',
-      timestamp: '2026-11-06 10:45 AM',
-      ruleName: 'STAGE_ADVANCE_AUTO_SPAWN',
-      matter: 'MAT-2025-0101 (Wasatch Mountain Logistics)',
-      triggeredBy: 'Thomas Bludworth, Esq.',
-      spawnedTasks: 2,
-      details: 'Advanced to Expert Discovery; spawned Expert Retainer & Index Disclosure tasks.',
-      status: 'Success',
-    },
-    {
-      id: 'WF-702',
-      timestamp: '2026-11-06 09:30 AM',
-      ruleName: 'RULE_6_DEADLINE_SHIFT',
-      matter: 'MAT-2025-0101 (Wasatch Mountain Logistics)',
-      triggeredBy: 'Marcus Vance',
-      spawnedTasks: 5,
-      details: 'Trial date anchor shifted; recalculated 5 cascading pre-trial court cutoffs.',
-      status: 'Success',
-    },
-    {
-      id: 'WF-703',
-      timestamp: '2026-11-05 02:15 PM',
-      ruleName: 'INTAKE_CONFLICT_CLEARANCE',
-      matter: 'INT-901 (Clearwater Basin Agricultural)',
-      triggeredBy: 'Eleanor Heugly, Esq.',
-      spawnedTasks: 0,
-      details: 'Issued Utah RPC 1.7 Certificate UT-RPC1.7-889102; zero adverse hits.',
-      status: 'Success',
-    },
-    {
-      id: 'WF-704',
-      timestamp: '2026-11-04 11:10 AM',
-      ruleName: 'COSMOLEX_LEDGER_SYNC_ATTEMPT',
-      matter: 'MAT-2024-0301 (Apex Horizon)',
-      triggeredBy: 'System Automation Worker',
-      spawnedTasks: 0,
-      details: 'Simulated endpoint timeout: Gateway connection retry scheduled in 5m.',
-      status: 'Retry Required',
-    },
-  ]);
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  // Workflow Execution Logs derived from real audit events
+  const workflowLogs = React.useMemo(() => {
+    return logs
+      .filter((l) => l.action?.includes('DRAFT') || l.action?.includes('TASK') || l.action?.includes('WORKFLOW') || l.action?.includes('CONFLICT'))
+      .map((l, idx) => ({
+        id: `WF-${l.id.substring(0, 8)}`,
+        timestamp: l.timestamp,
+        ruleName: l.action,
+        matter: l.target,
+        triggeredBy: l.user,
+        spawnedTasks: l.action?.includes('TASK') ? 1 : 0,
+        details: typeof l.details === 'string' ? l.details : JSON.stringify(l.details || {}),
+        status: l.status,
+      }));
+  }, [logs]);
 
   const [searchQuery, setSearchQuery] = useState('');
 

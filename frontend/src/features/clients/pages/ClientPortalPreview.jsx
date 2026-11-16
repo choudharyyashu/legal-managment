@@ -44,17 +44,11 @@ export function ClientPortalPreview() {
   const clientMatters = selectedClient ? matters.filter(m => m.clientId === selectedClient.id) : [];
 
   // Client Upload State
-  const [uploadedFiles, setUploadedFiles] = useState([
-    { id: 'up-1', name: '2024_W2_Wage_Statement.pdf', size: '1.2 MB', uploadedAt: '2026-11-02', status: 'Received by Firm' },
-    { id: 'up-2', name: 'Commercial_Driver_Log_Excerpts.pdf', size: '4.8 MB', uploadedAt: '2026-11-04', status: 'Received by Firm' },
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadCategory, setUploadCategory] = useState('Tax & Financial Records');
 
   // Client Messaging State
-  const [messages, setMessages] = useState([
-    { id: 'msg-1', sender: 'Thomas Bludworth, Esq.', time: 'Nov 5, 2026 at 10:15 AM', isLawyer: true, text: 'Robert, we have finalized the second set of interrogatories. Please review the attached draft question list when you have a moment before Friday.' },
-    { id: 'msg-2', sender: 'Robert H. Henderson', time: 'Nov 5, 2026 at 02:40 PM', isLawyer: false, text: 'Thanks Thomas. Our fleet safety director reviewed items 4 through 12. I uploaded the driver log excerpts to the portal.' },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [replyText, setReplyText] = useState('');
 
   // Online Payment Simulator State
@@ -254,51 +248,38 @@ export function ClientPortalPreview() {
               <div>
                 <h4 className="font-bold text-xs uppercase text-[#06244B] mb-2">Documents Transmitted to Legal Team</h4>
                 <div className="divide-y divide-[#D9D6CF] border border-[#D9D6CF] rounded bg-white overflow-hidden">
-                  {uploadedFiles.map(file => (
-                    <div key={file.id} className="p-3 flex items-center justify-between hover:bg-slate-50">
-                      <div className="flex items-center gap-2.5">
-                        <FileText className="w-4 h-4 text-emerald-700" />
-                        <div>
-                          <p className="font-semibold text-[#06244B]">{file.name}</p>
-                          <p className="text-[10px] text-[#667085]">{file.size} • Uploaded {file.uploadedAt}</p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                        {file.status}
-                      </span>
+                  {uploadedFiles.length === 0 ? (
+                    <div className="p-6 text-center text-[#667085]">
+                      <FileText className="w-6 h-6 text-[#D9D6CF] mx-auto mb-1 opacity-60" />
+                      <p className="font-semibold text-xs text-[#06244B]">No Documents Uploaded Yet</p>
+                      <p className="text-[11px] text-[#667085] mt-0.5">Use the dropzone above to securely transmit case files to your legal team.</p>
                     </div>
-                  ))}
+                  ) : (
+                    uploadedFiles.map(file => (
+                      <div key={file.id} className="p-3 flex items-center justify-between hover:bg-slate-50">
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-4 h-4 text-emerald-700" />
+                          <div>
+                            <p className="font-semibold text-[#06244B]">{file.name}</p>
+                            <p className="text-[10px] text-[#667085]">{file.size} • Uploaded {file.uploadedAt}</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                          {file.status}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Shared from Counsel */}
               <div>
                 <h4 className="font-bold text-xs uppercase text-[#06244B] mb-2">Pleadings Shared By Firm</h4>
-                <div className="divide-y divide-[#D9D6CF] border border-[#D9D6CF] rounded bg-white">
-                  <div className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-[#A4432B]" />
-                      <div>
-                        <p className="font-bold text-[#06244B]">First Amended Complaint (Court-Stamped Copy).pdf</p>
-                        <p className="text-[10px] text-[#667085]">Shared on 2025-01-24 • 3.4 MB</p>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" icon={Download} onClick={() => addToast('Encrypted client copy downloaded: First Amended Complaint.pdf', 'success')}>
-                      Download
-                    </Button>
-                  </div>
-                  <div className="p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-[#A4432B]" />
-                      <div>
-                        <p className="font-bold text-[#06244B]">Joint Scheduling Order Signed by Judge Hruby-Mills.pdf</p>
-                        <p className="text-[10px] text-[#667085]">Shared on 2025-02-16 • 840 KB</p>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline" icon={Download} onClick={() => addToast('Encrypted client copy downloaded: Scheduling Order.pdf', 'success')}>
-                      Download
-                    </Button>
-                  </div>
+                <div className="divide-y divide-[#D9D6CF] border border-[#D9D6CF] rounded bg-white p-6 text-center text-[#667085]">
+                  <FileText className="w-6 h-6 text-[#D9D6CF] mx-auto mb-1 opacity-60" />
+                  <p className="font-semibold text-xs text-[#06244B]">No Public Pleadings Available</p>
+                  <p className="text-[11px] text-[#667085] mt-0.5">Approved pleadings and court orders will appear here once finalized by counsel.</p>
                 </div>
               </div>
             </div>
@@ -309,15 +290,23 @@ export function ClientPortalPreview() {
             <div className="space-y-4 text-xs">
               <h3 className="font-serif text-base font-bold text-[#06244B]">Encrypted Counsel Messaging Channel</h3>
               <div className="border border-[#D9D6CF] rounded-lg p-4 space-y-3 bg-slate-50 max-h-72 overflow-y-auto">
-                {messages.map(m => (
-                  <div key={m.id} className={`p-3 rounded-lg max-w-xl ${m.isLawyer ? 'bg-white border border-[#D9D6CF]' : 'bg-[#06244B] text-white ml-auto'}`}>
-                    <div className="flex justify-between items-center mb-1 text-[10px]">
-                      <span className={`font-bold ${m.isLawyer ? 'text-[#06244B]' : 'text-amber-200'}`}>{m.sender}</span>
-                      <span className={m.isLawyer ? 'text-[#667085]' : 'text-slate-300'}>{m.time}</span>
-                    </div>
-                    <p className={`text-xs ${m.isLawyer ? 'text-[#202A35]' : 'text-slate-100'}`}>{m.text}</p>
+                {messages.length === 0 ? (
+                  <div className="p-8 text-center text-[#667085]">
+                    <MessageSquare className="w-6 h-6 text-[#D9D6CF] mx-auto mb-1 opacity-60" />
+                    <p className="font-semibold text-xs text-[#06244B]">No Messages Exchanged Yet</p>
+                    <p className="text-[11px] text-[#667085] mt-0.5">Use the composition box below to message your legal team.</p>
                   </div>
-                ))}
+                ) : (
+                  messages.map(m => (
+                    <div key={m.id} className={`p-3 rounded-lg max-w-xl ${m.isLawyer ? 'bg-white border border-[#D9D6CF]' : 'bg-[#06244B] text-white ml-auto'}`}>
+                      <div className="flex justify-between items-center mb-1 text-[10px]">
+                        <span className={`font-bold ${m.isLawyer ? 'text-[#06244B]' : 'text-amber-200'}`}>{m.sender}</span>
+                        <span className={m.isLawyer ? 'text-[#667085]' : 'text-slate-300'}>{m.time}</span>
+                      </div>
+                      <p className={`text-xs ${m.isLawyer ? 'text-[#202A35]' : 'text-slate-100'}`}>{m.text}</p>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Message Composer */}

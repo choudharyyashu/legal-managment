@@ -32,132 +32,90 @@ export function MatterReports() {
   const { tasks } = useTasks();
   const { addToast } = useToast();
 
-  const [activeReportTab, setActiveReportTab] = useState('stalled'); // 'all', 'stalled', 'missing-docs', 'deadlines', 'overdue'
+  const [activeReportTab, setActiveReportTab] = useState('all');
 
-  // Stalled Matters mock data (>30 days without activity or stage advance)
-  const stalledMatters = [
-    {
-      id: 'MAT-2024-0301',
-      matterNumber: '24-LND-0912',
-      title: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      clientName: 'Apex Horizon Real Estate Group',
-      practiceArea: 'Real Estate, Water Rights & Land Use',
-      leadAttorney: 'Eleanor Heugly, Esq.',
-      currentStage: 'Fact Discovery',
-      daysInactive: 42,
-      lastActivityDate: '2026-10-01',
-      stalledReason: 'Awaiting certified groundwater recharge telemetry logs from opposing expert.',
-    },
-    {
-      id: 'MAT-2025-0601',
-      matterNumber: '25-CORP-0119',
-      title: 'Intermountain Health Tech Acquisition & Asset Transfer',
-      clientName: 'Harrison & Claire Thorne',
-      practiceArea: 'Commercial & Corporate Law',
-      leadAttorney: 'Thomas Bludworth, Esq.',
-      currentStage: 'Entity Structuring',
-      daysInactive: 34,
-      lastActivityDate: '2026-10-09',
-      stalledReason: 'Pending member signature on revised buy-sell valuation schedule.',
-    },
-  ];
+  // Stalled Matters dynamically derived from live matters (inactive >30 days)
+  const now = new Date();
+  const stalledMatters = matters
+    .filter((m) => m.status !== 'Concluded' && m.status !== 'Closed')
+    .filter((m) => {
+      const updated = m.updatedAt ? new Date(m.updatedAt) : new Date(m.createdAt || now);
+      const daysDiff = Math.floor((now - updated) / (1000 * 60 * 60 * 24));
+      return daysDiff >= 30;
+    })
+    .map((m) => {
+      const updated = m.updatedAt ? new Date(m.updatedAt) : new Date(m.createdAt || now);
+      return {
+        id: m.id,
+        matterNumber: m.matterNumber,
+        title: m.title,
+        clientName: m.clientName || 'Firm Client',
+        practiceArea: m.practiceAreaName || m.practiceArea || 'General Practice',
+        leadAttorney: m.assignedAttorneyName || 'Thomas Bludworth, Esq.',
+        currentStage: m.stage || m.status || 'Active',
+        daysInactive: Math.max(30, Math.floor((now - updated) / (1000 * 60 * 60 * 24))),
+        lastActivityDate: updated.toISOString().split('T')[0],
+        stalledReason: 'No docket advancement or stage transition recorded in past 30 days.',
+      };
+    });
 
-  // Missing Documents mock data (Mandatory gatekeeper documents pending)
-  const missingDocMatters = [
-    {
-      id: 'md-1',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      missingDocument: 'Rule 26(a)(2) Economics Damages Expert Formal Report',
-      category: 'Pleadings / Discovery',
-      responsibleStaff: 'Thomas Bludworth, Esq.',
-      daysPending: 18,
-      severity: 'Critical (Trial Gatekeeper)',
-    },
-    {
-      id: 'md-2',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      clientName: 'Dr. Evelyn Martinez',
-      missingDocument: 'Utah URCP 26.1 Sworn Financial Declaration & 12 Months Bank Statements',
-      category: 'Mandatory Disclosure',
-      responsibleStaff: 'Sarah Jenkins, Esq.',
-      daysPending: 12,
-      severity: 'Urgent (Hearing Prerequisite)',
-    },
-    {
-      id: 'md-3',
-      matterNumber: '26-25410-JTM',
-      matterTitle: 'Rachel Lynn Walker: Chapter 7 Consumer Debt Liquidation',
-      clientName: 'Rachel Lynn Walker',
-      missingDocument: 'Signed IRS Form 1040 Tax Return Transcripts (2024 & 2025)',
-      category: 'Statutory 11 U.S.C. § 521',
-      responsibleStaff: 'Marcus Vance (Paralegal)',
-      daysPending: 8,
-      severity: 'High (341 Meeting Deficiency)',
-    },
-  ];
+  // Missing Documents dynamically identified from live matters without documents attached
+  const missingDocMatters = matters
+    .filter((m) => !m.documentsCount || m.documentsCount === 0)
+    .slice(0, 5)
+    .map((m, idx) => ({
+      id: `md-${m.id || idx}`,
+      matterNumber: m.matterNumber,
+      matterTitle: m.title,
+      clientName: m.clientName || 'Firm Client',
+      missingDocument: 'Initial Engagement Agreement & Representation Letter',
+      category: 'Mandatory Engagement Filing',
+      responsibleStaff: m.assignedAttorneyName || 'Thomas Bludworth, Esq.',
+      daysPending: Math.max(1, Math.floor((now - new Date(m.createdAt || now)) / (1000 * 60 * 60 * 24))),
+      severity: 'High (Required for Formal Filing)',
+    }));
 
-  // Approaching Court Deadlines mock data (Next 30 Days)
-  const approachingDeadlines = [
-    {
-      id: 'cd-1',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      deadlineTitle: 'Utah URCP 56 Dispositive Summary Judgment Briefing Cutoff',
-      ruleCitation: 'Utah R. Civ. P. 56(c)',
-      dueDate: '2026-12-01',
-      daysRemaining: 19,
-      responsibleCounsel: 'Thomas Bludworth, Esq.',
-      riskLevel: 'Critical',
-    },
-    {
-      id: 'cd-2',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      deadlineTitle: 'Mandatory Court Mediation & Marital Balance Sheet Exchange',
-      ruleCitation: 'Utah Code § 30-3-39',
-      dueDate: '2026-11-20',
-      daysRemaining: 8,
-      responsibleCounsel: 'Sarah Jenkins, Esq.',
-      riskLevel: 'Urgent',
-    },
-    {
-      id: 'cd-3',
-      matterNumber: '24-LND-0912',
-      deadlineTitle: 'Pre-Hearing Brief to Wasatch County Board of Adjustment',
-      ruleCitation: 'Wasatch County Code § 16.02',
-      dueDate: '2026-11-25',
-      daysRemaining: 13,
-      responsibleCounsel: 'Eleanor Heugly, Esq.',
-      riskLevel: 'High',
-    },
-  ];
+  // Approaching Deadlines dynamically derived from live tasks with due dates in next 30 days
+  const approachingDeadlines = tasks
+    .filter((t) => t.status !== 'Completed' && t.dueDate)
+    .filter((t) => {
+      const due = new Date(t.dueDate);
+      const daysUntil = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+      return daysUntil >= 0 && daysUntil <= 30;
+    })
+    .map((t) => {
+      const due = new Date(t.dueDate);
+      const daysRemaining = Math.max(0, Math.ceil((due - now) / (1000 * 60 * 60 * 24)));
+      return {
+        id: t.id,
+        matterNumber: t.matterNumber || 'Active Matter',
+        matterTitle: t.matterTitle || t.title,
+        deadlineTitle: t.title,
+        ruleCitation: t.ruleCitation || 'Utah R. Civ. P. Schedule',
+        dueDate: t.dueDate,
+        daysRemaining,
+        responsibleCounsel: t.assignedTo || 'Thomas Bludworth, Esq.',
+        riskLevel: daysRemaining <= 3 ? 'Critical' : daysRemaining <= 7 ? 'Urgent' : 'Standard',
+      };
+    });
 
-  // Overdue Tasks mock data
-  const overdueTasks = [
-    {
-      id: 'ot-1',
-      title: 'File Summary Judgment Opposition Brief & Rule 56(d) Declaration',
-      matterTitle: 'Apex Horizon v. Wasatch County Board (Water Rights Appeal)',
-      assignedTo: 'Eleanor Heugly, Esq.',
-      role: 'Partner',
-      dueDate: '2026-11-10',
-      daysOverdue: 2,
-      priority: 'High',
-    },
-    {
-      id: 'ot-2',
-      title: 'Subpoena Telemetry Sensor Calibration Log for Truck 408',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines',
-      assignedTo: 'Marcus Vance',
-      role: 'Paralegal',
-      dueDate: '2026-11-08',
-      daysOverdue: 4,
-      priority: 'Urgent',
-    },
-  ];
+  // Overdue Tasks dynamically derived from live overdue tasks in firm
+  const overdueTasks = tasks
+    .filter((t) => t.status !== 'Completed' && t.dueDate && new Date(t.dueDate) < now)
+    .map((t) => {
+      const due = new Date(t.dueDate);
+      const daysOverdue = Math.max(1, Math.floor((now - due) / (1000 * 60 * 60 * 24)));
+      return {
+        id: t.id,
+        title: t.title,
+        matterTitle: t.matterTitle || 'Firm Matter',
+        assignedTo: t.assignedTo || 'Firm Staff',
+        role: t.role || 'Attorney',
+        dueDate: t.dueDate,
+        daysOverdue,
+        priority: t.priority || 'High',
+      };
+    });
 
   const handleExportReport = () => {
     try {

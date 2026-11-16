@@ -122,11 +122,13 @@ export class AuthService {
     // 4. Extract permissions
     const permissions = user.roleRel?.permissions.map((p) => p.permissionKey) || [];
 
-    // 5. Update lastLoginAt
+    // 5. Update lastLoginAt asynchronously in background for rapid response
     const now = new Date();
-    await prisma.user.update({
+    prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: now },
+    }).catch((err) => {
+      // Non-fatal background update
     });
 
     // 6. Generate tokens
@@ -140,8 +142,8 @@ export class AuthService {
 
     const { token: refreshToken } = TokenService.generateRefreshToken(user.id);
 
-    // 7. Audit Log
-    await createAuditLog({
+    // 7. Audit Log dispatched asynchronously in background
+    createAuditLog({
       userId: user.id,
       userName: user.name,
       userRole: user.role,
@@ -155,7 +157,7 @@ export class AuthService {
       },
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
-    });
+    }).catch(() => {});
 
     const safeUser = this.toSafeUser(user, permissions);
     safeUser.lastLoginAt = now;

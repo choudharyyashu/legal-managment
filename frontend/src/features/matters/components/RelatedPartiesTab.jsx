@@ -21,11 +21,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { useToast } from '../../../components/ui/Toast';
 import { usePermissions } from '../../../hooks/usePermissions';
-import {
-  RELATED_PARTY_ROLES,
-  getRelatedPartiesByMatter,
-  getRelatedPartiesByClient
-} from '../../../data/mockRelatedParties';
+import { RELATED_PARTY_ROLES } from '../../../data/mockRelatedParties';
 
 export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName }) {
   const { addToast } = useToast();
@@ -35,10 +31,10 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
     try {
       const stored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
       if (matterId) {
-        return getRelatedPartiesByMatter(matterId, stored);
+        return stored.filter((p) => p.matterId === matterId);
       }
       if (clientId) {
-        return getRelatedPartiesByClient(clientId, stored);
+        return stored.filter((p) => p.clientId === clientId);
       }
       return stored;
     } catch {

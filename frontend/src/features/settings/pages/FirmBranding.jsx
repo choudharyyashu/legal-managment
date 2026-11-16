@@ -5,18 +5,44 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useToast } from '../../../components/ui/Toast';
 
+const BRANDING_STORAGE_KEY = 'hb_firm_branding_config';
+
+const DEFAULT_BRANDING = {
+  firmName: 'HEUGLY & BLUDWORTH, LLC',
+  tagline: 'ATTORNEYS AT LAW • ESTABLISHED PRACTICE',
+  primaryPhone: '(801) 555-0100',
+  primaryEmail: 'contact@utahslawyers.com',
+  address: '250 State Street, Suite 800, Salt Lake City, UT 84111',
+};
+
 export function FirmBranding() {
   const { addToast } = useToast();
 
-  const [firmName, setFirmName] = useState('HEUGLY & BLUDWORTH, LLC');
-  const [tagline, setTagline] = useState('ATTORNEYS AT LAW • ESTABLISHED PRACTICE');
-  const [primaryPhone, setPrimaryPhone] = useState('(801) 555-0100');
-  const [primaryEmail, setPrimaryEmail] = useState('contact@utahslawyers.com');
-  const [address, setAddress] = useState('250 State Street, Suite 800, Salt Lake City, UT 84111');
+  const [branding, setBranding] = useState(() => {
+    try {
+      const saved = localStorage.getItem(BRANDING_STORAGE_KEY);
+      return saved ? { ...DEFAULT_BRANDING, ...JSON.parse(saved) } : DEFAULT_BRANDING;
+    } catch {
+      return DEFAULT_BRANDING;
+    }
+  });
 
   const handleSave = (e) => {
     e.preventDefault();
-    addToast('Firm branding and letterhead configuration updated.', 'success');
+    try {
+      localStorage.setItem(BRANDING_STORAGE_KEY, JSON.stringify(branding));
+      addToast('Firm branding and letterhead configuration saved successfully.', 'success');
+    } catch (err) {
+      addToast('Failed to save firm branding configuration.', 'error');
+    }
+  };
+
+  const handleReset = () => {
+    setBranding(DEFAULT_BRANDING);
+    try {
+      localStorage.removeItem(BRANDING_STORAGE_KEY);
+    } catch {}
+    addToast('Branding reset to official Utah Law defaults.', 'info');
   };
 
   return (
@@ -73,46 +99,49 @@ export function FirmBranding() {
             <Input
               label="Legal Entity Name"
               required
-              value={firmName}
-              onChange={(e) => setFirmName(e.target.value)}
+              value={branding.firmName}
+              onChange={(e) => setBranding({ ...branding, firmName: e.target.value })}
             />
           </div>
 
           <div>
             <Input
               label="Practice Subtitle / Letterhead Tagline"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
+              value={branding.tagline}
+              onChange={(e) => setBranding({ ...branding, tagline: e.target.value })}
             />
           </div>
 
           <div>
             <Input
               label="Primary Law Firm Telephone"
-              value={primaryPhone}
-              onChange={(e) => setPrimaryPhone(e.target.value)}
+              value={branding.primaryPhone}
+              onChange={(e) => setBranding({ ...branding, primaryPhone: e.target.value })}
             />
           </div>
 
           <div>
             <Input
               label="Official Firm Notice Email"
-              value={primaryEmail}
-              onChange={(e) => setPrimaryEmail(e.target.value)}
+              value={branding.primaryEmail}
+              onChange={(e) => setBranding({ ...branding, primaryEmail: e.target.value })}
             />
           </div>
 
           <div className="sm:col-span-2">
             <Input
               label="Headquarters Street Address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              value={branding.address}
+              onChange={(e) => setBranding({ ...branding, address: e.target.value })}
             />
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-[#D9D6CF]">
-          <Button type="submit" variant="primary" size="sm">
+        <div className="flex items-center justify-between pt-3 border-t border-[#D9D6CF]">
+          <Button type="button" variant="outline" size="sm" icon={RefreshCw} onClick={handleReset}>
+            Reset Defaults
+          </Button>
+          <Button type="submit" variant="primary" size="sm" icon={Check}>
             Save Practice Branding
           </Button>
         </div>

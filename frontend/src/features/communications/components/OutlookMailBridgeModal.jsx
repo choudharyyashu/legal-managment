@@ -1,50 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, CheckCircle2, ArrowRight, FileText, Search, Sparkles, FolderPlus } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
+import { communicationService } from '../../../services/communicationService';
 
 export function OutlookMailBridgeModal({ isOpen, onClose, onFileEmail }) {
   const { addToast } = useToast();
+  const [inboxEmails, setInboxEmails] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [inboxEmails, setInboxEmails] = useState([
-    {
-      id: 'em-101',
-      sender: 'rhenderson@wasatchlogistics.com',
-      senderName: 'Robert H. Henderson',
-      subject: 'FWD: Telemetry Sensor Calibration Log for Truck 408',
-      preview: 'Thomas, attached are the temperature logs confirming the refrigeration unit power failure during the Nevada corridor transit...',
-      received: 'Today at 09:24 AM',
-      suggestedMatter: '25-CV-0101 (Wasatch Mountain Logistics v. Interstate Freightlines)',
-      matchConfidence: 98,
-      hasAttachments: true,
-      filed: false,
-    },
-    {
-      id: 'em-102',
-      sender: 'cynthia.vance@apexhorizon.com',
-      senderName: 'Cynthia Vance-Sterling',
-      subject: 'Re: Special Water Right Master Allotment Agreement Draft',
-      preview: 'Eleanor, our board reviewed section 4 regarding culinary recharge easements. We have minor redlines on the Heber City conveyance covenant...',
-      received: 'Yesterday at 04:12 PM',
-      suggestedMatter: '24-LND-0912 (Apex Horizon v. Wasatch County Board)',
-      matchConfidence: 95,
-      hasAttachments: true,
-      filed: false,
-    },
-    {
-      id: 'em-103',
-      sender: 'elena.rostova@slcmail.org',
-      senderName: 'Elena Rostova',
-      subject: 'Ukrainian Passport Translation Certification Received',
-      preview: 'Hi Sarah, the certified translation agency returned our translated birth certificate and marriage certificate today. I have attached the scans...',
-      received: 'Nov 4, 2026',
-      suggestedMatter: '26-IMM-0012 (Elena Rostova I-130 / I-485 Adjustment of Status)',
-      matchConfidence: 99,
-      hasAttachments: true,
-      filed: false,
-    }
-  ]);
+  useEffect(() => {
+    if (!isOpen) return;
+    setLoading(true);
+    communicationService.getUnmatchedQueue()
+      .then((items) => {
+        const list = Array.isArray(items) ? items : (items?.data || []);
+        const emails = list.filter((i) => i.type === 'EMAIL' || !i.type).map((i) => ({
+          id: i.id,
+          sender: i.senderEmail || i.contactNumber || 'client@example.com',
+          senderName: i.senderName || 'External Sender',
+          subject: i.subject,
+          preview: i.preview,
+          received: i.receivedAt ? new Date(i.receivedAt).toLocaleString() : 'Recently',
+          suggestedMatter: i.suggestedMatterLabel || 'Unassigned Matter',
+          matchConfidence: i.suggestedMatterId ? 95 : 60,
+          hasAttachments: false,
+          filed: i.matchingStatus === 'Matched',
+        }));
+        setInboxEmails(emails);
+      })
+      .catch((err) => {
+        console.warn('Failed to load bridge emails:', err?.message);
+        setInboxEmails([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [isOpen]);
 
   const handleFileToMatter = (email) => {
     setInboxEmails(prev =>
@@ -76,7 +69,14 @@ export function OutlookMailBridgeModal({ isOpen, onClose, onFileEmail }) {
         </div>
 
         <div className="divide-y divide-[#D9D6CF] border border-[#D9D6CF] rounded-lg bg-white overflow-hidden">
-          {inboxEmails.map(em => (
+          {inboxEmails.length === 0 ? (
+            <div className="p-8 text-center text-[#667085]">
+              <Mail className="w-8 h-8 text-[#D9D6CF] mx-auto mb-2 opacity-60" />
+              <p className="font-semibold text-xs text-[#06244B]">No Unfiled Outlook Messages</p>
+              <p className="text-[11px] text-[#667085] mt-0.5">All incoming client correspondence is fully reconciled and filed to matter files.</p>
+            </div>
+          ) : (
+            inboxEmails.map(em => (
             <div key={em.id} className={`p-4 space-y-2 hover:bg-slate-50 transition-colors ${em.filed ? 'bg-slate-50 opacity-80' : ''}`}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -118,7 +118,8 @@ export function OutlookMailBridgeModal({ isOpen, onClose, onFileEmail }) {
                 )}
               </div>
             </div>
-          ))}
+          ))
+        )}
         </div>
 
         <div className="flex justify-end pt-2 border-t border-[#D9D6CF]">

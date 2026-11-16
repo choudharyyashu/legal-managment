@@ -26,5 +26,18 @@ export class ReportController {
       next(err);
     }
   }
+
+  static async getAuditLogs(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const limit = req.query.limit ? Number(req.query.limit) : 50;
+      const logs = await ReportService.getAuditLogs(limit);
+      res.status(200).json({
+        success: true,
+        data: logs,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

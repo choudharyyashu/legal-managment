@@ -32,7 +32,14 @@ const normalizeMatter = (m) => ({
 
 export function MatterProvider({ children }) {
   const { isAuthenticated, currentUser } = useAuth();
-  const [matters, setMatters] = useState([]);
+  const [matters, setMatters] = useState(() => {
+    try {
+      const raw = localStorage.getItem('hb_cached_matters');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -67,7 +74,11 @@ export function MatterProvider({ children }) {
     try {
       const data = await matterService.getMatters({ limit: 100, ...params });
       const rawMatters = Array.isArray(data?.matters) ? data.matters : [];
-      setMatters(rawMatters.map(normalizeMatter));
+      const normalized = rawMatters.map(normalizeMatter);
+      setMatters(normalized);
+      try {
+        localStorage.setItem('hb_cached_matters', JSON.stringify(normalized));
+      } catch {}
     } catch (err) {
       console.warn('Failed to load matters from API:', err?.message);
       setError(err?.message || 'Failed to load matters');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Clock, Calendar, CheckCircle2, ShieldAlert, Plus, Search } from 'lucide-react';
 import { useMatters } from '../../../context/MatterContext';
 import { PageHeader } from '../../../components/shared/PageHeader';
@@ -7,61 +7,45 @@ import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
 import { formatDate, formatRelativeDays } from '../../../utils/formatDate';
 import { RelativeDeadlineCalculator } from '../components/RelativeDeadlineCalculator';
+import { calendarService } from '../../../services/calendarService';
 
 export function CourtDeadlines() {
   const { matters } = useMatters();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [deadlines, setDeadlines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [deadlines, setDeadlines] = useState([
-    {
-      id: 'DDL-101',
-      title: 'Fact Discovery Cutoff Date',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      court: 'Utah Third District Court',
-      dueDate: '2026-11-24',
-      type: 'Discovery Cutoff',
-      jurisdictionRule: 'Utah R. Civ. P. 26',
-      assignedAttorney: 'Thomas Bludworth, Esq.',
-      status: 'Attention Required',
-    },
-    {
-      id: 'DDL-102',
-      title: 'Motion for Summary Judgment Opposition Brief Filing',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment',
-      court: 'Utah Fourth Judicial District Court',
-      dueDate: '2026-11-10',
-      type: 'Briefing Deadline',
-      jurisdictionRule: 'Utah R. Civ. P. 56(c)',
-      assignedAttorney: 'Eleanor Heugly, Esq.',
-      status: 'Urgent',
-    },
-    {
-      id: 'DDL-103',
-      title: 'Rebuttal Expert Witness Disclosures',
-      matterNumber: '25-CV-0519',
-      matterTitle: 'Summit Crest BioSciences v. BioNexus Labs',
-      court: 'U.S. District Court for District of Utah',
-      dueDate: '2026-12-05',
-      type: 'Expert Disclosure',
-      jurisdictionRule: 'Fed. R. Civ. P. 26(a)(2)',
-      assignedAttorney: 'Thomas Bludworth, Esq.',
-      status: 'Pending',
-    },
-    {
-      id: 'DDL-104',
-      title: 'Statute of Limitations - Contractual Indemnity Claim',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      court: 'Utah State Courts',
-      dueDate: '2027-01-20',
-      type: 'Statute of Limitations',
-      jurisdictionRule: 'Utah Code Ann. § 78B-2-307',
-      assignedAttorney: 'Thomas Bludworth, Esq.',
-      status: 'Compliant',
-    }
-  ]);
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    calendarService.getEvents()
+      .then((events) => {
+        if (!isMounted) return;
+        const list = Array.isArray(events) ? events : [];
+        const mapped = list.map((ev) => ({
+          id: ev.id,
+          title: ev.title,
+          matterNumber: ev.matter?.matterNumber || (matters[0]?.matterNumber || 'Matter'),
+          matterTitle: ev.matter?.title || (matters[0]?.title || 'Matter Deadline'),
+          court: ev.location || 'Utah Judicial District Court',
+          dueDate: ev.startTime ? new Date(ev.startTime).toISOString().split('T')[0] : '',
+          type: ev.eventType || 'Court Deadline',
+          jurisdictionRule: ev.description || 'URCP Rule 26',
+          assignedAttorney: ev.assignedUser?.name || 'Assigned Counsel',
+          status: 'Active',
+        }));
+        setDeadlines(mapped);
+      })
+      .catch((err) => {
+        console.warn('Could not fetch calendar deadlines:', err?.message);
+        if (isMounted) setDeadlines([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [matters]);
 
   const columns = [
     {
@@ -160,19 +144,20 @@ export function CourtDeadlines() {
           isOpen={isCalculatorOpen}
           onClose={() => setIsCalculatorOpen(false)}
           onApplyDeadlines={(newDeadlines) => {
-            const mapped = newDeadlines.map(d => ({
+            const defaultMatter = matters[0] || {};
+            const mapped = newDeadlines.map((d) => ({
               id: `DDL-${Date.now()}-${d.id}`,
               title: d.title,
-              matterNumber: '25-CV-0101',
-              matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
+              matterNumber: defaultMatter.matterNumber || 'Matter',
+              matterTitle: defaultMatter.title || 'Legal Matter',
               court: 'Utah Third District Court',
               dueDate: d.calculatedDate,
               type: d.title.includes('Expert') ? 'Expert Disclosure' : 'Discovery Cutoff',
               jurisdictionRule: d.ruleCitation,
-              assignedAttorney: 'Thomas Bludworth, Esq.',
+              assignedAttorney: defaultMatter.responsibleAttorneyName || 'Assigned Counsel',
               status: 'Calculated (Rule 6)',
             }));
-            setDeadlines(prev => [...mapped, ...prev]);
+            setDeadlines((prev) => [...mapped, ...prev]);
           }}
         />
       )}

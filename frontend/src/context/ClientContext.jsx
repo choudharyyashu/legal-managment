@@ -7,7 +7,14 @@ const ClientContext = createContext();
 
 export function ClientProvider({ children }) {
   const { isAuthenticated } = useAuth();
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useState(() => {
+    try {
+      const raw = localStorage.getItem('hb_cached_clients');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [intakes, setIntakes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -43,7 +50,11 @@ export function ClientProvider({ children }) {
     try {
       const data = await clientService.getClients({ limit: 100, ...params });
       const rawClients = Array.isArray(data?.clients) ? data.clients : [];
-      setClients(rawClients.map(normalizeClient));
+      const normalized = rawClients.map(normalizeClient);
+      setClients(normalized);
+      try {
+        localStorage.setItem('hb_cached_clients', JSON.stringify(normalized));
+      } catch {}
     } catch (err) {
       console.warn('Failed to load clients from API:', err?.message);
       setError(err?.message || 'Failed to load clients');
@@ -68,11 +79,14 @@ export function ClientProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated) {
+      refreshClients();
+      refreshIntakes();
+    } else {
       setClients([]);
       setIntakes([]);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshClients, refreshIntakes]);
 
   const addClient = async (newClientData) => {
     try {
