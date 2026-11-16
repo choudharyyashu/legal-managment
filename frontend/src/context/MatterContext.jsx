@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { matterService } from '../services/matterService';
 import { useAuth } from '../hooks/useAuth';
-import { MOCK_MATTERS } from '../data/mockMatters';
 
 const MatterContext = createContext();
 
@@ -33,7 +32,7 @@ const normalizeMatter = (m) => ({
 
 export function MatterProvider({ children }) {
   const { isAuthenticated, currentUser } = useAuth();
-  const [matters, setMatters] = useState(() => MOCK_MATTERS.map(normalizeMatter));
+  const [matters, setMatters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -78,14 +77,16 @@ export function MatterProvider({ children }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated) {
+      refreshMatters();
+    } else {
       setMatters([]);
       setActiveMatterId(null);
       try {
         sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
       } catch {}
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshMatters]);
 
   // Resolve active matter object from list
   const activeMatter = useMemo(() => {

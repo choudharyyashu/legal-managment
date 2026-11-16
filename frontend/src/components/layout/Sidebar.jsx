@@ -617,21 +617,21 @@ export function Sidebar({ collapsed, setCollapsed }) {
         {!collapsed ? (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#F5F0E5] text-[#06244B] flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
-              {currentUser.initials}
+              {currentUser?.initials || 'HB'}
             </div>
             <div className="flex flex-col truncate flex-1">
               <span className="text-xs font-semibold text-[#F5F0E5] truncate">
-                {currentUser.name}
+                {currentUser?.name || 'Staff Member'}
               </span>
               <span className="text-[10px] text-[#A4432B] font-medium tracking-wide">
-                {currentUser.title}
+                {currentUser?.title || 'Heugly & Bludworth'}
               </span>
             </div>
           </div>
         ) : (
           <div className="flex justify-center">
             <div className="w-8 h-8 rounded-full bg-[#F5F0E5] text-[#06244B] flex items-center justify-center font-bold text-xs shadow-xs">
-              {currentUser.initials}
+              {currentUser?.initials || 'HB'}
             </div>
           </div>
         )}

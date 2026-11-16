@@ -432,21 +432,21 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
             type="button"
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center justify-center p-0.5 rounded-full hover:bg-[#F5F0E5] transition-colors cursor-pointer"
-            title={`${currentUser.name} (${currentUser.title})`}
+            title={`${currentUser?.name || 'User'} (${currentUser?.title || 'Staff'})`}
             aria-label="User Profile Menu"
           >
             <div className="w-8 h-8 rounded-full bg-[#06244B] text-[#F5F0E5] flex items-center justify-center font-bold text-xs shadow-xs hover:ring-2 hover:ring-[#A4432B] transition-all">
-              {currentUser.initials}
+              {currentUser?.initials || 'HB'}
             </div>
           </button>
 
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-64 max-w-xs bg-white rounded-lg shadow-elevated border border-[#D9D6CF] py-2 z-50">
               <div className="px-4 py-3 border-b border-[#D9D6CF]">
-                <p className="text-xs font-bold text-[#06244B]">{currentUser.name}</p>
-                <p className="text-[11px] text-[#667085] truncate">{currentUser.email}</p>
+                <p className="text-xs font-bold text-[#06244B]">{currentUser?.name || 'Staff Member'}</p>
+                <p className="text-[11px] text-[#667085] truncate">{currentUser?.email || 'staff@heuglybludworth.com'}</p>
                 <span className="inline-block mt-1 text-[10px] font-semibold text-[#A4432B] uppercase tracking-wider">
-                  {currentUser.title}
+                  {currentUser?.title || 'Legal Professional'}
                 </span>
               </div>
               <div className="py-1">
