@@ -14,18 +14,38 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import { MOCK_FAMILY_CASES } from '../../../../data/mockSpecialtyPractices';
 import { useToast } from '../../../../components/ui/Toast';
+import { useMatters } from '../../../../context/MatterContext';
 
 export function FamilyLawWorkspace() {
   const { addToast } = useToast();
-  const [selectedCaseId, setSelectedCaseId] = useState(MOCK_FAMILY_CASES[0].id);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaName?.toLowerCase().includes('family') || m.practiceAreaName?.toLowerCase().includes('divorce'))
+      .map((m) => ({
+        id: m.id,
+        caseNumber: m.matterNumber,
+        caseTitle: m.title,
+        court: m.courtName || 'Third District Court - Family Division',
+        judge: m.judge || 'Presiding Judge',
+        petitioner: m.clientName || 'Petitioner',
+        respondent: 'Respondent',
+        petitionerGrossIncome: 6500,
+        respondentGrossIncome: 8200,
+        financialDeclarationStatus: 'Pending URCP 26.1 Exchange',
+        mediationStatus: 'Mediation Conference Pending',
+        childrenCount: 2,
+        maritalProperty: [],
+        qdroAccounts: [],
+      }));
+  }, [matters]);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => cases[0]?.id || '');
   const [activeTab, setActiveTab] = useState('property'); // property, support, parenting, safety_qdro
 
-  // Support calculation state
-  const activeCase = MOCK_FAMILY_CASES.find(c => c.id === selectedCaseId) || MOCK_FAMILY_CASES[0];
-  const [petitionerIncome, setPetitionerIncome] = useState(activeCase.petitionerGrossIncome);
-  const [respondentIncome, setRespondentIncome] = useState(activeCase.respondentGrossIncome);
+  const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
+  const [petitionerIncome, setPetitionerIncome] = useState(activeCase?.petitionerGrossIncome || 6000);
+  const [respondentIncome, setRespondentIncome] = useState(activeCase?.respondentGrossIncome || 6000);
   const [petitionerOvernights, setPetitionerOvernights] = useState(245);
 
   // Recalculate Utah support dynamically
@@ -35,6 +55,20 @@ export function FamilyLawWorkspace() {
   // Utah statutory base support heuristic for 2 children
   const baseTableAmount = Math.max(800, totalIncome * 0.14);
   const estimatedChildSupport = Math.round(baseTableAmount * respondentShare * (petitionerOvernights / 365));
+
+  if (!activeCase) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="bg-white border border-[#E4E7EC] rounded-xl p-8 shadow-sm text-center">
+          <Heart className="w-12 h-12 text-[#A4432B] mx-auto mb-3 opacity-60" />
+          <h2 className="text-xl font-serif font-bold text-[#06244B]">Family Law &amp; Domestic Relations Docket</h2>
+          <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
+            No active family law or domestic relations matters found in database. Specialized family law workflows (URCP 26.1 Financial Declarations, Utah Statutory Child Support Worksheets, and Joint Property Division) are pending dedicated backend model deployment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -48,7 +82,7 @@ export function FamilyLawWorkspace() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[#FDF2FA] text-[#C11574] border border-[#FCCEEE] whitespace-nowrap">
-                  SECTION 21: FAMILY LAW & DIVORCE
+                  SECTION 21: FAMILY LAW &amp; DIVORCE
                 </span>
                 <span className="text-xs font-mono text-[#667085] whitespace-nowrap">{activeCase.caseNumber}</span>
               </div>
@@ -62,7 +96,7 @@ export function FamilyLawWorkspace() {
               value={selectedCaseId}
               onChange={(e) => {
                 setSelectedCaseId(e.target.value);
-                const nextCase = MOCK_FAMILY_CASES.find(c => c.id === e.target.value);
+                const nextCase = cases.find(c => c.id === e.target.value);
                 if (nextCase) {
                   setPetitionerIncome(nextCase.petitionerGrossIncome);
                   setRespondentIncome(nextCase.respondentGrossIncome);
@@ -70,7 +104,7 @@ export function FamilyLawWorkspace() {
               }}
               className="max-w-full sm:max-w-[260px] px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B]"
             >
-              {MOCK_FAMILY_CASES.map((c) => (
+              {cases.map((c) => (
                 <option key={c.id} value={c.id}>{c.caseNumber} - {c.caseTitle}</option>
               ))}
             </select>

@@ -5,12 +5,11 @@ import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
-import { MOCK_IMMIGRATION_PARTIES } from '../../../data/mockImmigrationParties';
 import { Modal } from '../../../components/ui/Modal';
 import { PartyModal } from '../components/PartyModal';
 
 export function ImmigrationPartiesDirectory() {
-  const [parties, setParties] = useState(MOCK_IMMIGRATION_PARTIES);
+  const [parties, setParties] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedParty, setSelectedParty] = useState(null);
   const [activeTab, setActiveTab] = useState('All'); // 'All', 'Petitioners', 'Beneficiaries', 'Joint Sponsors'

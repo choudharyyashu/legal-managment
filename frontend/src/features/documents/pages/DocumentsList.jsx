@@ -21,7 +21,6 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { documentService } from '../../../services/documentService';
-import { MOCK_DOCUMENTS } from '../../../data/mockDocuments';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
 import { useAuth } from '../../../hooks/useAuth';
@@ -39,28 +38,7 @@ export function DocumentsList() {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
 
-  const [documents, setDocuments] = useState(() => {
-    return MOCK_DOCUMENTS.map((doc, idx) => ({
-      ...doc,
-      version: idx === 0 ? 'v2.1' : (idx === 2 ? 'v3.0' : 'v1.0'),
-      isPrivileged: idx === 2 || idx === 3,
-      privilegeType: idx === 2
-        ? 'Attorney Work Product (Rule 1.6)'
-        : (idx === 3 ? 'Confidential Estate Client Communication' : null),
-      ocrText: idx === 0
-        ? 'Breach of commercial freight transport agreement pursuant to cold-chain telemetric sensor failure during transit...'
-        : (idx === 2
-          ? 'Comprehensive aquifer discharge study prepared by Intermountain Hydrology Associates. Culinary recharge basin capacity measured at 450 acre-feet...'
-          : 'Confidential dynasty trust provisions establishing generational transfer covenants and Salt Lake County real property deeds...'),
-      versionHistory: idx === 0 ? [
-        { version: 'v2.1', date: '2025-01-22', author: 'Thomas Bludworth, Esq.', note: 'Incorporated telemetry damage calculations' },
-        { version: 'v2.0', date: '2025-01-20', author: 'Marcus Vance (Paralegal)', note: 'Formatted exhibits and civil cover sheet' },
-        { version: 'v1.0', date: '2025-01-15', author: 'Thomas Bludworth, Esq.', note: 'Initial pleading draft' },
-      ] : [
-        { version: 'v1.0', date: doc.uploadedAt?.split('T')[0] || '2025-01-10', author: doc.uploadedByName || 'Firm Staff', note: 'Original filed instrument' }
-      ]
-    }));
-  });
+  const [documents, setDocuments] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -71,7 +49,7 @@ export function DocumentsList() {
   const loadDocuments = useCallback(async () => {
     try {
       const res = await documentService.getDocuments({ limit: 100 });
-      if (Array.isArray(res) && res.length > 0) {
+      if (Array.isArray(res)) {
         setDocuments(
           res.map((d) => ({
             ...d,
@@ -105,9 +83,12 @@ export function DocumentsList() {
                 ],
           }))
         );
+      } else {
+        setDocuments([]);
       }
     } catch (err) {
       console.warn('Could not load documents from API:', err?.message);
+      setDocuments([]);
     }
   }, []);
 
@@ -119,11 +100,14 @@ export function DocumentsList() {
   const loadDrafts = useCallback(async () => {
     try {
       const res = await documentService.getDrafts({ limit: 100 });
-      if (Array.isArray(res) && res.length > 0) {
+      if (Array.isArray(res)) {
         setDrafts(res);
+      } else {
+        setDrafts([]);
       }
     } catch (err) {
       console.warn('Could not load drafts from API:', err?.message);
+      setDrafts([]);
     }
   }, []);
 

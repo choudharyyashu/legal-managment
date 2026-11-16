@@ -18,26 +18,25 @@ import { ClosingStatementModal } from '../components/ClosingStatementModal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
-import { MOCK_PI_CASES, MOCK_SETTLEMENT_MODELS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function SettlementCalculator() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || cases[0]?.id || 'PI-2026-001');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || cases[0]?.id || 'ALL');
 
-  // Load preset or initialize state
-  const presetModel = MOCK_SETTLEMENT_MODELS.find(m => m.matterId === activeCaseId) || MOCK_SETTLEMENT_MODELS[0] || {};
-
-  const [grossRecovery, setGrossRecovery] = useState(presetModel?.grossRecovery || 250000);
-  const [feeRate, setFeeRate] = useState(presetModel?.contingencyFeePercentage || 33.3333);
-  const [caseExpenses, setCaseExpenses] = useState(Array.isArray(presetModel?.caseExpenses) ? presetModel.caseExpenses : []);
-  const [medicalLiens, setMedicalLiens] = useState(Array.isArray(presetModel?.medicalLiens) ? presetModel.medicalLiens : []);
-  const [otherDeductions, setOtherDeductions] = useState(Array.isArray(presetModel?.otherDeductions) ? presetModel.otherDeductions : []);
+  const [grossRecovery, setGrossRecovery] = useState(() => Number(activeMatter?.budget) || 100000);
+  const [feeRate, setFeeRate] = useState(() => Number(activeMatter?.contingencyPercentage) || 33.3333);
+  const [caseExpenses, setCaseExpenses] = useState([]);
+  const [medicalLiens, setMedicalLiens] = useState([]);
+  const [otherDeductions, setOtherDeductions] = useState([]);
 
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmt, setNewExpenseAmt] = useState('');
@@ -50,40 +49,26 @@ export function SettlementCalculator() {
   useEffect(() => {
     if (activeMatter?.id && activeMatter.id !== activeCaseId) {
       setActiveCaseId(activeMatter.id);
+      if (activeMatter.budget) setGrossRecovery(Number(activeMatter.budget));
+      if (activeMatter.contingencyPercentage) setFeeRate(Number(activeMatter.contingencyPercentage));
     }
   }, [activeMatter]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
     if (newCaseId && newCaseId !== 'ALL') {
-      const match = cases.find((c) => c.id === newCaseId);
-      if (match) {
-        setActiveMatter({
-          id: match.id,
-          title: match.matterTitle || `${match.clientName} - PI Claim`,
-          clientName: match.clientName,
-          clientNumber: match.clientNumber || match.id,
-          matterNumber: match.matterNumber || match.id,
-          practiceArea: 'Personal Injury',
-          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
-          status: match.caseStage || 'Active',
-          incidentDate: match.incidentDate,
-        });
-      }
+      setActiveMatter(newCaseId);
     }
   };
 
   // Sync when case changes
   useEffect(() => {
-    const model = MOCK_SETTLEMENT_MODELS.find(m => m.matterId === activeCaseId);
-    if (model) {
-      setGrossRecovery(model.grossRecovery || 0);
-      setFeeRate(model.contingencyFeePercentage || 33.3333);
-      setCaseExpenses(Array.isArray(model.caseExpenses) ? model.caseExpenses : []);
-      setMedicalLiens(Array.isArray(model.medicalLiens) ? model.medicalLiens : []);
-      setOtherDeductions(Array.isArray(model.otherDeductions) ? model.otherDeductions : []);
+    const selected = cases.find(c => c.id === activeCaseId);
+    if (selected) {
+      if (selected.budget) setGrossRecovery(Number(selected.budget));
+      if (selected.contingencyPercentage) setFeeRate(Number(selected.contingencyPercentage));
     }
-  }, [activeCaseId]);
+  }, [activeCaseId, cases]);
 
   // Dynamic Calculations:
   const numericGross = Number(grossRecovery) || 0;

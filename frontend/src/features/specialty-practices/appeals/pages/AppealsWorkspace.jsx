@@ -13,15 +13,47 @@ import {
   Send,
   Building2
 } from 'lucide-react';
-import { MOCK_APPEALS_CASES } from '../../../../data/mockSpecialtyPractices';
 import { useToast } from '../../../../components/ui/Toast';
+import { useMatters } from '../../../../context/MatterContext';
 
 export function AppealsWorkspace() {
   const { addToast } = useToast();
-  const [selectedCaseId, setSelectedCaseId] = useState(MOCK_APPEALS_CASES[0].id);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaName?.toLowerCase().includes('appeal'))
+      .map((m) => ({
+        id: m.id,
+        appellateCaseNumber: m.matterNumber,
+        caseTitle: m.title,
+        court: m.courtName || 'Utah Court of Appeals',
+        lowerCourt: 'Third Judicial District Court',
+        lowerCourtNumber: '2026-CV-001',
+        appellant: m.clientName || 'Appellant',
+        appellee: 'Appellee',
+        briefingSchedule: [],
+        recordOnAppealStatus: 'Index Under Preparation by Trial Court Clerk',
+        issuesPresented: [],
+      }));
+  }, [matters]);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => cases[0]?.id || '');
   const [activeTab, setActiveTab] = useState('briefing'); // briefing, record, issues, mandate
 
-  const activeCase = MOCK_APPEALS_CASES.find(c => c.id === selectedCaseId) || MOCK_APPEALS_CASES[0];
+  const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
+
+  if (!activeCase) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="bg-white border border-[#E4E7EC] rounded-xl p-8 shadow-sm text-center">
+          <Scale className="w-12 h-12 text-[#175CD3] mx-auto mb-3 opacity-60" />
+          <h2 className="text-xl font-serif font-bold text-[#06244B]">Appellate Practice Docket</h2>
+          <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
+            No active appellate matters found in database. Specialized appeals workflows (Utah R. App. P. 24 Brief Word Count Certifications, Record on Appeal Transmission Trackers, and Standards of Review Matrices) are pending dedicated backend model deployment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -50,7 +82,7 @@ export function AppealsWorkspace() {
               onChange={(e) => setSelectedCaseId(e.target.value)}
               className="max-w-full sm:max-w-[260px] px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B]"
             >
-              {MOCK_APPEALS_CASES.map((c) => (
+              {cases.map((c) => (
                 <option key={c.id} value={c.id}>{c.appellateCaseNumber} - {c.court}</option>
               ))}
             </select>

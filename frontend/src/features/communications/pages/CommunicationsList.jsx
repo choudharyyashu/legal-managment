@@ -14,14 +14,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { OutlookMailBridgeModal } from '../components/OutlookMailBridgeModal';
 import { TextMessageThreadModal } from '../components/TextMessageThreadModal';
-import {
-  INITIAL_UNMATCHED_EMAILS,
-  INITIAL_UNMATCHED_MESSAGES,
-} from '../../../data/mockUnmatchedCommunications';
-import {
-  AppleSyncLimitationsPanel,
-  UnmatchedCommunicationsQueue,
-} from '../components/UnmatchedCommunicationsQueue';
+import { AppleSyncLimitationsPanel, UnmatchedCommunicationsQueue } from '../components/UnmatchedCommunicationsQueue';
 
 export function CommunicationsList() {
   const { clients } = useClients();
@@ -29,56 +22,10 @@ export function CommunicationsList() {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
 
-  const [communications, setCommunications] = useState([
-    {
-      id: 'COMM-101',
-      type: 'Email',
-      subject: 'Discovery Protocol & Cold-Chain Telemetry Log Production',
-      sender: 'Thomas Bludworth, Esq.',
-      recipient: 'rhenderson@wasatchlogistics.com',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      date: '2026-11-05 14:20',
-      summary: 'Transmitted revised deposition questions and confirmed date for expert telemetry witness inspection.',
-    },
-    {
-      id: 'COMM-102',
-      type: 'Telephone Call',
-      subject: 'Park City Domestic Valuation Expert Deposition Preparation',
-      sender: 'Sarah Jenkins, Esq.',
-      recipient: 'Dr. Evelyn Martinez',
-      clientName: 'Dr. Evelyn Martinez',
-      matterTitle: 'In re Marriage of Martinez and Sterling',
-      date: '2026-11-04 11:30',
-      summary: '45-minute telephone conference discussing forensic CPA report on surgery center distribution characterization.',
-    },
-    {
-      id: 'COMM-103',
-      type: 'Written Notice',
-      subject: 'Utah Division of Water Rights Pre-Hearing Notice',
-      sender: 'Eleanor Heugly, Esq.',
-      recipient: 'cvance@apexhorizon.com',
-      clientName: 'Apex Horizon Real Estate Group',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment',
-      date: '2026-11-02 16:45',
-      summary: 'Formal statutory notice of intervention served on state water engineer regarding culinary recharge basin.',
-    },
-    {
-      id: 'COMM-104',
-      type: 'Email',
-      subject: 'Execution Instruments & Signature Notary Scheduling',
-      sender: 'Marcus Vance',
-      recipient: 'h.thorne@thornefamilyholdings.com',
-      clientName: 'Harrison & Claire Thorne',
-      matterTitle: 'Harrison & Claire Thorne Dynasty Trust & Corporate Succession',
-      date: '2026-11-01 10:15',
-      summary: 'Provided signature schedules and trust execution guidelines for upcoming in-office signing conference.',
-    }
-  ]);
-
+  const [communications, setCommunications] = useState([]);
   const [activeTab, setActiveTab] = useState('filed');
-  const [unmatchedEmails, setUnmatchedEmails] = useState(INITIAL_UNMATCHED_EMAILS);
-  const [unmatchedMessages, setUnmatchedMessages] = useState(INITIAL_UNMATCHED_MESSAGES);
+  const [unmatchedEmails, setUnmatchedEmails] = useState([]);
+  const [unmatchedMessages, setUnmatchedMessages] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isOutlookOpen, setIsOutlookOpen] = useState(false);

@@ -51,7 +51,7 @@ import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
 import { ActivityTimeline } from '../../../components/shared/ActivityTimeline';
 import { formatCurrency, formatHours } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
-import { MOCK_DOCUMENTS } from '../../../data/mockDocuments';
+import { documentService } from '../../../services/documentService';
 import { StageProgressBar } from '../components/StageProgressBar';
 import { RelatedPartiesTab } from '../components/RelatedPartiesTab';
 import { RelativeDeadlineCalculator } from '../../calendar/components/RelativeDeadlineCalculator';
@@ -311,6 +311,21 @@ export function MatterDetails() {
   // Litigation / Contested confirmation & workspace drawer state
   const [isLitigationConfirmOpen, setIsLitigationConfirmOpen] = useState(false);
   const [isLitigationWorkspaceOpen, setIsLitigationWorkspaceOpen] = useState(false);
+  const [matterDocuments, setMatterDocuments] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (matter?.id) {
+      documentService.getDocuments({ matterId: matter.id })
+        .then((docs) => {
+          if (isMounted && Array.isArray(docs)) setMatterDocuments(docs);
+        })
+        .catch(() => {
+          if (isMounted) setMatterDocuments([]);
+        });
+    }
+    return () => { isMounted = false; };
+  }, [matter?.id]);
 
   useEffect(() => {
     if (matter) {
@@ -369,7 +384,6 @@ export function MatterDetails() {
   // Linked records
   const matterTasks = tasks.filter(t => t.matterId === matter.id);
   const matterTimeEntries = timeEntries.filter(t => t.matterId === matter.id);
-  const matterDocuments = MOCK_DOCUMENTS.filter(d => d.matterId === matter.id);
   const totalLoggedHours = matterTimeEntries.reduce((sum, e) => sum + (e.hours || 0), 0);
   const totalLoggedAmount = matterTimeEntries.reduce((sum, e) => sum + (e.amount || 0), 0);
 

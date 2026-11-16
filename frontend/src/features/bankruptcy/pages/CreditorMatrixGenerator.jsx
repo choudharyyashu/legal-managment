@@ -2,21 +2,24 @@ import React, { useState } from 'react';
 import { FileText, Download, Printer, CheckCircle, Copy, HelpCircle } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
-import { MOCK_BANKRUPTCY_CASES } from '../../../data/mockBankruptcyCases';
-import { MOCK_BANKRUPTCY_SCHEDULES } from '../../../data/mockBankruptcySchedules';
+import { useMatters } from '../../../context/MatterContext';
 import { useToast } from '../../../components/ui/Toast';
 
 export function CreditorMatrixGenerator() {
-  const [selectedCaseId, setSelectedCaseId] = useState('BNK-2026-001');
+  const { matters } = useMatters();
+  const bankruptcyMatters = (matters || []).filter(
+    (m) => m.practiceAreaId === 'pa-bk' || m.practiceAreaName?.toLowerCase().includes('bankruptcy')
+  );
+  const [selectedCaseId, setSelectedCaseId] = useState(() => bankruptcyMatters[0]?.id || '');
   const { addToast } = useToast();
 
-  const caseData = MOCK_BANKRUPTCY_CASES.find(c => c.id === selectedCaseId) || MOCK_BANKRUPTCY_CASES[0];
-  const schedules = MOCK_BANKRUPTCY_SCHEDULES[selectedCaseId] || MOCK_BANKRUPTCY_SCHEDULES['BNK-2026-001'];
+  const caseData = bankruptcyMatters.find(c => c.id === selectedCaseId) || bankruptcyMatters[0] || null;
+  const schedules = { scheduleD: [], scheduleEF: [] };
 
   // Combine Schedule D and EF creditors
   const creditors = [
-    ...schedules.scheduleD.map(d => ({ name: d.creditor, address: d.address })),
-    ...schedules.scheduleEF.map(ef => ({ name: ef.creditor, address: ef.address }))
+    ...(schedules.scheduleD || []).map(d => ({ name: d.creditor, address: d.address })),
+    ...(schedules.scheduleEF || []).map(ef => ({ name: ef.creditor, address: ef.address }))
   ];
 
   // Generate standardized court matrix string (District of Utah format: uppercase, single-spaced address block, blank line separator)
@@ -70,11 +73,15 @@ export function CreditorMatrixGenerator() {
             onChange={(e) => setSelectedCaseId(e.target.value)}
             className="text-xs p-1.5 rounded border border-[#D9D6CF] text-[#06244B] bg-slate-50 font-medium"
           >
-            {MOCK_BANKRUPTCY_CASES.slice(0, 3).map(c => (
-              <option key={c.id} value={c.id}>
-                {c.caseNumber} - {c.debtorName}
-              </option>
-            ))}
+            {bankruptcyMatters.length === 0 ? (
+              <option value="">No bankruptcy matters</option>
+            ) : (
+              bankruptcyMatters.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.matterNumber} - {c.title}
+                </option>
+              ))
+            )}
           </select>
         </div>
       </div>

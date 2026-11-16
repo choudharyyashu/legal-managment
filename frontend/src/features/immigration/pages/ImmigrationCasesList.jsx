@@ -25,7 +25,6 @@ import { SearchBar } from '../../../components/shared/SearchBar';
 import { FilterBar } from '../../../components/shared/FilterBar';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
-import { MOCK_IMMIGRATION_CASES } from '../../../data/mockImmigrationCases';
 import { formatDate } from '../../../utils/formatDate';
 import { Link } from 'react-router-dom';
 import { ImmigrationCaseDrawer } from '../components/ImmigrationCaseDrawer';
@@ -34,7 +33,8 @@ import { useToast } from '../../../components/ui/Toast';
 import { matterService } from '../../../services/matterService';
 
 export function ImmigrationCasesList() {
-  const [cases, setCases] = useState(MOCK_IMMIGRATION_CASES);
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -46,29 +46,36 @@ export function ImmigrationCasesList() {
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     matterService.getMatters({ practiceAreaId: 'pa-imm' })
       .then((res) => {
         const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted && realMatters.length > 0) {
+        if (isMounted) {
           const mapped = realMatters.map((m) => ({
             id: m.id,
             title: m.title,
-            clientName: m.client?.name || m.clientName || 'Elena Rostova',
+            clientName: m.client?.name || m.clientName || m.title,
             matterNumber: m.matterNumber,
             category: m.title.includes('Naturalization') ? 'Naturalization (N-400)' : (m.title.includes('Employment') ? 'Employment-Based' : 'Family-Based Adjustment of Status'),
             status: m.status === 'Active' ? 'Pending USCIS Review' : (m.status === 'Concluded' ? 'Approved' : 'Document Collection'),
-            alienNumber: 'A-214-890-412',
-            receiptNumber: 'IOE-092-418-9201',
-            priorityDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-11-13',
-            formsRequired: ['I-130', 'I-485', 'I-864'],
-            assignedAttorney: m.responsibleAttorney?.name || 'Eleanor Heugly, Esq.',
+            alienNumber: '—',
+            receiptNumber: '—',
+            priorityDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
+            formsRequired: [],
+            assignedAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
             isRealDbMatter: true,
             matterId: m.id,
           }));
           setCases(mapped);
         }
       })
-      .catch((err) => console.warn('Could not load immigration matters from API:', err?.message));
+      .catch((err) => {
+        console.warn('Could not load immigration matters from API:', err?.message);
+        if (isMounted) setCases([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
     return () => { isMounted = false; };
   }, []);
 

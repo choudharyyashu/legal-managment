@@ -21,14 +21,29 @@ import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { FilterBar } from '../../../components/shared/FilterBar';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
-import { MOCK_LITIGATION_CASES } from '../../../data/mockLitigationCases';
 import { LitigationNavigationHeader } from '../components/LitigationNavigationHeader';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function LitigationDashboard() {
-  const [cases, setCases] = useState(MOCK_LITIGATION_CASES);
-  const [activeCase, setActiveCase] = useState(MOCK_LITIGATION_CASES[0]);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaId === 'pa-lit' || m.practiceAreaName?.toLowerCase().includes('litigation') || m.isLitigationContested)
+      .map((m) => ({
+        id: m.id,
+        caseNumber: m.matterNumber,
+        caseTitle: m.title,
+        courtName: m.courtName || 'Third Judicial District Court',
+        judge: m.judge || 'Presiding Judge',
+        trialDate: m.nextCourtDate ? new Date(m.nextCourtDate).toISOString().split('T')[0] : '',
+        tier: 'Tier 2 (URCP 26)',
+        leadAttorney: m.responsibleAttorneyName || 'Lead Counsel',
+        status: m.status || 'Active',
+      }));
+  }, [matters]);
+  const [activeCase, setActiveCase] = useState(() => cases[0] || null);
   const [searchQuery, setSearchQuery] = useState('');
   const { addToast } = useToast();
   const navigate = useNavigate();

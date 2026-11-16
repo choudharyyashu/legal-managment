@@ -17,18 +17,41 @@ import {
   Search,
   Scale
 } from 'lucide-react';
-import { MOCK_PROBATE_CASES } from '../../../../data/mockSpecialtyPractices';
 import { useToast } from '../../../../components/ui/Toast';
+import { useMatters } from '../../../../context/MatterContext';
 
 export function ProbateWorkspace() {
   const { addToast } = useToast();
-  const [selectedCaseId, setSelectedCaseId] = useState(MOCK_PROBATE_CASES[0].id);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaName?.toLowerCase().includes('probate') || m.practiceAreaName?.toLowerCase().includes('estate'))
+      .map((m) => ({
+        id: m.id,
+        caseNumber: m.matterNumber,
+        decedent: m.title,
+        estateType: 'Informal Probate',
+        judge: m.judge || 'Third District Probate Division',
+        personalRepresentative: m.clientName || 'Personal Representative',
+        lettersStatus: 'Letters Testamentary Pending',
+        barDate: '90 Days Post-Notice',
+        barDateStatus: 'Notice Period Active',
+        probateAssetsValue: Number(m.budget) || 0,
+        nonProbateAssetsValue: 0,
+        totalInventoryValue: Number(m.budget) || 0,
+        inventory: [],
+        claims: [],
+        beneficiaries: [],
+        accounting: [],
+      }));
+  }, [matters]);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => cases[0]?.id || '');
   const [activeTab, setActiveTab] = useState('inventory'); // inventory, claims, beneficiaries, accounting
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddAssetModal, setShowAddAssetModal] = useState(false);
   const [newAsset, setNewAsset] = useState({ category: 'Real Property', description: '', appraisedValue: '', probateType: 'Probate Asset' });
 
-  const activeCase = MOCK_PROBATE_CASES.find(c => c.id === selectedCaseId) || MOCK_PROBATE_CASES[0];
+  const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
 
   const handleAddAsset = (e) => {
     e.preventDefault();
@@ -49,6 +72,20 @@ export function ProbateWorkspace() {
     addToast('Asset added to Estate Inventory ledger', 'success');
   };
 
+  if (!activeCase) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="bg-white border border-[#E4E7EC] rounded-xl p-8 shadow-sm text-center">
+          <Landmark className="w-12 h-12 text-[#06244B] mx-auto mb-3 opacity-60" />
+          <h2 className="text-xl font-serif font-bold text-[#06244B]">Probate &amp; Estate Administration Docket</h2>
+          <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
+            No active probate or estate administration matters found in database. Specialized probate workflows (Fiduciary Inventory Form 1402, 90-Day Creditor Bar Tracking, and Supervised Accountings) are pending dedicated backend model deployment.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header & Case Selector */}
@@ -61,12 +98,12 @@ export function ProbateWorkspace() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[#F4EBFF] text-[#6941C6] border border-[#D6BBFB] whitespace-nowrap">
-                  SECTION 20: PROBATE & TRUSTS
+                  SECTION 20: PROBATE &amp; TRUSTS
                 </span>
                 <span className="text-xs font-mono text-[#667085] whitespace-nowrap">{activeCase.caseNumber}</span>
               </div>
-              <h1 className="text-2xl font-serif font-bold text-[#06244B] leading-tight">{activeCase.estateName}</h1>
-              <p className="text-xs text-[#475467] mt-0.5">{activeCase.court} • {activeCase.judge}</p>
+              <h1 className="text-2xl font-serif font-bold text-[#06244B] leading-tight">{activeCase.decedent || activeCase.estateName}</h1>
+              <p className="text-xs text-[#475467] mt-0.5">{activeCase.court || 'Third District Court'} • {activeCase.judge}</p>
             </div>
           </div>
 
@@ -76,7 +113,7 @@ export function ProbateWorkspace() {
               onChange={(e) => setSelectedCaseId(e.target.value)}
               className="max-w-full sm:max-w-[260px] px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B]"
             >
-              {MOCK_PROBATE_CASES.map((c) => (
+              {cases.map((c) => (
                 <option key={c.id} value={c.id}>{c.caseNumber} - {c.decedent}</option>
               ))}
             </select>

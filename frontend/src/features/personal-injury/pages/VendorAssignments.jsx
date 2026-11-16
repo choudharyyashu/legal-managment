@@ -16,17 +16,19 @@ import { VendorAssignmentModal } from '../components/VendorAssignmentModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
-import { MOCK_PI_CASES, MOCK_VENDOR_ASSIGNMENTS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function VendorAssignments() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [assignments, setAssignments] = useState(() => mockStorage.get('pi_vendors', MOCK_VENDOR_ASSIGNMENTS));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [assignments, setAssignments] = useState([]);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -42,20 +44,7 @@ export function VendorAssignments() {
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
     if (newCaseId && newCaseId !== 'ALL') {
-      const match = cases.find((c) => c.id === newCaseId);
-      if (match) {
-        setActiveMatter({
-          id: match.id,
-          title: match.matterTitle || `${match.clientName} - PI Claim`,
-          clientName: match.clientName,
-          clientNumber: match.clientNumber || match.id,
-          matterNumber: match.matterNumber || match.id,
-          practiceArea: 'Personal Injury',
-          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
-          status: match.caseStage || 'Active',
-          incidentDate: match.incidentDate,
-        });
-      }
+      setActiveMatter(newCaseId);
     }
   };
 
@@ -83,7 +72,6 @@ export function VendorAssignments() {
         updated = [savedRecord, ...prev];
         addToast('New outside vendor assignment dispatched.', 'success');
       }
-      mockStorage.set('pi_vendors', updated);
       return updated;
     });
   };

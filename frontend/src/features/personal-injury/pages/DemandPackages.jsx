@@ -18,18 +18,22 @@ import { DemandPackageModal } from '../components/DemandPackageModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
-import { MOCK_PI_CASES, MOCK_DEMAND_PACKAGES } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
+import { piService } from '../../../services/piService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function DemandPackages() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [demandPackages, setDemandPackages] = useState(() => mockStorage.get('pi_demands', MOCK_DEMAND_PACKAGES));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [demandPackages, setDemandPackages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDemand, setSelectedDemand] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,23 +45,34 @@ export function DemandPackages() {
     }
   }, [activeMatter]);
 
+  useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getDemands(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const list = Array.isArray(res) ? res : (res ? [res] : []);
+            setDemandPackages(list);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load demands from API:', err?.message);
+          if (isMounted) setDemandPackages([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setDemandPackages([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
+
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
     if (newCaseId && newCaseId !== 'ALL') {
-      const match = cases.find((c) => c.id === newCaseId);
-      if (match) {
-        setActiveMatter({
-          id: match.id,
-          title: match.matterTitle || `${match.clientName} - PI Claim`,
-          clientName: match.clientName,
-          clientNumber: match.clientNumber || match.id,
-          matterNumber: match.matterNumber || match.id,
-          practiceArea: 'Personal Injury',
-          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
-          status: match.caseStage || 'Active',
-          incidentDate: match.incidentDate,
-        });
-      }
+      setActiveMatter(newCaseId);
     }
   };
 
@@ -73,20 +88,23 @@ export function DemandPackages() {
     return matchesSearch && matchesCase;
   });
 
-  const handleSaveDemand = (savedRecord) => {
-    setDemandPackages((prev) => {
-      const exists = prev.some((d) => d.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((d) => (d.id === savedRecord.id ? savedRecord : d));
-        addToast('Demand package updated.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New demand package created and ready for attorney review.', 'success');
+  const handleSaveDemand = async (savedRecord) => {
+    try {
+      if (savedRecord.matterId) {
+        await piService.createDemand(savedRecord.matterId, savedRecord);
       }
-      mockStorage.set('pi_demands', updated);
-      return updated;
-    });
+      setDemandPackages((prev) => {
+        const exists = prev.some((d) => d.id === savedRecord.id);
+        if (exists) {
+          return prev.map((d) => (d.id === savedRecord.id ? savedRecord : d));
+        } else {
+          return [savedRecord, ...prev];
+        }
+      });
+      addToast('Demand package saved to database successfully.', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save demand package.', 'error');
+    }
   };
 
   const openAddModal = () => {

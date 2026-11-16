@@ -1,75 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe, Save, CheckCircle, HelpCircle, FileCheck, Languages, Database, ArrowRight } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useToast } from '../../../components/ui/Toast';
-import { MOCK_BILINGUAL_SECTIONS } from '../../../data/mockQuestionnaires';
+import { useMatters } from '../../../context/MatterContext';
+import { BILINGUAL_QUESTIONNAIRE_SECTIONS } from '../../../data/mockQuestionnaires';
 
-const PRESET_APPLICANTS = {
-  sofia: {
-    fullName: 'Sofia Elena Morales-Castillo',
-    otherNames: 'Sofia Morales',
-    dob: '1995-11-20',
-    countryOfBirth: 'Mexico',
-    countryOfCitizenship: 'Mexico',
-    alienNumber: 'A-214-889-102',
-    currentAddress: '742 South 1100 East, Salt Lake City, UT 84105',
-    currentDates: 'March 2024 to Present',
-    priorAddress1: 'Av. Vallarta 2440, Guadalajara, Jalisco, Mexico',
-    priorDates1: 'Jan 2019 to Feb 2024',
-    dateOfLastArrival: '2023-04-12',
-    placeOfEntry: 'Dallas Fort Worth International Airport (DFW), TX',
-    classOfAdmission: 'B-2 Visitor for Pleasure',
-    i94Number: '92841092810',
-    passportNumber: 'MEX-G8849102',
-  },
-  klaus: {
-    fullName: 'Dr. Klaus Richter, Ph.D.',
-    otherNames: 'None',
-    dob: '1984-03-22',
-    countryOfBirth: 'Germany',
-    countryOfCitizenship: 'Germany',
-    alienNumber: 'A-098-443-812',
-    currentAddress: '1120 Foothill Drive, Salt Lake City, UT 84108',
-    currentDates: 'September 2022 to Present',
-    priorAddress1: 'Leopoldstraße 45, 80802 Munich, Germany',
-    priorDates1: 'Jan 2017 to August 2022',
-    dateOfLastArrival: '2022-09-10',
-    placeOfEntry: 'Salt Lake City International Airport (SLC), UT',
-    classOfAdmission: 'O-1A Extraordinary Ability',
-    i94Number: '33491028190',
-    passportNumber: 'DEU-C9918230',
-  },
-  carlos: {
-    fullName: 'Carlos Ramirez-Vega',
-    otherNames: 'Carlos Ramirez',
-    dob: '1998-07-14',
-    countryOfBirth: 'Guatemala',
-    countryOfCitizenship: 'Guatemala',
-    alienNumber: 'A-201-332-945',
-    currentAddress: '3400 South West Temple, Salt Lake City, UT 84115',
-    currentDates: 'November 2023 to Present',
-    priorAddress1: 'Zona 1, Ciudad de Guatemala, Guatemala',
-    priorDates1: 'Jan 2018 to Oct 2023',
-    dateOfLastArrival: '2023-11-03',
-    placeOfEntry: 'El Paso Land Port of Entry, TX',
-    classOfAdmission: 'Parole Humanitarian',
-    i94Number: '55401928101',
-    passportNumber: 'GTM-B440192',
-  }
+const emptyFormData = {
+  fullName: '',
+  otherNames: '',
+  dob: '',
+  countryOfBirth: '',
+  countryOfCitizenship: '',
+  alienNumber: '',
+  currentAddress: '',
+  currentDates: '',
+  priorAddress1: '',
+  priorDates1: '',
+  dateOfLastArrival: '',
+  placeOfEntry: '',
+  classOfAdmission: '',
+  i94Number: '',
+  passportNumber: '',
 };
 
 export function MultilingualQuestionnaires() {
-  const [selectedApplicantKey, setSelectedApplicantKey] = useState('sofia');
+  const { matters = [] } = useMatters();
+  const immigrationMatters = matters.filter(m =>
+    m.practiceAreaId === 'pa-imm' ||
+    m.area === 'Immigration' ||
+    m.practiceArea === 'Immigration' ||
+    (m.matterNumber && m.matterNumber.includes('IMM'))
+  );
+
+  const [selectedMatterId, setSelectedMatterId] = useState('');
   const [language, setLanguage] = useState('en'); // 'en' | 'es'
-  const [formData, setFormData] = useState(PRESET_APPLICANTS.sofia);
+  const [formData, setFormData] = useState(emptyFormData);
   const [syncHistory, setSyncHistory] = useState(null);
   const { addToast } = useToast();
 
-  const handleSelectApplicant = (key) => {
-    setSelectedApplicantKey(key);
-    setFormData(PRESET_APPLICANTS[key] || PRESET_APPLICANTS.sofia);
+  useEffect(() => {
+    if (immigrationMatters.length > 0 && !selectedMatterId) {
+      const first = immigrationMatters[0];
+      setSelectedMatterId(first.id);
+      setFormData(prev => ({
+        ...prev,
+        fullName: first.clientName || first.client?.name || '',
+      }));
+    }
+  }, [immigrationMatters, selectedMatterId]);
+
+  const handleSelectMatter = (matterId) => {
+    setSelectedMatterId(matterId);
+    const selected = immigrationMatters.find(m => m.id === matterId);
+    if (selected) {
+      setFormData(prev => ({
+        ...emptyFormData,
+        fullName: selected.clientName || selected.client?.name || '',
+      }));
+    } else {
+      setFormData(emptyFormData);
+    }
     setSyncHistory(null);
   };
 
@@ -98,15 +90,15 @@ export function MultilingualQuestionnaires() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-800">
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-amber-700 shrink-0" />
+          <Globe className="w-4 h-4 text-blue-700 shrink-0" />
           <span>
-            <strong>[DEMO SIMULATION] Multilingual Intake &amp; Bio-Data Vault:</strong> Toggle language dynamically between English and Spanish. Data propagates across USCIS forms (I-130, I-485, I-765) without duplicate data entry.
+            <strong>Multilingual Intake &amp; Bio-Data Vault:</strong> Toggle language dynamically between English and Spanish. Data propagates across USCIS forms (I-130, I-485, I-765) without duplicate data entry.
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-blue-100 text-blue-900 font-semibold px-2 py-0.5 rounded text-[10px]">
+          CENTRAL VAULT
         </span>
       </div>
 
@@ -130,13 +122,19 @@ export function MultilingualQuestionnaires() {
           <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-[#D9D6CF] shadow-sm">
             <span className="text-xs font-semibold text-[#06244B] ml-2">Applicant / Solicitante:</span>
             <select
-              value={selectedApplicantKey}
-              onChange={(e) => handleSelectApplicant(e.target.value)}
+              value={selectedMatterId}
+              onChange={(e) => handleSelectMatter(e.target.value)}
               className="text-xs p-1.5 rounded border border-[#D9D6CF] text-[#06244B] bg-slate-50 font-medium"
             >
-              <option value="sofia">Sofia Alvarez (Mexico - Marriage AOS)</option>
-              <option value="klaus">Dr. Klaus Richter (Germany - EB-2 NIW)</option>
-              <option value="carlos">Carlos Ramirez (Guatemala - Asylum)</option>
+              {immigrationMatters.length === 0 ? (
+                <option value="">No immigration matters registered</option>
+              ) : (
+                immigrationMatters.map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.clientName || m.client?.name || m.title} ({m.matterNumber || m.caseNumber || 'No #'}: {m.title})
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -170,7 +168,7 @@ export function MultilingualQuestionnaires() {
 
       {/* Form sections */}
       <form onSubmit={handleSaveToBioDataVault} className="space-y-6">
-        {MOCK_BILINGUAL_SECTIONS.map((sec) => (
+        {BILINGUAL_QUESTIONNAIRE_SECTIONS.map((sec) => (
           <div key={sec.id} className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm p-5 space-y-4">
             <div className="border-b border-[#D9D6CF] pb-2">
               <h3 className="font-bold text-base text-[#06244B]">

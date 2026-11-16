@@ -2,32 +2,27 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
 import { DEFAULT_ROLE_PERMISSIONS } from '../config/permissions';
-import { MOCK_USERS } from '../data/mockUsers';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(() => authService.getCachedUser() || MOCK_USERS[0]);
+  const [currentUser, setCurrentUser] = useState(() => authService.getCachedUser() || null);
   const [isAuthenticated, setIsAuthenticated] = useState(() => authService.hasToken());
   const [loading, setLoading] = useState(true);
-  const [allUsers, setAllUsers] = useState(MOCK_USERS);
+  const [allUsers, setAllUsers] = useState([]);
   const [rolePermissions, setRolePermissions] = useState(DEFAULT_ROLE_PERMISSIONS);
 
-  // Load real firm staff from backend /users (Restricted to Super Admin or users with users:view permission)
-  const refreshUsers = useCallback(async (roleOverride) => {
-    const role = roleOverride || currentUser?.role;
-    if (role !== 'super_admin') {
-      return;
-    }
+  // Load real firm staff from backend /users
+  const refreshUsers = useCallback(async () => {
     try {
       const data = await userService.getUsers({ limit: 100 });
       if (Array.isArray(data?.users) && data.users.length > 0) {
         setAllUsers(data.users);
       }
     } catch (err) {
-      console.warn('Could not fetch remote users list, retaining baseline staff:', err?.message);
+      console.warn('Could not fetch remote users list:', err?.message);
     }
-  }, [currentUser?.role]);
+  }, []);
 
   // Validate session on mount or token change
   useEffect(() => {
@@ -64,7 +59,7 @@ export function AuthProvider({ children }) {
     const handleUnauthorized = () => {
       if (isMounted) {
         setIsAuthenticated(false);
-        setCurrentUser(MOCK_USERS[0]);
+        setCurrentUser(null);
       }
     };
     window.addEventListener('hb:auth:unauthorized', handleUnauthorized);
@@ -82,9 +77,7 @@ export function AuthProvider({ children }) {
       if (data?.user) {
         setCurrentUser(data.user);
         setIsAuthenticated(true);
-        if (data.user.role === 'super_admin') {
-          await refreshUsers(data.user.role);
-        }
+        await refreshUsers();
         return {
           success: true,
           user: data.user,
@@ -108,7 +101,7 @@ export function AuthProvider({ children }) {
       await authService.logout();
     } finally {
       setIsAuthenticated(false);
-      setCurrentUser(MOCK_USERS[0]);
+      setCurrentUser(null);
     }
   };
 

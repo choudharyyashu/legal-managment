@@ -24,7 +24,6 @@ import { StatCard } from '../../../components/shared/StatCard';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
-import { MOCK_PI_CASES, MOCK_DEMAND_PACKAGES } from '../../../data/mockPersonalInjury';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { matterService } from '../../../services/matterService';
@@ -33,7 +32,8 @@ import { useMatters } from '../../../context/MatterContext';
 export function PIDashboard() {
   const navigate = useNavigate();
   const { activeMatter, setActiveMatter } = useMatters();
-  const [cases, setCases] = useState(MOCK_PI_CASES);
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -46,28 +46,35 @@ export function PIDashboard() {
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     matterService.getMatters({ practiceAreaId: 'pa-pi' })
       .then((res) => {
         const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted && realMatters.length > 0) {
+        if (isMounted) {
           const mapped = realMatters.map((m) => ({
             id: m.id,
             matterNumber: m.matterNumber,
             clientName: m.client?.name || m.clientName || m.title,
-            accidentType: 'Motor Vehicle Collision (I-15)',
-            dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-08-14',
+            accidentType: m.description || 'Personal Injury Action',
+            dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
             status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
-            policyLimit: '$100,000 / $300,000',
-            totalMeds: 24500,
-            totalLiens: 8400,
-            leadAttorney: m.responsibleAttorney?.name || 'Thomas Bludworth, Esq.',
+            policyLimit: 'Verified Limits',
+            totalMeds: Number(m.budget) || 0,
+            totalLiens: 0,
+            leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
             isRealDbMatter: true,
             matterId: m.id,
           }));
           setCases(mapped);
         }
       })
-      .catch((err) => console.warn('Could not load PI matters from API:', err?.message));
+      .catch((err) => {
+        console.warn('Could not load PI matters from API:', err?.message);
+        if (isMounted) setCases([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
     return () => { isMounted = false; };
   }, []);
 

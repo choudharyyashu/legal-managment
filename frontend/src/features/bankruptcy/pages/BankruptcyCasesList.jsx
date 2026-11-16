@@ -25,7 +25,6 @@ import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { FilterBar } from '../../../components/shared/FilterBar';
 import { Modal } from '../../../components/ui/Modal';
-import { MOCK_BANKRUPTCY_CASES } from '../../../data/mockBankruptcyCases';
 import { Link } from 'react-router-dom';
 import { BankruptcyCaseDrawer } from '../components/BankruptcyCaseDrawer';
 import { DebtorIntakeWizardModal } from '../components/DebtorIntakeWizardModal';
@@ -33,7 +32,8 @@ import { useToast } from '../../../components/ui/Toast';
 import { matterService } from '../../../services/matterService';
 
 export function BankruptcyCasesList() {
-  const [cases, setCases] = useState(MOCK_BANKRUPTCY_CASES);
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [chapterFilter, setChapterFilter] = useState('');
   const [selectedCase, setSelectedCase] = useState(null);
@@ -44,30 +44,37 @@ export function BankruptcyCasesList() {
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     matterService.getMatters({ practiceAreaId: 'pa-bk' })
       .then((res) => {
         const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted && realMatters.length > 0) {
+        if (isMounted) {
           const mapped = realMatters.map((m) => ({
             id: m.id,
             caseNumber: m.matterNumber,
             debtorName: m.client?.name || m.clientName || m.title,
             chapter: m.title.includes('13') ? 'Chapter 13' : (m.title.includes('11') ? 'Chapter 11' : 'Chapter 7'),
             status: m.status === 'Active' ? 'Filing Prepared' : (m.status === 'Concluded' ? 'Discharged' : 'Pending 341 Meeting'),
-            filingDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '2026-11-13',
+            filingDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
             meeting341Date: '2026-12-15',
-            totalDebt: m.budget ? Number(m.budget) : 185000,
-            assetsValue: 240000,
-            trusteeName: 'Lon Jenkins (Ch. 13 Trustee)',
-            assignedJudge: 'Hon. Joel T. Marker',
-            assignedAttorney: m.responsibleAttorney?.name || 'Thomas Bludworth, Esq.',
+            totalDebt: m.budget ? Number(m.budget) : 0,
+            assetsValue: 0,
+            trusteeName: 'Trustee',
+            assignedJudge: m.judge || 'Hon. Joel T. Marker',
+            assignedAttorney: m.responsibleAttorney?.name || 'Assigned Counsel',
             isRealDbMatter: true,
             matterId: m.id,
           }));
           setCases(mapped);
         }
       })
-      .catch((err) => console.warn('Could not load bankruptcy matters from API:', err?.message));
+      .catch((err) => {
+        console.warn('Could not load bankruptcy matters from API:', err?.message);
+        if (isMounted) setCases([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
     return () => { isMounted = false; };
   }, []);
 

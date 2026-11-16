@@ -1,7 +1,7 @@
 // Multilingual Questionnaire Data (English / Español)
-// Reference: Docketwise Intake & Client Portal (DEMO / SIMULATED)
+// Reference: Docketwise Intake & Client Portal Standard Questionnaires
 
-export const MOCK_BILINGUAL_SECTIONS = [
+export const BILINGUAL_QUESTIONNAIRE_SECTIONS = [
   {
     id: 'sec-demographics',
     title_en: 'Part 1: Personal Demographics & Identity',
@@ -161,4 +161,6 @@ export const MOCK_BILINGUAL_SECTIONS = [
     ]
   }
 ];
+
+export const MOCK_BILINGUAL_SECTIONS = BILINGUAL_QUESTIONNAIRE_SECTIONS;
 

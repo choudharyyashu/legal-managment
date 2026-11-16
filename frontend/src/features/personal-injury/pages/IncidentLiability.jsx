@@ -19,18 +19,22 @@ import { PINavigationHeader } from '../components/PINavigationHeader';
 import { IncidentModal } from '../components/IncidentModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
-import { MOCK_PI_CASES, MOCK_INCIDENT_RECORDS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
+import { piService } from '../../../services/piService';
 import { documentService } from '../../../services/documentService';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function IncidentLiability() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [incidents, setIncidents] = useState(() => mockStorage.get('pi_incidents', MOCK_INCIDENT_RECORDS));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [incidents, setIncidents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +45,33 @@ export function IncidentLiability() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter?.id]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getIncident(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            if (res) {
+              setIncidents([res]);
+            } else {
+              setIncidents([]);
+            }
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load incident from API:', err?.message);
+          if (isMounted) setIncidents([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setIncidents([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const filteredIncidents = incidents.filter((inc) => {
     const matchesSearch =
@@ -60,20 +91,23 @@ export function IncidentLiability() {
     }
   };
 
-  const handleSaveIncident = (savedRecord) => {
-    setIncidents((prev) => {
-      const exists = prev.some((i) => i.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((i) => (i.id === savedRecord.id ? savedRecord : i));
-        addToast('Incident record updated successfully.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New incident & liability investigation recorded.', 'success');
+  const handleSaveIncident = async (savedRecord) => {
+    try {
+      if (savedRecord.matterId) {
+        await piService.saveIncident(savedRecord.matterId, savedRecord);
       }
-      mockStorage.set('pi_incidents', updated);
-      return updated;
-    });
+      setIncidents((prev) => {
+        const exists = prev.some((i) => i.id === savedRecord.id);
+        if (exists) {
+          return prev.map((i) => (i.id === savedRecord.id ? savedRecord : i));
+        } else {
+          return [savedRecord, ...prev];
+        }
+      });
+      addToast('Incident record saved to database successfully.', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save incident record.', 'error');
+    }
 
     // Event-Driven Auto Draft Trigger (Phase 4): Document 096 (Representation Letter)
     if (savedRecord.matterId) {

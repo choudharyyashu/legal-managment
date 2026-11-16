@@ -5,11 +5,11 @@ import { DataTable } from '../../../components/ui/DataTable';
 import { Button } from '../../../components/ui/Button';
 import { SearchBar } from '../../../components/shared/SearchBar';
 import { Modal } from '../../../components/ui/Modal';
-import { MOCK_USCIS_FORMS } from '../../../data/mockUSCISForms';
+import { USCIS_STANDARD_FORMS } from '../../../data/mockUSCISForms';
 import { useToast } from '../../../components/ui/Toast';
 
 export function ImmigrationFormLibrary() {
-  const [forms] = useState(MOCK_USCIS_FORMS);
+  const [forms] = useState(USCIS_STANDARD_FORMS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedForm, setSelectedForm] = useState(null);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);

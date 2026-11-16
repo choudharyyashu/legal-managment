@@ -21,18 +21,20 @@ import {
 import { PINavigationHeader } from '../components/PINavigationHeader';
 import { DamagesModal } from '../components/DamagesModal';
 import { Button } from '../../../components/ui/Button';
-import { MOCK_PI_CASES, MOCK_DAMAGES_RECORDS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function ClientDamages() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [damagesList, setDamagesList] = useState(() => mockStorage.get('pi_damages', MOCK_DAMAGES_RECORDS));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [damagesList, setDamagesList] = useState([]);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDamage, setSelectedDamage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,20 +50,7 @@ export function ClientDamages() {
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
     if (newCaseId && newCaseId !== 'ALL') {
-      const match = cases.find((c) => c.id === newCaseId);
-      if (match) {
-        setActiveMatter({
-          id: match.id,
-          title: match.matterTitle || `${match.clientName} - PI Claim`,
-          clientName: match.clientName,
-          clientNumber: match.clientNumber || match.id,
-          matterNumber: match.matterNumber || match.id,
-          practiceArea: 'Personal Injury',
-          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
-          status: match.caseStage || 'Active',
-          incidentDate: match.incidentDate,
-        });
-      }
+      setActiveMatter(newCaseId);
     }
   };
 
@@ -95,7 +84,6 @@ export function ClientDamages() {
         updated = [savedRecord, ...prev];
         addToast('New injury & economic damages profile created.', 'success');
       }
-      mockStorage.set('pi_damages', updated);
       return updated;
     });
   };
@@ -112,9 +100,7 @@ export function ClientDamages() {
 
   const handleDeleteDamage = (id) => {
     setDamagesList((prev) => {
-      const updated = prev.filter((d) => d.id !== id);
-      mockStorage.set('pi_damages', updated);
-      return updated;
+      return prev.filter((d) => d.id !== id);
     });
     if (expandedRecord?.id === id) {
       setExpandedRecord(null);

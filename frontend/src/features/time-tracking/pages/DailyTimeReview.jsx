@@ -7,7 +7,6 @@ import { PageHeader } from '../../../components/shared/PageHeader';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Tabs } from '../../../components/ui/Tabs';
 import { FilterBar } from '../../../components/shared/FilterBar';
-import { INITIAL_IDLE_FLAGS, INITIAL_OVERLAP_FLAGS } from '../../../data/mockTimeReviewSchedules';
 import { ScheduledReviewSlots } from '../components/ScheduledReviewSlots';
 import { TimeReviewFlagsPanel } from '../components/TimeReviewFlagsPanel';
 import { formatDate } from '../../../utils/formatDate';
@@ -23,8 +22,8 @@ export function DailyTimeReview() {
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
-  const [idleFlags, setIdleFlags] = useState(INITIAL_IDLE_FLAGS);
-  const [overlapFlags, setOverlapFlags] = useState(INITIAL_OVERLAP_FLAGS);
+  const [idleFlags, setIdleFlags] = useState([]);
+  const [overlapFlags, setOverlapFlags] = useState([]);
 
   const handleUpdateIdleFlagStatus = (flagId, status, reviewNote) => {
     setIdleFlags((prev) =>

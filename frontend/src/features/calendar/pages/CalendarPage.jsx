@@ -13,7 +13,6 @@ import {
   Scale
 } from 'lucide-react';
 import { calendarService } from '../../../services/calendarService';
-import { MOCK_CALENDAR_EVENTS } from '../../../data/mockCalendar';
 import { useMatters } from '../../../context/MatterContext';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
@@ -29,7 +28,7 @@ export function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 10, 1)); // November 2026
   const [viewMode, setViewMode] = useState('month'); // 'month', 'week', 'day', 'agenda'
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [events, setEvents] = useState(MOCK_CALENDAR_EVENTS);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Modals
@@ -76,14 +75,15 @@ export function CalendarPage() {
     try {
       setLoading(true);
       const res = await calendarService.getEvents();
-      if (Array.isArray(res) && res.length > 0) {
+      if (Array.isArray(res)) {
         const liveEvents = res.map(normalizeEvent);
         setEvents(liveEvents);
       } else {
-        setEvents(MOCK_CALENDAR_EVENTS);
+        setEvents([]);
       }
     } catch (err) {
       console.warn('Could not load calendar events from API:', err?.message);
+      setEvents([]);
     } finally {
       setLoading(false);
     }

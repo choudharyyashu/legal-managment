@@ -14,21 +14,59 @@ import {
   ShieldCheck,
   Building
 } from 'lucide-react';
-import { MOCK_EVICTIONS_CASES } from '../../../../data/mockSpecialtyPractices';
 import { useToast } from '../../../../components/ui/Toast';
+import { useMatters } from '../../../../context/MatterContext';
 
 export function EvictionsWorkspace() {
   const { addToast } = useToast();
-  const [selectedCaseId, setSelectedCaseId] = useState(MOCK_EVICTIONS_CASES[0].id);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaName?.toLowerCase().includes('eviction') || m.practiceAreaName?.toLowerCase().includes('detainer'))
+      .map((m) => ({
+        id: m.id,
+        caseNumber: m.matterNumber,
+        propertyAddress: m.title,
+        court: m.courtName || 'Third District Court',
+        representationRole: 'Landlord Representation',
+        tenantNames: 'Tenant Party',
+        delinquentRent: 2400,
+        lateFeesOwed: 150,
+        threeDayNoticeDate: '2026-11-01',
+        threeDayExpiryDate: '2026-11-04',
+        noticeServiceType: 'Personal Service',
+        trebleDamagesCalculator: {
+          unlawfulDetainerDays: 14,
+          dailyRentRate: 80,
+          statutoryAttorneyFees: 750,
+          courtCosts: 185,
+        },
+      }));
+  }, [matters]);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => cases[0]?.id || '');
   const [activeTab, setActiveTab] = useState('notices'); // notices, court, treble, sheriff
 
-  const activeCase = MOCK_EVICTIONS_CASES.find(c => c.id === selectedCaseId) || MOCK_EVICTIONS_CASES[0];
+  const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
 
   // Treble damages interactive state
-  const [unlawfulDays, setUnlawfulDays] = useState(activeCase.trebleDamagesCalculator.unlawfulDetainerDays);
-  const dailyRate = activeCase.trebleDamagesCalculator.dailyRentRate;
+  const [unlawfulDays, setUnlawfulDays] = useState(activeCase?.trebleDamagesCalculator?.unlawfulDetainerDays || 14);
+  const dailyRate = activeCase?.trebleDamagesCalculator?.dailyRentRate || 80;
   const computedTrebledDamages = Math.round(unlawfulDays * dailyRate * 3);
-  const totalJudgment = computedTrebledDamages + activeCase.delinquentRent + activeCase.lateFeesOwed + activeCase.trebleDamagesCalculator.statutoryAttorneyFees + activeCase.trebleDamagesCalculator.courtCosts;
+  const totalJudgment = computedTrebledDamages + (activeCase?.delinquentRent || 0) + (activeCase?.lateFeesOwed || 0) + (activeCase?.trebleDamagesCalculator?.statutoryAttorneyFees || 0) + (activeCase?.trebleDamagesCalculator?.courtCosts || 0);
+
+  if (!activeCase) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="bg-white border border-[#E4E7EC] rounded-xl p-8 shadow-sm text-center">
+          <Home className="w-12 h-12 text-[#B93815] mx-auto mb-3 opacity-60" />
+          <h2 className="text-xl font-serif font-bold text-[#06244B]">Evictions &amp; Unlawful Detainer Docket</h2>
+          <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
+            No active eviction or unlawful detainer matters found in database. Specialized unlawful detainer workflows (3-Day Pay or Vacate Notice Logs, Utah Code 78B-6-811 Treble Damages Calculator, and Writs of Restitution Trackers) are pending dedicated backend model deployment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -42,7 +80,7 @@ export function EvictionsWorkspace() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-[#FEF6EE] text-[#B93815] border border-[#F9DBAF] whitespace-nowrap">
-                  SECTION 24: EVICTIONS & UNLAWFUL DETAINER
+                  SECTION 24: EVICTIONS &amp; UNLAWFUL DETAINER
                 </span>
                 <span className="text-xs font-mono text-[#667085] whitespace-nowrap">{activeCase.caseNumber}</span>
               </div>
@@ -56,15 +94,15 @@ export function EvictionsWorkspace() {
               value={selectedCaseId}
               onChange={(e) => {
                 setSelectedCaseId(e.target.value);
-                const nextCase = MOCK_EVICTIONS_CASES.find(c => c.id === e.target.value);
+                const nextCase = cases.find(c => c.id === e.target.value);
                 if (nextCase) {
                   setUnlawfulDays(nextCase.trebleDamagesCalculator.unlawfulDetainerDays);
                 }
               }}
               className="max-w-full sm:max-w-[260px] px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B]"
             >
-              {MOCK_EVICTIONS_CASES.map((c) => (
-                <option key={c.id} value={c.id}>{c.caseNumber} - {c.representationRole.split('(')[0]}</option>
+              {cases.map((c) => (
+                <option key={c.id} value={c.id}>{c.caseNumber} - {c.propertyAddress}</option>
               ))}
             </select>
             <button

@@ -26,9 +26,9 @@ import {
   ArrowDownLeft,
   ArrowUpRight
 } from 'lucide-react';
-import { MOCK_INVOICES } from '../../../data/mockInvoices';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
+import { useTime } from '../../../context/TimeContext';
 import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
@@ -83,53 +83,22 @@ export function ClientDetails() {
   const client = clients.find(c => c.id === clientId || c.clientNumber === clientId) || fetchedClient;
   const clientMatters = client ? getMattersByClient(client.id) : [];
 
+  const { invoices } = useTime();
   const linkedIntake = intakeId ? intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId) : null;
 
   // 360° Financials & Invoices for this client
-  const clientInvoices = MOCK_INVOICES.filter(
+  const clientInvoices = (invoices || []).filter(
     inv => inv.clientId === client?.id || inv.clientName === client?.name
   );
   const totalBilled = clientInvoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
   const totalPaid = clientInvoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
   const totalOutstanding = clientInvoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
 
-  // Client Trust Ledger: strictly isolated per client (0 for new clients)
-  const clientTrustBalance = client?.id === 'CLI-1001' ? 25000 : (client?.id === 'CLI-1002' ? 12500 : (client?.id === 'CLI-1008' ? 1440 : 0));
+  // Client Trust Ledger: from actual client record or 0
+  const clientTrustBalance = Number(client?.trustBalance || 0);
 
-  // Client Communications: strictly isolated per client (0 for new clients)
-  const ALL_MOCK_COMMS = [
-    {
-      id: 'comm-1',
-      clientId: 'CLI-1001',
-      type: 'Email',
-      subject: 'Discovery Protocol & Cold-Chain Telemetry Log Production',
-      sender: 'Thomas Bludworth, Esq.',
-      recipient: client?.email || 'client@firm.com',
-      date: '2026-11-05 14:20',
-      summary: 'Transmitted revised deposition questions and confirmed date for expert telemetry witness inspection.',
-    },
-    {
-      id: 'comm-2',
-      clientId: 'CLI-1001',
-      type: 'Telephone Call',
-      subject: 'Monthly Case Status & Deposition Scheduling Conference',
-      sender: 'Thomas Bludworth, Esq.',
-      recipient: client?.phone || '(801) 555-0100',
-      date: '2026-11-01 11:30',
-      summary: '30-minute conference with primary representative regarding upcoming mediator scheduling order.',
-    },
-    {
-      id: 'comm-3',
-      clientId: 'CLI-1001',
-      type: 'Portal Notice',
-      subject: 'Formal Request: 2024 Corporate Tax Returns & W-2 Records',
-      sender: 'Marcus Vance (Paralegal)',
-      recipient: 'Client Portal Secure Inbox',
-      date: '2026-10-24 09:15',
-      summary: 'Official document upload request issued through the secure client portal.',
-    },
-  ];
-  const clientComms = ALL_MOCK_COMMS.filter(c => c.clientId === client?.id || c.clientId === client?.clientNumber);
+  // Client Communications: live list or empty
+  const clientComms = [];
 
   if (!client) {
     return (

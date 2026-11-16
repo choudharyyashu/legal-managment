@@ -27,7 +27,6 @@ import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Tabs } from '../../../components/ui/Tabs';
 import { EmptyState } from '../../../components/ui/EmptyState';
-import { INITIAL_UNCERTAIN_SUGGESTIONS } from '../../../data/mockTimeReviewSchedules';
 import { ScheduledReviewSlots } from '../components/ScheduledReviewSlots';
 import { UncertainQueuePanel } from '../components/UncertainQueuePanel';
 import { formatHours, formatCurrency } from '../../../utils/formatCurrency';
@@ -39,93 +38,12 @@ export function SuggestedBilling() {
   const { matters } = useMatters();
   const { addToast } = useToast();
 
-  const [suggestions, setSuggestions] = useState([
-    {
-      id: 'SUG-01',
-      slotId: 'slot-noon',
-      sourceType: 'Outlook Email',
-      sourceIcon: Mail,
-      sourceIdentifier: 'MSG-ID: <20261105.1420.outbound@wasatchlogistics.com>',
-      date: '2026-11-05',
-      matterId: 'MAT-2025-0101',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      actualDuration: '14 mins',
-      actualMinutes: 14,
-      suggestedHours: 0.3, // Rounded up to nearest 0.1 hr (18 mins)
-      matchConfidence: 98,
-      activityDescription: 'Email correspondence to opposing counsel regarding proposed cold-chain inspection schedule.',
-      detectedRate: 500,
-      converted: false,
-      dismissed: false,
-    },
-    {
-      id: 'SUG-02',
-      slotId: 'slot-4pm',
-      sourceType: 'Telephone Call',
-      sourceIcon: Phone,
-      sourceIdentifier: 'VOIP-CALL-REC #88192 (Direct Inward Dialing)',
-      date: '2026-11-04',
-      matterId: 'MAT-2025-0418',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      clientName: 'Dr. Evelyn Martinez',
-      actualDuration: '42 mins',
-      actualMinutes: 42,
-      suggestedHours: 0.8, // Rounded to 48 mins (0.8 hrs)
-      matchConfidence: 95,
-      activityDescription: 'Attended telephonic pre-hearing conference with mediator and counsel of record.',
-      detectedRate: 375,
-      converted: false,
-      dismissed: false,
-    },
-    {
-      id: 'SUG-03',
-      slotId: 'slot-6pm',
-      sourceType: 'Word Document',
-      sourceIcon: FileText,
-      sourceIdentifier: 'WIN-DOC-AUDIT: Reply_Brief_Recharge_Easements_v3.docx',
-      date: '2026-11-04',
-      matterId: 'MAT-2024-0301',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      clientName: 'Apex Horizon Real Estate Group',
-      actualDuration: '2 hrs 18 mins',
-      actualMinutes: 138,
-      suggestedHours: 2.4, // Standard 6-minute billing increment
-      matchConfidence: 68, // Flagged for review
-      activityDescription: 'Drafted reply brief section addressing municipal groundwater recharge easements.',
-      detectedRate: 550,
-      converted: false,
-      dismissed: false,
-    },
-    {
-      id: 'SUG-04',
-      slotId: 'slot-9pm',
-      sourceType: 'VoIP SMS Thread',
-      sourceIcon: MessageSquare,
-      sourceIdentifier: 'TWILIO-SMS-SID: SM88192001a1',
-      date: '2026-11-03',
-      matterId: 'MAT-2025-0101',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      actualDuration: '6 mins',
-      actualMinutes: 6,
-      suggestedHours: 0.2, // Minimum 0.2 block
-      matchConfidence: 99,
-      activityDescription: 'Mobile SMS exchange confirming expert witness inspection time and zoom conference access.',
-      detectedRate: 500,
-      converted: false,
-      dismissed: false,
-    }
-  ]);
+  const [suggestions, setSuggestions] = useState([]);
 
   // Modal states & Phase 4 Queue states
   const [activeTab, setActiveTab] = useState('uncertain');
   const [activeSlotId, setActiveSlotId] = useState('');
-  const [uncertainItems, setUncertainItems] = useState(INITIAL_UNCERTAIN_SUGGESTIONS);
+  const [uncertainItems, setUncertainItems] = useState([]);
   const [isProposalModalOpen, setIsProposalModalOpen] = useState(false);
   const [reassigningItem, setReassigningItem] = useState(null);
   const [newSelectedMatterId, setNewSelectedMatterId] = useState('');

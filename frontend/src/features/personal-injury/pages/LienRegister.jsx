@@ -16,18 +16,20 @@ import { LienModal } from '../components/LienModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatCard } from '../../../components/shared/StatCard';
-import { MOCK_PI_CASES, MOCK_LIENS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function LienRegister() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [liens, setLiens] = useState(() => mockStorage.get('pi_liens', MOCK_LIENS));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [liens, setLiens] = useState([]);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLien, setSelectedLien] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,20 +44,7 @@ export function LienRegister() {
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
     if (newCaseId && newCaseId !== 'ALL') {
-      const match = cases.find((c) => c.id === newCaseId);
-      if (match) {
-        setActiveMatter({
-          id: match.id,
-          title: match.matterTitle || `${match.clientName} - PI Claim`,
-          clientName: match.clientName,
-          clientNumber: match.clientNumber || match.id,
-          matterNumber: match.matterNumber || match.id,
-          practiceArea: 'Personal Injury',
-          leadAttorney: match.leadAttorney || 'Eleanor Heugly, Esq.',
-          status: match.caseStage || 'Active',
-          incidentDate: match.incidentDate,
-        });
-      }
+      setActiveMatter(newCaseId);
     }
   };
 
@@ -89,7 +78,6 @@ export function LienRegister() {
         updated = [savedRecord, ...prev];
         addToast('New healthcare lien registered.', 'success');
       }
-      mockStorage.set('pi_liens', updated);
       return updated;
     });
   };

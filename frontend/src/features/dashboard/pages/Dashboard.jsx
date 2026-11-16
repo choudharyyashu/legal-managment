@@ -34,7 +34,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { ClientForm } from '../../clients/forms/ClientForm';
 import { MatterForm } from '../../matters/forms/MatterForm';
 import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
-import { MOCK_CALENDAR_EVENTS } from '../../../data/mockCalendar';
+import { calendarService } from '../../../services/calendarService';
 import { reportService } from '../../../services/reportService';
 import { formatDate } from '../../../utils/formatDate';
 import { EndToEndDemoWizard } from '../../intake/components/EndToEndDemoWizard';
@@ -43,13 +43,14 @@ export function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const permissions = usePermissions();
-  const { clients } = useClients();
+  const { clients, intakes } = useClients();
   const { matters } = useMatters();
   const { tasks, updateTaskStatus } = useTasks();
   const { timeEntries, approveTimeEntry, rejectTimeEntry } = useTime();
   const { addToast } = useToast();
 
   const [dashboardMetrics, setDashboardMetrics] = useState(null);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
 
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -67,19 +68,69 @@ export function Dashboard() {
       .catch((err) => {
         console.warn('Could not fetch aggregated report metrics:', err?.message);
       });
+
+    calendarService.getEvents({ limit: 4 })
+      .then((events) => {
+        if (isMounted && Array.isArray(events)) {
+          setUpcomingEvents(events.slice(0, 4));
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch calendar events for dashboard:', err?.message);
+      });
+
     return () => { isMounted = false; };
   }, []);
 
   // Derived metrics (live backend counts with fallback to context arrays)
   const totalClientsCount = dashboardMetrics?.clients?.total !== undefined ? dashboardMetrics.clients.total : clients.length;
   const activeMattersCount = dashboardMetrics?.matters?.active !== undefined ? dashboardMetrics.matters.active : matters.filter(m => m.status !== 'Concluded').length;
-  const myTasks = tasks.filter(t => t.assignedToId === currentUser.id || t.assignedToUserId === currentUser.id);
+  const myTasks = tasks.filter(t => t.assignedToId === currentUser?.id || t.assignedToUserId === currentUser?.id);
   const myPendingTasksCount = myTasks.filter(t => t.status !== 'Completed').length;
   const teamTasks = tasks.filter(t => t.status !== 'Completed');
   const pendingApprovals = timeEntries.filter(t => t.status === 'Submitted');
 
-  // Upcoming hearings & deadlines
-  const upcomingEvents = MOCK_CALENDAR_EVENTS.slice(0, 4);
+  // Compute live team workload strictly from actual tasks
+  const teamMemberWorkload = React.useMemo(() => {
+    const map = {};
+    tasks.forEach(t => {
+      const name = t.assignedToName || 'Unassigned Staff';
+      if (!map[name]) {
+        map[name] = { name, role: 'Staff Member', open: 0, high: 0, id: t.assignedToUserId || t.assignedToId };
+      }
+      if (t.status !== 'Completed') {
+        map[name].open += 1;
+        if (t.priority === 'Urgent' || t.priority === 'High') {
+          map[name].high += 1;
+        }
+      }
+    });
+    return Object.values(map);
+  }, [tasks]);
+
+  // Compute live firm activity from actual matters and intakes
+  const recentActivities = React.useMemo(() => {
+    const activities = [];
+    (matters || []).slice(0, 3).forEach(m => {
+      activities.push({
+        id: `matter-${m.id}`,
+        title: 'Matter Active',
+        description: `${m.title} (${m.matterNumber}) - Counsel: ${m.responsibleAttorneyName || 'Assigned'}`,
+        date: m.openDate || 'Recently',
+        color: 'bg-[#06244B]',
+      });
+    });
+    (intakes || []).slice(0, 2).forEach(i => {
+      activities.push({
+        id: `intake-${i.id}`,
+        title: `Intake: ${i.conflictStatus || 'In Review'}`,
+        description: `Client ${i.clientName || i.contactName} - Practice Area: ${i.practiceAreaName || 'General'}`,
+        date: i.createdAt || 'Recently',
+        color: i.conflictStatus === 'Cleared' ? 'bg-[#287A55]' : 'bg-[#A4432B]',
+      });
+    });
+    return activities;
+  }, [matters, intakes]);
 
   const handleTaskToggle = (task) => {
     const nextStatus = task.status === 'Completed' ? 'In Progress' : 'Completed';
@@ -326,14 +377,15 @@ export function Dashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#D9D6CF]/40">
-                    {permissions.isSuperAdmin || permissions.isSupervisor ? (
-                      [
-                        { name: 'Sarah Jenkins, Esq.', role: 'Senior Associate', open: 3, high: 2, id: 'usr-3' },
-                        { name: 'Marcus Vance', role: 'Litigation Paralegal', open: 5, high: 2, id: 'usr-4' },
-                        { name: 'Rachel Adams', role: 'Billing Director', open: 2, high: 1, id: 'usr-5' },
-                        { name: 'Thomas Bludworth, Esq.', role: 'Senior Partner', open: 4, high: 1, id: 'usr-2' },
-                      ].map((member, idx) => (
-                        <tr key={idx} className="hover:bg-[#F5F0E5]/30">
+                    {teamMemberWorkload.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-4 text-center text-xs text-[#667085]">
+                          No active team task assignments.
+                        </td>
+                      </tr>
+                    ) : (
+                      teamMemberWorkload.map((member, idx) => (
+                        <tr key={member.id || idx} className="hover:bg-[#F5F0E5]/30">
                           <td className="py-2.5 font-semibold text-[#06244B]">{member.name}</td>
                           <td className="py-2.5 text-[#667085]">{member.role}</td>
                           <td className="py-2.5">
@@ -352,7 +404,7 @@ export function Dashboard() {
                           </td>
                         </tr>
                       ))
-                    ) : null}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -443,29 +495,35 @@ export function Dashboard() {
             </div>
 
             <div className="divide-y divide-[#D9D6CF]/50 p-2">
-              {upcomingEvents.map((evt) => (
-                <div
-                  key={evt.id}
-                  onClick={() => setSelectedEvent(evt)}
-                  className={`p-3 rounded hover:bg-[#F5F0E5]/50 transition-colors cursor-pointer ${evt.badgeColor || 'border-l-4 border-l-[#06244B] bg-[#F5F0E5]/20'}`}
-                >
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span>{evt.type}</span>
-                    <span>{formatDate(evt.date, { short: true })}</span>
-                  </div>
-                  <p className="font-serif font-bold text-sm text-[#06244B] mt-1 line-clamp-1">
-                    {evt.title}
-                  </p>
-                  <p className="text-xs text-[#667085] mt-0.5 line-clamp-1">
-                    {evt.location}
-                  </p>
-                  {evt.startTime && (
-                    <p className="text-[11px] text-[#A4432B] font-medium mt-1">
-                      {evt.startTime} - {evt.endTime}
-                    </p>
-                  )}
+              {upcomingEvents.length === 0 ? (
+                <div className="p-6 text-center text-xs text-[#667085]">
+                  No upcoming court hearings or calendar events scheduled.
                 </div>
-              ))}
+              ) : (
+                upcomingEvents.map((evt) => (
+                  <div
+                    key={evt.id}
+                    onClick={() => setSelectedEvent(evt)}
+                    className={`p-3 rounded hover:bg-[#F5F0E5]/50 transition-colors cursor-pointer ${evt.badgeColor || 'border-l-4 border-l-[#06244B] bg-[#F5F0E5]/20'}`}
+                  >
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span>{evt.type}</span>
+                      <span>{formatDate(evt.date, { short: true })}</span>
+                    </div>
+                    <p className="font-serif font-bold text-sm text-[#06244B] mt-1 line-clamp-1">
+                      {evt.title}
+                    </p>
+                    <p className="text-xs text-[#667085] mt-0.5 line-clamp-1">
+                      {evt.location}
+                    </p>
+                    {evt.startTime && (
+                      <p className="text-[11px] text-[#A4432B] font-medium mt-1">
+                        {evt.startTime} - {evt.endTime}
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -486,34 +544,8 @@ export function Dashboard() {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div
-                onClick={() => navigate('/communications')}
-                className="p-2.5 rounded hover:bg-[#F5F0E5]/60 transition-colors cursor-pointer border-l-2 border-[#A4432B] bg-[#FAF7F0]"
-              >
-                <div className="flex items-center justify-between font-semibold text-[#06244B]">
-                  <span>Vance Sterling (Wasatch Logistics)</span>
-                  <span className="text-[10px] text-[#667085]">10:30 AM</span>
-                </div>
-                <p className="text-[#667085] mt-1 line-clamp-1">
-                  Transmitted supplemental electronic bills of lading and refrigerated sensor telemetry logs...
-                </p>
-                <span className="text-[10px] text-[#A4432B] font-medium mt-1 inline-block">Re: Wasatch Logistics v. Interstate</span>
-              </div>
-
-              <div
-                onClick={() => navigate('/communications')}
-                className="p-2.5 rounded hover:bg-[#F5F0E5]/60 transition-colors cursor-pointer border-l-2 border-[#06244B] bg-[#F5F0E5]/20"
-              >
-                <div className="flex items-center justify-between font-semibold text-[#06244B]">
-                  <span>Dr. Evelyn Martinez</span>
-                  <span className="text-[10px] text-[#667085]">Yesterday</span>
-                </div>
-                <p className="text-[#667085] mt-1 line-clamp-1">
-                  Confirmed mediation availability with Dr. Sterling for upcoming Friday hearing session...
-                </p>
-                <span className="text-[10px] text-[#06244B] font-medium mt-1 inline-block">Re: Marriage of Martinez &amp; Sterling</span>
-              </div>
+            <div className="p-4 text-center text-xs text-[#667085]">
+              No unread client communications.
             </div>
           </div>
 
@@ -523,32 +555,22 @@ export function Dashboard() {
               Firm Recent Activity
             </h2>
             <div className="space-y-3 text-xs">
-              <div className="flex items-start gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#287A55] mt-1.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-[#06244B]">Conflict Check Cleared</p>
-                  <p className="text-[#667085]">Clearwater Basin Agricultural Water Co. approved by Eleanor Heugly.</p>
-                  <span className="text-[10px] text-gray-400">Yesterday at 4:15 PM</span>
+              {recentActivities.length === 0 ? (
+                <div className="py-4 text-center text-xs text-[#667085]">
+                  No recent firm activities logged.
                 </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#A4432B] mt-1.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-[#06244B]">CosmoLex Export Synchronized</p>
-                  <p className="text-[#667085]">Batch COSMO-2026-1101 (32.4 hrs / $14,850.00) transferred to ledger.</p>
-                  <span className="text-[10px] text-gray-400">2 days ago</span>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#06244B] mt-1.5 flex-shrink-0" />
-                <div>
-                  <p className="font-semibold text-[#06244B]">Pleading Filed</p>
-                  <p className="text-[#667085]">First Amended Complaint uploaded for Wasatch Logistics v. Interstate Freightlines.</p>
-                  <span className="text-[10px] text-gray-400">3 days ago</span>
-                </div>
-              </div>
+              ) : (
+                recentActivities.map((act) => (
+                  <div key={act.id} className="flex items-start gap-2.5">
+                    <span className={`w-2 h-2 rounded-full ${act.color} mt-1.5 flex-shrink-0`} />
+                    <div>
+                      <p className="font-semibold text-[#06244B]">{act.title}</p>
+                      <p className="text-[#667085]">{act.description}</p>
+                      <span className="text-[10px] text-gray-400">{formatDate(act.date, { short: true })}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

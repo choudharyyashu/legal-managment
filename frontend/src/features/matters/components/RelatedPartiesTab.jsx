@@ -21,9 +21,7 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { useToast } from '../../../components/ui/Toast';
 import { usePermissions } from '../../../hooks/usePermissions';
-import { mockStorage } from '../../../services/mockStorage';
 import {
-  MOCK_RELATED_PARTIES,
   RELATED_PARTY_ROLES,
   getRelatedPartiesByMatter,
   getRelatedPartiesByClient
@@ -34,14 +32,18 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
   const permissions = usePermissions();
 
   const [parties, setParties] = useState(() => {
-    const stored = mockStorage.get('related_parties', MOCK_RELATED_PARTIES);
-    if (matterId) {
-      return getRelatedPartiesByMatter(matterId, stored);
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
+      if (matterId) {
+        return getRelatedPartiesByMatter(matterId, stored);
+      }
+      if (clientId) {
+        return getRelatedPartiesByClient(clientId, stored);
+      }
+      return stored;
+    } catch {
+      return [];
     }
-    if (clientId) {
-      return getRelatedPartiesByClient(clientId, stored);
-    }
-    return stored;
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +101,10 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
     }
 
     const roleObj = RELATED_PARTY_ROLES.find(r => r.id === formData.roleId) || RELATED_PARTY_ROLES[0];
-    const allStored = mockStorage.get('related_parties', MOCK_RELATED_PARTIES);
+    let allStored = [];
+    try {
+      allStored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
+    } catch {}
 
     if (editingPartyId) {
       // Edit mode: update existing party
@@ -116,7 +121,9 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
       };
 
       const updatedAll = allStored.map(p => p.id === editingPartyId ? { ...p, ...updatedParty } : p);
-      mockStorage.set('related_parties', updatedAll);
+      try {
+        sessionStorage.setItem('hb_related_parties', JSON.stringify(updatedAll));
+      } catch {}
 
       setParties(prev => prev.map(p => p.id === editingPartyId ? { ...p, ...updatedParty } : p));
       setIsAddModalOpen(false);
@@ -145,7 +152,9 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
 
     // Update state and persistence
     const updatedAll = [newParty, ...allStored];
-    mockStorage.set('related_parties', updatedAll);
+    try {
+      sessionStorage.setItem('hb_related_parties', JSON.stringify(updatedAll));
+    } catch {}
 
     setParties(prev => [newParty, ...prev]);
     setIsAddModalOpen(false);
@@ -164,9 +173,14 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
   };
 
   const handleDeleteParty = (partyId, partyName) => {
-    const allStored = mockStorage.get('related_parties', MOCK_RELATED_PARTIES);
+    let allStored = [];
+    try {
+      allStored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
+    } catch {}
     const filteredAll = allStored.filter(p => p.id !== partyId);
-    mockStorage.set('related_parties', filteredAll);
+    try {
+      sessionStorage.setItem('hb_related_parties', JSON.stringify(filteredAll));
+    } catch {}
 
     setParties(prev => prev.filter(p => p.id !== partyId));
     addToast(`Related party "${partyName}" unlinked from matter.`, 'info');

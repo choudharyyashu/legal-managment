@@ -172,11 +172,11 @@ export const MOCK_RELATED_PARTIES = [
   }
 ];
 
-export const getRelatedPartiesByMatter = (matterId, partyList = MOCK_RELATED_PARTIES) => {
+export const getRelatedPartiesByMatter = (matterId, partyList = []) => {
   return partyList.filter(p => p.matterId === matterId);
 };
 
-export const getRelatedPartiesByClient = (clientId, partyList = MOCK_RELATED_PARTIES) => {
+export const getRelatedPartiesByClient = (clientId, partyList = []) => {
   return partyList.filter(p => p.clientId === clientId);
 };
 

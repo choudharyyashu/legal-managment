@@ -21,10 +21,6 @@ import { useToast } from '../../../components/ui/Toast';
 import { useAuth } from '../../../hooks/useAuth';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
-import { mockStorage } from '../../../services/mockStorage';
-import { MOCK_CLIENTS } from '../../../data/mockClients';
-import { MOCK_MATTERS } from '../../../data/mockMatters';
-import { MOCK_RELATED_PARTIES } from '../../../data/mockRelatedParties';
 
 export function ConflictSearchModal({
   isOpen,
@@ -50,28 +46,7 @@ export function ConflictSearchModal({
   const [generatedCert, setGeneratedCert] = useState(null);
 
   // Search History
-  const [history, setHistory] = useState(() => {
-    return mockStorage.get('conflict_search_history', [
-      {
-        id: 'CSH-101',
-        query: 'Interstate Freightlines Inc.',
-        searchedBy: 'Eleanor Heugly, Esq.',
-        date: '2026-11-04 10:15 AM',
-        hitsCount: 2,
-        disposition: 'Conflict Identified',
-        notes: 'Direct conflict: Defendant in Wasatch Mountain Logistics litigation.',
-      },
-      {
-        id: 'CSH-102',
-        query: 'Clearwater Basin Water Co.',
-        searchedBy: 'Thomas Bludworth, Esq.',
-        date: '2026-11-02 02:45 PM',
-        hitsCount: 0,
-        disposition: 'Cleared',
-        notes: 'Adverse check against Central Valley Canal Co. clear.',
-      }
-    ]);
-  });
+  const [history, setHistory] = useState([]);
 
   const runSearch = (searchStr) => {
     const q = (searchStr || query).trim().toLowerCase();
@@ -84,9 +59,8 @@ export function ConflictSearchModal({
     const hits = [];
     const seenIds = new Set();
 
-    // Pool clients (live + mock fallback)
-    const combinedClients = [...clients, ...MOCK_CLIENTS];
-    combinedClients.forEach(client => {
+    // Search live clients
+    (clients || []).forEach(client => {
       if (seenIds.has(`client-${client.id}`)) return;
       const nameMatch = client.name?.toLowerCase().includes(q);
       const contactMatch = client.primaryContact && client.primaryContact.toLowerCase().includes(q);
@@ -96,7 +70,7 @@ export function ConflictSearchModal({
         hits.push({
           type: 'Existing Active Client',
           name: client.name,
-          detail: `Client ID: ${client.clientNumber || client.id} • Lead Counsel: ${client.assignedAttorneyName || 'Thomas Bludworth, Esq.'}`,
+          detail: `Client ID: ${client.clientNumber || client.id} • Lead Counsel: ${client.assignedAttorneyName || 'Assigned Counsel'}`,
           confidence: nameMatch ? 96 : 78,
           severity: 'Critical Conflict',
           status: 'Direct Adverse Conflict under Utah RPC 1.7(a)(1)',
@@ -105,9 +79,8 @@ export function ConflictSearchModal({
       }
     });
 
-    // Pool matters (live + mock fallback)
-    const combinedMatters = [...matters, ...MOCK_MATTERS];
-    combinedMatters.forEach(matter => {
+    // Search live matters
+    (matters || []).forEach(matter => {
       if (seenIds.has(`matter-${matter.id}`)) return;
       const titleMatch = matter.title?.toLowerCase().includes(q);
       const descMatch = matter.description && matter.description.toLowerCase().includes(q);
@@ -116,28 +89,11 @@ export function ConflictSearchModal({
         hits.push({
           type: 'Active Matter Docket',
           name: matter.title,
-          detail: `Matter: ${matter.matterNumber || matter.id} (${matter.practiceAreaName || 'Litigation'})`,
+          detail: `Matter: ${matter.matterNumber || matter.id} (${matter.practiceAreaName || 'General'})`,
           confidence: 88,
           severity: 'Potential Conflict',
           status: 'Substantially Related Matter under Utah RPC 1.9',
           matchReason: `Search query "${q}" matched matter case title or pleadings summary.`,
-        });
-      }
-    });
-
-    // Search Related Parties
-    MOCK_RELATED_PARTIES.forEach(party => {
-      if (seenIds.has(`party-${party.name}`)) return;
-      if (party.name.toLowerCase().includes(q) || (party.firmName && party.firmName.toLowerCase().includes(q))) {
-        seenIds.add(`party-${party.name}`);
-        hits.push({
-          type: `Related Entity: ${party.roleLabel}`,
-          name: party.name,
-          detail: `Linked to: ${party.matterTitle} (${party.firmName || 'Direct Entity'})`,
-          confidence: 94,
-          severity: party.roleId === 'opposing_party' ? 'Direct Adversary' : 'Informational Hit',
-          status: party.roleId === 'opposing_party' ? 'Adverse Litigant in Pending Action' : 'Witness / Affiliated Entity',
-          matchReason: `Party listed as ${party.roleLabel || 'related entity'} in firm records.`,
         });
       }
     });
@@ -196,7 +152,6 @@ export function ConflictSearchModal({
     };
     const updatedHistory = [newHistoryItem, ...history];
     setHistory(updatedHistory);
-    mockStorage.set('conflict_search_history', updatedHistory);
 
     if (onConflictResolved) {
       onConflictResolved(disposition, reviewer, analysisNotes);

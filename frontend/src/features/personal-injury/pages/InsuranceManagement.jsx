@@ -16,17 +16,21 @@ import { InsuranceModal } from '../components/InsuranceModal';
 import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
-import { MOCK_PI_CASES, MOCK_INSURANCE_POLICIES } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
+import { piService } from '../../../services/piService';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 
 export function InsuranceManagement() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [policies, setPolicies] = useState(() => mockStorage.get('pi_policies', MOCK_INSURANCE_POLICIES));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [policies, setPolicies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +40,30 @@ export function InsuranceManagement() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter?.id]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getInsurance(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const list = Array.isArray(res) ? res : (res ? [res] : []);
+            setPolicies(list);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load insurance from API:', err?.message);
+          if (isMounted) setPolicies([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setPolicies([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
@@ -57,20 +85,23 @@ export function InsuranceManagement() {
     return matchesSearch && matchesCase;
   });
 
-  const handleSavePolicy = (savedRecord) => {
-    setPolicies((prev) => {
-      const exists = prev.some((p) => p.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((p) => (p.id === savedRecord.id ? savedRecord : p));
-        addToast('Insurance policy updated successfully.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New insurance policy coverage added.', 'success');
+  const handleSavePolicy = async (savedRecord) => {
+    try {
+      if (savedRecord.matterId) {
+        await piService.createInsurance(savedRecord.matterId, savedRecord);
       }
-      mockStorage.set('pi_policies', updated);
-      return updated;
-    });
+      setPolicies((prev) => {
+        const exists = prev.some((p) => p.id === savedRecord.id);
+        if (exists) {
+          return prev.map((p) => (p.id === savedRecord.id ? savedRecord : p));
+        } else {
+          return [savedRecord, ...prev];
+        }
+      });
+      addToast('Insurance policy coverage saved to database successfully.', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save insurance policy.', 'error');
+    }
   };
 
   const openAddModal = () => {

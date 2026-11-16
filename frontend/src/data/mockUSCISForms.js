@@ -1,7 +1,7 @@
 // Official Immigration Form Catalog & Diagnostic Inventory
-// Reference: USCIS, EOIR, DOS, DOL (DEMO / SIMULATED)
+// Reference: USCIS, EOIR, DOS, DOL
 
-export const MOCK_USCIS_FORMS = [
+export const USCIS_STANDARD_FORMS = [
   {
     id: 'FORM-I-130',
     code: 'I-130',
@@ -176,5 +176,6 @@ export const MOCK_USCIS_FORMS = [
   }
 ];
 
-export const getFormByCode = (code) => MOCK_USCIS_FORMS.find(f => f.code === code);
+export const MOCK_USCIS_FORMS = USCIS_STANDARD_FORMS;
+export const getFormByCode = (code) => USCIS_STANDARD_FORMS.find(f => f.code === code);
 

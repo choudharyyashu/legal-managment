@@ -14,15 +14,47 @@ import {
   Radio,
   FileCheck
 } from 'lucide-react';
-import { MOCK_CRIMINAL_CASES } from '../../../../data/mockSpecialtyPractices';
 import { useToast } from '../../../../components/ui/Toast';
+import { useMatters } from '../../../../context/MatterContext';
 
 export function CriminalWorkspace() {
   const { addToast } = useToast();
-  const [selectedCaseId, setSelectedCaseId] = useState(MOCK_CRIMINAL_CASES[0].id);
+  const { matters } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || [])
+      .filter((m) => m.practiceAreaName?.toLowerCase().includes('criminal'))
+      .map((m) => ({
+        id: m.id,
+        caseNumber: m.matterNumber,
+        defendant: m.clientName || 'Defendant',
+        court: m.courtName || 'Third District Court - Criminal Division',
+        judge: m.judge || 'Presiding Judge',
+        prosecutor: 'County Attorney Office',
+        bailStatus: 'Own Recognizance',
+        speedyTrialDeadline: '180-Day Rule Active',
+        charges: [],
+        discovery: [],
+        pleaMatrix: [],
+      }));
+  }, [matters]);
+  const [selectedCaseId, setSelectedCaseId] = useState(() => cases[0]?.id || '');
   const [activeTab, setActiveTab] = useState('charges'); // charges, discovery, plea, expungement
 
-  const activeCase = MOCK_CRIMINAL_CASES.find(c => c.id === selectedCaseId) || MOCK_CRIMINAL_CASES[0];
+  const activeCase = cases.find(c => c.id === selectedCaseId) || cases[0] || null;
+
+  if (!activeCase) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="bg-white border border-[#E4E7EC] rounded-xl p-8 shadow-sm text-center">
+          <Shield className="w-12 h-12 text-[#B42318] mx-auto mb-3 opacity-60" />
+          <h2 className="text-xl font-serif font-bold text-[#06244B]">Criminal Defense Docket</h2>
+          <p className="text-sm text-[#667085] max-w-xl mx-auto mt-2">
+            No active criminal defense matters found in database. Specialized criminal defense workflows (Rule 16 Mandatory Discovery Trackers, Plea Agreement Collateral Consequence Checkers, and Utah Expungement Petitions) are pending dedicated backend model deployment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -51,7 +83,7 @@ export function CriminalWorkspace() {
               onChange={(e) => setSelectedCaseId(e.target.value)}
               className="max-w-full sm:max-w-[260px] px-3 py-2 text-sm border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B]"
             >
-              {MOCK_CRIMINAL_CASES.map((c) => (
+              {cases.map((c) => (
                 <option key={c.id} value={c.id}>{c.caseNumber} - {c.defendant}</option>
               ))}
             </select>

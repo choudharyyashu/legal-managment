@@ -4,33 +4,20 @@ import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useToast } from '../../../components/ui/Toast';
-import { MOCK_IMMIGRATION_CASES } from '../../../data/mockImmigrationCases';
 
 export function USCISReceiptTracker() {
-  const [receiptNumber, setReceiptNumber] = useState('LIN-26-901-50234');
-  const [activeTracking, setActiveTracking] = useState(MOCK_IMMIGRATION_CASES[0]);
+  const [receiptNumber, setReceiptNumber] = useState('');
+  const [activeTracking, setActiveTracking] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { addToast } = useToast();
 
   const handleLookup = (e) => {
     e.preventDefault();
-    const cleanQuery = receiptNumber.trim().toUpperCase();
-    const found = MOCK_IMMIGRATION_CASES.find(c =>
-      c.receiptNumber.replace(/[^A-Z0-9]/g, '') === cleanQuery.replace(/[^A-Z0-9]/g, '')
-    );
-    if (found) {
-      setActiveTracking(found);
-      addToast(`Receipt ${found.receiptNumber} loaded from immigration dockets.`, 'success');
-    } else {
-      addToast(`Receipt "${receiptNumber}" not found in current mock cases. Showing sample tracking.`, 'info');
-      setActiveTracking({
-        ...MOCK_IMMIGRATION_CASES[0],
-        receiptNumber: cleanQuery || 'WAC-26-900-88123',
-        title: 'Custom Inquired Petition',
-        beneficiaryName: 'Foreign National Applicant',
-        currentStage: 'Case Was Received and A Notice Was Sent',
-      });
+    if (!receiptNumber.trim()) {
+      addToast('Please enter a 13-character USCIS receipt number (e.g. LIN2690150234).', 'error');
+      return;
     }
+    addToast(`Receipt "${receiptNumber}" queried. Live USCIS Case Status Online webhook integration is awaiting backend deployment.`, 'info');
   };
 
   const handleSimulateRefresh = () => {
@@ -90,24 +77,8 @@ export function USCISReceiptTracker() {
         </form>
 
         <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-slate-100">
-          <span className="text-[10px] uppercase font-bold text-[#667085] mr-1">Quick Case Select:</span>
-          {MOCK_IMMIGRATION_CASES.slice(0, 5).map(c => (
-            <button
-              type="button"
-              key={c.id}
-              onClick={() => {
-                setReceiptNumber(c.receiptNumber);
-                setActiveTracking(c);
-              }}
-              className={`text-[11px] font-mono px-2 py-0.5 rounded transition-colors border ${
-                activeTracking?.id === c.id
-                  ? 'bg-[#06244B] text-white border-[#06244B]'
-                  : 'bg-slate-100 text-[#06244B] border-slate-200 hover:bg-slate-200'
-              }`}
-            >
-              {c.receiptNumber} ({c.beneficiaryName.split(' ')[0]})
-            </button>
-          ))}
+          <span className="text-[10px] uppercase font-bold text-[#667085] mr-1">Receipt Format:</span>
+          <span className="text-[11px] font-mono text-[#667085]">3 letters (LIN, WAC, EAC, SRC, IOE) followed by 10 digits</span>
         </div>
       </div>
 

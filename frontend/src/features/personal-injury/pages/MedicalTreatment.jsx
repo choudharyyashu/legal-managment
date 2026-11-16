@@ -23,8 +23,7 @@ import { Button } from '../../../components/ui/Button';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { StatCard } from '../../../components/shared/StatCard';
-import { MOCK_PI_CASES, MOCK_MEDICAL_PROVIDERS } from '../../../data/mockPersonalInjury';
-import { mockStorage } from '../../../services/mockStorage';
+import { piService } from '../../../services/piService';
 import { documentService } from '../../../services/documentService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
@@ -32,10 +31,15 @@ import { useMatters } from '../../../context/MatterContext';
 
 export function MedicalTreatment() {
   const { addToast } = useToast();
-  const { activeMatter, setActiveMatter } = useMatters();
-  const [cases] = useState(() => mockStorage.get('pi_cases', MOCK_PI_CASES));
-  const [providers, setProviders] = useState(() => mockStorage.get('pi_medical', MOCK_MEDICAL_PROVIDERS));
-  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || 'ALL');
+  const { matters, activeMatter, setActiveMatter } = useMatters();
+  const cases = React.useMemo(() => {
+    return (matters || []).filter(
+      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    );
+  }, [matters]);
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || (cases[0]?.id || 'ALL'));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,11 +59,9 @@ export function MedicalTreatment() {
 
   const handleProviderUpdated = (updatedProvider) => {
     setProviders((prev) => {
-      const updated = prev.map((p) =>
+      return prev.map((p) =>
         p.id === updatedProvider.id ? { ...p, ...updatedProvider } : p
       );
-      mockStorage.set('pi_medical', updated);
-      return updated;
     });
   };
 
@@ -68,6 +70,30 @@ export function MedicalTreatment() {
       setActiveCaseId(activeMatter.id);
     }
   }, [activeMatter?.id]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    if (activeCaseId && activeCaseId !== 'ALL') {
+      setLoading(true);
+      piService.getProviders(activeCaseId)
+        .then((res) => {
+          if (isMounted) {
+            const list = Array.isArray(res) ? res : (res?.providers || (res ? [res] : []));
+            setProviders(list);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load medical providers from API:', err?.message);
+          if (isMounted) setProviders([]);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    } else {
+      setProviders([]);
+    }
+    return () => { isMounted = false; };
+  }, [activeCaseId]);
 
   const handleCaseChange = (newCaseId) => {
     setActiveCaseId(newCaseId);
@@ -93,20 +119,23 @@ export function MedicalTreatment() {
   const totalInsurancePaid = filteredProviders.reduce((sum, p) => sum + (p.bills?.insurancePaid || 0), 0);
   const totalOutstanding = filteredProviders.reduce((sum, p) => sum + (p.bills?.outstandingBalance || 0), 0);
 
-  const handleSaveProvider = (savedRecord) => {
-    setProviders((prev) => {
-      const exists = prev.some((p) => p.id === savedRecord.id);
-      let updated;
-      if (exists) {
-        updated = prev.map((p) => (p.id === savedRecord.id ? savedRecord : p));
-        addToast('Medical provider & billing record updated.', 'success');
-      } else {
-        updated = [savedRecord, ...prev];
-        addToast('New medical provider added to treatment ledger.', 'success');
+  const handleSaveProvider = async (savedRecord) => {
+    try {
+      if (savedRecord.matterId) {
+        await piService.addProvider(savedRecord.matterId, savedRecord);
       }
-      mockStorage.set('pi_medical', updated);
-      return updated;
-    });
+      setProviders((prev) => {
+        const exists = prev.some((p) => p.id === savedRecord.id);
+        if (exists) {
+          return prev.map((p) => (p.id === savedRecord.id ? savedRecord : p));
+        } else {
+          return [savedRecord, ...prev];
+        }
+      });
+      addToast('Medical provider & billing record saved to database.', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save medical provider.', 'error');
+    }
 
     // Event-Driven Auto Draft Triggers (Phase 4)
     if (savedRecord.matterId && savedRecord.providerName) {

@@ -3,20 +3,23 @@ import { Landmark, FileSpreadsheet, DollarSign, Plus, CheckCircle, AlertTriangle
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
 import { Button } from '../../../components/ui/Button';
-import { MOCK_BANKRUPTCY_SCHEDULES } from '../../../data/mockBankruptcySchedules';
-import { MOCK_BANKRUPTCY_CASES } from '../../../data/mockBankruptcyCases';
+import { useMatters } from '../../../context/MatterContext';
 import { AddCreditorModal } from '../components/AddCreditorModal';
 import { AmendedSchedulesModal } from '../components/AmendedSchedulesModal';
 
 export function BankruptcySchedulesLedger() {
-  const [selectedCaseId, setSelectedCaseId] = useState('BNK-2026-001');
+  const { matters } = useMatters();
+  const bankruptcyMatters = (matters || []).filter(
+    (m) => m.practiceAreaId === 'pa-bk' || m.practiceAreaName?.toLowerCase().includes('bankruptcy')
+  );
+  const [selectedCaseId, setSelectedCaseId] = useState(() => bankruptcyMatters[0]?.id || '');
   const [activeTab, setActiveTab] = useState('AB'); // 'AB', 'D', 'EF', 'IJ'
-  const [schedulesMap, setSchedulesMap] = useState(MOCK_BANKRUPTCY_SCHEDULES);
+  const [schedulesMap, setSchedulesMap] = useState({});
   const [isAddCreditorOpen, setIsAddCreditorOpen] = useState(false);
   const [isAmendModalOpen, setIsAmendModalOpen] = useState(false);
 
-  const caseData = MOCK_BANKRUPTCY_CASES.find(c => c.id === selectedCaseId) || MOCK_BANKRUPTCY_CASES[0];
-  const schedules = schedulesMap[selectedCaseId] || schedulesMap['BNK-2026-001'];
+  const caseData = bankruptcyMatters.find(c => c.id === selectedCaseId) || bankruptcyMatters[0] || null;
+  const schedules = schedulesMap[selectedCaseId] || { scheduleAB: [], scheduleD: [], scheduleEF: [], scheduleIJ: [] };
 
   const handleAddCreditor = (newCreditor) => {
     setSchedulesMap(prev => {
@@ -75,11 +78,15 @@ export function BankruptcySchedulesLedger() {
               onChange={(e) => setSelectedCaseId(e.target.value)}
               className="text-xs p-1.5 rounded border border-[#D9D6CF] text-[#06244B] bg-slate-50 font-medium"
             >
-              {MOCK_BANKRUPTCY_CASES.slice(0, 3).map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.caseNumber} - {c.debtorName} ({c.chapter})
-                </option>
-              ))}
+              {bankruptcyMatters.length === 0 ? (
+                <option value="">No bankruptcy matters</option>
+              ) : (
+                bankruptcyMatters.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.matterNumber} - {c.title}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>

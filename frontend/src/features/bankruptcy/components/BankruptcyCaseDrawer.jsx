@@ -25,7 +25,6 @@ import { AddCreditorModal } from './AddCreditorModal';
 import { ChapterSelectorModal } from './ChapterSelectorModal';
 import { EmergencyFilingModal } from './EmergencyFilingModal';
 import { PostFilingAdminTab } from './PostFilingAdminTab';
-import { MOCK_BANKRUPTCY_SCHEDULES } from '../../../data/mockBankruptcySchedules';
 import {
   getDefaultDistrictAndFormDetails,
   getDefaultPostFilingAdmin,
@@ -66,7 +65,7 @@ export function BankruptcyCaseDrawer({ isOpen, onClose, bankruptcyCase, onUpdate
     if (onUpdateCase) onUpdateCase(updated);
   };
 
-  const schedules = MOCK_BANKRUPTCY_SCHEDULES[currentCase.id] || MOCK_BANKRUPTCY_SCHEDULES['BNK-2026-001'];
+  const schedules = currentCase.schedules || { scheduleAB: [], scheduleD: [], scheduleEF: [], scheduleIJ: [] };
   const debtorProfile = currentCase.debtorProfile || {
     ssnMasked: '***-**-4912',
     phone: '(801) 555-0819',
