@@ -487,128 +487,271 @@ export function DocumentsList() {
         </div>
       </div>
 
-      {/* Documents Table */}
-      <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] tracking-wider border-b border-[#EAECF0]">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Document Title &amp; File</th>
-                <th className="py-3 px-3 text-center font-semibold">Version History</th>
-                <th className="py-3 px-3 font-semibold">Privilege &amp; Confidentiality Tag</th>
-                <th className="py-3 px-3 font-semibold">Category</th>
-                <th className="py-3 px-4 font-semibold">Linked Matter &amp; Client</th>
-                <th className="py-3 px-3 font-semibold">Uploaded By</th>
-                <th className="py-3 px-4 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#EAECF0]">
-              {filteredDocs.map((doc) => (
-                <tr key={doc.id} className="hover:bg-[#F9FAFB]/70 transition-colors">
-                  {/* Title & File */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-lg bg-[#06244B] text-white shrink-0 shadow-xs">
-                        <FileText className="w-4 h-4 text-amber-300" />
-                      </div>
-                      <div>
-                        <span
-                          onClick={() => setPreviewDoc(doc)}
-                          className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
-                        >
-                          {doc.title}
-                        </span>
-                        <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.fileName} • {doc.fileSize}</span>
-                        {searchOCR && doc.ocrText && searchQuery && doc.ocrText.toLowerCase().includes(searchQuery.toLowerCase()) && (
-                          <div className="mt-1.5 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-900 max-w-md">
-                            <span className="font-bold">OCR Match:</span> "...{doc.ocrText.slice(0, 80)}..."
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Version History Pill */}
-                  <td className="py-3 px-3 text-center">
-                    <button
-                      onClick={() => setVersionDoc(doc)}
-                      className="font-mono font-semibold text-[11px] px-2.5 py-0.5 rounded-md bg-[#F9FAFB] text-[#06244B] border border-[#D0D5DD] hover:border-[#06244B] hover:bg-white transition-all cursor-pointer"
-                      title="Click to view revision history"
-                    >
-                      {doc.version} ({doc.versionHistory?.length || 1})
-                    </button>
-                  </td>
-
-                  {/* Privilege Tag Button */}
-                  <td className="py-3 px-3">
-                    <button
-                      onClick={() => handleTogglePrivilege(doc.id)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
-                        doc.isPrivileged
-                          ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
-                          : 'bg-slate-50 text-[#475467] border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {doc.isPrivileged ? (
-                        <>
-                          <Lock className="w-3 h-3 text-amber-700" />
-                          <span>Privileged (RPC 1.6)</span>
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="w-3 h-3 text-slate-400" />
-                          <span>Court Record / Public</span>
-                        </>
-                      )}
-                    </button>
-                  </td>
-
-                  {/* Category */}
-                  <td className="py-3 px-3">
-                    <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-100 text-[#344054] font-medium border border-slate-200">
-                      {doc.category}
-                    </span>
-                  </td>
-
-                  {/* Matter & Client */}
-                  <td className="py-3 px-4 max-w-xs">
-                    <span className="text-xs font-semibold text-[#1D2939] block truncate">{doc.matterTitle}</span>
-                    <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.clientName}</span>
-                  </td>
-
-                  {/* Uploaded By */}
-                  <td className="py-3 px-3">
-                    <span className="text-xs font-medium text-[#1D2939] block">{doc.uploadedByName}</span>
-                    <span className="text-[11px] text-[#667085]">{formatDate(doc.uploadedAt, { short: true })}</span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-3 px-4 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewDoc(doc)}
-                        className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
-                        title="Preview Document"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadDocument(doc)}
-                        className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
-                        title="Download Document"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
+      {/* Conditional View: Documents Repository vs. PI Automation Drafts */}
+      {viewMode === 'drafts' ? (
+        <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] tracking-wider border-b border-[#EAECF0]">
+                <tr>
+                  <th className="py-3 px-4 font-semibold">Draft Code &amp; Title</th>
+                  <th className="py-3 px-3 font-semibold">PI Workflow</th>
+                  <th className="py-3 px-3 font-semibold">Status</th>
+                  <th className="py-3 px-3 font-semibold">Missing Fields</th>
+                  <th className="py-3 px-4 font-semibold">Linked Matter</th>
+                  <th className="py-3 px-3 font-semibold">Generated Date</th>
+                  <th className="py-3 px-4 text-right font-semibold">Review Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#EAECF0]">
+                {drafts
+                  .filter((d) => {
+                    if (!d) return false;
+                    const q = searchQuery.toLowerCase();
+                    return (
+                      searchQuery === '' ||
+                      d.title?.toLowerCase().includes(q) ||
+                      d.draftCode?.toLowerCase().includes(q) ||
+                      d.template?.templateCode?.toLowerCase().includes(q) ||
+                      d.template?.templateName?.toLowerCase().includes(q)
+                    );
+                  })
+                  .map((d) => {
+                    const code = d.template?.templateCode || '';
+                    let workflowLabel = 'PI General Document';
+                    if (code.includes('096')) workflowLabel = '096 - Representation Letter';
+                    else if (code.includes('112')) workflowLabel = '112 - Medical Authorization';
+                    else if (code.includes('113')) workflowLabel = '113 - Records Request';
+                    else if (code.includes('116')) workflowLabel = '116 - Incomplete Follow-up';
+                    else if (code.includes('140')) workflowLabel = '140 - PI Demand Letter';
+
+                    const missingCount = d.missingFieldsFlags?.length || 0;
+
+                    return (
+                      <tr key={d.id} className="hover:bg-[#F9FAFB]/70 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-[#06244B] text-white shrink-0">
+                              <Sparkles className="w-4 h-4 text-amber-300" />
+                            </div>
+                            <div>
+                              <span
+                                onClick={() => {
+                                  setSelectedReviewDraft(d);
+                                  setIsReviewModalOpen(true);
+                                }}
+                                className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
+                              >
+                                {d.title}
+                              </span>
+                              <span className="font-mono text-[11px] text-[#667085] mt-0.5 block">
+                                {d.draftCode} • {d.template?.templateName || 'Legal Document Draft'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="inline-block whitespace-nowrap font-semibold text-[#06244B] bg-[#F5F0E5] px-2.5 py-1 rounded text-[11px] border border-[#E0D9C8]">
+                            {workflowLabel}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border ${
+                              d.status === 'Approved'
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                : d.status === 'Rejected'
+                                ? 'bg-rose-100 text-rose-800 border-rose-200'
+                                : 'bg-amber-100 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {d.status || 'Drafted'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          {missingCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              <AlertTriangle className="w-3 h-3 text-amber-600" />
+                              {missingCount} missing
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              Ready
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs font-semibold text-[#1D2939] block">
+                            {d.matter?.matterNumber || d.matterId || 'PI Matter'}
+                          </span>
+                          <span className="text-[11px] text-[#667085] block truncate max-w-xs">
+                            {d.matter?.title || 'Personal Injury Claim'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="text-xs text-slate-700">
+                            {d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'Recent'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              icon={Eye}
+                              onClick={() => {
+                                setSelectedReviewDraft(d);
+                                setIsReviewModalOpen(true);
+                              }}
+                              className="text-xs py-1 text-[#06244B] border-[#06244B] hover:bg-[#06244B]/5"
+                            >
+                              Review &amp; Approve
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {drafts.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-slate-500">
+                      <Sparkles className="w-8 h-8 text-amber-400 mx-auto mb-2 opacity-60" />
+                      <span className="font-semibold text-slate-800 block text-sm">No Document Drafts Generated Yet</span>
+                      <span className="text-xs text-slate-500 mt-1 block max-w-md mx-auto">
+                        Personal injury document drafts are automatically prepared when saving incident details (096), adding medical providers (112, 113), reporting deficiencies (116), or creating demand packages (140).
+                      </span>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Documents Table */
+        <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] tracking-wider border-b border-[#EAECF0]">
+                <tr>
+                  <th className="py-3 px-4 font-semibold">Document Title &amp; File</th>
+                  <th className="py-3 px-3 text-center font-semibold">Version History</th>
+                  <th className="py-3 px-3 font-semibold">Privilege &amp; Confidentiality Tag</th>
+                  <th className="py-3 px-3 font-semibold">Category</th>
+                  <th className="py-3 px-4 font-semibold">Linked Matter &amp; Client</th>
+                  <th className="py-3 px-3 font-semibold">Uploaded By</th>
+                  <th className="py-3 px-4 text-right font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#EAECF0]">
+                {filteredDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-[#F9FAFB]/70 transition-colors">
+                    {/* Title & File */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-lg bg-[#06244B] text-white shrink-0 shadow-xs">
+                          <FileText className="w-4 h-4 text-amber-300" />
+                        </div>
+                        <div>
+                          <span
+                            onClick={() => setPreviewDoc(doc)}
+                            className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
+                          >
+                            {doc.title}
+                          </span>
+                          <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.fileName} • {doc.fileSize}</span>
+                          {searchOCR && doc.ocrText && searchQuery && doc.ocrText.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                            <div className="mt-1.5 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-900 max-w-md">
+                              <span className="font-bold">OCR Match:</span> "...{doc.ocrText.slice(0, 80)}..."
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Version History Pill */}
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        onClick={() => setVersionDoc(doc)}
+                        className="font-mono font-semibold text-[11px] px-2.5 py-0.5 rounded-md bg-[#F9FAFB] text-[#06244B] border border-[#D0D5DD] hover:border-[#06244B] hover:bg-white transition-all cursor-pointer"
+                        title="Click to view revision history"
+                      >
+                        {doc.version} ({doc.versionHistory?.length || 1})
+                      </button>
+                    </td>
+
+                    {/* Privilege Tag Button */}
+                    <td className="py-3 px-3">
+                      <button
+                        onClick={() => handleTogglePrivilege(doc.id)}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
+                          doc.isPrivileged
+                            ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                            : 'bg-slate-50 text-[#475467] border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {doc.isPrivileged ? (
+                          <>
+                            <Lock className="w-3 h-3 text-amber-700" />
+                            <span>Privileged (RPC 1.6)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Unlock className="w-3 h-3 text-slate-400" />
+                            <span>Court Record / Public</span>
+                          </>
+                        )}
+                      </button>
+                    </td>
+
+                    {/* Category */}
+                    <td className="py-3 px-3">
+                      <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-100 text-[#344054] font-medium border border-slate-200">
+                        {doc.category}
+                      </span>
+                    </td>
+
+                    {/* Matter & Client */}
+                    <td className="py-3 px-4 max-w-xs">
+                      <span className="text-xs font-semibold text-[#1D2939] block truncate">{doc.matterTitle}</span>
+                      <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.clientName}</span>
+                    </td>
+
+                    {/* Uploaded By */}
+                    <td className="py-3 px-3">
+                      <span className="text-xs font-medium text-[#1D2939] block">{doc.uploadedByName}</span>
+                      <span className="text-[11px] text-[#667085]">{formatDate(doc.uploadedAt, { short: true })}</span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDoc(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
+                          title="Preview Document"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadDocument(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
+                          title="Download Document"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Version History Modal */}
       {versionDoc && (
@@ -824,8 +967,24 @@ export function DocumentsList() {
       <GenerateDraftModal
         isOpen={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
-        onGenerated={loadDocuments}
+        onGenerated={() => {
+          loadDocuments();
+          loadDrafts();
+          setViewMode('drafts');
+        }}
         matters={matters}
+      />
+
+      {/* Document Draft Review, Approval & Transmission Modal */}
+      <DraftReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        draft={selectedReviewDraft}
+        onStatusChanged={(updated) => {
+          setDrafts((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+          loadDrafts();
+          loadDocuments();
+        }}
       />
     </div>
   );
