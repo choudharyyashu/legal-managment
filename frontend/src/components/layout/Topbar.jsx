@@ -57,40 +57,55 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
     };
   }, []);
 
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: 'Court Deadline in 48 Hours',
-      description: 'Fact Discovery Cutoff in Wasatch Logistics v. Interstate Freightlines',
-      time: '2 hours ago',
-      read: false,
-      type: 'warning',
-      link: '/deadlines',
-    },
-    {
-      id: 'notif-2',
-      title: 'Pending Time Approval',
-      description: 'Thomas Bludworth submitted 3.5 hrs for Discovery Review',
-      time: '3 hours ago',
-      read: false,
-      type: 'info',
-      link: '/time/approvals',
-    },
-    {
-      id: 'notif-3',
-      title: 'Conflict Check Required',
-      description: 'New intake: Bryce Canyon Hospitality Partners',
-      time: '5 hours ago',
-      read: true,
-      type: 'success',
-      link: '/intake',
-    },
-  ]);
+  const [readNotifIds, setReadNotifIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('read_notification_ids');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Dynamically derive firm notifications from real active tasks and deadlines
+  const notifications = React.useMemo(() => {
+    if (!Array.isArray(tasks) || tasks.length === 0) return [];
+
+    // Filter pending/in-progress tasks, priority-ranked (Critical/High first)
+    const activeTasks = tasks.filter((t) => t.status !== 'Completed');
+    const priorityOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    activeTasks.sort((a, b) => {
+      const prioDiff = (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
+      if (prioDiff !== 0) return prioDiff;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+
+    return activeTasks.slice(0, 6).map((t) => {
+      const notifId = `notif-task-${t.id}`;
+      const isUrgent = t.priority === 'Critical' || t.priority === 'High';
+      return {
+        id: notifId,
+        title: isUrgent ? `Urgent Task: ${t.title}` : t.title,
+        description: `${t.matterName || 'Matter Task'} • Assigned to ${t.assignedToName || 'Staff'}`,
+        time: t.dueDate ? `Due ${t.dueDate}` : 'Pending',
+        read: readNotifIds.has(notifId),
+        type: isUrgent ? 'warning' : 'info',
+        link: '/tasks',
+      };
+    });
+  }, [tasks, readNotifIds]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const allIds = new Set(notifications.map((n) => n.id));
+    setReadNotifIds(allIds);
+    try {
+      localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(allIds)));
+    } catch {
+      // ignore
+    }
   };
 
   // Global search filtering
