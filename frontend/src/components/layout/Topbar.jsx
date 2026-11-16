@@ -393,37 +393,54 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
               </div>
 
               <div className="divide-y divide-[#D9D6CF]/50 max-h-72 overflow-y-auto">
-                {notifications.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      navigate(item.link);
-                      setIsNotificationsOpen(false);
-                    }}
-                    className={`p-3.5 hover:bg-[#F5F0E5] transition-colors cursor-pointer flex gap-3 ${
-                      !item.read ? 'bg-[#FAF7F0]' : ''
-                    }`}
-                  >
-                    <div className="mt-0.5 flex-shrink-0">
-                      {item.type === 'warning' ? (
-                        <AlertTriangle className="w-4 h-4 text-amber-600" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4 text-[#06244B]" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <p className={`text-xs ${!item.read ? 'font-bold text-[#06244B]' : 'font-medium text-[#202A35]'}`}>
-                          {item.title}
-                        </p>
-                        <span className="text-[10px] text-[#667085]">{item.time}</span>
-                      </div>
-                      <p className="text-[11px] text-[#667085] mt-0.5 leading-snug">
-                        {item.description}
-                      </p>
-                    </div>
+                {notifications.length === 0 ? (
+                  <div className="p-6 text-center text-[#667085]">
+                    <Bell className="w-8 h-8 mx-auto text-[#D9D6CF] mb-2 opacity-60" />
+                    <p className="text-xs font-semibold text-[#06244B]">No New Notifications</p>
+                    <p className="text-[11px] text-[#667085] mt-0.5">All firm tasks and court deadlines are up to date.</p>
                   </div>
-                ))}
+                ) : (
+                  notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setReadNotifIds((prev) => {
+                          const updated = new Set(prev).add(item.id);
+                          try {
+                            localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(updated)));
+                          } catch {
+                            // ignore
+                          }
+                          return updated;
+                        });
+                        navigate(item.link);
+                        setIsNotificationsOpen(false);
+                      }}
+                      className={`p-3.5 hover:bg-[#F5F0E5] transition-colors cursor-pointer flex gap-3 ${
+                        !item.read ? 'bg-[#FAF7F0]' : ''
+                      }`}
+                    >
+                      <div className="mt-0.5 flex-shrink-0">
+                        {item.type === 'warning' ? (
+                          <AlertTriangle className="w-4 h-4 text-amber-600" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 text-[#06244B]" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className={`text-xs ${!item.read ? 'font-bold text-[#06244B]' : 'font-medium text-[#202A35]'}`}>
+                            {item.title}
+                          </p>
+                          <span className="text-[10px] text-[#667085]">{item.time}</span>
+                        </div>
+                        <p className="text-[11px] text-[#667085] mt-0.5 leading-snug">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="px-4 py-2 border-t border-[#D9D6CF] text-center bg-[#F5F0E5]/30">
