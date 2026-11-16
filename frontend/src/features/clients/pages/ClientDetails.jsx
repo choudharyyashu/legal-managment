@@ -45,6 +45,7 @@ import { RelatedPartiesTab } from '../../matters/components/RelatedPartiesTab';
 import { EngagementLetterModal } from '../components/EngagementLetterModal';
 
 import { clientService } from '../../../services/clientService';
+import { intakeService } from '../../../services/intakeService';
 
 export function ClientDetails() {
   const { clientId } = useParams();
@@ -63,6 +64,7 @@ export function ClientDetails() {
   const [isNewMatterModalOpen, setIsNewMatterModalOpen] = useState(false);
   const [isEngagementLetterOpen, setIsEngagementLetterOpen] = useState(false);
   const [fetchedClient, setFetchedClient] = useState(null);
+  const [fetchedIntake, setFetchedIntake] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,6 +77,23 @@ export function ClientDetails() {
   }, [clientId, clients]);
 
   useEffect(() => {
+    let isMounted = true;
+    if (intakeId) {
+      const existing = intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId);
+      if (existing) {
+        setFetchedIntake(existing);
+      } else {
+        intakeService.getIntakeById(intakeId).then(res => {
+          if (isMounted && res) setFetchedIntake(res);
+        }).catch((err) => {
+          console.warn('Could not fetch linked intake:', err);
+        });
+      }
+    }
+    return () => { isMounted = false; };
+  }, [intakeId, intakes]);
+
+  useEffect(() => {
     if (shouldOpenMatter) {
       setIsNewMatterModalOpen(true);
     }
@@ -84,7 +103,7 @@ export function ClientDetails() {
   const clientMatters = client ? getMattersByClient(client.id) : [];
 
   const { invoices } = useTime();
-  const linkedIntake = intakeId ? intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId) : null;
+  const linkedIntake = fetchedIntake || (intakeId ? intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId) : null);
 
   // 360° Financials & Invoices for this client
   const clientInvoices = (invoices || []).filter(

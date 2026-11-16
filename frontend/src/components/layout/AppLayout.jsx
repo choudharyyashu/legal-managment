@@ -49,6 +49,9 @@ export function AppLayout() {
     // Trigger API calls specific to the navigated menu
     if (path.startsWith('/clients')) {
       refreshClients();
+      if (location.search.includes('intakeId')) {
+        refreshIntakes();
+      }
     } else if (path.startsWith('/intake')) {
       refreshIntakes();
     } else if (
