@@ -146,7 +146,7 @@ export function ClientDetails() {
                 </h1>
                 <StatusBadge status={client.status} />
                 <span className="text-xs px-2 py-0.5 rounded bg-[#F5F0E5] text-[#06244B] font-semibold border border-[#D9D6CF]">
-                  {client.id}
+                  {client.clientNumber || client.id}
                 </span>
               </div>
 

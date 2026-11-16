@@ -163,7 +163,7 @@ export function ClientPortalPreview() {
             <h2 className="text-2xl font-serif font-bold text-[#06244B] mt-1">
               Welcome, {selectedClient.primaryContact || selectedClient.name}
             </h2>
-            <p className="text-xs text-[#667085]">{selectedClient.name} • Account #{selectedClient.id}</p>
+            <p className="text-xs text-[#667085]">{selectedClient.name} • Account #{selectedClient.clientNumber || selectedClient.id}</p>
           </div>
 
           <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs">
