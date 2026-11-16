@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Eye,
   Shield,
@@ -31,11 +31,17 @@ export function ClientPortalPreview() {
   const { matters } = useMatters();
   const { addToast } = useToast();
 
-  const [selectedClientId, setSelectedClientId] = useState(clients[0]?.id || 'CLI-1001');
+  const [selectedClientId, setSelectedClientId] = useState(clients[0]?.id || '');
   const [portalTab, setPortalTab] = useState('matters');
 
-  const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0];
-  const clientMatters = matters.filter(m => m.clientId === selectedClient?.id);
+  useEffect(() => {
+    if (clients.length > 0 && !selectedClientId) {
+      setSelectedClientId(clients[0].id);
+    }
+  }, [clients, selectedClientId]);
+
+  const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0] || null;
+  const clientMatters = selectedClient ? matters.filter(m => m.clientId === selectedClient.id) : [];
 
   // Client Upload State
   const [uploadedFiles, setUploadedFiles] = useState([
@@ -85,7 +91,7 @@ export function ClientPortalPreview() {
 
     const newMsg = {
       id: `msg-${Date.now()}`,
-      sender: selectedClient.primaryContact || selectedClient.name,
+      sender: selectedClient?.primaryContact || selectedClient?.name || 'Client',
       time: 'Just now',
       isLawyer: false,
       text: replyText.trim()
@@ -119,14 +125,18 @@ export function ClientPortalPreview() {
               onChange={(e) => {
                 setSelectedClientId(e.target.value);
                 const cl = clients.find(c => c.id === e.target.value);
-                setPaymentAmount(cl?.outstandingBalance || 1500);
+                setPaymentAmount(cl?.outstandingBalance || 0);
                 setPaidInvoices(false);
               }}
               className="text-xs py-1.5 px-3 rounded bg-white border border-[#D9D6CF] text-[#06244B] font-bold focus:outline-none"
             >
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {clients.length === 0 ? (
+                <option value="">No clients available</option>
+              ) : (
+                clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))
+              )}
             </select>
           </div>
         }
@@ -151,7 +161,14 @@ export function ClientPortalPreview() {
       </div>
 
       {/* Simulated Portal Canvas */}
-      <div className="bg-white rounded-lg border-2 border-[#06244B] p-6 shadow-elevated">
+      {!selectedClient ? (
+        <div className="bg-white rounded-lg border border-[#D9D6CF] p-12 text-center text-[#667085]">
+          <Shield className="w-10 h-10 text-[#06244B]/40 mx-auto mb-3" />
+          <h3 className="font-serif text-lg font-bold text-[#06244B]">No Client Selected</h3>
+          <p className="text-xs text-[#667085] mt-1">Select an active client from the dropdown above to preview their client portal.</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border-2 border-[#06244B] p-6 shadow-elevated">
         {/* Portal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[#D9D6CF] gap-4">
           <div>
@@ -161,14 +178,14 @@ export function ClientPortalPreview() {
               </span>
             </div>
             <h2 className="text-2xl font-serif font-bold text-[#06244B] mt-1">
-              Welcome, {selectedClient.primaryContact || selectedClient.name}
+              Welcome, {selectedClient?.primaryContact || selectedClient?.name || 'Valued Client'}
             </h2>
-            <p className="text-xs text-[#667085]">{selectedClient.name} • Account #{selectedClient.clientNumber || selectedClient.id}</p>
+            <p className="text-xs text-[#667085]">{selectedClient?.name || 'Client Profile'} • Account #{selectedClient?.clientNumber || selectedClient?.id || 'N/A'}</p>
           </div>
 
           <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs">
             <span className="text-[#667085] block">Your Lead Counsel:</span>
-            <span className="font-bold text-[#06244B]">{selectedClient.assignedAttorneyName}</span>
+            <span className="font-bold text-[#06244B]">{selectedClient?.assignedAttorneyName || 'Heugly & Bludworth Legal Team'}</span>
           </div>
         </div>
 
@@ -405,6 +422,7 @@ export function ClientPortalPreview() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

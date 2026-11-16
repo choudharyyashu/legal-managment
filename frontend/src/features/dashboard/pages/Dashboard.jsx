@@ -38,6 +38,7 @@ import { MatterForm } from '../../matters/forms/MatterForm';
 import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
 import { calendarService } from '../../../services/calendarService';
 import { reportService } from '../../../services/reportService';
+import { documentService } from '../../../services/documentService';
 import { formatDate } from '../../../utils/formatDate';
 import { EndToEndDemoWizard } from '../../intake/components/EndToEndDemoWizard';
 
@@ -53,6 +54,7 @@ export function Dashboard() {
 
   const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [recentDocumentsCount, setRecentDocumentsCount] = useState(0);
 
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -79,6 +81,16 @@ export function Dashboard() {
       })
       .catch((err) => {
         console.warn('Could not fetch calendar events for dashboard:', err?.message);
+      });
+
+    documentService.getDocuments({ limit: 50 })
+      .then((docs) => {
+        if (isMounted && Array.isArray(docs)) {
+          setRecentDocumentsCount(docs.length);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not fetch documents for dashboard count:', err?.message);
       });
 
     return () => { isMounted = false; };
@@ -267,8 +279,8 @@ export function Dashboard() {
         ) : (
           <StatCard
             title="Recent Filings"
-            value="6"
-            subtitle="Uploaded this week"
+            value={recentDocumentsCount}
+            subtitle={recentDocumentsCount === 1 ? "Uploaded document" : "Uploaded documents"}
             icon={FileText}
             onClick={() => navigate('/documents')}
           />
