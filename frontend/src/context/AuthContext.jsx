@@ -77,7 +77,8 @@ export function AuthProvider({ children }) {
       if (data?.user) {
         setCurrentUser(data.user);
         setIsAuthenticated(true);
-        await refreshUsers();
+        // Sync full users roster in background without blocking immediate login redirect
+        refreshUsers();
         return {
           success: true,
           user: data.user,

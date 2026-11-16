@@ -17,10 +17,10 @@ export function WorkflowChecklists() {
       title: 'Civil Litigation Initial Pleadings & Rule 26 Checklist',
       practiceArea: 'Civil Litigation & Dispute Resolution',
       items: [
-        { id: 'c1', text: 'Run Adverse Party Conflict Check in HB System', done: true },
-        { id: 'c2', text: 'Obtain countersigned engagement letter & trust retainer deposit', done: true },
-        { id: 'c3', text: 'Draft and file Complaint / Petition in Utah Judicial District Court', done: true },
-        { id: 'c4', text: 'Issue summons and complete constable service of process within 120 days', done: true },
+        { id: 'c1', text: 'Run Adverse Party Conflict Check in HB System', done: false },
+        { id: 'c2', text: 'Obtain countersigned engagement letter & trust retainer deposit', done: false },
+        { id: 'c3', text: 'Draft and file Complaint / Petition in Utah Judicial District Court', done: false },
+        { id: 'c4', text: 'Issue summons and complete constable service of process within 120 days', done: false },
         { id: 'c5', text: 'Serve Initial Rule 26 Disclosures with witness contact list', done: false },
         { id: 'c6', text: 'Negotiate and submit Joint Discovery Plan & Scheduling Order', done: false },
       ]
@@ -30,9 +30,9 @@ export function WorkflowChecklists() {
       title: 'Dynasty Trust Execution & Funding Protocol',
       practiceArea: 'Estate Planning, Wills & Trust Administration',
       items: [
-        { id: 't1', text: 'Verify grantor, trustee, and beneficiary legal names and SSNs', done: true },
-        { id: 't2', text: 'Finalize generation-skipping transfer tax formula clauses', done: true },
-        { id: 't3', text: 'Print execution instruments on 24lb archival bond parchment', done: true },
+        { id: 't1', text: 'Verify grantor, trustee, and beneficiary legal names and SSNs', done: false },
+        { id: 't2', text: 'Finalize generation-skipping transfer tax formula clauses', done: false },
+        { id: 't3', text: 'Print execution instruments on 24lb archival bond parchment', done: false },
         { id: 't4', text: 'Conduct formal signing ceremony with two independent witnesses & notary', done: false },
         { id: 't5', text: 'Execute Special Warranty Deeds to convey real estate into Trust', done: false },
         { id: 't6', text: 'Provide Certificate of Trust Existence to commercial financial institutions', done: false },
@@ -43,8 +43,8 @@ export function WorkflowChecklists() {
       title: 'Domestic Relations / Divorce Mandatory Financial Declarations',
       practiceArea: 'Family Law & Domestic Relations',
       items: [
-        { id: 'f1', text: 'Serve Utah Rule 26.1 Mandatory Financial Declaration with 3 years tax returns', done: true },
-        { id: 'f2', text: 'Obtain retirement account 401(k) / pension plan summary plan descriptions', done: true },
+        { id: 'f1', text: 'Serve Utah Rule 26.1 Mandatory Financial Declaration with 3 years tax returns', done: false },
+        { id: 'f2', text: 'Obtain retirement account 401(k) / pension plan summary plan descriptions', done: false },
         { id: 'f3', text: 'Schedule forensic business valuation of martial dental/medical equity', done: false },
         { id: 'f4', text: 'Calculate preliminary child support guidelines using Utah State worksheet', done: false },
       ]
@@ -54,8 +54,8 @@ export function WorkflowChecklists() {
       title: 'Felony Criminal Defense Preliminary Hearing Protocol',
       practiceArea: 'Criminal Defense & State Prosecution Response',
       items: [
-        { id: 'cr1', text: 'Enter formal appearance of counsel and demand Rule 16 state discovery', done: true },
-        { id: 'cr2', text: 'Subpoena body-worn camera footage, dispatch audio, and breathalyzer logs', done: true },
+        { id: 'cr1', text: 'Enter formal appearance of counsel and demand Rule 16 state discovery', done: false },
+        { id: 'cr2', text: 'Subpoena body-worn camera footage, dispatch audio, and breathalyzer logs', done: false },
         { id: 'cr3', text: 'Conduct defense witness cross-examination outline for preliminary hearing', done: false },
         { id: 'cr4', text: 'Draft Motion in Limine to Suppress Illegally Seized Physical Evidence', done: false },
       ]
@@ -65,8 +65,8 @@ export function WorkflowChecklists() {
       title: 'Commercial Real Estate Acquisition Due Diligence',
       practiceArea: 'Real Estate, Water Rights & Land Use',
       items: [
-        { id: 're1', text: 'Examine Title Commitment Schedule B exceptions and encumbrances', done: true },
-        { id: 're2', text: 'Verify state water rights conveyance deeds with Utah Division of Water', done: true },
+        { id: 're1', text: 'Examine Title Commitment Schedule B exceptions and encumbrances', done: false },
+        { id: 're2', text: 'Verify state water rights conveyance deeds with Utah Division of Water', done: false },
         { id: 're3', text: 'Review ALTA/NSPS boundary survey for utility easement encroachments', done: false },
         { id: 're4', text: 'Prepare and record Special Warranty Deed and Escrow Closing Statement', done: false },
       ]

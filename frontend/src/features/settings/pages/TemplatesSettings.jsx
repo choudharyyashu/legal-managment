@@ -15,7 +15,10 @@ import {
   ToggleRight,
   User,
   Scale,
-  FolderOpen
+  FolderOpen,
+  UploadCloud,
+  FileUp,
+  Tag
 } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -132,6 +135,64 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
   const [enableArbitration, setEnableArbitration] = useState(true);
   const [enableIOLTAClause, setEnableIOLTAClause] = useState(true);
   const [enableEService, setEnableEService] = useState(true);
+
+  // Add Template Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: '',
+    category: 'Litigation Pleadings',
+    practiceArea: 'Civil Litigation & Dispute Resolution',
+    format: 'DOCX',
+    templateBody: '',
+    uploadedFileName: '',
+  });
+
+  const handleInsertTag = (tag) => {
+    setNewTemplate(prev => ({
+      ...prev,
+      templateBody: (prev.templateBody ? prev.templateBody + ' ' : '') + tag
+    }));
+  };
+
+  const handleSaveNewTemplate = (e) => {
+    e?.preventDefault();
+    if (!newTemplate.name.trim()) {
+      addToast('Please enter a template title.', 'error');
+      return;
+    }
+
+    const templateId = `TPL-0${templates.length + 1}`;
+    const detectedTags = newTemplate.templateBody.match(/\{\{[^}]+\}\}/g) || [
+      '{{Client.Name}}',
+      '{{Matter.Title}}',
+      '{{Court.Name}}'
+    ];
+    const uniqueTags = Array.from(new Set(detectedTags));
+
+    const created = {
+      id: templateId,
+      name: newTemplate.name.trim(),
+      category: newTemplate.category,
+      format: newTemplate.uploadedFileName ? `${newTemplate.format} (Uploaded)` : newTemplate.format,
+      practiceArea: newTemplate.practiceArea,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      variables: uniqueTags,
+      conditionalClauses: ['Standard Utah RPC Provisions'],
+      templateBody: newTemplate.templateBody.trim() || `LEGAL INSTRUMENT: ${newTemplate.name.toUpperCase()}\n\nIn the Matter of {{Matter.Title}} (Civil No. {{Matter.DocketNumber}}).\nClient: {{Client.Name}}\nCourt: {{Court.Name}}\n\nCounsel of Record: Heugly & Bludworth, P.C.`
+    };
+
+    setTemplates(prev => [created, ...prev]);
+    addToast(`Template "${created.name}" created and added to firm templates.`, 'success');
+    setIsAddModalOpen(false);
+    setNewTemplate({
+      name: '',
+      category: 'Litigation Pleadings',
+      practiceArea: 'Civil Litigation & Dispute Resolution',
+      format: 'DOCX',
+      templateBody: '',
+      uploadedFileName: '',
+    });
+  };
 
   const handleOpenStudio = (tpl) => {
     setSelectedTemplate(tpl);
@@ -290,7 +351,7 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
               variant="primary"
               size="sm"
               icon={Plus}
-              onClick={() => addToast('Upload Word / PDF template dialog opened.', 'info')}
+              onClick={() => setIsAddModalOpen(true)}
             >
               Add New Template
             </Button>
@@ -409,6 +470,186 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
               </div>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* Add New Template Modal */}
+      {isAddModalOpen && (
+        <Modal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          title="Add New Document Template"
+          subtitle="Configure a standard firm pleading, retainer, or discovery instrument with live merge tags."
+          maxWidth="max-w-2xl"
+        >
+          <form onSubmit={handleSaveNewTemplate} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
+                  Template Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                  placeholder="e.g. Motion for Summary Judgment"
+                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={newTemplate.category}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value })}
+                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
+                >
+                  <option value="Litigation Pleadings">Litigation Pleadings</option>
+                  <option value="Engagement">Engagement & Retainer</option>
+                  <option value="Discovery">Discovery & Subpoena</option>
+                  <option value="Personal Injury">Personal Injury</option>
+                  <option value="Settlement">Settlement & Release</option>
+                  <option value="Court Motions">Court Motions</option>
+                  <option value="Notices">Statutory Notices</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
+                  Practice Area
+                </label>
+                <select
+                  value={newTemplate.practiceArea}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, practiceArea: e.target.value })}
+                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
+                >
+                  <option value="All Practice Areas">All Practice Areas</option>
+                  <option value="Civil Litigation & Dispute Resolution">Civil Litigation & Dispute Resolution</option>
+                  <option value="Personal Injury & Wrongful Death">Personal Injury & Wrongful Death</option>
+                  <option value="Family Law & Domestic Relations">Family Law & Domestic Relations</option>
+                  <option value="Immigration & Nationality Law">Immigration & Nationality Law</option>
+                  <option value="Bankruptcy & Debtor Relief">Bankruptcy & Debtor Relief</option>
+                  <option value="Criminal Defense">Criminal Defense</option>
+                  <option value="Real Estate & Land Use">Real Estate & Land Use</option>
+                  <option value="Estate Planning & Probate">Estate Planning & Probate</option>
+                  <option value="Corporate & Commercial Transactions">Corporate & Commercial Transactions</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
+                  File Format
+                </label>
+                <select
+                  value={newTemplate.format}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, format: e.target.value })}
+                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
+                >
+                  <option value="DOCX">Microsoft Word (.DOCX)</option>
+                  <option value="DOCX / PDF">DOCX / PDF Dual Export</option>
+                  <option value="PDF">Adobe PDF (.PDF)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* File Upload Zone */}
+            <div className="border-2 border-dashed border-[#D9D6CF] rounded-lg p-3.5 bg-slate-50/50 text-center hover:bg-slate-50 transition-colors">
+              <UploadCloud className="w-6 h-6 text-[#A4432B] mx-auto mb-1" />
+              <p className="text-xs font-semibold text-[#06244B]">
+                {newTemplate.uploadedFileName ? (
+                  <span className="text-emerald-700 font-bold">Selected: {newTemplate.uploadedFileName}</span>
+                ) : (
+                  'Upload Word (.docx) or PDF Master Template (Optional)'
+                )}
+              </p>
+              <p className="text-[10px] text-[#667085] mt-0.5">
+                Merge tags within your uploaded document will be automatically recognized upon upload.
+              </p>
+              <input
+                type="file"
+                id="template-file-upload"
+                accept=".docx,.pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setNewTemplate({ ...newTemplate, uploadedFileName: file.name });
+                    addToast(`Template file attached: ${file.name}`, 'info');
+                  }
+                }}
+              />
+              <label
+                htmlFor="template-file-upload"
+                className="inline-block mt-2 px-3 py-1 bg-white border border-[#D9D6CF] rounded text-[11px] font-medium text-[#06244B] cursor-pointer hover:bg-slate-100 transition-colors shadow-xs"
+              >
+                Browse Document...
+              </label>
+            </div>
+
+            {/* Template Body & Merge Tags Picker */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-bold text-[#06244B]">
+                  Template Body / Pleading Text (with Merge Tags)
+                </label>
+                <span className="text-[10px] text-[#667085]">Click any tag below to insert:</span>
+              </div>
+
+              {/* Tag Quick Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {[
+                  '{{Client.Name}}',
+                  '{{Matter.Title}}',
+                  '{{Matter.DocketNumber}}',
+                  '{{Court.Name}}',
+                  '{{OpposingParty.Name}}',
+                  '{{Billing.HourlyRate}}',
+                  '{{Billing.RetainerDeposit}}'
+                ].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleInsertTag(tag)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#F5F0E5] border border-[#D9D6CF] text-[#06244B] hover:bg-[#A4432B] hover:text-white transition-colors text-[10px] font-mono"
+                  >
+                    <Tag className="w-2.5 h-2.5" />
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                rows={6}
+                value={newTemplate.templateBody}
+                onChange={(e) => setNewTemplate({ ...newTemplate, templateBody: e.target.value })}
+                placeholder="Paste standardized instrument text or type pleading body here with {{Merge.Tags}}..."
+                className="w-full p-2.5 border border-[#D9D6CF] rounded font-mono text-[11px] text-[#202A35] bg-white focus:outline-none focus:border-[#06244B] resize-y"
+              />
+            </div>
+
+            {/* Footer buttons */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#D9D6CF]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                icon={Plus}
+              >
+                Save &amp; Add Template
+              </Button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>

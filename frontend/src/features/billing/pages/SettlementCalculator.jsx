@@ -31,23 +31,16 @@ export function SettlementCalculator() {
   const selectedMatter = matters.find(m => m.id === selectedMatterId) || matters[0];
 
   // Settlement Inputs
-  const [grossSettlement, setGrossSettlement] = useState(250000);
+  const [grossSettlement, setGrossSettlement] = useState(0);
   const [contingencyPct, setContingencyPct] = useState(33.33);
 
   // Dynamic Case Costs
-  const [costs, setCosts] = useState([
-    { id: 'c1', label: 'Accident Reconstruction & Biomechanics Expert', amount: 12500 },
-    { id: 'c2', label: 'Certified Deposition Transcripts (4 Witnesses)', amount: 4800 },
-    { id: 'c3', label: 'Utah Third District Court Filing & Service Fees', amount: 950 },
-  ]);
+  const [costs, setCosts] = useState([]);
   const [newCostLabel, setNewCostLabel] = useState('');
   const [newCostAmount, setNewCostAmount] = useState('');
 
   // Dynamic Medical & Subrogation Liens
-  const [liens, setLiens] = useState([
-    { id: 'l1', holder: 'University of Utah Hospital (Statutory Lien)', originalAmount: 28000, negotiatedAmount: 18500 },
-    { id: 'l2', holder: 'BlueCross BlueShield (ERISA Subrogation)', originalAmount: 7200, negotiatedAmount: 3900 },
-  ]);
+  const [liens, setLiens] = useState([]);
   const [newLienHolder, setNewLienHolder] = useState('');
   const [newLienOriginal, setNewLienOriginal] = useState('');
   const [newLienNegotiated, setNewLienNegotiated] = useState('');
@@ -271,21 +264,27 @@ export function SettlementCalculator() {
             </div>
 
             <div className="space-y-2">
-              {costs.map(c => (
-                <div key={c.id} className="p-2.5 rounded bg-slate-50 border border-[#D9D6CF]/60 flex items-center justify-between text-xs">
-                  <span className="font-medium text-[#202A35]">{c.label}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-[#06244B]">{formatCurrency(c.amount)}</span>
-                    <button
-                      onClick={() => handleRemoveCost(c.id)}
-                      className="text-slate-400 hover:text-rose-600 transition-colors"
-                      title="Remove line item"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              {costs.length === 0 ? (
+                <div className="p-4 text-center text-xs text-[#667085] bg-slate-50 rounded border border-dashed border-[#D9D6CF]">
+                  No litigation costs itemized yet. Add case expenses using the form below.
                 </div>
-              ))}
+              ) : (
+                costs.map(c => (
+                  <div key={c.id} className="p-2.5 rounded bg-slate-50 border border-[#D9D6CF]/60 flex items-center justify-between text-xs">
+                    <span className="font-medium text-[#202A35]">{c.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-[#06244B]">{formatCurrency(c.amount)}</span>
+                      <button
+                        onClick={() => handleRemoveCost(c.id)}
+                        className="text-slate-400 hover:text-rose-600 transition-colors"
+                        title="Remove line item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Add Cost Form */}
@@ -321,26 +320,32 @@ export function SettlementCalculator() {
             </div>
 
             <div className="space-y-2">
-              {liens.map(l => (
-                <div key={l.id} className="p-2.5 rounded bg-slate-50 border border-[#D9D6CF]/60 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-medium text-[#202A35] block">{l.holder}</span>
-                    <span className="text-[10px] text-[#667085]">
-                      Asserted: {formatCurrency(l.originalAmount)} • Savings: {formatCurrency(l.originalAmount - l.negotiatedAmount)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-rose-700">{formatCurrency(l.negotiatedAmount)}</span>
-                    <button
-                      onClick={() => handleRemoveLien(l.id)}
-                      className="text-slate-400 hover:text-rose-600 transition-colors"
-                      title="Remove lien"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              {liens.length === 0 ? (
+                <div className="p-4 text-center text-xs text-[#667085] bg-slate-50 rounded border border-dashed border-[#D9D6CF]">
+                  No healthcare or subrogation liens recorded yet. Add asserted liens using the form below.
                 </div>
-              ))}
+              ) : (
+                liens.map(l => (
+                  <div key={l.id} className="p-2.5 rounded bg-slate-50 border border-[#D9D6CF]/60 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-medium text-[#202A35] block">{l.holder}</span>
+                      <span className="text-[10px] text-[#667085]">
+                        Asserted: {formatCurrency(l.originalAmount)} • Savings: {formatCurrency(l.originalAmount - l.negotiatedAmount)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-rose-700">{formatCurrency(l.negotiatedAmount)}</span>
+                      <button
+                        onClick={() => handleRemoveLien(l.id)}
+                        className="text-slate-400 hover:text-rose-600 transition-colors"
+                        title="Remove lien"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Add Lien Form */}

@@ -123,5 +123,24 @@ export class ReportService {
       totalOutstanding: Number(totalOutstanding.toFixed(2)),
     };
   }
+
+  static async getAuditLogs(limit: number = 50) {
+    const rawLogs = await prisma.auditLog.findMany({
+      take: limit,
+      orderBy: { timestamp: 'desc' },
+    });
+
+    return rawLogs.map((l) => ({
+      id: l.id,
+      timestamp: l.timestamp.toISOString().replace('T', ' ').substring(0, 16),
+      user: l.userName || 'System / Auto Engine',
+      role: l.userRole || 'System',
+      action: l.action,
+      target: `${l.resourceType}${l.resourceId ? `:${l.resourceId}` : ''}`,
+      ipAddress: l.ipAddress || '127.0.0.1',
+      status: 'Success',
+      details: l.details,
+    }));
+  }
 }
 

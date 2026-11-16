@@ -17,10 +17,10 @@ import { useToast } from '../../../components/ui/Toast';
 export function RelativeDeadlineCalculator({
   isOpen,
   onClose,
-  initialAnchorDate = '2027-02-15',
+  initialAnchorDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   anchorEventType = 'Trial Date',
-  matterNumber = '25-CV-0101',
-  matterTitle = 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
+  matterNumber = '',
+  matterTitle = 'Selected Legal Matter',
   onApplyDeadlines = null
 }) {
   const { addToast } = useToast();

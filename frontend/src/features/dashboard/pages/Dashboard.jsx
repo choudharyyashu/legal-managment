@@ -50,9 +50,23 @@ export function Dashboard() {
   const { timeEntries, approveTimeEntry, rejectTimeEntry } = useTime();
   const { addToast } = useToast();
 
-  const [dashboardMetrics, setDashboardMetrics] = useState(null);
+  const [dashboardMetrics, setDashboardMetrics] = useState(() => {
+    try {
+      const raw = localStorage.getItem('hb_cached_dashboard_metrics');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [recentDocumentsCount, setRecentDocumentsCount] = useState(0);
+  const [recentDocumentsCount, setRecentDocumentsCount] = useState(() => {
+    try {
+      const raw = localStorage.getItem('hb_cached_recent_docs_count');
+      return raw ? Number(raw) : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -65,7 +79,12 @@ export function Dashboard() {
     let isMounted = true;
     reportService.getDashboard()
       .then((data) => {
-        if (isMounted && data) setDashboardMetrics(data);
+        if (isMounted && data) {
+          setDashboardMetrics(data);
+          try {
+            localStorage.setItem('hb_cached_dashboard_metrics', JSON.stringify(data));
+          } catch {}
+        }
       })
       .catch((err) => {
         console.warn('Could not fetch aggregated report metrics:', err?.message);
@@ -85,6 +104,9 @@ export function Dashboard() {
       .then((docs) => {
         if (isMounted && Array.isArray(docs)) {
           setRecentDocumentsCount(docs.length);
+          try {
+            localStorage.setItem('hb_cached_recent_docs_count', String(docs.length));
+          } catch {}
         }
       })
       .catch((err) => {
@@ -189,16 +211,6 @@ export function Dashboard() {
 
         {/* Quick Actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsDemoWizardOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-[#A4432B] bg-orange-50/70 border border-orange-200 hover:bg-orange-100/80 hover:border-orange-300 transition-all shadow-2xs cursor-pointer whitespace-nowrap"
-            title="Launch End-to-End Onboarding Demo"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#A4432B]" />
-            <span>E2E Onboarding Demo</span>
-          </button>
-
           <button
             type="button"
             onClick={() => setIsClientModalOpen(true)}

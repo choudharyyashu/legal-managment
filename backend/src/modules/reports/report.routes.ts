@@ -18,3 +18,8 @@ reportRouter.get(
   ReportController.getArAging
 );
 
+reportRouter.get(
+  '/audit-logs',
+  ReportController.getAuditLogs
+);
+
