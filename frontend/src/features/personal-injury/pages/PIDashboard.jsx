@@ -326,18 +326,22 @@ export function PIDashboard() {
           </div>
 
           <div className="space-y-2.5 text-xs">
-            {cases.slice(0, 3).map((c) => (
-              <div key={c.id} className="p-2.5 rounded bg-[#F5F0E5]/50 border border-[#D9D6CF] flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-[#06244B] block">{c.clientName}</span>
-                  <span className="text-[#667085] text-[11px]">{c.matterNumber} • Accident: {c.incidentDate}</span>
+            {cases.length === 0 ? (
+              <p className="text-xs text-slate-500 italic py-4 text-center">No active personal injury deadlines.</p>
+            ) : (
+              cases.slice(0, 3).map((c) => (
+                <div key={c.id} className="p-2.5 rounded bg-[#F5F0E5]/50 border border-[#D9D6CF] flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-[#06244B] block">{c.clientName}</span>
+                    <span className="text-[#667085] text-[11px]">{c.matterNumber} • Accident: {c.incidentDate || c.dateOfLoss || '—'}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[#B42318] font-bold block">{c.statuteOfLimitations || '4 Years (Utah PI)'}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">Statutory Bar Date</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[#B42318] font-bold block">{c.statuteOfLimitations}</span>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Statutory Bar Date</span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -352,20 +356,24 @@ export function PIDashboard() {
           </div>
 
           <div className="space-y-2.5 text-xs">
-            {cases.slice(0, 3).map((c) => (
-              <div key={c.id} className="p-2.5 rounded bg-slate-50 border border-slate-200 flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-slate-900 block">{c.clientName}</span>
-                  <span className="text-slate-600 text-[11px]">Next follow-up appointment verification</span>
+            {cases.length === 0 ? (
+              <p className="text-xs text-slate-500 italic py-4 text-center">No upcoming medical follow-ups scheduled.</p>
+            ) : (
+              cases.slice(0, 3).map((c) => (
+                <div key={c.id} className="p-2.5 rounded bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">{c.clientName}</span>
+                    <span className="text-slate-600 text-[11px]">Next follow-up appointment verification</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-[#06244B] block">{c.medicalFollowupDue || 'As Scheduled'}</span>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">
+                      Scheduled
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="font-bold text-[#06244B] block">{c.medicalFollowupDue}</span>
-                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">
-                    Scheduled
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
