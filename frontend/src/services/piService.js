@@ -45,4 +45,22 @@ export const piService = {
     const res = await apiClient.get(`/pi/matters/${matterId}/workflow/tasks`);
     return res?.data;
   },
+
+  async signAuthorization(matterId, requestId, data) {
+    const res = await apiClient.post(`/pi/matters/${matterId}/records-requests/${requestId}/sign-authorization`, data);
+    return res?.data;
+  },
+
+  async updateRecordRequestStatus(matterId, requestId, data) {
+    const res = await apiClient.patch(`/pi/matters/${matterId}/records-requests/${requestId}/status`, data);
+    return res?.data;
+  },
+
+  async markRecordsIncomplete(requestId, data, matterId) {
+    const url = matterId
+      ? `/pi/matters/${matterId}/records-requests/${requestId}/incomplete`
+      : `/pi/records-requests/${requestId}/incomplete`;
+    const res = await apiClient.post(url, data);
+    return res?.data;
+  },
 };

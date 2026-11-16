@@ -20,6 +20,18 @@ export class TaskService {
   }
 
   private static formatResponse(task: any): TaskResponse {
+    const formatDt = (dt: any) => {
+      if (!dt) return null;
+      if (typeof dt?.toISOString === 'function') return dt.toISOString();
+      return String(dt);
+    };
+
+    const formatDateOnly = (dt: any) => {
+      if (!dt) return null;
+      if (typeof dt?.toISOString === 'function') return dt.toISOString().split('T')[0];
+      return String(dt).split('T')[0];
+    };
+
     return {
       id: task.id,
       taskCode: task.taskCode,
@@ -32,14 +44,14 @@ export class TaskService {
       assignedToName: task.assignee?.name || null,
       createdByUserId: task.createdByUserId,
       createdByName: task.creator?.name || null,
-      dueDate: task.dueDate.toISOString().split('T')[0],
+      dueDate: formatDateOnly(task.dueDate) || '',
       priority: task.priority,
       status: task.status,
-      completedAt: task.completedAt?.toISOString() || null,
+      completedAt: formatDt(task.completedAt),
       reminderSetting: task.reminderSetting || null,
       urcpRuleReference: task.urcpRuleReference || null,
-      createdAt: task.createdAt.toISOString(),
-      updatedAt: task.updatedAt.toISOString(),
+      createdAt: formatDt(task.createdAt) || new Date().toISOString(),
+      updatedAt: formatDt(task.updatedAt) || new Date().toISOString(),
     };
   }
 

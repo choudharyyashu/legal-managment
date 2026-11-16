@@ -252,17 +252,22 @@ export class AutoDraftService {
       }
 
       // Idempotency check: Do not re-trigger representation letter if already created
+      // Scoped to matterId + templateId + insuranceCompany to support multiple insurers per Matter
+      const draftTitle = `Representation Letter - ${payload.insuranceCompany || 'Adverse Insurer'}`;
       const existingDraft = await prisma.documentDraft.findFirst({
         where: {
           matterId: matter.id,
           templateId: template.id,
+          ...(payload.insuranceCompany
+            ? { title: { contains: payload.insuranceCompany } }
+            : {}),
         },
       });
 
       if (existingDraft) {
         result.skipped.push({
           templateCode: template.templateCode,
-          reason: `Draft '${existingDraft.draftCode}' already exists for this matter (Idempotent trigger).`,
+          reason: `Draft '${existingDraft.draftCode}' already exists for this matter and insurer '${payload.insuranceCompany || 'Adverse Insurer'}' (Idempotent trigger).`,
         });
         return result;
       }
@@ -287,7 +292,7 @@ export class AutoDraftService {
         {
           matterId: matter.id,
           templateId: template.id,
-          title: `Representation Letter - ${payload.insuranceCompany || 'Adverse Insurer'}`,
+          title: draftTitle,
           allowIncomplete: true,
           customOverrides,
         },
@@ -543,30 +548,39 @@ export class AutoDraftService {
         return result;
       }
 
-      // Idempotency check: Don't create duplicate follow-up letter on same day for provider
+      // Idempotency check: Don't create duplicate follow-up letter for the same deficiency on the same day
+      const deficiencyKey = payload.followUpNotes ? payload.followUpNotes.trim().slice(0, 30) : null;
       const today = new Date().toISOString().split('T')[0];
       const existingDraft116 = await prisma.documentDraft.findFirst({
         where: {
           matterId: matter.id,
           templateId: template116.id,
-          title: { contains: payload.providerName },
-          createdAt: { gte: new Date(`${today}T00:00:00.000Z`) },
+          AND: [
+            { title: { contains: payload.providerName } },
+            ...(deficiencyKey
+              ? [{ title: { contains: deficiencyKey } }]
+              : [{ createdAt: { gte: new Date(`${today}T00:00:00.000Z`) } }]),
+          ],
         },
       });
 
       if (existingDraft116) {
         result.skipped.push({
           templateCode: template116.templateCode,
-          reason: `Incomplete records follow-up draft '${existingDraft116.draftCode}' was already generated today for '${payload.providerName}'.`,
+          reason: `Incomplete records follow-up draft '${existingDraft116.draftCode}' already exists for '${payload.providerName}' and this deficiency (Idempotent trigger).`,
         });
         return result;
       }
+
+      const draftTitle = deficiencyKey
+        ? `Incomplete Records Follow-up - ${payload.providerName} (${deficiencyKey})`
+        : `Incomplete Records Follow-up - ${payload.providerName}`;
 
       const draft116 = await DraftService.generateDraft(
         {
           matterId: matter.id,
           templateId: template116.id,
-          title: `Incomplete Records Follow-up - ${payload.providerName}`,
+          title: draftTitle,
           allowIncomplete: true,
           customOverrides: {
             provider_name: payload.providerName,

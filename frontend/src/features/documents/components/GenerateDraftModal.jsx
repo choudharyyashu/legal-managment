@@ -62,12 +62,13 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
           }
         })
         .catch(() => {
-          // Fallback mock templates if endpoint not yet seeded
+          // Fallback templates matching the 5 canonical PI document automations
           const fallback = [
             { id: 'TPL-PI-096', templateCode: 'UT-PI-REP-096', templateName: 'Liability Insurer Letter of Representation (096)', category: 'Personal Injury' },
-            { id: 'TPL-PI-112', templateCode: 'UT-PI-MED-112', templateName: 'Medical Authorization Packet (112)', category: 'Personal Injury' },
+            { id: 'TPL-PI-112', templateCode: 'UT-PI-MED-112', templateName: 'Medical Authorization (112)', category: 'Personal Injury' },
             { id: 'TPL-PI-113', templateCode: 'UT-PI-MED-113', templateName: 'Medical Records Request Letter (113)', category: 'Personal Injury' },
-            { id: 'TPL-PI-115', templateCode: 'UT-PI-DEF-115', templateName: 'Records Deficiency Follow-up Letter (115)', category: 'Personal Injury' },
+            { id: 'TPL-PI-116', templateCode: 'UT-PI-DEF-116', templateName: 'Incomplete Medical Records Follow-up (116)', category: 'Personal Injury' },
+            { id: 'TPL-PI-140', templateCode: 'UT-PI-DEM-140', templateName: 'Personal Injury Settlement Demand Letter (140)', category: 'Personal Injury' },
           ];
           setTemplates(fallback);
           if (!selectedTemplateId) setSelectedTemplateId(fallback[0].id);

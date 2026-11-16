@@ -76,7 +76,7 @@ export class PersonalInjuryController {
 
   static async markRecordsIncomplete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = req.params.id || req.params.requestId;
       const user = (req as any).user;
       const validated = markIncompleteSchema.parse(req.body);
       const context = {
