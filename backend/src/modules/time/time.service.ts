@@ -108,7 +108,14 @@ export class TimeService {
     input: CreateTimeEntryInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<TimeEntryResponse> {
-    const matter = await prisma.matter.findUnique({ where: { id: input.matterId } });
+    const matter = await prisma.matter.findFirst({
+      where: {
+        OR: [
+          { id: input.matterId },
+          { matterNumber: input.matterId },
+        ],
+      },
+    });
     if (!matter) throw AppError.badRequest('Referenced matter was not found.', 'MATTER_NOT_FOUND');
 
     const user = await prisma.user.findUnique({ where: { id: context.userId } });
@@ -121,7 +128,7 @@ export class TimeService {
     const created = await prisma.timeEntry.create({
       data: {
         entryCode,
-        matterId: input.matterId,
+        matterId: matter.id,
         userId: context.userId,
         date: new Date(input.date),
         hours: input.hours,

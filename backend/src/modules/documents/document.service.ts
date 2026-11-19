@@ -60,7 +60,7 @@ export class DocumentService {
       batesNumberEnd: doc.batesNumberEnd || null,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
-      versions: doc.versions ? doc.versions.map(this.formatVersion) : undefined,
+      versions: doc.versions ? doc.versions.map((v: any) => DocumentService.formatVersion(v)) : undefined,
     };
   }
 
@@ -97,7 +97,7 @@ export class DocumentService {
     ]);
 
     return {
-      documents: records.map(this.formatResponse),
+      documents: records.map((doc) => DocumentService.formatResponse(doc)),
       pagination: {
         page,
         limit,

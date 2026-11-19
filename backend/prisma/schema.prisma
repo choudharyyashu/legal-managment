@@ -256,10 +256,23 @@ model Matter {
   criminalCase            CriminalCase?
   appealsCase             AppealsCase?
   evictionsCase           EvictionsCase?
+  overviewPanels          MatterOverviewPanels?
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
   @@map("matters")
+}
+
+model MatterOverviewPanels {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  matterId   String   @unique @map("matter_id") @db.VarChar(36)
+  panelsData String   @map("panels_data") @db.LongText
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter     Matter   @relation(fields: [matterId], references: [id], onDelete: Cascade)
+
+  @@map("matter_overview_panels")
 }
 
 model MatterStaffAssignment {

@@ -24,47 +24,63 @@ export function ExpensesList() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New expense form
   const [category, setCategory] = useState('Court Filing Fees');
-  const [matterId, setMatterId] = useState(matters[0]?.id || '');
+  const [matterId, setMatterId] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
 
+  // Default to first matter once matters load
+  React.useEffect(() => {
+    if (matters.length > 0 && !matterId) {
+      setMatterId(matters[0].id);
+    }
+  }, [matters, matterId]);
+
   const filteredExpenses = expenses.filter(e =>
-    e.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.matterTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.category.toLowerCase().includes(searchQuery.toLowerCase())
+    (e.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (e.matterTitle || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (e.category || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalExpenseAmount = filteredExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
-  const handleAddExpense = (e) => {
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0 || !matterId) {
       addToast('Please provide an amount and select a matter.', 'error');
       return;
     }
 
-    const matter = matters.find(m => m.id === matterId);
-    addExpense({
-      category,
-      matterId,
-      matterTitle: matter?.title || 'Matter',
-      clientId: matter?.clientId || 'CLI-1001',
-      clientName: matter?.clientName || 'Client',
-      amount: parseFloat(amount),
-      date,
-      description,
-      enteredByName: currentUser.name,
-      status: 'Approved',
-    });
+    try {
+      setIsSubmitting(true);
+      const matter = matters.find(m => m.id === matterId);
+      await addExpense({
+        category,
+        matterId,
+        matterTitle: matter?.title || 'Matter',
+        clientId: matter?.clientId || 'CLI-1001',
+        clientName: matter?.clientName || 'Client',
+        amount: parseFloat(amount),
+        date,
+        description,
+        enteredByName: currentUser?.name || 'Staff Member',
+        status: 'Approved',
+      });
 
-    addToast(`Expense disbursement of ${formatCurrency(amount)} recorded.`, 'success');
-    setIsAddModalOpen(false);
-    setAmount('');
-    setDescription('');
+      addToast(`Expense disbursement of ${formatCurrency(amount)} recorded.`, 'success');
+      setIsAddModalOpen(false);
+      setAmount('');
+      setDescription('');
+    } catch (err) {
+      console.error('Failed to add expense:', err);
+      addToast(err?.message || 'Failed to record expense disbursement.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const columns = [
@@ -231,8 +247,8 @@ export function ExpensesList() {
             <Button size="sm" variant="outline" type="button" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" variant="primary" type="submit">
-              Save Expense Disbursement
+            <Button size="sm" variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving Expense...' : 'Save Expense Disbursement'}
             </Button>
           </div>
         </form>

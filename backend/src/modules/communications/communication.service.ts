@@ -49,25 +49,42 @@ export class CommunicationService {
   }
 
   static async createCommunication(input: CreateCommunicationInput, currentUser: AuthenticatedUser) {
-    if (!input.subject || !input.type || !input.sender || !input.recipient) {
-      throw AppError.badRequest('Subject, communication type, sender, and recipient are required.');
+    const subject = input.subject?.trim();
+    if (!subject) {
+      throw AppError.badRequest('Subject line is required.');
+    }
+
+    const type = input.type?.trim() || 'Email';
+    const sender = input.sender?.trim() || currentUser?.email || 'Firm Staff';
+    const recipient = input.recipient?.trim() || 'Client';
+
+    let validClientId: string | null = null;
+    if (input.clientId) {
+      const clientExists = await prisma.client.findUnique({ where: { id: input.clientId } });
+      if (clientExists) validClientId = clientExists.id;
+    }
+
+    let validMatterId: string | null = null;
+    if (input.matterId) {
+      const matterExists = await prisma.matter.findUnique({ where: { id: input.matterId } });
+      if (matterExists) validMatterId = matterExists.id;
     }
 
     const record = await prisma.communication.create({
       data: {
-        clientId: input.clientId || null,
-        matterId: input.matterId || null,
-        type: input.type,
-        subject: input.subject,
-        sender: input.sender,
-        recipient: input.recipient,
+        clientId: validClientId,
+        matterId: validMatterId,
+        type,
+        subject,
+        sender,
+        recipient,
         summary: input.summary || '',
         direction: input.direction || 'OUTBOUND',
         date: input.date ? new Date(input.date) : new Date(),
         durationMinutes: input.durationMinutes || null,
         status: input.status || 'Filed',
         sourceIdentifier: input.sourceIdentifier || null,
-        createdById: currentUser.id,
+        createdById: currentUser?.id || null,
       },
       include: {
         client: { select: { id: true, name: true, clientNumber: true } },
@@ -75,14 +92,16 @@ export class CommunicationService {
       },
     });
 
-    await createAuditLog({
-      userId: currentUser.id,
-      userRole: currentUser.role,
-      action: 'COMMUNICATION_LOGGED',
-      resourceType: 'COMMUNICATION',
-      resourceId: record.id,
-      details: { subject: record.subject, type: record.type, matterId: record.matterId, clientId: record.clientId },
-    });
+    if (currentUser?.id) {
+      await createAuditLog({
+        userId: currentUser.id,
+        userRole: currentUser.role,
+        action: 'COMMUNICATION_LOGGED',
+        resourceType: 'COMMUNICATION',
+        resourceId: record.id,
+        details: { subject: record.subject, type: record.type, matterId: record.matterId, clientId: record.clientId },
+      });
+    }
 
     return record;
   }

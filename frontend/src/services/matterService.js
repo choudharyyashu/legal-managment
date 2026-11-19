@@ -36,4 +36,14 @@ export const matterService = {
     const res = await apiClient.delete(`/matters/${id}/staff/${userId}`);
     return res?.data;
   },
+
+  async getOverviewPanels(id) {
+    const res = await apiClient.get(`/matters/${id}/overview-panels`);
+    return res?.data;
+  },
+
+  async saveOverviewPanels(id, data) {
+    const res = await apiClient.put(`/matters/${id}/overview-panels`, data);
+    return res?.data;
+  },
 };

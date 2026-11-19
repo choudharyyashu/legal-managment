@@ -94,7 +94,14 @@ export class ExpenseService {
     input: CreateExpenseInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<ExpenseResponse> {
-    const matter = await prisma.matter.findUnique({ where: { id: input.matterId } });
+    const matter = await prisma.matter.findFirst({
+      where: {
+        OR: [
+          { id: input.matterId },
+          { matterNumber: input.matterId },
+        ],
+      },
+    });
     if (!matter) throw AppError.badRequest('Referenced matter not found.', 'MATTER_NOT_FOUND');
 
     const expenseCode = await this.generateExpenseCode();
@@ -102,7 +109,7 @@ export class ExpenseService {
     const created = await prisma.expense.create({
       data: {
         expenseCode,
-        matterId: input.matterId,
+        matterId: matter.id,
         incurredByUserId: context.userId,
         date: new Date(input.date),
         category: input.category,

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 export const createTaskSchema = z.object({
-  matterId: z.string().uuid(),
+  matterId: z.string().min(1, 'matterId is required'),
   title: z.string().min(2).max(255),
   description: z.string().max(2000).optional(),
-  assignedToUserId: z.string().uuid(),
+  assignedToUserId: z.string().min(1, 'assignedToUserId is required'),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dueDate must be in YYYY-MM-DD format'),
   priority: z.enum(['Low', 'Medium', 'High', 'Critical']).default('Medium'),
   reminderSetting: z.string().max(50).optional().default('1 day prior'),
@@ -14,7 +14,7 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = z.object({
   title: z.string().min(2).max(255).optional(),
   description: z.string().max(2000).optional(),
-  assignedToUserId: z.string().uuid().optional(),
+  assignedToUserId: z.string().min(1).optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dueDate must be in YYYY-MM-DD format').optional(),
   priority: z.enum(['Low', 'Medium', 'High', 'Critical']).optional(),
   status: z.enum(['Not Started', 'In Progress', 'Waiting on Client', 'Completed', 'Deferred']).optional(),

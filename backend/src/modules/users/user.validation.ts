@@ -25,12 +25,14 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   name: z.string().trim().min(2).optional(),
+  email: z.string().trim().email().optional(),
   phone: z.string().trim().optional().nullable(),
   role: z.enum(VALID_ROLES).optional(),
   title: z.string().trim().optional().nullable(),
   initials: z.string().trim().max(10).optional(),
   department: z.string().trim().optional().nullable(),
   billingRate: z.coerce.number().min(0).optional(),
+  rate: z.coerce.number().min(0).optional(),
   status: z.enum(['Active', 'Inactive']).optional(),
 });
 

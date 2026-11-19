@@ -98,7 +98,7 @@ export function PINavigationHeader({
                   <option value="ALL" className="bg-[#06244B] text-white">All Active PI Matters ({cases.length})</option>
                   {cases.map((c) => (
                     <option key={c.id} value={c.id} className="bg-[#06244B] text-white">
-                      {c.matterNumber} – {c.clientName} ({c.accidentType?.split(' ')[0]})
+                      {c.matterNumber} – {c.clientName || c.title}{c.accidentType ? ` (${c.accidentType.split(' ')[0]})` : ''}
                     </option>
                   ))}
                 </select>

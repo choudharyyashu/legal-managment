@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createCalendarEventSchema = z.object({
-  matterId: z.string().uuid().optional(),
+  matterId: z.string().min(1).optional(),
   title: z.string().min(2).max(255),
   eventType: z.enum(['Hearing', 'Trial', 'Deposition', 'Mediation', 'Client Conference', 'Filing Deadline', 'Internal Meeting']),
   startTime: z.string().datetime(),
@@ -15,7 +15,7 @@ export const createCalendarEventSchema = z.object({
 });
 
 export const updateCalendarEventSchema = z.object({
-  matterId: z.string().uuid().optional(),
+  matterId: z.string().min(1).optional(),
   title: z.string().min(2).max(255).optional(),
   eventType: z.enum(['Hearing', 'Trial', 'Deposition', 'Mediation', 'Client Conference', 'Filing Deadline', 'Internal Meeting']).optional(),
   startTime: z.string().datetime().optional(),

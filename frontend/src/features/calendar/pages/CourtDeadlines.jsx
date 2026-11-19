@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, Clock, Calendar, CheckCircle2, ShieldAlert, Plus, Search } from 'lucide-react';
 import { useMatters } from '../../../context/MatterContext';
+import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
@@ -10,42 +11,67 @@ import { RelativeDeadlineCalculator } from '../components/RelativeDeadlineCalcul
 import { calendarService } from '../../../services/calendarService';
 
 export function CourtDeadlines() {
-  const { matters } = useMatters();
+  const { matters, activeMatter } = useMatters();
+  const { addToast } = useToast();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [deadlines, setDeadlines] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    calendarService.getEvents()
-      .then((events) => {
-        if (!isMounted) return;
-        const list = Array.isArray(events) ? events : [];
-        const mapped = list.map((ev) => ({
-          id: ev.id,
-          title: ev.title,
-          matterNumber: ev.matter?.matterNumber || (matters[0]?.matterNumber || 'Matter'),
-          matterTitle: ev.matter?.title || (matters[0]?.title || 'Matter Deadline'),
-          court: ev.location || 'Utah Judicial District Court',
-          dueDate: ev.startTime ? new Date(ev.startTime).toISOString().split('T')[0] : '',
-          type: ev.eventType || 'Court Deadline',
-          jurisdictionRule: ev.description || 'URCP Rule 26',
-          assignedAttorney: ev.assignedUser?.name || 'Assigned Counsel',
-          status: 'Active',
-        }));
-        setDeadlines(mapped);
-      })
-      .catch((err) => {
-        console.warn('Could not fetch calendar deadlines:', err?.message);
-        if (isMounted) setDeadlines([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+  const fetchDeadlines = useCallback(async () => {
+    try {
+      setLoading(true);
+      const events = await calendarService.getEvents();
+      const list = Array.isArray(events) ? events : [];
+      const currentMatter = activeMatter || matters[0] || {};
+      const mapped = list.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        matterNumber: ev.matterNumber || ev.matter?.matterNumber || currentMatter?.matterNumber || 'Matter',
+        matterTitle: ev.matterTitle || ev.matter?.title || currentMatter?.title || 'Matter Deadline',
+        court: ev.location || 'Utah Third District Court',
+        dueDate: ev.startTime ? new Date(ev.startTime).toISOString().split('T')[0] : '',
+        type: ev.eventType || 'Filing Deadline',
+        jurisdictionRule: ev.judge || ev.description || 'URCP Rule 26',
+        assignedAttorney: ev.createdByName || ev.assignedUser?.name || currentMatter?.responsibleAttorneyName || 'Assigned Counsel',
+        status: 'Active',
+      }));
+      setDeadlines(mapped);
+    } catch (err) {
+      console.warn('Could not fetch calendar deadlines:', err?.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [matters, activeMatter]);
 
-    return () => { isMounted = false; };
-  }, [matters]);
+  useEffect(() => {
+    fetchDeadlines();
+  }, [fetchDeadlines]);
+
+  const handleApplyDeadlines = async (newDeadlines) => {
+    const targetMatter = activeMatter || matters[0] || {};
+    let savedCount = 0;
+    for (const d of newDeadlines) {
+      try {
+        await calendarService.createEvent({
+          matterId: targetMatter.id || undefined,
+          title: d.title,
+          eventType: 'Filing Deadline',
+          startTime: new Date(`${d.calculatedDate}T09:00:00`).toISOString(),
+          endTime: new Date(`${d.calculatedDate}T10:00:00`).toISOString(),
+          location: 'Utah Third District Court',
+          judge: d.ruleCitation,
+          isCourtAppearance: false,
+        });
+        savedCount++;
+      } catch (err) {
+        console.error('Failed to create calendar event for deadline:', d.title, err);
+      }
+    }
+    await fetchDeadlines();
+    if (savedCount > 0) {
+      addToast(`${savedCount} court deadlines saved to database.`, 'success');
+    }
+  };
 
   const columns = [
     {
@@ -143,22 +169,9 @@ export function CourtDeadlines() {
         <RelativeDeadlineCalculator
           isOpen={isCalculatorOpen}
           onClose={() => setIsCalculatorOpen(false)}
-          onApplyDeadlines={(newDeadlines) => {
-            const defaultMatter = matters[0] || {};
-            const mapped = newDeadlines.map((d) => ({
-              id: `DDL-${Date.now()}-${d.id}`,
-              title: d.title,
-              matterNumber: defaultMatter.matterNumber || 'Matter',
-              matterTitle: defaultMatter.title || 'Legal Matter',
-              court: 'Utah Third District Court',
-              dueDate: d.calculatedDate,
-              type: d.title.includes('Expert') ? 'Expert Disclosure' : 'Discovery Cutoff',
-              jurisdictionRule: d.ruleCitation,
-              assignedAttorney: defaultMatter.responsibleAttorneyName || 'Assigned Counsel',
-              status: 'Calculated (Rule 6)',
-            }));
-            setDeadlines((prev) => [...mapped, ...prev]);
-          }}
+          matterNumber={(activeMatter || matters[0])?.matterNumber || ''}
+          matterTitle={(activeMatter || matters[0])?.title || 'Selected Legal Matter'}
+          onApplyDeadlines={handleApplyDeadlines}
         />
       )}
     </div>

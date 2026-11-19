@@ -26,6 +26,7 @@ export function RelativeDeadlineCalculator({
   const { addToast } = useToast();
   const [anchorDate, setAnchorDate] = useState(initialAnchorDate);
   const [anchorType, setAnchorType] = useState(anchorEventType);
+  const [isApplying, setIsApplying] = useState(false);
 
   // Helper to add/subtract days and adjust for Utah URCP Rule 6 (weekend rollover)
   const calculateRuleDate = (baseDateStr, daysOffset) => {
@@ -86,15 +87,18 @@ export function RelativeDeadlineCalculator({
     },
   ];
 
-  const handleApplyCascading = () => {
-    if (onApplyDeadlines) {
-      onApplyDeadlines(statutoryRules);
+  const handleApplyCascading = async () => {
+    try {
+      setIsApplying(true);
+      if (onApplyDeadlines) {
+        await onApplyDeadlines(statutoryRules);
+      }
+      onClose();
+    } catch (err) {
+      addToast(err?.message || 'Failed to apply cascading deadlines.', 'error');
+    } finally {
+      setIsApplying(false);
     }
-    addToast(
-      `Cascading court deadlines recalculated and synchronized for "${matterNumber}" per Utah URCP Rule 6.`,
-      'success'
-    );
-    onClose();
   };
 
   return (
@@ -196,9 +200,9 @@ export function RelativeDeadlineCalculator({
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="button" variant="primary" size="sm" onClick={handleApplyCascading}>
-              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-              Apply Cascading Updates
+            <Button type="button" variant="primary" size="sm" onClick={handleApplyCascading} disabled={isApplying}>
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isApplying ? 'animate-spin' : ''}`} />
+              {isApplying ? 'Saving to Database...' : 'Apply Cascading Updates'}
             </Button>
           </div>
         </div>

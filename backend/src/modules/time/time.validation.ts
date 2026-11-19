@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
 export const createTimeEntrySchema = z.object({
-  matterId: z.string().uuid(),
+  matterId: z.string().min(1, 'matterId is required'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format'),
   hours: z.number().positive().max(24),
   rate: z.number().nonnegative().optional(),
-  activityType: z.string().min(2).max(100),
+  activityType: z.string().min(1).max(100),
   activityCode: z.string().max(50).optional(),
-  description: z.string().min(5),
+  description: z.string().min(1, 'description is required'),
   isBillable: z.boolean().default(true),
 });
 
@@ -15,9 +15,9 @@ export const updateTimeEntrySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   hours: z.number().positive().max(24).optional(),
   rate: z.number().nonnegative().optional(),
-  activityType: z.string().min(2).max(100).optional(),
+  activityType: z.string().min(1).max(100).optional(),
   activityCode: z.string().max(50).optional(),
-  description: z.string().min(5).optional(),
+  description: z.string().min(1).optional(),
   isBillable: z.boolean().optional(),
 });
 

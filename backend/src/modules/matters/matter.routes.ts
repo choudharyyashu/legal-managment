@@ -30,6 +30,18 @@ matterRouter.get(
   MatterController.getMatterById
 );
 
+matterRouter.get(
+  '/:id/overview-panels',
+  requirePermission('matters:view'),
+  MatterController.getOverviewPanels
+);
+
+matterRouter.put(
+  '/:id/overview-panels',
+  requirePermission('matters:edit'),
+  MatterController.saveOverviewPanels
+);
+
 matterRouter.post(
   '/',
   requirePermission('matters:create'),

@@ -67,14 +67,23 @@ export class CalendarService {
     input: CreateCalendarEventInput,
     context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<CalendarEventResponse> {
+    let resolvedMatterId: string | undefined = undefined;
     if (input.matterId) {
-      const matter = await prisma.matter.findUnique({ where: { id: input.matterId } });
+      const matter = await prisma.matter.findFirst({
+        where: {
+          OR: [
+            { id: input.matterId },
+            { matterNumber: input.matterId },
+          ],
+        },
+      });
       if (!matter) throw AppError.badRequest('Referenced matter not found.', 'MATTER_NOT_FOUND');
+      resolvedMatterId = matter.id;
     }
 
     const created = await prisma.calendarEvent.create({
       data: {
-        matterId: input.matterId,
+        matterId: resolvedMatterId,
         title: input.title,
         eventType: input.eventType,
         startTime: new Date(input.startTime),
@@ -112,6 +121,18 @@ export class CalendarService {
     const existing = await this.getEventById(id);
 
     const data: any = { ...input };
+    if (input.matterId) {
+      const matter = await prisma.matter.findFirst({
+        where: {
+          OR: [
+            { id: input.matterId },
+            { matterNumber: input.matterId },
+          ],
+        },
+      });
+      if (!matter) throw AppError.badRequest('Referenced matter not found.', 'MATTER_NOT_FOUND');
+      data.matterId = matter.id;
+    }
     if (input.startTime) data.startTime = new Date(input.startTime);
     if (input.endTime) data.endTime = new Date(input.endTime);
 

@@ -239,16 +239,27 @@ export class UserService {
       perms = await AuthService.getRolePermissions(user.role);
     }
 
+    if (input.email && input.email.trim().toLowerCase() !== user.email.toLowerCase()) {
+      const normalizedEmail = input.email.trim().toLowerCase();
+      const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+      if (existing) {
+        throw AppError.conflict(`Email '${normalizedEmail}' is already in use by another account.`, 'EMAIL_EXISTS');
+      }
+    }
+
+    const rateVal = input.billingRate !== undefined ? input.billingRate : ((input as any).rate !== undefined ? (input as any).rate : undefined);
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
         ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+        ...(input.email !== undefined ? { email: input.email.trim().toLowerCase() } : {}),
         ...(input.phone !== undefined ? { phone: input.phone } : {}),
         ...(input.role !== undefined ? { role: input.role } : {}),
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.initials !== undefined ? { initials: input.initials } : {}),
         ...(input.department !== undefined ? { department: input.department } : {}),
-        ...(input.billingRate !== undefined ? { billingRate: input.billingRate } : {}),
+        ...(rateVal !== undefined ? { billingRate: rateVal } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
       },
     });

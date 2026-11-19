@@ -18,7 +18,155 @@ export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Inter
   const netClientPayout = grossSettlement - attorneyFee - totalDisbursements;
 
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Contingency Settlement Statement - ${matterTitle}</title>
+          <style>
+            @page { size: letter portrait; margin: 15mm 20mm; }
+            body { font-family: "Georgia", "Times New Roman", serif; color: #1a1a1a; margin: 0; padding: 20px; font-size: 11pt; line-height: 1.45; }
+            .header { text-align: center; border-bottom: 2px solid #06244B; padding-bottom: 12px; margin-bottom: 16px; }
+            .firm-name { font-size: 18pt; font-weight: bold; color: #06244B; letter-spacing: 0.5px; }
+            .firm-sub { font-size: 9pt; text-transform: uppercase; letter-spacing: 1.5px; color: #555; margin-top: 3px; font-family: sans-serif; }
+            .cert-title { font-size: 13pt; font-weight: bold; margin-top: 12px; text-transform: uppercase; color: #A4432B; }
+            .rule-cite { font-size: 9pt; font-style: italic; color: #444; margin-top: 2px; }
+            .meta-grid { display: flex; justify-content: space-between; font-size: 9.5pt; margin-bottom: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; font-family: sans-serif; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 10pt; font-family: sans-serif; }
+            th { background: #06244B; color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; text-transform: uppercase; font-size: 8.5pt; }
+            td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+            .row-gross { background-color: #f8fafc; font-weight: bold; font-size: 10.5pt; }
+            .row-net { background-color: #ecfdf5; font-weight: bold; font-size: 11pt; color: #065f46; border-top: 2px solid #059669; }
+            .text-right { text-align: right; }
+            .text-red { color: #b91c1c; }
+            .text-emerald { color: #047857; }
+            .sub-item { padding-left: 20px; font-size: 9pt; color: #475569; }
+            .legal-box { margin-top: 18px; padding: 12px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 9pt; border-radius: 4px; }
+            .legal-box strong { color: #06244B; }
+            .sig-row { display: flex; justify-content: space-between; margin-top: 40px; }
+            .sig-col { width: 45%; }
+            .sig-line { border-top: 1px solid #333; margin-top: 45px; padding-top: 6px; font-size: 9pt; font-family: sans-serif; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="firm-name">HEUGLY &amp; BLUDWORTH, LLC</div>
+            <div class="firm-sub">Attorneys at Law • 222 S. Main Street, Suite 500 • Salt Lake City, Utah 84101</div>
+            <div class="cert-title">Contingency Settlement Statement &amp; Disbursement Sheet</div>
+            <div class="rule-cite">Required Written Settlement Disclosure Pursuant to Utah Rules of Professional Conduct — Rule 1.5(c)</div>
+          </div>
+
+          <div class="meta-grid">
+            <div>
+              <strong>Matter Caption:</strong> ${matterTitle}<br>
+              <strong>Governing Rule:</strong> Utah RPC 1.5(c) (Contingency Settlement Accounting)
+            </div>
+            <div style="text-align: right;">
+              <strong>Date of Statement:</strong> ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}<br>
+              <strong>Status:</strong> Approved for Client Closing
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Disbursement Description</th>
+                <th>Authority / Reference</th>
+                <th class="text-right">Amount ($)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="row-gross">
+                <td>1. GROSS SETTLEMENT RECOVERY</td>
+                <td>Total Recovery Proceeds</td>
+                <td class="text-right text-emerald">${formatCurrency(grossSettlement)}</td>
+              </tr>
+              <tr>
+                <td><strong>2. Attorney Contingency Fee</strong></td>
+                <td>Pursuant to signed retainer agreement (${contingencyFeePct}%)</td>
+                <td class="text-right text-red">-${formatCurrency(attorneyFee)}</td>
+              </tr>
+              <tr style="background:#f1f5f9;">
+                <td colspan="3"><strong>3. ITEMIZED LITIGATION COSTS &amp; LIENS WITHHELD</strong></td>
+              </tr>
+              <tr>
+                <td class="sub-item">• Accident Reconstruction / Medical Experts</td>
+                <td class="sub-item">Expert Witness Services</td>
+                <td class="text-right text-red">-${formatCurrency(expertWitnessFees)}</td>
+              </tr>
+              <tr>
+                <td class="sub-item">• Certified Deposition Transcripts &amp; Filing Fees</td>
+                <td class="sub-item">Court Reporter &amp; Clerk Filing Fees</td>
+                <td class="text-right text-red">-${formatCurrency(depositionTranscripts)}</td>
+              </tr>
+              <tr>
+                <td class="sub-item">• Resolved Healthcare / Subrogation Liens</td>
+                <td class="sub-item">Statutory Medical Provider Liens</td>
+                <td class="text-right text-red">-${formatCurrency(medicalLiens)}</td>
+              </tr>
+              <tr style="font-weight: 600;">
+                <td style="padding-left: 20px;">Total Withheld Costs &amp; Liens</td>
+                <td>Total Advanced Disbursements</td>
+                <td class="text-right text-red">-${formatCurrency(totalDisbursements)}</td>
+              </tr>
+              <tr class="row-net">
+                <td>4. NET PROCEEDS DISBURSED TO CLIENT</td>
+                <td>Payable by Trust Check or Wire to Client</td>
+                <td class="text-right text-emerald">${formatCurrency(netClientPayout)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="legal-box">
+            <strong>CLIENT WRITTEN ACKNOWLEDGMENT &amp; APPROVAL (UTAH RPC 1.5(c)):</strong><br>
+            "I have examined this settlement statement and approve the disbursement of funds as outlined above. I acknowledge receipt of the net settlement amount in full satisfaction of the settlement recovery."
+          </div>
+
+          <div class="sig-row">
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>Client Signature</strong><br>
+                Date: ________________________
+              </div>
+            </div>
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>Responsible Attorney Signature</strong><br>
+                Eleanor Heugly, Esq. / Thomas Bludworth, Esq.<br>
+                Date: ________________________
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 350);
+    } else {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+      iframe.contentWindow.document.open();
+      iframe.contentWindow.document.write(htmlContent);
+      iframe.contentWindow.document.close();
+      iframe.contentWindow.focus();
+      setTimeout(() => {
+        iframe.contentWindow.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      }, 350);
+    }
   };
 
   const handleDownloadStatement = () => {

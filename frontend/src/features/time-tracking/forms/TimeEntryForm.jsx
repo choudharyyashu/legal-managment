@@ -30,6 +30,7 @@ export function TimeEntryForm({ defaultMatterId = null, onSuccess, onCancel }) {
   const [rate, setRate] = useState(currentUser.rate || 450);
   const [description, setDescription] = useState('');
   const [isBillable, setIsBillable] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
   // When client changes, filter available matters
@@ -55,36 +56,44 @@ export function TimeEntryForm({ defaultMatterId = null, onSuccess, onCancel }) {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (submitStatus) => {
+  const handleSubmit = async (submitStatus) => {
     if (!validate()) return;
 
-    const client = clients.find(c => c.id === clientId);
-    const matter = matters.find(m => m.id === matterId);
+    try {
+      setIsSubmitting(true);
+      const client = clients.find(c => c.id === clientId);
+      const matter = matters.find(m => m.id === matterId);
 
-    const payload = {
-      userId: currentUser.id,
-      userName: currentUser.name,
-      clientId,
-      clientName: client?.name || 'Client',
-      matterId,
-      matterTitle: matter?.title || 'Matter',
-      date,
-      hours: parseFloat(hours),
-      rate: parseFloat(rate),
-      description,
-      isBillable,
-      status: submitStatus, // 'Draft' or 'Submitted'
-    };
+      const payload = {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        clientId,
+        clientName: client?.name || 'Client',
+        matterId,
+        matterTitle: matter?.title || 'Matter',
+        date,
+        hours: parseFloat(hours),
+        rate: parseFloat(rate),
+        description: description.trim(),
+        isBillable,
+        status: submitStatus, // 'Draft' or 'Submitted'
+      };
 
-    addTimeEntry(payload);
-    addToast(
-      submitStatus === 'Submitted'
-        ? `Logged ${hours} hrs and submitted for review.`
-        : `Time entry saved as Draft (${hours} hrs).`,
-      'success'
-    );
+      await addTimeEntry(payload);
+      addToast(
+        submitStatus === 'Submitted'
+          ? `Logged ${hours} hrs and submitted for review.`
+          : `Time entry saved as Draft (${hours} hrs).`,
+        'success'
+      );
 
-    if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      console.error('Failed to log time entry:', err);
+      addToast(err?.message || 'Failed to log time entry.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -192,6 +201,7 @@ export function TimeEntryForm({ defaultMatterId = null, onSuccess, onCancel }) {
             type="button"
             variant="outline"
             size="sm"
+            disabled={isSubmitting}
             onClick={() => handleSubmit('Draft')}
           >
             Save Draft
@@ -200,9 +210,10 @@ export function TimeEntryForm({ defaultMatterId = null, onSuccess, onCancel }) {
             type="button"
             variant="primary"
             size="sm"
+            disabled={isSubmitting}
             onClick={() => handleSubmit('Submitted')}
           >
-            Submit for Approval
+            {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
           </Button>
         </div>
       </div>

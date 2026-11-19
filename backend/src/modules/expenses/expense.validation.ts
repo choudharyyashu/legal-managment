@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const createExpenseSchema = z.object({
-  matterId: z.string().uuid(),
+  matterId: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format'),
-  category: z.enum(['Court Filing Fee', 'Deposition / Court Reporter', 'Expert Witness', 'Service of Process', 'Investigation', 'Travel / Mileage', 'Medical Records Retrieval', 'Postage / Courier', 'Other']),
+  category: z.string().min(1).max(100),
   amount: z.number().positive(),
   vendorName: z.string().max(255).optional(),
   receiptDocumentId: z.string().uuid().optional(),
@@ -12,7 +12,7 @@ export const createExpenseSchema = z.object({
 
 export const updateExpenseSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  category: z.enum(['Court Filing Fee', 'Deposition / Court Reporter', 'Expert Witness', 'Service of Process', 'Investigation', 'Travel / Mileage', 'Medical Records Retrieval', 'Postage / Courier', 'Other']).optional(),
+  category: z.string().min(1).max(100).optional(),
   amount: z.number().positive().optional(),
   vendorName: z.string().max(255).optional(),
   receiptDocumentId: z.string().uuid().optional(),

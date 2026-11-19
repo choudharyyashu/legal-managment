@@ -49,8 +49,11 @@ export function TimeProvider({ children }) {
     id: e.id,
     amount: Number(e.amount) || 0,
     matterId: e.matterId,
-    matterName: e.matter?.title || e.matterName || 'Matter',
+    matterName: e.matter?.title || e.matterTitle || e.matterName || 'Matter',
+    matterTitle: e.matter?.title || e.matterTitle || e.matterName || 'Matter',
+    clientName: e.matter?.client?.name || e.clientName || 'Client',
     category: e.category || 'Other',
+    description: e.vendorName || e.description || '',
     vendorName: e.vendorName || 'Vendor',
     date: e.date ? new Date(e.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     isBillable: e.isBillable !== false,
@@ -183,7 +186,7 @@ export function TimeProvider({ children }) {
         date: expenseData.date || new Date().toISOString().split('T')[0],
         category: expenseData.category || 'Court Filing Fee',
         amount: Number(expenseData.amount) || 0,
-        vendorName: expenseData.vendorName || undefined,
+        vendorName: expenseData.vendorName || expenseData.description || undefined,
         isBillable: expenseData.isBillable !== false,
       };
 

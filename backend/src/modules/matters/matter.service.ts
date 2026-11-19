@@ -859,5 +859,58 @@ export class MatterService {
 
     return { message: `Staff member removed from matter ${matter.matterNumber}.` };
   }
+
+  /**
+   * Retrieves persistent overview panels for a matter (Next Actions, Missing Info, Requests, Approvals)
+   */
+  static async getOverviewPanels(matterIdOrNumber: string, currentUser: AuthenticatedUser) {
+    const matter = await this.getMatterByIdOrNumber(matterIdOrNumber, currentUser);
+    const record: any = await (prisma as any).matterOverviewPanels.findUnique({
+      where: { matterId: matter.id },
+    });
+
+    if (!record || !record.panelsData) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(record.panelsData);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Persists updated overview panels for a matter to the database
+   */
+  static async saveOverviewPanels(
+    matterIdOrNumber: string,
+    panelsData: any,
+    currentUser: AuthenticatedUser,
+    context?: { ipAddress?: string; userAgent?: string }
+  ) {
+    const matter = await this.getMatterByIdOrNumber(matterIdOrNumber, currentUser);
+    const serialized = typeof panelsData === 'string' ? panelsData : JSON.stringify(panelsData);
+
+    await (prisma as any).matterOverviewPanels.upsert({
+      where: { matterId: matter.id },
+      update: { panelsData: serialized },
+      create: { matterId: matter.id, panelsData: serialized },
+    });
+
+    await createAuditLog({
+      userId: currentUser.id,
+      userName: currentUser.email,
+      userRole: currentUser.role,
+      action: 'MATTER_PANELS_SAVED',
+      resourceType: 'MATTER',
+      resourceId: matter.id,
+      details: { matterNumber: matter.matterNumber },
+      ipAddress: context?.ipAddress,
+      userAgent: context?.userAgent,
+    });
+
+    return typeof panelsData === 'string' ? JSON.parse(panelsData) : panelsData;
+  }
 }
 

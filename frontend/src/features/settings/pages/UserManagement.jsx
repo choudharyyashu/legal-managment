@@ -103,7 +103,7 @@ export function UserManagement() {
     setIsAddUserOpen(true);
   };
 
-  const handleCreateUser = (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!permissions.canManageUsers) {
       addToast('Super Admin authorization required to create users.', 'error');
@@ -120,10 +120,22 @@ export function UserManagement() {
       return;
     }
 
-    const res = addUser(formData);
+    const res = await addUser(formData);
     if (res.success) {
       addToast(`User account for "${formData.name}" created successfully.`, 'success');
       setIsAddUserOpen(false);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        role: 'attorney',
+        title: '',
+        department: 'Litigation',
+        rate: '450',
+        status: 'Active',
+      });
+    } else {
+      addToast(res.message || 'Failed to create user account.', 'error');
     }
   };
 

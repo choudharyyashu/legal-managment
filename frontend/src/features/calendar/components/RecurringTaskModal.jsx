@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Repeat, Calendar, Clock, CheckCircle2, Bell, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
+import { useMatters } from '../../../context/MatterContext';
 
 export function RecurringTaskModal({ isOpen, onClose, onTaskCreated }) {
   const { addToast } = useToast();
+  const { matters = [] } = useMatters();
   const [taskTitle, setTaskTitle] = useState('');
-  const [matterId, setMatterId] = useState('25-CV-0101');
+  const [matterId, setMatterId] = useState(() => matters[0]?.id || '');
   const [category, setCategory] = useState('Court Filing');
   const [frequency, setFrequency] = useState('Weekly');
   const [dayOfWeek, setDayOfWeek] = useState('Friday');
@@ -16,6 +18,12 @@ export function RecurringTaskModal({ isOpen, onClose, onTaskCreated }) {
   const [reminderDays, setReminderDays] = useState('3');
   const [excludeWeekends, setExcludeWeekends] = useState(true);
   const [syncToOutlook, setSyncToOutlook] = useState(true);
+
+  useEffect(() => {
+    if (matters.length > 0 && (!matterId || !matters.some(m => m.id === matterId))) {
+      setMatterId(matters[0].id);
+    }
+  }, [matters]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -81,11 +89,15 @@ export function RecurringTaskModal({ isOpen, onClose, onTaskCreated }) {
               onChange={(e) => setMatterId(e.target.value)}
               className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white"
             >
-              <option value="25-CV-0101">25-CV-0101 - Wasatch Mountain Logistics</option>
-              <option value="24-LND-0912">24-LND-0912 - Apex Horizon Land Use</option>
-              <option value="IMM-2026-001">IMM-2026-001 - Garcia I-130 Petition</option>
-              <option value="BNK-2026-001">BNK-2026-001 - Rachel Walker Ch. 7</option>
-              <option value="FIRM-GEN">FIRM-GEN - Administrative &amp; Trust Accounting</option>
+              {matters.length > 0 ? (
+                matters.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.matterNumber} - {m.title}
+                  </option>
+                ))
+              ) : (
+                <option value="">No matters available</option>
+              )}
             </select>
           </div>
 

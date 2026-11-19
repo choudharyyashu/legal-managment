@@ -130,10 +130,16 @@ async function request(endpoint, options = {}) {
   // Handle HTTP errors
   const status = response.status;
   const errorObj = data?.error || {};
-  const errorMessage =
+  let errorMessage =
     errorObj.message ||
     data?.message ||
     `API request failed with status ${status}: ${response.statusText}`;
+
+  if (Array.isArray(errorObj.details) && errorObj.details.length > 0) {
+    const detailMsgs = errorObj.details.map((d) => (d.path ? `${d.path}: ${d.message}` : d.message)).join('; ');
+    errorMessage = `${errorMessage} (${detailMsgs})`;
+  }
+
   const errorCode = errorObj.code || data?.code || `HTTP_${status}`;
 
   // Handle Token Expiration or Authentication Required

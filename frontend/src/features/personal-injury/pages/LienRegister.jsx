@@ -19,15 +19,22 @@ import { StatCard } from '../../../components/shared/StatCard';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
 import { piService } from '../../../services/piService';
 
 export function LienRegister() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    return (matters || []).filter(
-      (m) => m.practiceAreaId === 'pa-pi' || m.practiceAreaName?.toLowerCase().includes('personal injury')
+    const filtered = (matters || []).filter(
+      (m) =>
+        m.practiceAreaId === 'pa-pi' ||
+        m.practiceAreaId === 'pa-7' ||
+        m.practiceArea?.code === 'PI' ||
+        m.practiceAreaName?.toLowerCase().includes('personal injury') ||
+        m.matterNumber?.toUpperCase().includes('PI')
     );
+    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [liens, setLiens] = useState([]);
   const [loading, setLoading] = useState(false);

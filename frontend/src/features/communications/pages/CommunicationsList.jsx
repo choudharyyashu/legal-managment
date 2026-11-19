@@ -187,39 +187,96 @@ export function CommunicationsList() {
   // Compose State
   const [newSubject, setNewSubject] = useState('');
   const [newType, setNewType] = useState('Email');
-  const [newClientId, setNewClientId] = useState(clients[0]?.id || '');
-  const [newMatterId, setNewMatterId] = useState(matters[0]?.id || '');
+  const [newClientId, setNewClientId] = useState('');
+  const [newMatterId, setNewMatterId] = useState('');
   const [newRecipient, setNewRecipient] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCompose = (e) => {
+  useEffect(() => {
+    if (!newClientId && clients.length > 0) {
+      setNewClientId(clients[0].id);
+      if (!newRecipient) {
+        setNewRecipient(clients[0].email || clients[0].name || '');
+      }
+    }
+  }, [clients, newClientId, newRecipient]);
+
+  useEffect(() => {
+    if (!newMatterId && matters.length > 0) {
+      setNewMatterId(matters[0].id);
+    }
+  }, [matters, newMatterId]);
+
+  const handleClientChange = (e) => {
+    const selectedId = e.target.value;
+    setNewClientId(selectedId);
+    const selectedClient = clients.find((c) => c.id === selectedId);
+    if (selectedClient) {
+      setNewRecipient(selectedClient.email || selectedClient.name || '');
+      const clientMatter = matters.find((m) => m.clientId === selectedId);
+      if (clientMatter) {
+        setNewMatterId(clientMatter.id);
+      }
+    }
+  };
+
+  const handleCompose = async (e) => {
     e.preventDefault();
-    if (!newSubject.trim() || !newRecipient.trim()) {
-      addToast('Please fill out recipient and subject.', 'error');
+    if (!newSubject.trim()) {
+      addToast('Please provide a subject line.', 'error');
       return;
     }
 
-    const client = clients.find(c => c.id === newClientId);
-    const matter = matters.find(m => m.id === newMatterId);
+    const effectiveClientId = newClientId || clients[0]?.id || null;
+    const effectiveMatterId = newMatterId || matters[0]?.id || null;
+    const client = clients.find((c) => c.id === effectiveClientId);
+    const matter = matters.find((m) => m.id === effectiveMatterId);
 
-    const newRecord = {
-      id: `COMM-${communications.length + 101}`,
-      type: newType,
-      subject: newSubject,
-      sender: currentUser.name,
-      recipient: newRecipient,
-      clientName: client?.name || 'Client',
-      matterTitle: matter?.title || 'Matter',
-      date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      summary: newMessage,
-    };
+    const effectiveRecipient = newRecipient.trim() || client?.email || client?.name || 'Client';
 
-    setCommunications(prev => [newRecord, ...prev]);
-    addToast(`Communication record "${newSubject}" logged to case file.`, 'success');
-    setIsComposeOpen(false);
-    setNewSubject('');
-    setNewRecipient('');
-    setNewMessage('');
+    try {
+      setIsSubmitting(true);
+      const created = await communicationService.createCommunication({
+        type: newType || 'Email',
+        subject: newSubject.trim(),
+        sender: currentUser?.name || 'Firm Staff',
+        recipient: effectiveRecipient,
+        clientId: effectiveClientId,
+        matterId: effectiveMatterId,
+        summary: newMessage.trim(),
+        direction: 'OUTBOUND',
+        status: 'Filed',
+        date: new Date().toISOString(),
+      });
+
+      const formattedRecord = {
+        ...created,
+        id: created.id,
+        type: created.type,
+        subject: created.subject,
+        sender: created.sender,
+        recipient: created.recipient,
+        clientName: created.client?.name || client?.name || 'Client',
+        matterTitle: created.matter?.title || matter?.title || 'Matter',
+        date: created.date
+          ? new Date(created.date).toISOString().replace('T', ' ').substring(0, 16)
+          : new Date().toISOString().replace('T', ' ').substring(0, 16),
+        summary: created.summary,
+      };
+
+      setCommunications((prev) => [formattedRecord, ...prev]);
+      addToast(`Communication record "${newSubject}" logged to case file.`, 'success');
+      setIsComposeOpen(false);
+      setNewSubject('');
+      setNewRecipient('');
+      setNewMessage('');
+    } catch (err) {
+      console.error('Failed to log communication:', err);
+      addToast(err?.message || 'Failed to save communication record.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const columns = [
@@ -410,7 +467,6 @@ export function CommunicationsList() {
             <div>
               <Input
                 label="Recipient Name / Email"
-                required
                 value={newRecipient}
                 onChange={(e) => setNewRecipient(e.target.value)}
                 placeholder="client@domain.com"
@@ -423,7 +479,7 @@ export function CommunicationsList() {
               <Select
                 label="Client"
                 value={newClientId}
-                onChange={(e) => setNewClientId(e.target.value)}
+                onChange={handleClientChange}
                 options={clients.map(c => ({ value: c.id, label: c.name }))}
               />
             </div>
@@ -465,8 +521,8 @@ export function CommunicationsList() {
             <Button size="sm" variant="outline" type="button" onClick={() => setIsComposeOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" variant="primary" type="submit">
-              Save Communication Record
+            <Button size="sm" variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Communication Record'}
             </Button>
           </div>
         </form>

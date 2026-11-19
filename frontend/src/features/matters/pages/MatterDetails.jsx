@@ -52,6 +52,8 @@ import { ActivityTimeline } from '../../../components/shared/ActivityTimeline';
 import { formatCurrency, formatHours } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { documentService } from '../../../services/documentService';
+import { matterService } from '../../../services/matterService';
+import { calendarService } from '../../../services/calendarService';
 import { StageProgressBar } from '../components/StageProgressBar';
 import { RelatedPartiesTab } from '../components/RelatedPartiesTab';
 import { RelativeDeadlineCalculator } from '../../calendar/components/RelativeDeadlineCalculator';
@@ -254,7 +256,7 @@ export function MatterDetails() {
   const { matters, updateMatter, activeMatter, setActiveMatter } = useMatters();
   const { tasks, addTask, updateTaskStatus } = useTasks();
   const { timeEntries } = useTime();
-  const { currentUser } = useAuth();
+  const { currentUser, allUsers } = useAuth();
   const permissions = usePermissions();
   const { addToast } = useToast();
 
@@ -291,6 +293,7 @@ export function MatterDetails() {
   const [missingInfoItems, setMissingInfoItems] = useState(() => buildInitialMissingInfo(matter));
   const [unresolvedRequests, setUnresolvedRequests] = useState(() => buildInitialUnresolvedRequests(matter));
   const [approvalItems, setApprovalItems] = useState(() => buildInitialApprovals(matter));
+  const [matterStage, setMatterStage] = useState(() => matter?.stage || 'Intake & Conflicts');
 
   // Panel filters & modal states
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
@@ -328,11 +331,55 @@ export function MatterDetails() {
   }, [matter?.id]);
 
   useEffect(() => {
-    if (matter) {
-      setNextActions(buildInitialNextActions(matter));
-      setMissingInfoItems(buildInitialMissingInfo(matter));
-      setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
-      setApprovalItems(buildInitialApprovals(matter));
+    let isMounted = true;
+    if (matter?.id) {
+      matterService.getOverviewPanels(matter.id)
+        .then((savedPanels) => {
+          if (!isMounted) return;
+          if (savedPanels) {
+            if (Array.isArray(savedPanels.nextActions)) {
+              setNextActions(savedPanels.nextActions);
+            } else {
+              setNextActions(buildInitialNextActions(matter));
+            }
+
+            if (Array.isArray(savedPanels.missingInfoItems)) {
+              setMissingInfoItems(savedPanels.missingInfoItems);
+            } else {
+              setMissingInfoItems(buildInitialMissingInfo(matter));
+            }
+
+            if (Array.isArray(savedPanels.unresolvedRequests)) {
+              setUnresolvedRequests(savedPanels.unresolvedRequests);
+            } else {
+              setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
+            }
+
+            if (Array.isArray(savedPanels.approvalItems)) {
+              setApprovalItems(savedPanels.approvalItems);
+            } else {
+              setApprovalItems(buildInitialApprovals(matter));
+            }
+
+            if (savedPanels.currentStage) {
+              setMatterStage(savedPanels.currentStage);
+            }
+          } else {
+            setNextActions(buildInitialNextActions(matter));
+            setMissingInfoItems(buildInitialMissingInfo(matter));
+            setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
+            setApprovalItems(buildInitialApprovals(matter));
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setNextActions(buildInitialNextActions(matter));
+            setMissingInfoItems(buildInitialMissingInfo(matter));
+            setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
+            setApprovalItems(buildInitialApprovals(matter));
+          }
+        });
+
       setMissingFilter('All');
       setRequestFilter('All');
       setReviewingApproval(null);
@@ -343,6 +390,7 @@ export function MatterDetails() {
         setActiveMatter(matter);
       }
     }
+    return () => { isMounted = false; };
   }, [matter?.id, activeMatter?.id, setActiveMatter]);
 
   const isLitigationActive = Boolean(
@@ -401,14 +449,19 @@ export function MatterDetails() {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
+    const paralegalUser = allUsers?.find(u => u.role === 'paralegal') || currentUser;
+    const assignedUserId = paralegalUser?.id || matter.responsibleAttorneyId || currentUser?.id;
+    const assignedUserName = paralegalUser?.name || currentUser?.name || 'Assigned Counsel';
+
     addTask({
       title: newTaskTitle,
       matterId: matter.id,
       matterTitle: matter.title,
       clientId: matter.clientId,
       clientName: matter.clientName,
-      assignedToId: 'usr-4',
-      assignedToName: 'Marcus Vance',
+      assignedToId: assignedUserId,
+      assignedToUserId: assignedUserId,
+      assignedToName: assignedUserName,
       dueDate: newTaskDue,
       priority: newTaskPriority,
       status: 'Not Started',
@@ -419,6 +472,22 @@ export function MatterDetails() {
   };
 
   // --- Handlers for Matter Command Panels & Litigation Switch ---
+  const persistPanels = async (updatedData = {}) => {
+    if (!matter?.id) return;
+    try {
+      const payload = {
+        nextActions: updatedData.nextActions !== undefined ? updatedData.nextActions : nextActions,
+        missingInfoItems: updatedData.missingInfoItems !== undefined ? updatedData.missingInfoItems : missingInfoItems,
+        unresolvedRequests: updatedData.unresolvedRequests !== undefined ? updatedData.unresolvedRequests : unresolvedRequests,
+        approvalItems: updatedData.approvalItems !== undefined ? updatedData.approvalItems : approvalItems,
+        currentStage: updatedData.currentStage !== undefined ? updatedData.currentStage : (matterStage || matter?.stage || 'Intake & Conflicts'),
+      };
+      await matterService.saveOverviewPanels(matter.id, payload);
+    } catch (err) {
+      console.error('Failed to persist overview panels to database:', err);
+    }
+  };
+
   const handleConfirmLitigationToggle = () => {
     if (!canToggleLitigation) {
       addToast('Insufficient role permission to modify Litigation / Contested status.', 'error');
@@ -445,9 +514,11 @@ export function MatterDetails() {
   };
 
   const handleNextActionStatusChange = (actionId, nextStatus) => {
-    setNextActions((prev) =>
-      prev.map((act) => (act.id === actionId ? { ...act, status: nextStatus } : act))
+    const updated = nextActions.map((act) =>
+      act.id === actionId ? { ...act, status: nextStatus } : act
     );
+    setNextActions(updated);
+    persistPanels({ nextActions: updated });
     addToast(`Next action status updated to "${nextStatus}".`, nextStatus === 'Completed' ? 'success' : 'info');
   };
 
@@ -463,7 +534,9 @@ export function MatterDetails() {
       dueDate: newActionForm.dueDate,
       status: 'Pending',
     };
-    setNextActions((prev) => [item, ...prev]);
+    const updated = [item, ...nextActions];
+    setNextActions(updated);
+    persistPanels({ nextActions: updated });
     setNewActionForm({
       title: '',
       description: '',
@@ -477,19 +550,19 @@ export function MatterDetails() {
 
   const handleMissingInfoAction = (itemId, actionType) => {
     const today = new Date().toISOString().split('T')[0];
-    setMissingInfoItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== itemId) return item;
-        if (actionType === 'received') {
-          return { ...item, status: 'Received', followUpDate: today };
-        }
-        if (actionType === 'follow_up') {
-          const nextWeek = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0];
-          return { ...item, status: 'Follow-up Sent', followUpDate: nextWeek };
-        }
-        return { ...item, status: 'Missing' };
-      })
-    );
+    const updated = missingInfoItems.map((item) => {
+      if (item.id !== itemId) return item;
+      if (actionType === 'received') {
+        return { ...item, status: 'Received', followUpDate: today };
+      }
+      if (actionType === 'follow_up') {
+        const nextWeek = new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0];
+        return { ...item, status: 'Follow-up Sent', followUpDate: nextWeek };
+      }
+      return { ...item, status: 'Missing' };
+    });
+    setMissingInfoItems(updated);
+    persistPanels({ missingInfoItems: updated });
     addToast(
       actionType === 'received'
         ? 'Missing item marked as Received.'
@@ -501,13 +574,13 @@ export function MatterDetails() {
   };
 
   const handleRequestStatusAction = (reqId, nextStatus, note) => {
-    setUnresolvedRequests((prev) =>
-      prev.map((r) =>
-        r.id === reqId
-          ? { ...r, status: nextStatus, followUpNote: note || r.followUpNote }
-          : r
-      )
+    const updated = unresolvedRequests.map((r) =>
+      r.id === reqId
+        ? { ...r, status: nextStatus, followUpNote: note || r.followUpNote }
+        : r
     );
+    setUnresolvedRequests(updated);
+    persistPanels({ unresolvedRequests: updated });
     addToast(`Request status updated to "${nextStatus}".`, nextStatus === 'Resolved' ? 'success' : 'info');
   };
 
@@ -517,17 +590,17 @@ export function MatterDetails() {
       return;
     }
     const today = new Date().toISOString().split('T')[0];
-    setApprovalItems((prev) =>
-      prev.map((ap) =>
-        ap.id === item.id
-          ? {
-              ...ap,
-              status: 'Approved',
-              reviewNotes: approvalNoteInput.trim() || `Approved by ${currentUser?.name || item.assignedAttorney} on ${today}.`,
-            }
-          : ap
-      )
+    const updated = approvalItems.map((ap) =>
+      ap.id === item.id
+        ? {
+            ...ap,
+            status: 'Approved',
+            reviewNotes: approvalNoteInput.trim() || `Approved by ${currentUser?.name || item.assignedAttorney} on ${today}.`,
+          }
+        : ap
     );
+    setApprovalItems(updated);
+    persistPanels({ approvalItems: updated });
     addToast(`"${item.itemName}" formally approved.`, 'success');
     setReviewingApproval(null);
     setApprovalNoteInput('');
@@ -543,13 +616,13 @@ export function MatterDetails() {
       addToast('Please enter revision instructions before requesting changes.', 'warning');
       return;
     }
-    setApprovalItems((prev) =>
-      prev.map((ap) =>
-        ap.id === item.id
-          ? { ...ap, status: 'Changes Requested', reviewNotes: note }
-          : ap
-      )
+    const updated = approvalItems.map((ap) =>
+      ap.id === item.id
+        ? { ...ap, status: 'Changes Requested', reviewNotes: note }
+        : ap
     );
+    setApprovalItems(updated);
+    persistPanels({ approvalItems: updated });
     addToast(`Revision requested on "${item.itemName}".`, 'warning');
     setReviewingApproval(null);
     setApprovalNoteInput('');
@@ -821,7 +894,13 @@ export function MatterDetails() {
       </div>
 
       {/* Stage Progress Bar (Filevine Reference) */}
-      <StageProgressBar matter={matter} />
+      <StageProgressBar
+        matter={{ ...matter, stage: matterStage || matter?.stage }}
+        onStageAdvance={(newStageName) => {
+          setMatterStage(newStageName);
+          persistPanels({ currentStage: newStageName });
+        }}
+      />
 
       {/* Contested Litigation Workspace Banner (Shown whenever Litigation / Contested is Active) */}
       {isLitigationActive && (
@@ -1754,6 +1833,29 @@ export function MatterDetails() {
           initialAnchorDate={matter.nextCourtDate || '2027-02-15'}
           matterNumber={matter.matterNumber}
           matterTitle={matter.title}
+          onApplyDeadlines={async (newDeadlines) => {
+            let savedCount = 0;
+            for (const d of newDeadlines) {
+              try {
+                await calendarService.createEvent({
+                  matterId: matter.id,
+                  title: d.title,
+                  eventType: 'Filing Deadline',
+                  startTime: new Date(`${d.calculatedDate}T09:00:00`).toISOString(),
+                  endTime: new Date(`${d.calculatedDate}T10:00:00`).toISOString(),
+                  location: 'Utah Third District Court',
+                  judge: d.ruleCitation,
+                  isCourtAppearance: false,
+                });
+                savedCount++;
+              } catch (err) {
+                console.error('Failed to create calendar event for deadline:', d.title, err);
+              }
+            }
+            if (savedCount > 0) {
+              addToast(`${savedCount} court deadlines saved directly to database.`, 'success');
+            }
+          }}
         />
       )}
 

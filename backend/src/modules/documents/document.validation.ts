@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createDocumentSchema = z.object({
   matterId: z.string().uuid(),
   clientId: z.string().uuid(),
-  title: z.string().min(2).max(255),
+  title: z.string().trim().min(1, 'Title must contain at least 1 character').max(255),
   category: z.enum(['Pleading', 'Motion', 'Discovery', 'Correspondence', 'Contract', 'Evidence', 'Court Order', 'Billing / Receipt', 'Other']),
   isPrivileged: z.boolean().default(false),
   privilegeType: z.string().max(100).optional(),

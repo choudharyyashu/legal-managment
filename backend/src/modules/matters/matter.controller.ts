@@ -36,6 +36,27 @@ export class MatterController {
     }
   }
 
+  static async getOverviewPanels(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await MatterService.getOverviewPanels(req.params.id, req.user!);
+      res.status(200).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async saveOverviewPanels(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const data = await MatterService.saveOverviewPanels(req.params.id, req.body, req.user!, {
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+      res.status(200).json({ success: true, message: 'Overview panels saved successfully.', data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   /**
    * POST /api/v1/matters
    * Creates a new legal matter

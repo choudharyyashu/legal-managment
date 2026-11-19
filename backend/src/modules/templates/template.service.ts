@@ -78,7 +78,7 @@ export class TemplateService {
       createdByName: tpl.createdByUser?.name || null,
       createdAt: tpl.createdAt.toISOString(),
       updatedAt: tpl.updatedAt.toISOString(),
-      versions: tpl.versions ? tpl.versions.map(this.formatVersion) : undefined,
+      versions: tpl.versions ? tpl.versions.map((v: any) => TemplateService.formatVersion(v)) : undefined,
       draftsCount: tpl._count?.drafts ?? undefined,
     };
   }
@@ -207,7 +207,7 @@ export class TemplateService {
     ]);
 
     return {
-      templates: records.map(this.formatTemplate),
+      templates: records.map((r: any) => TemplateService.formatTemplate(r)),
       pagination: {
         total,
         page,
@@ -488,7 +488,7 @@ export class TemplateService {
       },
     });
 
-    return versions.map(this.formatVersion);
+    return versions.map((v: any) => TemplateService.formatVersion(v));
   }
 
   static async getTemplateVersionById(
@@ -526,8 +526,8 @@ export class TemplateService {
     }
 
     return {
-      ...this.formatVersion(version),
-      fieldMappings: version.fieldMappings.map(this.formatMapping),
+      ...TemplateService.formatVersion(version),
+      fieldMappings: version.fieldMappings.map((m: any) => TemplateService.formatMapping(m)),
     };
   }
 
@@ -566,7 +566,7 @@ export class TemplateService {
       where: { templateVersionId: version.id },
       orderBy: { placeholderTag: 'asc' },
     });
-    return mappings.map(this.formatMapping);
+    return mappings.map((m: any) => TemplateService.formatMapping(m));
   }
 
   private static normalizePlaceholderTag(tag: string): string {
@@ -693,7 +693,7 @@ export class TemplateService {
       userAgent: context.userAgent,
     });
 
-    return refreshed.map(this.formatMapping);
+    return refreshed.map((m: any) => TemplateService.formatMapping(m));
   }
 
   static async updateFieldMapping(
