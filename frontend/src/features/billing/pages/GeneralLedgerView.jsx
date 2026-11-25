@@ -18,34 +18,34 @@ export function GeneralLedgerView() {
       id: 'JE-2026-0101',
       date: '2026-02-15',
       ref: 'INV-2026-0041',
-      description: 'Fee Income recognition for Wasatch Mountain Logistics',
+      description: 'Fee Income recognition for Commercial Litigation Matter',
       accountDebit: '1100 - Accounts Receivable',
       debit: 14250.00,
       accountCredit: '4010 - Legal Fee Income (Hourly)',
       credit: 14250.00,
-      postedBy: 'Rachel Adams (Billing Director)'
+      postedBy: 'Billing Director'
     },
     {
       id: 'JE-2026-0102',
       date: '2026-02-16',
       ref: 'ACH-49102',
-      description: 'Client payment receipt from Wasatch Mountain Logistics',
+      description: 'Client payment receipt for Commercial Retainer Account',
       accountDebit: '1010 - Operating Checking Account',
       debit: 14250.00,
       accountCredit: '1100 - Accounts Receivable',
       credit: 14250.00,
-      postedBy: 'Rachel Adams (Billing Director)'
+      postedBy: 'Billing Director'
     },
     {
       id: 'JE-2026-0103',
       date: '2026-02-18',
       ref: 'TR-DEP-1003',
-      description: 'IOLTA Trust Retainer Deposit - Elena Rostova (USCIS Filing Escrow)',
+      description: 'IOLTA Trust Retainer Deposit (Immigration Filing Escrow)',
       accountDebit: '1020 - IOLTA Client Trust Account',
       debit: 1440.00,
       accountCredit: '2010 - Client Trust Liability',
       credit: 1440.00,
-      postedBy: 'Thomas Bludworth, Esq.'
+      postedBy: 'Supervising Partner'
     },
     {
       id: 'JE-2026-0104',
@@ -56,18 +56,18 @@ export function GeneralLedgerView() {
       debit: 1850.00,
       accountCredit: '1010 - Operating Checking Account',
       credit: 1850.00,
-      postedBy: 'Rachel Adams (Billing Director)'
+      postedBy: 'Billing Director'
     },
     {
       id: 'JE-2026-0105',
       date: '2026-02-20',
       ref: 'DRAW-TR-1002',
-      description: 'Earned fee drawdown from Dr. Evelyn Martinez Trust Retainer',
+      description: 'Earned fee drawdown from Client Trust Retainer',
       accountDebit: '2010 - Client Trust Liability',
       debit: 3500.00,
       accountCredit: '1020 - IOLTA Client Trust Account',
       credit: 3500.00,
-      postedBy: 'Eleanor Heugly, Esq.'
+      postedBy: 'Managing Partner'
     },
     {
       id: 'JE-2026-0106',
@@ -78,7 +78,7 @@ export function GeneralLedgerView() {
       debit: 3500.00,
       accountCredit: '4010 - Legal Fee Income (Hourly)',
       credit: 3500.00,
-      postedBy: 'Rachel Adams (Billing Director)'
+      postedBy: 'Billing Director'
     }
   ]);
 

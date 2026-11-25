@@ -305,7 +305,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             required
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="e.g. Wasatch Mountain Logistics v. Interstate Freightlines Inc."
+            placeholder="e.g. Client v. Opposing Party"
             error={errors.title}
           />
         </div>

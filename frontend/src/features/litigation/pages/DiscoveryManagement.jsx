@@ -58,8 +58,8 @@ export function DiscoveryManagement() {
   // New Privilege Log entry state
   const [privBates, setPrivBates] = useState('WML-PRIV-0003');
   const [privDate, setPrivDate] = useState('2025-11-25');
-  const [privAuthor, setPrivAuthor] = useState('Thomas Bludworth, Esq.');
-  const [privRecipients, setPrivRecipients] = useState('Travis Olsen (Client Managing Member)');
+  const [privAuthor, setPrivAuthor] = useState('');
+  const [privRecipients, setPrivRecipients] = useState('');
   const [privSubject, setPrivSubject] = useState('Confidential Legal Strategy Memo re Trade Secret Injunction');
   const [privBasis, setPrivBasis] = useState('Attorney-Client Communication (Utah R. Evid. 504)');
   const [privRedaction, setPrivRedaction] = useState('Withheld in Entirety');

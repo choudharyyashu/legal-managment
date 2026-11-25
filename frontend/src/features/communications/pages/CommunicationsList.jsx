@@ -568,8 +568,8 @@ export function CommunicationsList() {
             type: 'Email',
             subject: email.subject,
             sender: email.sender,
-            recipient: 'Thomas Bludworth, Esq.',
-            clientName: 'Wasatch Mountain Logistics LLC',
+            recipient: 'Assigned Counsel',
+            clientName: 'Client Contact',
             matterTitle: email.suggestedMatter,
             date: new Date().toISOString().replace('T', ' ').substring(0, 16),
             summary: email.preview

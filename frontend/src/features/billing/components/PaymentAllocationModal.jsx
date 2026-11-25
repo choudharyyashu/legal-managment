@@ -10,8 +10,8 @@ export function PaymentAllocationModal({ isOpen, onClose }) {
   const [totalPayment, setTotalPayment] = useState(20000);
 
   const [invoices, setInvoices] = useState([
-    { id: 'INV-2026-0041', client: 'Wasatch Mountain Logistics', matter: '25-CV-0101', due: 14250.00, allocatedFees: 12000.00, allocatedCosts: 2250.00 },
-    { id: 'INV-2026-0042', client: 'Wasatch Mountain Logistics', matter: '25-CORP-0102', due: 8500.00, allocatedFees: 5750.00, allocatedCosts: 0.00 },
+    { id: 'INV-2026-0041', client: 'Retainer Client A', matter: 'Matter A', due: 14250.00, allocatedFees: 12000.00, allocatedCosts: 2250.00 },
+    { id: 'INV-2026-0042', client: 'Retainer Client A', matter: 'Matter B', due: 8500.00, allocatedFees: 5750.00, allocatedCosts: 0.00 },
   ]);
 
   const allocatedTotal = invoices.reduce((sum, inv) => sum + inv.allocatedFees + inv.allocatedCosts, 0);

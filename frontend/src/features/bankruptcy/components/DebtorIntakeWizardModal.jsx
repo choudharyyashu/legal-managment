@@ -949,7 +949,7 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
                   <span>OFFICIAL COURT CM/ECF TRANSMISSION NOTICE</span>
                 </div>
                 <p className="text-[#202A35] leading-relaxed">
-                  This system compiles, validates, and packages debtor schedules and the creditor matrix in strict compliance with the Federal Rules of Bankruptcy Procedure (FRBP) and District of Utah Local Rules. The final electronic filing submission must be executed through the official CM/ECF court portal by counsel of record.
+                  This system organizes and validates debtor schedules and the creditor matrix for counsel review under Federal Rules of Bankruptcy Procedure (FRBP) and District of Utah guidelines. The final electronic filing submission must be verified and executed through the official CM/ECF court portal by counsel of record.
                 </p>
                 <div className="flex items-center gap-4 text-[11px] font-mono text-[#667085] pt-1">
                   <span>Venue: District of Utah (Salt Lake City)</span>

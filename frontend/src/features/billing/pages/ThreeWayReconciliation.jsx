@@ -178,13 +178,13 @@ export function ThreeWayReconciliation() {
     const auditTimestamp = new Date().toISOString().split('T')[0];
 
     const csvLines = [
-      `"HEUGLY & BLUDWORTH, LLC - ATTORNEYS AT LAW"`,
-      `"IOLTA CLIENT TRUST ACCOUNT MONTHLY THREE-WAY RECONCILIATION CERTIFICATE"`,
-      `"Statutory Authority:","Utah Supreme Court Rules of Professional Conduct - Rule 1.15(a), (c), & (d)"`,
+      `"Firm Trust Account — Three-Way Reconciliation Worksheet"`,
+      `"IOLTA CLIENT TRUST ACCOUNT MONTHLY THREE-WAY RECONCILIATION WORKSHEET"`,
+      `"Reference Policy:","Trust Account Three-Way Reconciliation Controls"`,
       `"Audit Period:","${periodName}"`,
       `"Audit Verification Date:","${auditTimestamp}"`,
-      `"Supervising Trust Auditor:","Eleanor Heugly, Esq. (Managing Partner, Utah Bar #UT-8819)"`,
-      `"Designated Fiduciary Depository:","Chase Bank Pooled IOLTA Trust Account #****4402"`,
+      `"Supervising Trust Auditor:","Assigned Supervising Partner / Trust Auditor"`,
+      `"Designated Fiduciary Depository:","Pooled IOLTA Client Trust Account"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 1: BANK STATEMENT RECONCILIATION (ADJUSTED CASH BALANCE)"`,
@@ -285,7 +285,7 @@ export function ThreeWayReconciliation() {
             </div>
             <div style="text-align: right;">
               <strong>Verification Date:</strong> ${auditTimestamp}<br>
-              <strong>Auditing Partner:</strong> Eleanor Heugly, Esq. (Utah Bar #UT-8819)
+              <strong>Prepared For:</strong> Supervising Partner / CPA Review
             </div>
           </div>
 
@@ -532,11 +532,25 @@ export function ThreeWayReconciliation() {
               </div>
               <div className="flex justify-between">
                 <span>Highest Retainer:</span>
-                <span className="font-semibold text-[#06244B]">Apex Horizon ($35k)</span>
+                <span className="font-semibold text-[#06244B]">
+                  {(() => {
+                    const positive = (clientLedgers || []).filter(c => Number(c.balance) > 0);
+                    if (positive.length === 0) return 'N/A';
+                    const top = [...positive].sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+                    return `${top.clientName || 'Client Account'} (${formatCurrency(top.balance)})`;
+                  })()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Lowest Retainer:</span>
-                <span className="font-semibold text-[#06244B]">Rachel Walker ($338)</span>
+                <span className="font-semibold text-[#06244B]">
+                  {(() => {
+                    const positive = (clientLedgers || []).filter(c => Number(c.balance) > 0);
+                    if (positive.length === 0) return 'N/A';
+                    const low = [...positive].sort((a, b) => Number(a.balance) - Number(b.balance))[0];
+                    return `${low.clientName || 'Client Account'} (${formatCurrency(low.balance)})`;
+                  })()}
+                </span>
               </div>
             </div>
           </div>
@@ -722,9 +736,9 @@ export function ThreeWayReconciliation() {
           <div className="p-4 space-y-3">
             <div className="space-y-2">
               {[
-                { period: 'October 2026', periodCode: '2026-10', date: '2026-10-31', reviewer: 'Eleanor Heugly, Esq.', status: 'Reconciled ($68,500.00)', variance: '$0.00' },
-                { period: 'September 2026', periodCode: '2026-09', date: '2026-09-30', reviewer: 'Rachel Adams (Billing Dir)', status: 'Reconciled ($62,100.00)', variance: '$0.00' },
-                { period: 'August 2026', periodCode: '2026-08', date: '2026-08-31', reviewer: 'Eleanor Heugly, Esq.', status: 'Reconciled ($55,400.00)', variance: '$0.00' },
+                { period: 'October 2026', periodCode: '2026-10', date: '2026-10-31', reviewer: 'Managing Partner (Review)', status: 'Reconciled ($68,500.00)', variance: '$0.00' },
+                { period: 'September 2026', periodCode: '2026-09', date: '2026-09-30', reviewer: 'Billing Director (Review)', status: 'Reconciled ($62,100.00)', variance: '$0.00' },
+                { period: 'August 2026', periodCode: '2026-08', date: '2026-08-31', reviewer: 'Managing Partner (Review)', status: 'Reconciled ($55,400.00)', variance: '$0.00' },
               ].map((h, i) => (
                 <div key={i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                   <div>
@@ -763,16 +777,16 @@ export function ThreeWayReconciliation() {
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title="Three-Way IOLTA Reconciliation Report (Utah RPC 1.15)"
-        subtitle="Mandatory monthly compliance certificate for firm records and Utah State Bar inspection."
+        title="Three-Way IOLTA Reconciliation Worksheet (Utah RPC 1.15 Reference)"
+        subtitle="Monthly trust reconciliation worksheet for internal accounting and supervising partner review."
         maxWidth="max-w-2xl"
       >
         <div className="space-y-4 text-xs">
           <div className="p-4 bg-slate-50 border border-[#D9D6CF] rounded font-mono text-[11px] space-y-2 text-[#202A35]">
             <div className="text-center pb-2 border-b border-[#D9D6CF]">
               <p className="font-bold text-sm text-[#06244B]">HEUGLY &amp; BLUDWORTH, LLC</p>
-              <p className="text-[#667085]">IOLTA Client Trust Account Monthly Three-Way Reconciliation Certificate</p>
-              <p className="text-[#667085]">Statutory Standard: Utah Supreme Court Rules of Professional Conduct 1.15</p>
+              <p className="text-[#667085]">IOLTA Client Trust Account Three-Way Reconciliation Worksheet</p>
+              <p className="text-[#667085]">Reference: Utah Supreme Court Rules of Professional Conduct 1.15</p>
               <p className="text-[#667085]">Audit Date: November 12, 2026 | Period: {selectedMonth === '2026-11' ? 'November 2026' : selectedMonth === '2026-10' ? 'October 2026' : selectedMonth}</p>
             </div>
 
@@ -811,7 +825,7 @@ export function ThreeWayReconciliation() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
             <span className="text-[11px] text-[#667085]">
-              Managing Partner Certifier: <strong>Eleanor Heugly, Esq. (UT-8819)</strong>
+              Supervising Reviewer: <strong>Managing Partner / CPA Review</strong>
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => setIsReportModalOpen(false)}>

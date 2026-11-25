@@ -79,7 +79,7 @@ export function WorkflowChecklists() {
       id: 'rule-1',
       trigger: 'When Matter Stage advances to "In Discovery"',
       action: 'Auto-spawn task: "Serve Utah Rule 26 Initial Disclosures"',
-      assignee: 'Marcus Vance (Litigation Paralegal)',
+      assignee: 'Litigation Paralegal',
       deadline: '+14 Days from Stage Advance',
       condition: 'Applies to Civil Litigation & Dispute Resolution',
       enabled: true
@@ -88,7 +88,7 @@ export function WorkflowChecklists() {
       id: 'rule-2',
       trigger: 'When Matter Stage advances to "Trial Prep"',
       action: 'Auto-spawn task: "Draft Pre-Trial Order & Witness Disclosures"',
-      assignee: 'Thomas Bludworth, Esq. (Lead Counsel)',
+      assignee: 'Lead Counsel',
       deadline: '-30 Days before First Trial Date',
       condition: 'Applies to All Litigation Practice Areas',
       enabled: true
@@ -106,7 +106,7 @@ export function WorkflowChecklists() {
       id: 'rule-4',
       trigger: 'When Retainer Balance falls below $2,500.00',
       action: 'Auto-spawn task: "Dispatch Retainer Replenishment Request"',
-      assignee: 'Rachel Adams (Billing Director)',
+      assignee: 'Billing Director',
       deadline: 'Immediate',
       condition: 'All Hourly Practice Engagements',
       enabled: true
@@ -116,7 +116,7 @@ export function WorkflowChecklists() {
   // New Rule Form
   const [newTrigger, setNewTrigger] = useState('When Matter Stage advances to "Expert Discovery"');
   const [newAction, setNewAction] = useState('Auto-spawn task: "Retain Independent Forensic Expert"');
-  const [newAssignee, setNewAssignee] = useState('Marcus Vance (Litigation Paralegal)');
+  const [newAssignee, setNewAssignee] = useState('Litigation Paralegal');
   const [newCondition, setNewCondition] = useState('Civil Litigation');
 
   const handleCreateRule = (e) => {
@@ -334,9 +334,9 @@ export function WorkflowChecklists() {
               onChange={(e) => setNewAssignee(e.target.value)}
               className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-medium"
             >
-              <option value="Marcus Vance (Litigation Paralegal)">Marcus Vance (Litigation Paralegal)</option>
-              <option value="Thomas Bludworth, Esq. (Lead Counsel)">Thomas Bludworth, Esq. (Lead Counsel)</option>
-              <option value="Rachel Adams (Billing Director)">Rachel Adams (Billing Director)</option>
+              <option value="Litigation Paralegal">Litigation Paralegal</option>
+              <option value="Lead Counsel">Lead Counsel</option>
+              <option value="Billing Director">Billing Director</option>
               <option value="Assigned Supervising Partner">Assigned Supervising Partner</option>
             </select>
           </div>

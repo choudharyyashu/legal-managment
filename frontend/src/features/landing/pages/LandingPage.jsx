@@ -84,25 +84,25 @@ export function LandingPage() {
   const userRoles = [
     {
       title: 'Super Admin',
-      person: 'Eleanor Heugly, Esq.',
+      person: 'Managing Partner',
       subtitle: 'Managing Partner',
       scope: 'Unrestricted governance across all matters, financial ledgers, user credentials, and security policies.',
     },
     {
       title: 'Attorney',
-      person: 'Thomas Bludworth, Esq.',
+      person: 'Senior Litigation Partner',
       subtitle: 'Senior Litigation Partner',
       scope: 'Case docket leadership, client advisory, conflict review, and billable time entry submission.',
     },
     {
       title: 'Paralegal / Staff',
-      person: 'Marcus Vance',
+      person: 'Senior Paralegal',
       subtitle: 'Senior Litigation Paralegal',
       scope: 'Pleading filings, discovery index management, court deadline tracking, and task execution.',
     },
     {
       title: 'Billing Staff',
-      person: 'Rachel Adams',
+      person: 'Billing Director',
       subtitle: 'Billing & Accounting Director',
       scope: 'Invoice preparation, disbursements, fee accounting, and batch export to CosmoLex ledger.',
     },
@@ -330,7 +330,7 @@ export function LandingPage() {
                     Commercial carrier cargo spoilage dispute. Expert fact discovery cutoff in 48 hours.
                   </p>
                   <div className="flex items-center justify-between pt-1 text-[10px] text-[#B8C0C4]">
-                    <span>Lead: Thomas Bludworth, Esq.</span>
+                    <span>Lead: Assigned Trial Counsel</span>
                     <span className="text-emerald-400 font-semibold">Conflict Cleared</span>
                   </div>
                 </div>

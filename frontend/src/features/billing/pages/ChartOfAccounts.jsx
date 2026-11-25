@@ -31,8 +31,8 @@ export function ChartOfAccounts() {
     { code: '2200', name: 'Commercial Equipment Term Loan', type: 'Liability', category: 'Long-Term Debt', balance: 32000.00, status: 'Active' },
 
     // 3000 Equity
-    { code: '3010', name: 'Partner Capital - Eleanor Heugly, Esq.', type: 'Equity', category: 'Partners Equity', balance: 140000.00, status: 'Active' },
-    { code: '3020', name: 'Partner Capital - Thomas Bludworth, Esq.', type: 'Equity', category: 'Partners Equity', balance: 110000.00, status: 'Active' },
+    { code: '3010', name: 'Managing Partner Capital Account', type: 'Equity', category: 'Partners Equity', balance: 140000.00, status: 'Active' },
+    { code: '3020', name: 'Senior Partner Capital Account', type: 'Equity', category: 'Partners Equity', balance: 110000.00, status: 'Active' },
     { code: '3100', name: 'Retained Earnings Prior Years', type: 'Equity', category: 'Retained Earnings', balance: 85200.50, status: 'Active' },
 
     // 4000 Revenue

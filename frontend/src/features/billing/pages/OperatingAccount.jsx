@@ -15,9 +15,9 @@ export function OperatingAccount() {
   const [isDisbursementOpen, setIsDisbursementOpen] = useState(false);
 
   const [transactions, setTransactions] = useState([
-    { id: 'TX-101', date: '2026-10-28', description: 'Client Wire Deposit - Wasatch Mountain Logistics', type: 'Credit', amount: 15390.00, balance: 148200.00 },
-    { id: 'TX-102', date: '2026-10-24', description: 'Advanced Court Filing Fees - Utah Third District Court', type: 'Debit', amount: 385.00, balance: 132810.00 },
-    { id: 'TX-103', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer - Apex Horizon Matter', type: 'Credit', amount: 10000.00, balance: 133195.00 },
+    { id: 'TX-101', date: '2026-10-28', description: 'Client Wire Deposit - Corporate Retainer', type: 'Credit', amount: 15390.00, balance: 148200.00 },
+    { id: 'TX-102', date: '2026-10-24', description: 'Advanced Court Filing Fees - District Court', type: 'Debit', amount: 385.00, balance: 132810.00 },
+    { id: 'TX-103', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer', type: 'Credit', amount: 10000.00, balance: 133195.00 },
     { id: 'TX-104', date: '2026-10-18', description: 'Certified Court Reporter Appearance Fee Disbursement', type: 'Debit', amount: 890.00, balance: 123195.00 },
   ]);
 

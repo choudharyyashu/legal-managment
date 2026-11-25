@@ -20,7 +20,7 @@ export function PaymentRecords() {
     {
       id: 'PAY-8801',
       date: '2026-10-28',
-      clientName: 'Wasatch Mountain Logistics LLC',
+      clientName: 'Commercial Litigation Account',
       invoiceNumber: 'HB-2026-1088',
       amount: 15390.00,
       method: 'FedWire / ACH',
@@ -30,7 +30,7 @@ export function PaymentRecords() {
     {
       id: 'PAY-8802',
       date: '2026-10-22',
-      clientName: 'Apex Horizon Real Estate Group',
+      clientName: 'Real Estate Escrow Account',
       invoiceNumber: 'HB-2026-1092',
       amount: 10000.00,
       method: 'Trust Retainer Drawdown',
@@ -40,7 +40,7 @@ export function PaymentRecords() {
     {
       id: 'PAY-8803',
       date: '2026-09-30',
-      clientName: 'Summit Crest BioSciences Inc.',
+      clientName: 'Corporate Advisory Account',
       invoiceNumber: 'HB-2026-1070',
       amount: 22500.00,
       method: 'FedWire / ACH',

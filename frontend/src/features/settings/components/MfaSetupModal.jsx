@@ -4,7 +4,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
 
-export function MfaSetupModal({ isOpen, onClose, userName = 'Thomas Bludworth, Esq.' }) {
+export function MfaSetupModal({ isOpen, onClose, userName = 'Authenticated User' }) {
   const { addToast } = useToast();
   const [step, setStep] = useState(1); // 1: QR & Secret, 2: Verification Code, 3: Backup Codes
   const [authCode, setAuthCode] = useState('');

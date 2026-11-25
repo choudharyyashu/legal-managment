@@ -10,9 +10,9 @@ export function BankReconciliationModal({ isOpen, onClose }) {
   const [statementEndingBalance, setStatementEndingBalance] = useState(148200);
 
   const [statementItems, setStatementItems] = useState([
-    { id: 'ST-1', date: '2026-10-28', description: 'Client Wire Deposit - Wasatch Mountain Logistics', amount: 15390.00, cleared: true },
-    { id: 'ST-2', date: '2026-10-24', description: 'Advanced Court Filing Fees - Utah Third District Court', amount: -385.00, cleared: true },
-    { id: 'ST-3', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer - Apex Horizon', amount: 10000.00, cleared: true },
+    { id: 'ST-1', date: '2026-10-28', description: 'Client Wire Deposit - Commercial Retainer', amount: 15390.00, cleared: true },
+    { id: 'ST-2', date: '2026-10-24', description: 'Advanced Court Filing Fees - District Court', amount: -385.00, cleared: true },
+    { id: 'ST-3', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer', amount: 10000.00, cleared: true },
     { id: 'ST-4', date: '2026-10-18', description: 'Certified Court Reporter Appearance Fee Disbursement', amount: -890.00, cleared: true },
     { id: 'ST-5', date: '2026-10-30', description: 'Outstanding Client Retainer Check #4912', amount: 3500.00, cleared: false },
     { id: 'ST-6', date: '2026-10-31', description: 'Uncashed Vendor Check - Deposition Transcripts', amount: -650.00, cleared: false },

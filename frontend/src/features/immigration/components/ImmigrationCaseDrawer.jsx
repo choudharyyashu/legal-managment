@@ -217,8 +217,8 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                     <span className="font-bold text-[#06244B] mt-1 block">Tabs A through F Indexed</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded border border-[#D9D6CF]">
-                    <span className="text-[10px] uppercase text-[#667085] font-bold block">Statutory Filing Fee:</span>
-                    <span className="font-bold text-[#A4432B] mt-1 block">$1,975.00 Check Voucher</span>
+                    <span className="text-[10px] uppercase text-[#667085] font-bold block">Reference Filing Fee:</span>
+                    <span className="font-bold text-[#A4432B] mt-1 block">Verify current G-1055 fee</span>
                   </div>
                 </div>
 
@@ -227,7 +227,7 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-emerald-600" />
                       <span>
-                        Certified &amp; Cleared by <strong>{currentCase.filingPackage.clearingAttorney || 'Sarah Jenkins, Esq.'}</strong> on {new Date(currentCase.filingPackage.clearedAt).toLocaleDateString()}.
+                        Reviewed &amp; Ready by <strong>{currentCase.filingPackage.clearingAttorney || 'Assigned Supervising Counsel'}</strong> on {new Date(currentCase.filingPackage.clearedAt).toLocaleDateString()}.
                       </span>
                     </div>
                     <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">

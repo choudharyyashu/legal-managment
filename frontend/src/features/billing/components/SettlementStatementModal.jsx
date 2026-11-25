@@ -5,7 +5,7 @@ import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 
-export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Interstate Freightlines Settlement' }) {
+export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Settlement Statement' }) {
   const { addToast } = useToast();
   const [grossSettlement, setGrossSettlement] = useState(250000);
   const [contingencyFeePct, setContingencyFeePct] = useState(33.33);
@@ -133,7 +133,7 @@ export function SettlementStatementModal({ isOpen, onClose, matterTitle = 'Inter
             <div class="sig-col">
               <div class="sig-line">
                 <strong>Responsible Attorney Signature</strong><br>
-                Eleanor Heugly, Esq. / Thomas Bludworth, Esq.<br>
+                Assigned Responsible Attorney<br>
                 Date: ________________________
               </div>
             </div>
