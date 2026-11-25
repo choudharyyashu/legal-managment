@@ -5,18 +5,19 @@ import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 
-export function BankReconciliationModal({ isOpen, onClose }) {
+export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) {
   const { addToast } = useToast();
-  const [statementEndingBalance, setStatementEndingBalance] = useState(148200);
+  const [statementEndingBalance, setStatementEndingBalance] = useState(0);
 
-  const [statementItems, setStatementItems] = useState([
-    { id: 'ST-1', date: '2026-10-28', description: 'Client Wire Deposit - Commercial Retainer', amount: 15390.00, cleared: true },
-    { id: 'ST-2', date: '2026-10-24', description: 'Advanced Court Filing Fees - District Court', amount: -385.00, cleared: true },
-    { id: 'ST-3', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer', amount: 10000.00, cleared: true },
-    { id: 'ST-4', date: '2026-10-18', description: 'Certified Court Reporter Appearance Fee Disbursement', amount: -890.00, cleared: true },
-    { id: 'ST-5', date: '2026-10-30', description: 'Outstanding Client Retainer Check #4912', amount: 3500.00, cleared: false },
-    { id: 'ST-6', date: '2026-10-31', description: 'Uncashed Vendor Check - Deposition Transcripts', amount: -650.00, cleared: false },
-  ]);
+  const [statementItems, setStatementItems] = useState(() => {
+    return (transactions || []).map((t, idx) => ({
+      id: t.id || `TX-${idx + 1}`,
+      date: t.date || '',
+      description: t.description || 'Operating Transaction',
+      amount: t.type === 'Debit' ? -Math.abs(t.amount) : Math.abs(t.amount),
+      cleared: false,
+    }));
+  });
 
   const toggleCleared = (id) => {
     setStatementItems(prev =>
@@ -24,7 +25,7 @@ export function BankReconciliationModal({ isOpen, onClose }) {
     );
   };
 
-  const clearedBalance = 124085.00 + statementItems
+  const clearedBalance = statementItems
     .filter(i => i.cleared)
     .reduce((sum, i) => sum + i.amount, 0);
 
@@ -88,23 +89,31 @@ export function BankReconciliationModal({ isOpen, onClose }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D9D6CF]">
-                {statementItems.map(item => (
-                  <tr key={item.id} className={`hover:bg-slate-50 ${item.cleared ? 'bg-emerald-50/30' : ''}`}>
-                    <td className="p-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={item.cleared}
-                        onChange={() => toggleCleared(item.id)}
-                        className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-0 cursor-pointer"
-                      />
-                    </td>
-                    <td className="p-2 text-[#667085]">{item.date}</td>
-                    <td className="p-2 font-medium text-[#202A35]">{item.description}</td>
-                    <td className={`p-2 text-right font-bold ${item.amount > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                      {item.amount > 0 ? '+' : ''}{formatCurrency(item.amount)}
+                {statementItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="p-6 text-center text-[#667085] text-xs">
+                      No operating ledger transactions recorded to match against statement.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  statementItems.map(item => (
+                    <tr key={item.id} className={`hover:bg-slate-50 ${item.cleared ? 'bg-emerald-50/30' : ''}`}>
+                      <td className="p-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={item.cleared}
+                          onChange={() => toggleCleared(item.id)}
+                          className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-0 cursor-pointer"
+                        />
+                      </td>
+                      <td className="p-2 text-[#667085]">{item.date}</td>
+                      <td className="p-2 font-medium text-[#202A35]">{item.description}</td>
+                      <td className={`p-2 text-right font-bold ${item.amount > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {item.amount > 0 ? '+' : ''}{formatCurrency(item.amount)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

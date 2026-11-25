@@ -52,6 +52,26 @@ export function ThreeWayReconciliation() {
 
   // Pillar 3: Client Sub‑Ledgers – loaded from trust service
   const [clientLedgers, setClientLedgers] = useState([]);
+  const [auditHistory, setAuditHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistory = () => {
+    setLoadingHistory(true);
+    reconciliationService
+      .getHistory()
+      .then((records) => {
+        if (Array.isArray(records)) {
+          setAuditHistory(records);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load reconciliation history from API:', err?.message);
+        setAuditHistory([]);
+      })
+      .finally(() => {
+        setLoadingHistory(false);
+      });
+  };
 
   // Load data on component mount and period change
   useEffect(() => {
@@ -64,6 +84,32 @@ export function ThreeWayReconciliation() {
       .catch((err) => {
         console.warn('Could not load client ledgers:', err?.message);
         setClientLedgers([]);
+      });
+
+    // Load actual uncleared trust transactions
+    trustService
+      .getTransactions({ limit: 50 })
+      .then((res) => {
+        const raw = Array.isArray(res) ? res : (res?.transactions || []);
+        if (raw.length > 0) {
+          setUnclearedItems(
+            raw.map((t) => ({
+              id: t.id,
+              date: t.createdAt ? t.createdAt.split('T')[0] : '',
+              type: t.transactionType === 'DEPOSIT' ? 'Deposit in Transit' : 'Outstanding Draft',
+              description: t.purpose || t.sourceReference || 'Trust Transaction',
+              matterNumber: t.matterNumber || t.matter?.matterNumber || 'Matter Trust',
+              amount: t.transactionType === 'DEPOSIT' ? Number(t.amount) : -Number(t.amount),
+              cleared: false,
+            }))
+          );
+        } else {
+          setUnclearedItems([]);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load trust transactions:', err?.message);
+        setUnclearedItems([]);
       });
 
     // Query live reconciliation status from backend service
@@ -94,6 +140,8 @@ export function ThreeWayReconciliation() {
         setGlTrustBalance(null);
         setGlDataAvailable(false);
       });
+
+    fetchHistory();
   }, [selectedMonth]);
 
 
@@ -110,27 +158,8 @@ export function ThreeWayReconciliation() {
   const totalVariance = (variance1 !== null && variance2 !== null) ? variance1 + variance2 : null;
   const isReconciled = totalVariance === 0 && variance1 !== null && variance2 !== null;
 
-  // Uncleared items for Tab 2
-  const [unclearedItems, setUnclearedItems] = useState([
-    {
-      id: 'TX-901',
-      date: '2026-11-08',
-      type: 'Deposit in Transit',
-      description: 'Client Trust Retainer - Wire transfer pending clearance',
-      matterNumber: '26-IMM-0012',
-      amount: 1440.0,
-      cleared: false,
-    },
-    {
-      id: 'TX-902',
-      date: '2026-11-09',
-      type: 'Outstanding Draft',
-      description: 'Check #4812 to U.S. Bankruptcy Court Clerk (Filing Fee)',
-      matterNumber: '26-25410-JTM',
-      amount: -1440.0,
-      cleared: false,
-    },
-  ]);
+  // Uncleared items for Tab 2 (loaded from real backend trust transactions)
+  const [unclearedItems, setUnclearedItems] = useState([]);
 
   const handleRunReconcile = async () => {
     setIsReconciling(true);
@@ -155,6 +184,7 @@ export function ThreeWayReconciliation() {
       } else {
         addToast(`Reconciliation submitted for ${selectedMonth}. Check audit history for results.`, 'info');
       }
+      fetchHistory();
     } catch (err) {
       addToast(
         `Could not submit reconciliation to server. Verify your inputs and try again.`,
@@ -700,34 +730,40 @@ export function ThreeWayReconciliation() {
             <p className="text-xs text-[#667085]">
               Verify and match in-transit deposits and outstanding checks to reconcile against Chase IOLTA statement ending balances:
             </p>
-            <div className="space-y-2">
-              {unclearedItems.map(item => (
-                <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={item.cleared}
-                      onChange={() => handleToggleClear(item.id)}
-                      className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-4 w-4"
-                    />
-                    <div>
-                      <span className="font-bold text-xs text-[#06244B] block">{item.description}</span>
-                      <span className="text-[11px] text-[#667085]">
-                        {item.date} • {item.type} • Matter #{item.matterNumber}
+            {unclearedItems.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
+                No uncleared in-transit deposits or outstanding checks recorded in database.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {unclearedItems.map(item => (
+                  <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={item.cleared}
+                        onChange={() => handleToggleClear(item.id)}
+                        className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-4 w-4"
+                      />
+                      <div>
+                        <span className="font-bold text-xs text-[#06244B] block">{item.description}</span>
+                        <span className="text-[11px] text-[#667085]">
+                          {item.date} • {item.type} • Matter #{item.matterNumber}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`font-bold text-xs ${item.amount > 0 ? 'text-emerald-700' : 'text-[#06244B]'}`}>
+                        {item.amount > 0 ? `+${formatCurrency(item.amount)}` : formatCurrency(item.amount)}
+                      </span>
+                      <span className="block text-[10px] text-[#667085]">
+                        {item.cleared ? 'Cleared on Statement' : 'Pending Bank Clearance'}
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`font-bold text-xs ${item.amount > 0 ? 'text-emerald-700' : 'text-[#06244B]'}`}>
-                      {item.amount > 0 ? `+${formatCurrency(item.amount)}` : formatCurrency(item.amount)}
-                    </span>
-                    <span className="block text-[10px] text-[#667085]">
-                      {item.cleared ? 'Cleared on Statement' : 'Pending Bank Clearance'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -735,39 +771,49 @@ export function ThreeWayReconciliation() {
         {activeTab === 'history' && (
           <div className="p-4 space-y-3">
             <div className="space-y-2">
-              {[
-                { period: 'October 2026', periodCode: '2026-10', date: '2026-10-31', reviewer: 'Managing Partner (Review)', status: 'Reconciled ($68,500.00)', variance: '$0.00' },
-                { period: 'September 2026', periodCode: '2026-09', date: '2026-09-30', reviewer: 'Billing Director (Review)', status: 'Reconciled ($62,100.00)', variance: '$0.00' },
-                { period: 'August 2026', periodCode: '2026-08', date: '2026-08-31', reviewer: 'Managing Partner (Review)', status: 'Reconciled ($55,400.00)', variance: '$0.00' },
-              ].map((h, i) => (
-                <div key={i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <span className="font-bold text-[#06244B] block">{h.period} Three-Way Audit Certificate</span>
-                    <span className="text-[11px] text-[#667085]">Audited on {h.date} by {h.reviewer}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                      {h.status}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      icon={FileSpreadsheet}
-                      onClick={() => handleDownloadComplianceReport(h.periodCode)}
-                    >
-                      Export CSV
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      icon={Printer}
-                      onClick={() => handlePrintAuditReport(h.periodCode)}
-                    >
-                      Print Certificate
-                    </Button>
-                  </div>
+              {auditHistory.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
+                  {loadingHistory
+                    ? 'Loading historical reconciliation records from database...'
+                    : 'No historical monthly reconciliation records found in database. Complete and submit a reconciliation to record an audited period under Utah RPC 1.15.'}
                 </div>
-              ))}
+              ) : (
+                auditHistory.map((h, i) => (
+                  <div key={h.id || i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-bold text-[#06244B] block">{h.reconciliationMonth} Three-Way Audit Certificate</span>
+                      <span className="text-[11px] text-[#667085]">
+                        Audited on {h.reconciledAt ? formatDate(h.reconciledAt, { short: true }) : 'Recorded'} by {h.auditedByName || 'Supervising Attorney'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-semibold px-2 py-0.5 rounded border text-[11px] ${
+                        h.isBalanced
+                          ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                          : 'text-amber-800 bg-amber-50 border-amber-200'
+                      }`}>
+                        {h.isBalanced ? `Reconciled (${formatCurrency(h.adjustedBankBalance)})` : `Variance (${formatCurrency(h.reconciliationVariance)})`}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={FileSpreadsheet}
+                        onClick={() => handleDownloadComplianceReport(h.reconciliationMonth)}
+                      >
+                        Export CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={Printer}
+                        onClick={() => handlePrintAuditReport(h.reconciliationMonth)}
+                      >
+                        Print Certificate
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

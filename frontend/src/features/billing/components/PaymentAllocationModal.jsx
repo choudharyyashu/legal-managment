@@ -4,15 +4,26 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
+import { useTime } from '../../../context/TimeContext';
 
 export function PaymentAllocationModal({ isOpen, onClose }) {
   const { addToast } = useToast();
-  const [totalPayment, setTotalPayment] = useState(20000);
+  const { invoices: contextInvoices } = useTime();
+  const [totalPayment, setTotalPayment] = useState(0);
 
-  const [invoices, setInvoices] = useState([
-    { id: 'INV-2026-0041', client: 'Retainer Client A', matter: 'Matter A', due: 14250.00, allocatedFees: 12000.00, allocatedCosts: 2250.00 },
-    { id: 'INV-2026-0042', client: 'Retainer Client A', matter: 'Matter B', due: 8500.00, allocatedFees: 5750.00, allocatedCosts: 0.00 },
-  ]);
+  const [invoices, setInvoices] = useState(() => {
+    const open = (contextInvoices || []).filter(
+      (inv) => inv.status !== 'Paid' && (Number(inv.totalAmount || inv.total || 0) > Number(inv.paidAmount || 0))
+    );
+    return open.map((inv) => ({
+      id: inv.invoiceNumber || inv.id,
+      client: inv.clientName || 'Client',
+      matter: inv.matterTitle || inv.matterName || 'Matter',
+      due: Number(inv.totalAmount || inv.total || 0) - Number(inv.paidAmount || 0),
+      allocatedFees: 0,
+      allocatedCosts: 0,
+    }));
+  });
 
   const allocatedTotal = invoices.reduce((sum, inv) => sum + inv.allocatedFees + inv.allocatedCosts, 0);
   const remainingUnallocated = totalPayment - allocatedTotal;
@@ -66,41 +77,47 @@ export function PaymentAllocationModal({ isOpen, onClose }) {
 
         <div className="space-y-3">
           <span className="font-bold text-xs text-[#06244B] uppercase block">Invoice Allocation Matrix</span>
-          {invoices.map(inv => (
-            <div key={inv.id} className="p-3 bg-white border border-[#D9D6CF] rounded-lg space-y-2">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-1">
-                <div>
-                  <span className="font-mono font-bold text-[#A4432B]">{inv.id}</span>
-                  <span className="text-[11px] text-[#667085] ml-2">Matter: {inv.matter}</span>
-                </div>
-                <span className="text-xs font-semibold text-[#06244B]">Due: {formatCurrency(inv.due)}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-[#667085] uppercase font-semibold block mb-0.5">
-                    Allocate to Professional Fees ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={inv.allocatedFees}
-                    onChange={(e) => handleUpdateAllocation(inv.id, 'allocatedFees', e.target.value)}
-                    className="w-full text-xs p-1.5 rounded border border-[#D9D6CF]"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-[#667085] uppercase font-semibold block mb-0.5">
-                    Allocate to Litigation Costs ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={inv.allocatedCosts}
-                    onChange={(e) => handleUpdateAllocation(inv.id, 'allocatedCosts', e.target.value)}
-                    className="w-full text-xs p-1.5 rounded border border-[#D9D6CF]"
-                  />
-                </div>
-              </div>
+          {invoices.length === 0 ? (
+            <div className="py-6 text-center text-xs text-[#667085] bg-white border border-[#D9D6CF] rounded-lg">
+              No open unpaid invoices found for payment allocation.
             </div>
-          ))}
+          ) : (
+            invoices.map(inv => (
+              <div key={inv.id} className="p-3 bg-white border border-[#D9D6CF] rounded-lg space-y-2">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-1">
+                  <div>
+                    <span className="font-mono font-bold text-[#A4432B]">{inv.id}</span>
+                    <span className="text-[11px] text-[#667085] ml-2">Matter: {inv.matter}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-[#06244B]">Due: {formatCurrency(inv.due)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-[#667085] uppercase font-semibold block mb-0.5">
+                      Allocate to Professional Fees ($)
+                    </label>
+                    <input
+                      type="number"
+                      value={inv.allocatedFees}
+                      onChange={(e) => handleUpdateAllocation(inv.id, 'allocatedFees', e.target.value)}
+                      className="w-full text-xs p-1.5 rounded border border-[#D9D6CF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[#667085] uppercase font-semibold block mb-0.5">
+                      Allocate to Litigation Costs ($)
+                    </label>
+                    <input
+                      type="number"
+                      value={inv.allocatedCosts}
+                      onChange={(e) => handleUpdateAllocation(inv.id, 'allocatedCosts', e.target.value)}
+                      className="w-full text-xs p-1.5 rounded border border-[#D9D6CF]"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[#D9D6CF]">
