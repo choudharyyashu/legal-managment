@@ -213,14 +213,8 @@ export function ThreeWayReconciliation() {
       `"Pillar 3: Sum of Individual Client Sub-Ledgers","${totalClientLedgersBalance.toFixed(2)}"`,
       `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance !== null ? totalVariance.toFixed(2) : 'N/A'}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : (glDataAvailable ? 'ATTENTION: VARIANCE DETECTED' : 'INCOMPLETE: GL DATA UNAVAILABLE')}"`,
       `""`,
-<<<<<<< HEAD
-      `"RECONCILIATION WORKSHEET NOTE (UTAH RPC 1.15 REFERENCE):","${glDataAvailable ? (isReconciled ? 'Computed trust figures show $0.00 variance in current system worksheet; subject to supervising attorney and bank statement verification.' : 'Reconciliation worksheet shows a computed variance of $' + totalVariance.toFixed(2) + '; review required.') : 'General Ledger data is unavailable; three-way reconciliation worksheet is incomplete.'}"`,
+      `"RECONCILIATION WORKSHEET NOTE (UTAH RPC 1.15 REFERENCE):","${glDataAvailable ? (isReconciled ? 'Computed trust figures show $0.00 variance in current system worksheet; subject to supervising attorney and bank statement verification.' : 'Reconciliation worksheet shows a computed variance of $' + (totalVariance !== null ? totalVariance.toFixed(2) : 'N/A') + '; review required.') : 'General Ledger data is unavailable; three-way reconciliation worksheet is incomplete.'}"`,
       `"Reviewed By (Supervising Attorney / CPA): Pending Sign-off"`
-=======
-      `"OFFICIAL CERTIFICATION UNDER PENALTY OF UNSWORN DECLARATION:"`,
-      `"${isReconciled ? 'I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability, and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15.' : (glDataAvailable ? 'CERTIFICATION WITHHELD: A variance was detected among the three pillars. Reconciliation cannot be certified balanced under Utah RPC 1.15.' : 'CERTIFICATION WITHHELD: General Ledger data is unavailable. A three-way reconciliation cannot be certified without complete records.')}"`,
-      `"Certifying Managing Partner: Eleanor Heugly, Esq. | Utah State Bar License #UT-8819 | Firm: Heugly & Bludworth, LLC"`
->>>>>>> e26be3a6d5fa05153d5596c37c2b91553e9f699b
     ];
 
     const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -298,21 +292,12 @@ export function ThreeWayReconciliation() {
           <div class="box-summary">
             <h3>{!glDataAvailable ? 'RECONCILIATION WORKSHEET: GL DATA UNAVAILABLE' : isReconciled ? 'THREE-WAY RECONCILIATION WORKSHEET (0 VARIANCE IN FIGURES)' : 'THREE-WAY RECONCILIATION WORKSHEET (VARIANCE DETECTED)'}</h3>
             <div class="pillars-summary">
-<<<<<<< HEAD
-              <div>Pillar 1 (Adjusted Bank): $${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div>= Pillar 2 (General Ledger #2100): ${glDataAvailable && glTrustBalance !== null ? `$${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</div>
-              <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-            </div>
-            <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Calculated Variance: ${glDataAvailable && glTrustBalance !== null ? `$${Math.abs(adjustedBankBalance - glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'} — Subject to manual bank statement and partner sign-off.
-=======
               <div>Pillar 1 (Adjusted Bank): ${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
               <div>= Pillar 2 (General Ledger #2100): ${glDataAvailable && glTrustBalance !== null ? '$' + glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
               <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             </div>
             <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Net Audit Discrepancy: ${totalVariance !== null ? '$' + totalVariance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'} — ${isReconciled ? 'All fiduciary client balances in exact mathematical equilibrium.' : (glDataAvailable ? 'Review variance before certifying.' : 'General Ledger entries missing; reconciliation is incomplete.')}
->>>>>>> e26be3a6d5fa05153d5596c37c2b91553e9f699b
+              Calculated Variance: ${totalVariance !== null ? '$' + totalVariance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'} — ${isReconciled ? 'Subject to manual bank statement and partner sign-off.' : (glDataAvailable ? 'Review variance before sign-off.' : 'General Ledger entries missing; worksheet is incomplete.')}
             </div>
           </div>
 
@@ -362,17 +347,8 @@ export function ThreeWayReconciliation() {
           </table>
 
           <div class="cert-block">
-<<<<<<< HEAD
             <strong>RECONCILIATION REVIEW &amp; ATTESTATION DRAFT (UTAH RPC 1.15 REFERENCE):</strong><br>
             This report summarizes internal system figures for the IOLTA bank balance, trust control account, and client subsidiary ledgers for the period indicated above. Supervising counsel and firm accounting must verify figures against official bank statements and execute required sign-offs separately.
-=======
-            <strong>OFFICIAL ATTORNEY CERTIFICATION UNDER UTAH RPC 1.15:</strong><br>
-            ${isReconciled
-              ? "I hereby certify under penalty of perjury under the laws of the State of Utah that I am the managing partner responsible for trust accounting compliance at Heugly &amp; Bludworth, LLC. I have examined the firm's IOLTA bank statements, general ledger control accounts, and itemized client subsidiary ledgers for the period indicated above. The three components are in complete mathematical reconciliation with zero discrepancy ($0.00 variance), no client trust account is overdrawn, and client funds are strictly segregated in accordance with Utah Supreme Court Rule 1.15."
-              : glDataAvailable
-                ? "CERTIFICATION WITHHELD: Mathematical variance detected between bank, general ledger, and client sub-ledger records. Corrective reconciliation required prior to compliance certification pursuant to Utah RPC 1.15."
-                : "CERTIFICATION WITHHELD: General Ledger records for Account #1010 are unavailable for this accounting period. Utah Supreme Court Rule 1.15 prohibits certification of incomplete or unverified three-way trust reconciliations."}
->>>>>>> e26be3a6d5fa05153d5596c37c2b91553e9f699b
           </div>
 
           <div class="sig-row">
