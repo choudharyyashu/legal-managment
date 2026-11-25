@@ -961,15 +961,15 @@ export function ThreeWayReconciliation() {
 
             <div className="pt-2 space-y-1">
               <p className="font-bold text-[#06244B]">1. ADJUSTED BANK BALANCE:</p>
-              <p className="pl-4">Chase Bank Pooled IOLTA Account (Ending Balance): ${bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4">Add: Deposits in Transit: +${depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4">Less: Outstanding Checks: -${outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4 font-bold text-emerald-800">Adjusted Bank Balance: ${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              <p className="pl-4">Chase Bank Pooled IOLTA Account (Ending Balance): {bankStatementBalance !== null ? `$${Number(bankStatementBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4">Add: Deposits in Transit: {depositsInTransit !== null ? `+$${Number(depositsInTransit).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4">Less: Outstanding Checks: {outstandingChecks !== null ? `-$${Number(outstandingChecks).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4 font-bold text-emerald-800">Adjusted Bank Balance: {adjustedBankBalance !== null ? `$${Number(adjustedBankBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
             </div>
 
             <div className="pt-2 space-y-1 border-t border-slate-200">
               <p className="font-bold text-[#06244B]">2. GENERAL LEDGER BALANCE:</p>
-              <p className="pl-4">General Ledger Account #2100 (Client Trust Funds Liability): ${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              <p className="pl-4">General Ledger Account #2100 (Client Trust Funds Liability): {glDataAvailable && glTrustBalance !== null ? `$${Number(glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A (Unavailable)'}</p>
             </div>
 
             <div className="pt-2 space-y-1 border-t border-slate-200">
