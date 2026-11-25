@@ -23,6 +23,7 @@ import { useMatters } from '../../../context/MatterContext';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { calculateSettlement } from '../../../utils/settlementCalculations';
 import { trustService } from '../../../services/trustService';
+import { piService } from '../../../services/piService';
 import { SettlementStatementModal } from '../components/SettlementStatementModal';
 
 export function SettlementCalculator() {
@@ -35,6 +36,7 @@ export function SettlementCalculator() {
   // Settlement Inputs
   const [grossSettlement, setGrossSettlement] = useState(0);
   const [feeSelection, setFeeSelection] = useState('33.33'); // '33.33', 'exact_one_third', '40', '25', '50'
+  const [isSaving, setIsSaving] = useState(false);
   const feeRateOption = feeSelection === 'exact_one_third' ? 'exact' : 'standard';
   const contingencyPct = feeSelection === 'exact_one_third' ? 33.33 : Number(feeSelection);
 
@@ -51,6 +53,29 @@ export function SettlementCalculator() {
 
   const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
+  // Sync saved settlement data when matter selection changes
+  useEffect(() => {
+    if (!selectedMatter?.id) return;
+    let cancelled = false;
+    piService.getSettlements(selectedMatter.id)
+      .then((res) => {
+        if (cancelled) return;
+        const latest = Array.isArray(res) ? res[0]?.versions?.[0] : null;
+        if (!latest) return;
+        const savedGross = Number(latest.grossSettlementAmount ?? 0);
+        const savedPct = Number(latest.contingencyFeePercentage ?? 33.33);
+        const isExact = Boolean(latest.notes?.includes('1/3 (Exact)')) || latest.feeBasis === 'EXACT_ONE_THIRD';
+        if (savedGross > 0) setGrossSettlement(savedGross);
+        setFeeSelection(isExact ? 'exact_one_third' : String(savedPct));
+        const savedCosts = Number(latest.totalLitigationCosts ?? 0);
+        const savedLiens = Number(latest.totalMedicalLiens ?? 0);
+        if (savedCosts > 0) setCosts([{ id: 'saved-cost', label: 'Itemized Case Costs', amount: savedCosts }]);
+        if (savedLiens > 0) setLiens([{ id: 'saved-lien', holder: 'Healthcare Liens', originalAmount: savedLiens, negotiatedAmount: savedLiens }]);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedMatter?.id]);
+
   // Math (integer-cent precision, distinguishing 33.33% from exact 1/3)
   const {
     contingencyFeeAmount: attorneyFee,
@@ -58,6 +83,8 @@ export function SettlementCalculator() {
     totalMedicalLiens: totalLiens,
     netClientProceeds: netClientPayout,
     feeRateDisplay,
+    feePercentageForStorage,
+    feeBasis,
   } = calculateSettlement({
     grossRecovery: grossSettlement,
     feeRate: contingencyPct,
@@ -107,18 +134,23 @@ export function SettlementCalculator() {
   };
 
   const handleSaveSettlement = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       if (selectedMatter?.id) {
-        try {
-          await trustService.deposit({
-            matterId: selectedMatter.id,
-            amount: Number(grossSettlement),
-            sourceReference: 'Settlement Recovery',
-            purpose: `Settlement proceeds for ${selectedMatter.title || 'Personal Injury Claim'}`,
-          });
-        } catch (apiErr) {
-          console.warn('Trust deposit notice:', apiErr?.message);
-        }
+        // Persist settlement breakdown via authoritative PI Settlement API (without modifying trust ledger)
+        await piService.createSettlement(selectedMatter.id, {
+          settlementTitle: `Settlement Disbursement - ${selectedMatter.title || 'Personal Injury Claim'}`,
+          grossSettlementAmount: grossSettlement,
+          contingencyFeePercentage: feePercentageForStorage,
+          feeBasis,
+          calculatedAttorneyFee: attorneyFee,
+          totalLitigationCosts: totalCosts,
+          totalMedicalLiens: totalLiens,
+          otherDeductions: 0,
+          netClientRecovery: netClientPayout,
+          notes: feeRateOption === 'exact' ? 'Fee Basis: 1/3 (Exact)' : `Fee Basis: ${feeRateDisplay}`,
+        });
       }
 
       // Generate & auto-download Closing Statement CSV
@@ -136,9 +168,18 @@ export function SettlementCalculator() {
         `"Gross Settlement Recovery","Policy Limits / Defense Award Settlement","${grossSettlement.toFixed(2)}","100.00%"`,
         `"Attorney Contingency Fee","Heugly & Bludworth PLLC (Operating Transfer)","-${attorneyFee.toFixed(2)}","${feeRateDisplay} Contingency"`,
         `"Itemized Case Costs","Litigation Expenses & Expert Reports Reimbursed to Firm","-${totalCosts.toFixed(2)}","Itemized Hard Costs"`,
-        ...costs.map(c => `"  - Cost Item","${c.description.replace(/"/g, '""')}","-${c.amount.toFixed(2)}","Reimbursement"`),
+        ...costs.map(c => {
+          const desc = (c.label || c.description || 'Cost Item').replace(/"/g, '""');
+          const amt = typeof c.amount === 'number' ? c.amount.toFixed(2) : Number(c.amount || 0).toFixed(2);
+          return `"  - Cost Item","${desc}","-${amt}","Reimbursement"`;
+        }),
         `"Resolved Healthcare Liens","Subrogation / Medical Provider Liens Withheld","-${totalLiens.toFixed(2)}","Negotiated Balance"`,
-        ...liens.map(l => `"  - Lien Holder","${l.holder.replace(/"/g, '""')} (Original: $${l.originalAmount.toFixed(2)})","-${l.negotiatedAmount.toFixed(2)}","Final Negotiated"`),
+        ...liens.map(l => {
+          const holder = (l.holder || l.name || 'Lien Holder').replace(/"/g, '""');
+          const orig = Number(l.originalAmount || l.amount || 0).toFixed(2);
+          const neg = Number(l.negotiatedAmount || l.amount || 0).toFixed(2);
+          return `"  - Lien Holder","${holder} (Original: $${orig})","-${neg}","Final Negotiated"`;
+        }),
         `""`,
         `"NET CLIENT PROCEEDS DISBURSED","Payable to Client Escrow / Trust Check","${netClientPayout.toFixed(2)}","Net Settlement Proceeds"`
       ];
@@ -154,12 +195,14 @@ export function SettlementCalculator() {
       URL.revokeObjectURL(url);
 
       addToast(
-        `Settlement of ${formatCurrency(grossSettlement)} posted to Trust Ledger and Closing Statement downloaded!`,
+        `Settlement breakdown of ${formatCurrency(grossSettlement)} saved to database and Closing Statement downloaded.`,
         'success'
       );
     } catch (err) {
-      console.error('Failed to post settlement:', err);
-      addToast('Failed to post settlement. Please check values.', 'error');
+      console.error('Failed to save settlement:', err);
+      addToast(err?.response?.data?.message || err?.message || 'Failed to save settlement.', 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -457,7 +500,7 @@ export function SettlementCalculator() {
 
               <div className="pt-2 border-t border-slate-200 space-y-1.5 text-[#667085]">
                 <div className="flex justify-between">
-                  <span>(-) Attorney Fee ({contingencyPct}%):</span>
+                  <span>(-) Attorney Fee ({feeRateDisplay}):</span>
                   <span className="font-mono text-rose-700">-{formatCurrency(attorneyFee)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -492,8 +535,9 @@ export function SettlementCalculator() {
                 className="w-full justify-center"
                 icon={CheckCircle2}
                 onClick={handleSaveSettlement}
+                disabled={isSaving}
               >
-                Approve &amp; Disburse Check
+                {isSaving ? 'Saving Settlement Draft...' : 'Save Settlement Draft'}
               </Button>
             </div>
 

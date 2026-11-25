@@ -53,6 +53,7 @@ export function SettlementCalculator() {
   const [newOtherAmt, setNewOtherAmt] = useState('');
 
   const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Sync activeCaseId when global activeMatter changes
   useEffect(() => {
@@ -201,6 +202,8 @@ export function SettlementCalculator() {
   };
 
   const handleSaveSettlement = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       if (activeCaseId && activeCaseId !== 'ALL') {
         await piService.createSettlement(activeCaseId, {
@@ -221,6 +224,8 @@ export function SettlementCalculator() {
       }
     } catch (err) {
       addToast(err?.response?.data?.message || err?.message || 'Error saving settlement', 'error');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -239,8 +244,9 @@ export function SettlementCalculator() {
               variant="outline"
               icon={Save}
               onClick={handleSaveSettlement}
+              disabled={isSaving}
             >
-              Save to Database
+              {isSaving ? 'Saving...' : 'Save to Database'}
             </Button>
             <Button
               size="sm"

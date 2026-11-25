@@ -1315,6 +1315,53 @@ export class PersonalInjuryService {
     let demandsInProgressCount = 0;
     let readyForSettlementCount = 0;
     let totalLienAmount = 0;
+    let pendingInsuranceCount = 0;
+
+    const caseSummaries = piMatters.map((m) => {
+      // Calculate total medical bills from medicalProviders
+      const totalMedicalBills = (m.medicalProviders || []).reduce((sum, p) => {
+        return sum + (Number((p as any).totalBilled) || 0);
+      }, 0);
+
+      // Check verified insurance policies
+      const hasVerifiedInsurance = (m.insurancePolicies || []).length > 0 &&
+        m.insurancePolicies.some(p => p.claimNumber || (p.policyLimits && p.policyLimits !== 'Pending'));
+      
+      if (!hasVerifiedInsurance) {
+        pendingInsuranceCount++;
+      }
+
+      // Statute of Limitations calculation
+      let solDate: string | null = m.statuteOfLimitations
+        ? new Date(m.statuteOfLimitations).toISOString().split('T')[0]
+        : null;
+
+      if (!solDate && m.incidents?.[0]?.incidentDate) {
+        const d = new Date(m.incidents[0].incidentDate);
+        d.setFullYear(d.getFullYear() + 4); // Utah Code Ann. § 78B-2-307(3) (4-year tort limit)
+        solDate = d.toISOString().split('T')[0];
+      }
+
+      const totalMatterLiens = (m.liens || []).reduce(
+        (sum, l) => sum + Number(l.finalPayoffAmount || l.assertedAmount || 0),
+        0
+      );
+
+      return {
+        id: m.id,
+        matterNumber: m.matterNumber,
+        title: m.title,
+        clientName: m.client?.name || m.title,
+        status: m.status,
+        totalMedicalBills,
+        totalLiens: totalMatterLiens,
+        hasInsurance: Boolean(m.insurancePolicies?.length),
+        solDate: solDate || 'Pending Review',
+        targetDemand: m.demandPackages?.[0]?.demandedAmount
+          ? Number(m.demandPackages[0].demandedAmount)
+          : null,
+      };
+    });
 
     piMatters.forEach((m) => {
       m.medicalProviders.forEach((p) => {
@@ -1336,10 +1383,12 @@ export class PersonalInjuryService {
     return {
       activeCasesCount,
       pendingRecordsCount,
+      pendingInsuranceCount,
       demandsInProgressCount,
       readyForSettlementCount,
       totalLienAmount,
       totalCases: activeCasesCount,
+      caseSummaries,
     };
   }
 }

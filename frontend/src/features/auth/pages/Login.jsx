@@ -126,7 +126,7 @@ export function Login() {
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Official CosmoLex Accounting Bridge</span>
+              <span>Native Double-Entry General Ledger &amp; Trust</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />

@@ -34,6 +34,7 @@ import { appealsRouter } from './modules/appeals/appeals.routes.js';
 import { evictionsRouter } from './modules/evictions/evictions.routes.js';
 import { backupRouter } from './modules/backup/backup.routes.js';
 import { relatedPartyRouter } from './modules/related-parties/related-party.routes.js';
+import { integrationsRouter } from './modules/integrations/integrations.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -193,6 +194,7 @@ app.use('/api/v1/appeals', appealsRouter);
 app.use('/api/v1/evictions', evictionsRouter);
 app.use('/api/v1/backups', backupRouter);
 app.use('/api/v1/related-parties', relatedPartyRouter);
+app.use('/api/v1/integrations', integrationsRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);
