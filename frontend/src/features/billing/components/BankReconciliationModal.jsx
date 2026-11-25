@@ -122,7 +122,7 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
         <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-900 text-[11px] flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700" />
           <span>
-            <strong>[DEMO SIMULATION] Utah State Bar Compliance:</strong> Reconciled bank statements must be certified by the Managing Partner and archived for 7 years under Utah Supreme Court Rules of Professional Practice.
+            <strong>[DEMO SIMULATION] Reconciliation Retention Notice:</strong> Reconciled bank statements should be reviewed by supervising counsel and retained in accordance with firm policy and applicable trust-accounting rules.
           </span>
         </div>
 

@@ -72,7 +72,7 @@ export function FinancialReports() {
 
       const lines = [
         ['HEUGLY & BLUDWORTH ATTORNEYS AT LAW - EXECUTIVE FINANCIAL PACKAGE'],
-        [`Generated: ${today}`, 'Jurisdiction: Utah State Bar Compliant', 'Accounting Standard: Modified Cash Basis'],
+        [`Generated: ${today}`, 'Internal Firm Financial Summary', 'Accounting Standard: Modified Cash Basis'],
         [''],
         ['SECTION 1: YEAR-TO-DATE (YTD) FINANCIAL KPI SUMMARY'],
         ['Metric Category', 'Key Performance Indicator', 'YTD Amount / Ratio', 'Benchmark / Target', 'Audit Status'],

@@ -164,7 +164,7 @@ export function AppLayout() {
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
         title="Client Onboarding: Conflict Check Required"
-        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        subtitle="Conflict Screening Notice (Requires Supervising Counsel Review)"
         maxWidth="max-w-lg"
       >
         <div className="space-y-4 py-1">

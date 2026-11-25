@@ -150,10 +150,10 @@ export function CourtDeadlines() {
         <ShieldAlert className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
         <div>
           <p className="font-bold text-amber-950">
-            Mandatory Malpractice Prevention Docket
+            Case Deadline Tracking Docket
           </p>
           <p className="text-amber-800 mt-0.5">
-            All statutory deadlines are double-checked against Utah Court XChange e-filing receipt confirmations and judicial scheduling orders.
+            Verify all calculated deadlines against official court dockets, e-filing confirmations, and judicial scheduling orders.
           </p>
         </div>
       </div>

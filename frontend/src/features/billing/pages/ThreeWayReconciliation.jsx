@@ -237,7 +237,7 @@ export function ThreeWayReconciliation() {
       `"TOTAL INDIVIDUAL CLIENT SUB-LEDGER BALANCES (PILLAR 3 TOTAL)","","","","","${totalClientLedgersBalance.toFixed(2)}"`,
       `""`,
       `"=========================================================================================="`,
-      `"MANDATORY THREE-WAY AUDIT VARIANCE SUMMARY"`,
+      `"THREE-WAY AUDIT VARIANCE SUMMARY (INTERNAL WORKSHEET)"`,
       `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
       `"Pillar 2: General Ledger Account #2100 Balance","${glDataAvailable && glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `"Pillar 3: Sum of Individual Client Sub-Ledgers","${totalClientLedgersBalance.toFixed(2)}"`,
@@ -304,8 +304,8 @@ export function ThreeWayReconciliation() {
           <div class="header">
             <div class="firm-name">HEUGLY &amp; BLUDWORTH, LLC</div>
             <div class="firm-sub">Attorneys at Law • 222 S. Main Street, Suite 500 • Salt Lake City, Utah 84101</div>
-            <div class="cert-title">Formal Certificate of Three-Way Trust Reconciliation</div>
-            <div class="rule-cite">Mandatory Monthly Verification Pursuant to Utah Supreme Court Rules of Professional Conduct — Rule 1.15(a), (c), &amp; (d)</div>
+            <div class="cert-title">Three-Way Trust Reconciliation Summary (Draft Review Record)</div>
+            <div class="rule-cite">Internal Reconciliation Comparison Worksheet — Subject to Counsel &amp; Trust Accountant Verification</div>
           </div>
 
           <div class="meta-grid">
@@ -338,7 +338,7 @@ export function ThreeWayReconciliation() {
             </thead>
             <tbody>
               <tr><td>Bank Statement Ending Balance</td><td>Chase Bank Statement ending ${periodName}</td><td class="text-right">${bankStatementBalance !== null ? '$' + bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
-              <tr><td>Add: Deposits in Transit (Retainers)</td><td>USCIS Statutory Retainers within bank clearance window</td><td class="text-right">${depositsInTransit !== null ? '+$' + depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr><td>Add: Deposits in Transit (Retainers)</td><td>Trust Retainers within bank clearance window</td><td class="text-right">${depositsInTransit !== null ? '+$' + depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
               <tr><td>Less: Outstanding Checks / Drafts</td><td>Draft #4812 U.S. Bankruptcy Court Filing Fee</td><td class="text-right">${outstandingChecks !== null ? '-$' + outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
               <tr class="font-bold" style="background:#e8f4fd;"><td>ADJUSTED LIQUID BANK BALANCE</td><td>Net Bank Fiduciary Available Cash</td><td class="text-right">${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
             </tbody>
@@ -421,7 +421,7 @@ export function ThreeWayReconciliation() {
 
       <PageHeader
         title="Three-Way IOLTA Trust Reconciliation"
-        subtitle="Mandatory monthly comparison of Adjusted Bank Balance, General Ledger, and Individual Client Sub-Ledgers (Utah RPC 1.15)."
+        subtitle="Comparison of Adjusted Bank Balance, General Ledger, and Individual Client Sub-Ledgers (Internal Trust Worksheet)."
         breadcrumbs={[
           { label: 'Billing & Accounting', to: '/billing' },
           { label: 'Trust Account', to: '/billing/trust' },

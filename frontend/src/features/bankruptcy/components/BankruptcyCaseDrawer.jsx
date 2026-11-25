@@ -876,7 +876,7 @@ export function BankruptcyCaseDrawer({
                 <div className="mt-4 pt-4 border-t border-slate-300 flex justify-between items-end text-xs">
                   <div>
                     <div><strong>Attorney:</strong> {currentCase.assignedAttorneyName}</div>
-                    <div className="text-[11px] text-slate-500">Utah State Bar ID #14902</div>
+                    <div className="text-[11px] text-slate-500">Attorney of Record (Confirm Bar ID Before Filing)</div>
                     <div className="text-[11px] text-slate-500">Heugly &amp; Bludworth Attorneys at Law</div>
                   </div>
                   <div className="text-right">

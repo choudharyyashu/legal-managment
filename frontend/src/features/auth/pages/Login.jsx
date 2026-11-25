@@ -295,7 +295,7 @@ export function Login() {
 
         {/* Static Bottom Security Watermark */}
         <div className="w-full text-center py-1 text-[10px] text-[#667085] flex-shrink-0">
-          <span>Protected by 256-Bit SSL Encryption • Utah Third Judicial District Court &amp; Bar Approved Standards</span>
+          <span>Protected by 256-Bit SSL Encryption • Role-Based Practice Access Controls</span>
         </div>
       </div>
 

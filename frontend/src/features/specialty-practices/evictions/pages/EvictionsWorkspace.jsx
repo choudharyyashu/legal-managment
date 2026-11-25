@@ -244,7 +244,7 @@ export function EvictionsWorkspace() {
               <input
                 type="text"
                 disabled
-                value="3x (Mandatory per Utah Code § 78B-6-811)"
+                value="Up to 3x (Statutory claim subject to court determination)"
                 className="w-full mt-1 p-2.5 border border-[#D0D5DD] rounded-lg text-sm font-mono bg-slate-100 text-[#475467]"
               />
               <span className="text-[11px] text-[#667085] mt-1 block">Non-discretionary under Utah law</span>
