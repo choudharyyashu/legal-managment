@@ -46,15 +46,14 @@ export function ThreeWayReconciliation() {
 ? bankStatementBalance + depositsInTransit - outstandingChecks
 : null;
 
-  // Pillar 2: General Ledger Trust Balance (Account #2100) – fetched when endpoint exists
-  const [glTrustBalance, setGlTrustBalance] = useState<number | null>(null);
-  // Determine if GL data was successfully retrieved
-  const glDataAvailable = glTrustBalance !== null;
+  // Pillar 2: General Ledger Trust Balance (Account #1010/2100)
+  const [glTrustBalance, setGlTrustBalance] = useState(null);
+  const [glDataAvailable, setGlDataAvailable] = useState(false);
 
   // Pillar 3: Client Sub‑Ledgers – loaded from trust service
   const [clientLedgers, setClientLedgers] = useState([]);
 
-  // Load data on component mount
+  // Load data on component mount and period change
   useEffect(() => {
     // Load client ledgers
     trustService
@@ -67,30 +66,35 @@ export function ThreeWayReconciliation() {
         setClientLedgers([]);
       });
 
-    // Attempt to load bank statement data – placeholder endpoint (may not exist)
-    // If the endpoint is missing, we simply leave the values null and show an empty state.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    fetch('/api/bank/statement')
-      .then((r) => r.json())
+    // Query live reconciliation status from backend service
+    reconciliationService
+      .getLiveStatus({ reconciliationMonth: selectedMonth })
       .then((data) => {
-        setBankStatementBalance(data?.balance ?? null);
-        setDepositsInTransit(data?.depositsInTransit ?? null);
-        setOutstandingChecks(data?.outstandingChecks ?? null);
+        if (data) {
+          if (data.bankStatementBalance !== undefined && data.bankStatementBalance !== null) {
+            setBankStatementBalance(data.bankStatementBalance);
+          }
+          if (data.depositsInTransit !== undefined && data.depositsInTransit !== null) {
+            setDepositsInTransit(data.depositsInTransit);
+          }
+          if (data.outstandingChecks !== undefined && data.outstandingChecks !== null) {
+            setOutstandingChecks(data.outstandingChecks);
+          }
+          if (data.glDataAvailable) {
+            setGlTrustBalance(data.glTrustLiabilityBalance);
+            setGlDataAvailable(true);
+          } else {
+            setGlTrustBalance(null);
+            setGlDataAvailable(false);
+          }
+        }
       })
-      .catch(() => {
-        // No bank statement endpoint – keep null
-        setBankStatementBalance(null);
-        setDepositsInTransit(null);
-        setOutstandingChecks(null);
+      .catch((err) => {
+        console.warn('Could not load live reconciliation status:', err?.message);
+        setGlTrustBalance(null);
+        setGlDataAvailable(false);
       });
-
-    // Attempt to load GL trust balance – placeholder endpoint
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    fetch('/api/trust/gl-balance')
-      .then((r) => r.json())
-      .then((data) => setGlTrustBalance(data?.balance ?? null))
-      .catch(() => setGlTrustBalance(null));
-  }, []);
+  }, [selectedMonth]);
 
 
   const totalClientLedgersBalance = clientLedgers.reduce((sum, item) => sum + item.balance, 0);
@@ -185,14 +189,14 @@ export function ThreeWayReconciliation() {
       `"=========================================================================================="`,
       `"PILLAR 1: BANK STATEMENT RECONCILIATION (ADJUSTED CASH BALANCE)"`,
       `"Line Item Description","Accounting Ledger Source","Amount ($)"`,
-      `"Bank Statement Ending Balance","Chase Bank IOLTA #4402 (Period Ending Statement)","${bankStatementBalance.toFixed(2)}"`,
-      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","+${depositsInTransit.toFixed(2)}"`,
-      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","-${outstandingChecks.toFixed(2)}"`,
-      `"ADJUSTED BANK BALANCE (PILLAR 1 TOTAL)","Net Available Liquid Fiduciary Cash","${adjustedBankBalance.toFixed(2)}"`,
+      `"Bank Statement Ending Balance","Chase Bank IOLTA #4402 (Period Ending Statement)","${bankStatementBalance !== null ? bankStatementBalance.toFixed(2) : 'N/A'}"`,
+      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","${depositsInTransit !== null ? '+' + depositsInTransit.toFixed(2) : 'N/A'}"`,
+      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","${outstandingChecks !== null ? '-' + outstandingChecks.toFixed(2) : 'N/A'}"`,
+      `"ADJUSTED BANK BALANCE (PILLAR 1 TOTAL)","Net Available Liquid Fiduciary Cash","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 2: GENERAL LEDGER FIDUCIARY LIABILITY (CONTROL ACCOUNT)"`,
-      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
+      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glDataAvailable && glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 3: ITEMIZATION OF INDIVIDUAL CLIENT TRUST SUB-LEDGERS"`,
@@ -204,15 +208,13 @@ export function ThreeWayReconciliation() {
       `""`,
       `"=========================================================================================="`,
       `"MANDATORY THREE-WAY AUDIT VARIANCE SUMMARY"`,
-      `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance.toFixed(2)}"`,
-      `"Pillar 2: General Ledger Account #2100 Balance","${glDataAvailable ? glTrustBalance.toFixed(2) : 'N/A'}"`,
+      `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
+      `"Pillar 2: General Ledger Account #2100 Balance","${glDataAvailable && glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `"Pillar 3: Sum of Individual Client Sub-Ledgers","${totalClientLedgersBalance.toFixed(2)}"`,
-      `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance.toFixed(2)}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : 'ATTENTION: VARIANCE DETECTED'}"`,
+      `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance !== null ? totalVariance.toFixed(2) : 'N/A'}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : (glDataAvailable ? 'ATTENTION: VARIANCE DETECTED' : 'INCOMPLETE: GL DATA UNAVAILABLE')}"`,
       `""`,
-      `"OFFICIAL CERTIFICATION UNDER PENALTY OF UNSWORN DECLARATION:",${glDataAvailable ? (isReconciled ? "I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability, and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15." : "I hereby certify that the reconciliation shows a variance of $" + totalVariance.toFixed(2) + "; therefore it is not balanced.") : "I cannot certify the reconciliation because General Ledger data is unavailable; the three-way reconciliation is incomplete."`,
-      `"I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing"`,
-      `"monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability,"`,
-      `"and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15."`,
+      `"OFFICIAL CERTIFICATION UNDER PENALTY OF UNSWORN DECLARATION:"`,
+      `"${isReconciled ? 'I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability, and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15.' : (glDataAvailable ? 'CERTIFICATION WITHHELD: A variance was detected among the three pillars. Reconciliation cannot be certified balanced under Utah RPC 1.15.' : 'CERTIFICATION WITHHELD: General Ledger data is unavailable. A three-way reconciliation cannot be certified without complete records.')}"`,
       `"Certifying Managing Partner: Eleanor Heugly, Esq. | Utah State Bar License #UT-8819 | Firm: Heugly & Bludworth, LLC"`
     ];
 
@@ -291,12 +293,12 @@ export function ThreeWayReconciliation() {
           <div class="box-summary">
             <h3>{!glDataAvailable ? 'AUDIT FINDING: GL DATA UNAVAILABLE' : isReconciled ? 'AUDIT FINDING: ZERO DISCREPANCY RECONCILIATION VERIFIED' : 'AUDIT FINDING: VARIANCE DETECTED'}</h3>
             <div class="pillars-summary">
-              <div>Pillar 1 (Adjusted Bank): $${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div>= Pillar 2 (General Ledger #2100): {glDataAvailable ? `$${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</div>
+              <div>Pillar 1 (Adjusted Bank): ${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
+              <div>= Pillar 2 (General Ledger #2100): ${glDataAvailable && glTrustBalance !== null ? '$' + glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
               <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             </div>
             <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Net Audit Discrepancy: $0.00 — All fiduciary client balances in exact mathematical equilibrium.
+              Net Audit Discrepancy: ${totalVariance !== null ? '$' + totalVariance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'} — ${isReconciled ? 'All fiduciary client balances in exact mathematical equilibrium.' : (glDataAvailable ? 'Review variance before certifying.' : 'General Ledger entries missing; reconciliation is incomplete.')}
             </div>
           </div>
 
@@ -306,10 +308,10 @@ export function ThreeWayReconciliation() {
               <tr><th>Description</th><th>Source / Depository Ledger</th><th class="text-right">Amount ($)</th></tr>
             </thead>
             <tbody>
-              <tr><td>Bank Statement Ending Balance</td><td>Chase Bank Statement ending ${periodName}</td><td class="text-right">$${bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr><td>Add: Deposits in Transit (Retainers)</td><td>USCIS Statutory Retainers within bank clearance window</td><td class="text-right">+$${depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr><td>Less: Outstanding Checks / Drafts</td><td>Draft #4812 U.S. Bankruptcy Court Filing Fee</td><td class="text-right">-$${outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr class="font-bold" style="background:#e8f4fd;"><td>ADJUSTED LIQUID BANK BALANCE</td><td>Net Bank Fiduciary Available Cash</td><td class="text-right">$${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              <tr><td>Bank Statement Ending Balance</td><td>Chase Bank Statement ending ${periodName}</td><td class="text-right">${bankStatementBalance !== null ? '$' + bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr><td>Add: Deposits in Transit (Retainers)</td><td>USCIS Statutory Retainers within bank clearance window</td><td class="text-right">${depositsInTransit !== null ? '+$' + depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr><td>Less: Outstanding Checks / Drafts</td><td>Draft #4812 U.S. Bankruptcy Court Filing Fee</td><td class="text-right">${outstandingChecks !== null ? '-$' + outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr class="font-bold" style="background:#e8f4fd;"><td>ADJUSTED LIQUID BANK BALANCE</td><td>Net Bank Fiduciary Available Cash</td><td class="text-right">${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
             </tbody>
           </table>
 
@@ -319,7 +321,7 @@ export function ThreeWayReconciliation() {
               <tr><th>Account Number &amp; Title</th><th>Ledger Classification</th><th class="text-right">Trust Liability ($)</th></tr>
             </thead>
             <tbody>
-              <tr class="font-bold"><td>General Ledger Account #2100</td><td>Client Trust Funds Liability Control Account</td><td class="text-right">$${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              <tr class="font-bold"><td>General Ledger Account #2100</td><td>Client Trust Funds Liability Control Account</td><td class="text-right">${glDataAvailable && glTrustBalance !== null ? '$' + glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A (Unavailable)'}</td></tr>
             </tbody>
           </table>
 
@@ -347,7 +349,11 @@ export function ThreeWayReconciliation() {
 
           <div class="cert-block">
             <strong>OFFICIAL ATTORNEY CERTIFICATION UNDER UTAH RPC 1.15:</strong><br>
-            I hereby certify under penalty of perjury under the laws of the State of Utah that I am the managing partner responsible for trust accounting compliance at Heugly &amp; Bludworth, LLC. I have examined the firm's IOLTA bank statements, general ledger control accounts, and itemized client subsidiary ledgers for the period indicated above. The three components are in complete mathematical reconciliation with zero discrepancy ($0.00 variance), no client trust account is overdrawn, and client funds are strictly segregated in accordance with Utah Supreme Court Rule 1.15.
+            ${isReconciled
+              ? "I hereby certify under penalty of perjury under the laws of the State of Utah that I am the managing partner responsible for trust accounting compliance at Heugly &amp; Bludworth, LLC. I have examined the firm's IOLTA bank statements, general ledger control accounts, and itemized client subsidiary ledgers for the period indicated above. The three components are in complete mathematical reconciliation with zero discrepancy ($0.00 variance), no client trust account is overdrawn, and client funds are strictly segregated in accordance with Utah Supreme Court Rule 1.15."
+              : glDataAvailable
+                ? "CERTIFICATION WITHHELD: Mathematical variance detected between bank, general ledger, and client sub-ledger records. Corrective reconciliation required prior to compliance certification pursuant to Utah RPC 1.15."
+                : "CERTIFICATION WITHHELD: General Ledger records for Account #1010 are unavailable for this accounting period. Utah Supreme Court Rule 1.15 prohibits certification of incomplete or unverified three-way trust reconciliations."}
           </div>
 
           <div class="sig-row">
