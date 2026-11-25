@@ -14,47 +14,17 @@ export function ChartOfAccounts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
-
-  const [accounts, setAccounts] = useState([
-    // 1000 Assets
-    { code: '1010', name: 'Operating Checking Account (Chase)', type: 'Asset', category: 'Current Assets', balance: 184520.50, status: 'Active' },
-    { code: '1020', name: 'IOLTA Client Trust Account (First Republic)', type: 'Asset', category: 'Trust & Escrow', balance: 74278.00, status: 'Active' },
-    { code: '1050', name: 'Petty Cash Reserve', type: 'Asset', category: 'Current Assets', balance: 1500.00, status: 'Active' },
-    { code: '1100', name: 'Accounts Receivable (Client Invoices)', type: 'Asset', category: 'Receivables', balance: 92450.00, status: 'Active' },
-    { code: '1200', name: 'Law Library & Digital Legal Subscriptions', type: 'Asset', category: 'Fixed Assets', balance: 14500.00, status: 'Active' },
-    { code: '1250', name: 'Office Furniture & High-End Tech Hardware', type: 'Asset', category: 'Fixed Assets', balance: 48900.00, status: 'Active' },
-
-    // 2000 Liabilities
-    { code: '2010', name: 'Client Trust Liability (Unearned Retainers)', type: 'Liability', category: 'Trust Liabilities', balance: 74278.00, status: 'Active' },
-    { code: '2050', name: 'Accounts Payable (Trade Vendors)', type: 'Liability', category: 'Current Liabilities', balance: 18400.00, status: 'Active' },
-    { code: '2100', name: 'Utah State Bar & Professional Privilege Tax Payable', type: 'Liability', category: 'Taxes Payable', balance: 4250.00, status: 'Active' },
-    { code: '2200', name: 'Commercial Equipment Term Loan', type: 'Liability', category: 'Long-Term Debt', balance: 32000.00, status: 'Active' },
-
-    // 3000 Equity
-    { code: '3010', name: 'Managing Partner Capital Account', type: 'Equity', category: 'Partners Equity', balance: 140000.00, status: 'Active' },
-    { code: '3020', name: 'Senior Partner Capital Account', type: 'Equity', category: 'Partners Equity', balance: 110000.00, status: 'Active' },
-    { code: '3100', name: 'Retained Earnings Prior Years', type: 'Equity', category: 'Retained Earnings', balance: 85200.50, status: 'Active' },
-
-    // 4000 Revenue
-    { code: '4010', name: 'Legal Fee Income - Hourly Matters', type: 'Revenue', category: 'Fee Revenue', balance: 384500.00, status: 'Active' },
-    { code: '4020', name: 'Legal Fee Income - Flat Fee Engagements', type: 'Revenue', category: 'Fee Revenue', balance: 142000.00, status: 'Active' },
-    { code: '4030', name: 'Legal Fee Income - Contingency Recoveries', type: 'Revenue', category: 'Fee Revenue', balance: 95000.00, status: 'Active' },
-    { code: '4100', name: 'Client Reimbursed Litigation Costs', type: 'Revenue', category: 'Cost Recoveries', balance: 12400.00, status: 'Active' },
-
-    // 5000 Expenses
-    { code: '5010', name: 'Associate Attorney & Staff Salaries', type: 'Expense', category: 'Personnel', balance: 198000.00, status: 'Active' },
-    { code: '5050', name: 'Office Lease - Foothill Boulevard Tower', type: 'Expense', category: 'Facilities', balance: 54000.00, status: 'Active' },
-    { code: '5100', name: 'Legal Malpractice Insurance Premium', type: 'Expense', category: 'Insurance', balance: 18200.00, status: 'Active' },
-    { code: '5150', name: 'Deposition Reporters & Expert Witness Fees', type: 'Expense', category: 'Litigation Expense', balance: 24500.00, status: 'Active' },
-    { code: '5200', name: 'Westlaw / LexisNexis Research Subscriptions', type: 'Expense', category: 'Practice Tools', balance: 9600.00, status: 'Active' },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const loadAccounts = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await ledgerService.getAccounts();
-      if (Array.isArray(res) && res.length > 0) {
+      const raw = Array.isArray(res) ? res : (Array.isArray(res?.accounts) ? res.accounts : (res?.data || []));
+      if (Array.isArray(raw) && raw.length > 0) {
         setAccounts(
-          res.map((a) => ({
+          raw.map((a) => ({
             code: String(a.accountNumber),
             name: a.accountName,
             type: a.accountType,
@@ -63,9 +33,14 @@ export function ChartOfAccounts() {
             status: a.isActive ? 'Active' : 'Inactive',
           }))
         );
+      } else {
+        setAccounts([]);
       }
     } catch (err) {
       console.warn('Could not load accounts from API:', err?.message);
+      setAccounts([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -214,30 +189,44 @@ export function ChartOfAccounts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9D6CF]">
-              {filteredAccounts.map(acc => (
-                <tr key={acc.code} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-mono font-bold text-[#A4432B]">{acc.code}</td>
-                  <td className="p-3 font-semibold text-[#06244B]">{acc.name}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded font-semibold text-[10px] ${
-                      acc.type === 'Asset' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      acc.type === 'Liability' ? 'bg-red-50 text-red-700 border border-red-200' :
-                      acc.type === 'Revenue' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      acc.type === 'Expense' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      'bg-purple-50 text-purple-700 border border-purple-200'
-                    }`}>
-                      {acc.type}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xs text-[#667085]">
+                    Loading authoritative Chart of Accounts from database...
                   </td>
-                  <td className="p-3 text-[#667085]">{acc.category}</td>
-                  <td className="p-3">
-                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">
-                      {acc.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right font-bold text-[#06244B]">{formatCurrency(acc.balance)}</td>
                 </tr>
-              ))}
+              ) : filteredAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xs text-[#667085]">
+                    No Chart of Accounts records found in database.
+                  </td>
+                </tr>
+              ) : (
+                filteredAccounts.map(acc => (
+                  <tr key={acc.code} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-mono font-bold text-[#A4432B]">{acc.code}</td>
+                    <td className="p-3 font-semibold text-[#06244B]">{acc.name}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded font-semibold text-[10px] ${
+                        acc.type === 'Asset' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                        acc.type === 'Liability' ? 'bg-red-50 text-red-700 border border-red-200' :
+                        acc.type === 'Revenue' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        acc.type === 'Expense' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-purple-50 text-purple-700 border border-purple-200'
+                      }`}>
+                        {acc.type}
+                      </span>
+                    </td>
+                    <td className="p-3 text-[#667085]">{acc.category}</td>
+                    <td className="p-3">
+                      <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">
+                        {acc.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right font-bold text-[#06244B]">{formatCurrency(acc.balance)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

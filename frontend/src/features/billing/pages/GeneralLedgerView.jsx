@@ -12,95 +12,35 @@ export function GeneralLedgerView() {
   const { addToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [accountFilter, setAccountFilter] = useState('ALL');
-
-  const [journalEntries, setJournalEntries] = useState([
-    {
-      id: 'JE-2026-0101',
-      date: '2026-02-15',
-      ref: 'INV-2026-0041',
-      description: 'Fee Income recognition for Commercial Litigation Matter',
-      accountDebit: '1100 - Accounts Receivable',
-      debit: 14250.00,
-      accountCredit: '4010 - Legal Fee Income (Hourly)',
-      credit: 14250.00,
-      postedBy: 'Billing Director'
-    },
-    {
-      id: 'JE-2026-0102',
-      date: '2026-02-16',
-      ref: 'ACH-49102',
-      description: 'Client payment receipt for Commercial Retainer Account',
-      accountDebit: '1010 - Operating Checking Account',
-      debit: 14250.00,
-      accountCredit: '1100 - Accounts Receivable',
-      credit: 14250.00,
-      postedBy: 'Billing Director'
-    },
-    {
-      id: 'JE-2026-0103',
-      date: '2026-02-18',
-      ref: 'TR-DEP-1003',
-      description: 'IOLTA Trust Retainer Deposit (Immigration Filing Escrow)',
-      accountDebit: '1020 - IOLTA Client Trust Account',
-      debit: 1440.00,
-      accountCredit: '2010 - Client Trust Liability',
-      credit: 1440.00,
-      postedBy: 'Supervising Partner'
-    },
-    {
-      id: 'JE-2026-0104',
-      date: '2026-02-19',
-      ref: 'EXP-502',
-      description: 'LexisNexis Research Suite monthly firm subscription',
-      accountDebit: '5200 - Legal Research Subscriptions',
-      debit: 1850.00,
-      accountCredit: '1010 - Operating Checking Account',
-      credit: 1850.00,
-      postedBy: 'Billing Director'
-    },
-    {
-      id: 'JE-2026-0105',
-      date: '2026-02-20',
-      ref: 'DRAW-TR-1002',
-      description: 'Earned fee drawdown from Client Trust Retainer',
-      accountDebit: '2010 - Client Trust Liability',
-      debit: 3500.00,
-      accountCredit: '1020 - IOLTA Client Trust Account',
-      credit: 3500.00,
-      postedBy: 'Managing Partner'
-    },
-    {
-      id: 'JE-2026-0106',
-      date: '2026-02-20',
-      ref: 'FEE-TR-1002',
-      description: 'Operating deposit of earned trust fee transfer',
-      accountDebit: '1010 - Operating Checking Account',
-      debit: 3500.00,
-      accountCredit: '4010 - Legal Fee Income (Hourly)',
-      credit: 3500.00,
-      postedBy: 'Billing Director'
-    }
-  ]);
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     ledgerService.getJournals().then((res) => {
-      if (isMounted && Array.isArray(res?.journals) && res.journals.length > 0) {
+      if (isMounted) {
+        const raw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.journals || []));
         setJournalEntries(
-          res.journals.map((j) => ({
+          raw.map((j) => ({
             id: j.journalNumber || j.id,
-            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : '2026-11-13',
-            ref: j.reference || 'GL-REF',
-            description: j.memo || 'Journal Entry',
-            accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || 1010} - Debit`,
-            debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit) || 0,
-            accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || 2100} - Credit`,
-            credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit) || 0,
-            postedBy: j.postedByUser?.name || 'Firm Staff',
+            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
+            ref: j.reference || j.memo || 'GL-REF',
+            description: j.memo || j.description || 'Journal Entry',
+            accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || j.entries?.find((e) => Number(e.debit) > 0)?.accountNumber || 1010} - Debit`,
+            debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit || j.entries?.find((e) => Number(e.debit) > 0)?.debit || 0),
+            accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || j.entries?.find((e) => Number(e.credit) > 0)?.accountNumber || 2100} - Credit`,
+            credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit || j.entries?.find((e) => Number(e.credit) > 0)?.credit || 0),
+            postedBy: j.postedByUser?.name || j.postedByName || 'System / Authorized User',
           }))
         );
       }
-    }).catch((err) => console.warn('Could not load journals from API:', err?.message));
+    }).catch((err) => {
+      console.warn('Could not load journals from API:', err?.message);
+      if (isMounted) setJournalEntries([]);
+    }).finally(() => {
+      if (isMounted) setLoading(false);
+    });
     return () => { isMounted = false; };
   }, []);
 
@@ -278,21 +218,35 @@ export function GeneralLedgerView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9D6CF]">
-              {filteredEntries.map(entry => (
-                <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3">
-                    <span className="font-mono font-bold text-[#A4432B] block">{entry.id}</span>
-                    <span className="text-[11px] text-[#667085]">{formatDate(entry.date)}</span>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs text-[#667085]">
+                    Loading authoritative General Ledger journal entries from database...
                   </td>
-                  <td className="p-3 font-mono font-semibold text-[#06244B]">{entry.ref}</td>
-                  <td className="p-3 font-medium text-[#202A35] max-w-xs">{entry.description}</td>
-                  <td className="p-3 text-blue-900 font-semibold">{entry.accountDebit}</td>
-                  <td className="p-3 text-right font-bold text-blue-800">{formatCurrency(entry.debit)}</td>
-                  <td className="p-3 text-red-900 font-semibold">{entry.accountCredit}</td>
-                  <td className="p-3 text-right font-bold text-red-800">{formatCurrency(entry.credit)}</td>
-                  <td className="p-3 text-[#667085] text-[11px]">{entry.postedBy}</td>
                 </tr>
-              ))}
+              ) : filteredEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs text-[#667085]">
+                    No General Ledger journal entries found in database.
+                  </td>
+                </tr>
+              ) : (
+                filteredEntries.map(entry => (
+                  <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3">
+                      <span className="font-mono font-bold text-[#A4432B] block">{entry.id}</span>
+                      <span className="text-[11px] text-[#667085]">{formatDate(entry.date)}</span>
+                    </td>
+                    <td className="p-3 font-mono font-semibold text-[#06244B]">{entry.ref}</td>
+                    <td className="p-3 font-medium text-[#202A35] max-w-xs">{entry.description}</td>
+                    <td className="p-3 text-blue-900 font-semibold">{entry.accountDebit}</td>
+                    <td className="p-3 text-right font-bold text-blue-800">{formatCurrency(entry.debit)}</td>
+                    <td className="p-3 text-red-900 font-semibold">{entry.accountCredit}</td>
+                    <td className="p-3 text-right font-bold text-red-800">{formatCurrency(entry.credit)}</td>
+                    <td className="p-3 text-[#667085] text-[11px]">{entry.postedBy}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot className="bg-[#F5F0E5]/60 font-bold border-t-2 border-[#D9D6CF]">
               <tr>
