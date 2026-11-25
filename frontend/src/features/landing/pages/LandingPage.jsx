@@ -645,7 +645,7 @@ export function LandingPage() {
 
           <div className="pt-8 border-t border-[#0B356D] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#667085]">
             <p>© 2026 HEUGLY &amp; BLUDWORTH, LLC. All Rights Reserved. Attorney Work Product.</p>
-            <p>Protected by 256-Bit SSL Encryption • Utah Third Judicial District Court &amp; Bar Approved Standards</p>
+            <p>Protected by 256-Bit SSL Encryption • Role-Based Practice Access Controls</p>
           </div>
         </div>
       </footer>

@@ -293,7 +293,7 @@ export function FamilyLawWorkspace() {
             </div>
             <div className="text-right">
               <span className="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-400 font-mono">
-                Statutory Table Compliant
+                Reference Worksheet (Verify Current Rates)
               </span>
             </div>
           </div>

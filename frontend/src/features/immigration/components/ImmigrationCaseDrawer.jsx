@@ -168,7 +168,7 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                   </span>
                 </div>
                 <p className="text-emerald-950 text-xs">
-                  Petitioner income ($92,500) and Joint Sponsor Gabriel Alvarez ($114,000) both exceed the statutory 125% Federal Poverty Guideline threshold for household size 2 ($25,550). Public charge ground of inadmissibility overcome.
+                  Evaluate household and any joint sponsor income against current USCIS Form I-864P poverty guidelines prior to filing.
                 </p>
               </div>
             </div>

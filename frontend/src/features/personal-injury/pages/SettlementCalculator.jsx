@@ -332,7 +332,7 @@ export function SettlementCalculator() {
               Primary Recovery &amp; Fee Inputs
             </h3>
             <p className="text-xs text-[#667085]">
-              Adjust gross recovery or select statutory contingency tier.
+              Adjust gross recovery or select contingency fee percentage per engagement agreement.
             </p>
           </div>
 
@@ -400,7 +400,7 @@ export function SettlementCalculator() {
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  25.00% (Minor/Govt)
+                  25.00% (Custom/Reduced)
                 </button>
               </div>
             </div>

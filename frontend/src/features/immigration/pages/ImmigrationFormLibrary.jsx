@@ -142,7 +142,7 @@ export function ImmigrationFormLibrary() {
 
       <PageHeader
         title="Immigration Form Library &amp; Diagnostic Engine"
-        subtitle="Catalog of official petitions, edition dates, filing fees, mandatory attachment checklists, and pre-filing validation."
+        subtitle="Reference catalog of USCIS petitions, edition dates, filing fee notes, supporting document checklists, and pre-filing review."
         breadcrumbs={[
           { label: 'Clients & Matters', to: '/matters' },
           { label: 'Immigration', to: '/immigration/cases' },
@@ -181,7 +181,7 @@ export function ImmigrationFormLibrary() {
 
             <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[#667085] block text-[10px] uppercase font-bold">Statutory Filing Fee:</span>
+                <span className="text-[#667085] block text-[10px] uppercase font-bold">Reference Filing Fee (Verify at USCIS):</span>
                 <span className="font-bold text-sm text-[#06244B]">
                   {selectedForm.filingFee > 0 ? `$${selectedForm.filingFee.toLocaleString()}` : '$0 (Fee Exempt)'}
                 </span>
@@ -196,7 +196,7 @@ export function ImmigrationFormLibrary() {
 
             <div>
               <span className="font-bold text-[#06244B] uppercase text-[10px] block mb-1">
-                Mandatory Supporting Evidence &amp; Civil Documents:
+                Commonly Requested Supporting Evidence &amp; Civil Documents:
               </span>
               <ul className="space-y-1 list-disc list-inside bg-white p-3 rounded border border-[#D9D6CF]">
                 {selectedForm.mandatoryAttachments.map((att, i) => (

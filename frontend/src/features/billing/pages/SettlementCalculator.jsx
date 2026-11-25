@@ -542,7 +542,7 @@ export function SettlementCalculator() {
             </div>
 
             <p className="text-[10px] text-[#667085] text-center italic">
-              Mandatory client closing disclosure pursuant to Utah Rules of Professional Conduct 1.5(c).
+              Written contingency settlement disclosure pursuant to signed fee agreement and counsel review.
             </p>
           </div>
         </div>

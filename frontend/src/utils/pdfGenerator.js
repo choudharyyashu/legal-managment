@@ -17,7 +17,7 @@ export function createLegalDocumentPdf({
 
   const defaultLines = [
     'HEUGLY & BLUDWORTH ATTORNEYS AT LAW',
-    'Salt Lake City, Utah • Utah State Bar Practice SaaS',
+    'Salt Lake City, Utah • Practice Management Workspace',
     '=========================================================================',
     ' ',
     `INSTRUMENT: ${title.toUpperCase()}`,
@@ -40,7 +40,7 @@ export function createLegalDocumentPdf({
     ' ',
     '3. FIDUCIARY & TRUST SAFEGUARDS (UTAH RPC 1.15):',
     '   All retainer funds and trust liabilities remain governed under strict anti-commingling',
-    '   safeguards with mandatory three-way reconciliation oversight.',
+    '   safeguards and counsel-reviewed three-way reconciliation workflows.',
     ' ',
     'IN WITNESS WHEREOF, the authorized firm counsel and client parties record this instrument.',
     ' ',
