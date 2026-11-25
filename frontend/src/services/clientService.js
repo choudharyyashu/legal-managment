@@ -31,4 +31,9 @@ export const clientService = {
     const res = await apiClient.get(`/clients/${id}/matters`);
     return res?.data?.matters || [];
   },
+
+  async getClient360(id) {
+    const res = await apiClient.get(`/clients/${id}/360`);
+    return res?.data || null;
+  },
 };

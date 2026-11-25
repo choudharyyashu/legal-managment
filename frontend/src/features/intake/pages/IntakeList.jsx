@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   UserCheck,
-  ShieldAlert,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
   Plus,
   Search,
-  ArrowRight,
   UserPlus,
   Sparkles,
   FileText,
   FileCheck,
-  Send,
-  Building,
-  Scale
+  CheckCircle2,
+  ExternalLink,
+  Briefcase,
 } from 'lucide-react';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
-import { usePermissions } from '../../../hooks/usePermissions';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -28,7 +22,7 @@ import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
-import { PRACTICE_AREAS } from '../../../data/practiceAreas';
+import { PRACTICE_AREAS, normalizePracticeAreaId } from '../../../data/practiceAreas';
 import { formatDate } from '../../../utils/formatDate';
 import { ConflictSearchModal } from '../components/ConflictSearchModal';
 import { EngagementLetterModal } from '../../clients/components/EngagementLetterModal';
@@ -42,48 +36,104 @@ import {
   getCleanMatterSummary,
 } from '../utils/piIntakeHelper';
 
+const PRACTICE_PROMPTS = {
+  'pa-civ': {
+    heading: 'Civil / Commercial Litigation Intake Details',
+    label: 'Claims, Contract / Entity Dispute Details & Statutory Tolling Notes',
+  },
+  'pa-fam': {
+    heading: 'Family Law Specialized Intake: Minor Children & Custody',
+    label: 'Children Details (Names, DOBs, Current Custody & Property Overview)',
+  },
+  'pa-crim': {
+    heading: 'Criminal Defense Intake: Charges, Arraignment & Bail Status',
+    label: 'Arresting Agency, Citation / Docket # & Next Hearing Date',
+  },
+  'pa-prob': {
+    heading: 'Probate & Estate Administration Intake',
+    label: 'Decedent Name, Date of Death, Will Status & Primary Fiduciary',
+  },
+  'pa-bk': {
+    heading: 'Bankruptcy Intake: Chapter, Household Size & Creditor Summary',
+    label: 'Proposed Chapter (7/13), Priority Creditors & Foreclosure/Garnishment Urgency',
+  },
+  'pa-evict': {
+    heading: 'Landlord-Tenant / Evictions Intake',
+    label: 'Property Address, Lease Balance & 3-Day/15-Day Notice Service Status',
+  },
+  'pa-imm': {
+    heading: 'Immigration Intake: Petitioner, Beneficiary & Filing Category',
+    label: 'Visa / Petition Type (I-130, I-485, N-400), Current Status & Expiry Dates',
+  },
+  'pa-app': {
+    heading: 'Appellate Practice Intake',
+    label: 'Lower Court Name, Final Order Date & Notice of Appeal Deadline',
+  },
+};
+
+const EMPTY_FORM_STATE = {
+  prospectiveClient: '',
+  contactPerson: '',
+  email: '',
+  phone: '',
+  practiceAreaId: PRACTICE_AREAS[0]?.id || 'pa-civ',
+  adverseParties: '',
+  matterSummary: '',
+  disputeAmount: '',
+  jurisdictionVenue: '',
+  practiceSpecificDetail: '',
+};
+
+const isClearedForConversion = (status) =>
+  ['Cleared', 'Waiver Obtained', 'Review Completed'].includes(status);
+
 export function IntakeList() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { intakes, addIntake, updateConflictCheck, addClient } = useClients();
+  const {
+    intakes,
+    addIntake,
+    updateConflictCheck,
+    convertIntakeToClient,
+    refreshIntakes,
+  } = useClients();
   const { currentUser } = useAuth();
-  const permissions = usePermissions();
   const { addToast } = useToast();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedIntake, setSelectedIntake] = useState(null);
+  const [convertingIntakeId, setConvertingIntakeId] = useState(null);
 
-  // Auto-open new intake modal if redirected from Header/Clients/Dashboard
   useEffect(() => {
     if (location.search.includes('openIntake=true') || location.search.includes('new=true')) {
       setIsAddModalOpen(true);
     }
   }, [location.search]);
 
-  // Phase 1 Enhanced Modals
   const [isConflictSearchOpen, setIsConflictSearchOpen] = useState(false);
   const [conflictSearchTarget, setConflictSearchTarget] = useState('');
   const [isEngagementModalOpen, setIsEngagementModalOpen] = useState(false);
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
   const [isDemoWizardOpen, setIsDemoWizardOpen] = useState(false);
 
-  // New Intake Form State with Practice Area Questionnaire Fields
-  const [formData, setFormData] = useState({
-    prospectiveClient: '',
-    contactPerson: '',
-    email: '',
-    phone: '',
-    practiceAreaId: PRACTICE_AREAS[0]?.id || '',
-    adverseParties: '',
-    matterSummary: '',
-    disputeAmount: '75000',
-    jurisdictionVenue: 'Utah Third Judicial District Court (Salt Lake County)',
-    practiceSpecificDetail: '',
-  });
-
+  const [formData, setFormData] = useState({ ...EMPTY_FORM_STATE });
   const [piData, setPiData] = useState({ ...EMPTY_PI_DATA });
 
-  const isPI = formData.practiceAreaId === 'pa-pi' || formData.practiceAreaId === 'pa-7';
+  const canonicalPAId = normalizePracticeAreaId(formData.practiceAreaId) || formData.practiceAreaId;
+  const isPI = canonicalPAId === 'pa-pi';
+  const promptConfig = PRACTICE_PROMPTS[canonicalPAId] || {
+    heading: 'Specialized Practice Intake Questionnaire',
+    label: 'Practice Area Custom Attributes & Statutory Notes',
+  };
+
+  // Keep modal selection synchronized with refreshed intakes list
+  useEffect(() => {
+    if (!selectedIntake?.id) return;
+    const latest = intakes.find((item) => item.id === selectedIntake.id);
+    if (latest) {
+      setSelectedIntake(latest);
+    }
+  }, [intakes, selectedIntake?.id]);
 
   const handleCreateIntake = async (e) => {
     e.preventDefault();
@@ -93,12 +143,12 @@ export function IntakeList() {
     }
 
     try {
-      const pa = PRACTICE_AREAS.find(p => p.id === formData.practiceAreaId || p.legacyId === formData.practiceAreaId);
-      
+      const pa = PRACTICE_AREAS.find((p) => p.id === canonicalPAId);
+
       let finalAdverse = formData.adverseParties.trim();
       if (isPI) {
         const adverseList = [];
-        if (formData.adverseParties.trim()) adverseList.push(formData.adverseParties.trim());
+        if (finalAdverse) adverseList.push(finalAdverse);
         if (piData.opposingParties && !finalAdverse.includes(piData.opposingParties)) {
           adverseList.push(piData.opposingParties);
         }
@@ -108,74 +158,101 @@ export function IntakeList() {
         finalAdverse = adverseList.join(', ');
       }
 
+      let baseSummary = formData.matterSummary.trim();
+      if (!isPI && formData.practiceSpecificDetail.trim()) {
+        baseSummary = baseSummary
+          ? `${baseSummary}\n\nPractice-Specific Details (${pa?.name || 'General'}): ${formData.practiceSpecificDetail.trim()}`
+          : `${pa?.name || 'Practice'} Details: ${formData.practiceSpecificDetail.trim()}`;
+      }
+
       const finalMatterSummary = isPI
-        ? serializePIIntakeData(piData, formData.matterSummary)
-        : formData.matterSummary;
+        ? serializePIIntakeData(piData, baseSummary)
+        : baseSummary;
 
       const payload = {
-        ...formData,
+        prospectiveClient: formData.prospectiveClient.trim(),
+        contactPerson: formData.contactPerson.trim() || undefined,
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        practiceAreaId: canonicalPAId,
         adverseParties: finalAdverse || 'None identified',
         matterSummary: finalMatterSummary || 'Prospective client intake record.',
-        disputeAmount: Number(formData.disputeAmount) || 0,
-        practiceAreaId: pa?.id || formData.practiceAreaId,
-        practiceAreaName: pa?.name || 'General Legal Practice',
+        disputeAmount: formData.disputeAmount ? Number(formData.disputeAmount) : 0,
+        jurisdictionVenue: formData.jurisdictionVenue.trim() || undefined,
       };
-      await addIntake(payload);
+      const created = await addIntake(payload);
 
-      addToast(`New intake file created for "${formData.prospectiveClient}". Ready for Conflict Check.`, 'success');
+      addToast(
+        created?.conflictStatus === 'Conflict Identified'
+          ? `Intake created (${created.intakeNumber}): Potential conflict detected during automated scan. Review required.`
+          : `Intake created (${created?.intakeNumber || formData.prospectiveClient}). Initial scan complete — run/complete conflict review before conversion.`,
+        created?.conflictStatus === 'Conflict Identified' ? 'warning' : 'success'
+      );
       setIsAddModalOpen(false);
-      setFormData({
-        prospectiveClient: '',
-        contactPerson: '',
-        email: '',
-        phone: '',
-        practiceAreaId: PRACTICE_AREAS[0]?.id || '',
-        adverseParties: '',
-        matterSummary: '',
-        disputeAmount: '75000',
-        jurisdictionVenue: 'Utah Third Judicial District Court (Salt Lake County)',
-        practiceSpecificDetail: '',
-      });
+      setFormData({ ...EMPTY_FORM_STATE });
       setPiData({ ...EMPTY_PI_DATA });
     } catch (err) {
       addToast(err?.message || 'Failed to create intake record. Please verify all fields.', 'error');
     }
   };
 
-  const handleSetConflictStatus = (intakeId, status, reviewerName, notes) => {
-    updateConflictCheck(intakeId, status, reviewerName || currentUser.name, notes);
-    addToast(`Conflict check marked as "${status}" by ${reviewerName || currentUser.name}.`, status === 'Cleared' ? 'success' : 'warning');
-    if (selectedIntake?.id === intakeId) {
-      setSelectedIntake(prev => ({
-        ...prev,
-        conflictStatus: status,
-        reviewedBy: reviewerName || currentUser.name,
-        reviewedByName: reviewerName || currentUser.name,
-        conflictNotes: notes,
-      }));
+  const handleSetConflictStatus = async (intakeId, status, reviewerName, notes) => {
+    try {
+      const result = await updateConflictCheck(intakeId, status, reviewerName || currentUser?.name, notes);
+      const updated = result?.intake;
+      if (selectedIntake?.id === intakeId && updated) {
+        setSelectedIntake(updated);
+      }
+      addToast(
+        `Conflict review saved as "${updated?.conflictStatus || status}".`,
+        isClearedForConversion(updated?.conflictStatus || status) ? 'success' : 'warning'
+      );
+      return result;
+    } catch (err) {
+      addToast(err?.message || 'Failed to save conflict review decision on server.', 'error');
+      throw err;
     }
   };
 
   const handleConvertClient = async (intake) => {
+    if (intake.convertedMatterId) {
+      setSelectedIntake(null);
+      navigate(`/matters/${intake.convertedMatterId}`);
+      return;
+    }
+    if (intake.convertedToClient && intake.convertedClientId) {
+      setSelectedIntake(null);
+      navigate(`/clients/${intake.convertedClientId}?intakeId=${intake.id}&openMatter=true`);
+      return;
+    }
+
+    setConvertingIntakeId(intake.id);
     try {
-      const isPIIntake = intake.practiceAreaId === 'pa-pi' || intake.practiceAreaId === 'pa-7' || intake.practiceAreaName?.toLowerCase().includes('personal injury');
-      const newClient = await addClient({
-        name: intake.prospectiveClient,
-        primaryContact: intake.contactPerson || null,
-        email: intake.email,
-        phone: intake.phone,
-        type: isPIIntake ? 'Individual' : 'Organization',
-        assignedAttorneyId: currentUser?.id || null,
-        assignedAttorneyName: currentUser?.name || null,
-        status: 'Active',
-        notes: `Converted from Intake ${intake.intakeNumber || intake.id}. Adverse Parties screened: ${intake.adverseParties}`,
+      const normalizedPA = normalizePracticeAreaId(intake.practiceAreaId);
+      const isPIIntake =
+        normalizedPA === 'pa-pi' ||
+        intake.practiceAreaName?.toLowerCase().includes('personal injury');
+
+      const result = await convertIntakeToClient(intake.id, {
+        clientType: isPIIntake ? 'Individual' : 'Organization',
+        ...(currentUser?.id ? { assignedAttorneyId: currentUser.id } : {}),
       });
 
-      addToast(`Client record created: ${newClient.name} (${newClient.clientNumber || newClient.id}). Opening matter creation...`, 'success');
+      const createdClient = result?.client;
+      if (!createdClient?.id) {
+        throw new Error('Conversion did not return a valid client record.');
+      }
+
+      addToast(
+        `Intake ${intake.intakeNumber || ''} converted to Client ${createdClient.clientNumber || createdClient.name}. Opening matter creation...`,
+        'success'
+      );
       setSelectedIntake(null);
-      navigate(`/clients/${newClient.id || newClient.clientNumber}?intakeId=${intake.id}&openMatter=true`);
+      navigate(`/clients/${createdClient.id}?intakeId=${intake.id}&openMatter=true`);
     } catch (err) {
       addToast(err?.message || 'Failed to convert intake to client.', 'error');
+    } finally {
+      setConvertingIntakeId(null);
     }
   };
 
@@ -193,7 +270,10 @@ export function IntakeList() {
       render: (val, row) => (
         <div>
           <span className="font-semibold text-[#06244B] block">{val}</span>
-          <span className="text-[11px] text-[#667085]">{row.contactPerson} • {row.email}</span>
+          <span className="text-[11px] text-[#667085]">
+            {row.contactPerson ? `${row.contactPerson} • ` : ''}
+            {row.email}
+          </span>
         </div>
       ),
     },
@@ -218,14 +298,49 @@ export function IntakeList() {
       render: (val) => <StatusBadge status={val} />,
     },
     {
+      key: 'convertedToClient',
+      label: 'Conversion',
+      render: (val, row) => {
+        if (row.convertedMatterId) {
+          return (
+            <Link
+              to={`/matters/${row.convertedMatterId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-semibold text-emerald-700 hover:underline inline-flex items-center gap-1"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {row.convertedMatterNumber || 'Matter Opened'}
+            </Link>
+          );
+        }
+        if (row.convertedToClient && row.convertedClientId) {
+          return (
+            <Link
+              to={`/clients/${row.convertedClientId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs font-semibold text-[#06244B] hover:underline inline-flex items-center gap-1"
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              {row.convertedClientNumber || 'Client Created'}
+            </Link>
+          );
+        }
+        return <span className="text-[11px] text-[#667085]">Pre-Conversion</span>;
+      },
+    },
+    {
       key: 'reviewedBy',
       label: 'Reviewer',
       render: (val, row) => {
-        const reviewerText = typeof val === 'string' && val ? val : (row.reviewedByName || row.reviewedBy || 'Pending Review');
+        const reviewerText = row.reviewedByName || row.reviewedBy || 'Pending Review';
         return (
           <div className="text-xs">
             <span className="text-[#06244B] font-semibold">{reviewerText}</span>
-            {row.reviewedAt && <span className="text-[10px] text-[#667085] block">{formatDate(row.reviewedAt, { short: true })}</span>}
+            {row.reviewedAt && (
+              <span className="text-[10px] text-[#667085] block">
+                {formatDate(row.reviewedAt, { short: true })}
+              </span>
+            )}
           </div>
         );
       },
@@ -235,11 +350,7 @@ export function IntakeList() {
       label: 'Review',
       align: 'right',
       render: (val, row) => (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setSelectedIntake(row)}
-        >
+        <Button size="sm" variant="outline" onClick={() => setSelectedIntake(row)}>
           Review
         </Button>
       ),
@@ -249,8 +360,8 @@ export function IntakeList() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Intake &amp; Conflict Checks"
-        subtitle="End-to-end prospective client intake screening, adverse party conflict checks (RPC 1.7), and matter clearance."
+        title="Intake & Conflict Checks"
+        subtitle="End-to-end prospective client intake screening, adverse party conflict checks (Utah RPC 1.7), and conversion to client & matter."
         breadcrumbs={[{ label: 'Clients & Matters', to: '/clients' }, { label: 'Intake & Conflicts' }]}
         actions={
           <div className="flex items-center gap-2">
@@ -263,19 +374,13 @@ export function IntakeList() {
               <Sparkles className="w-3.5 h-3.5 mr-1 text-[#A4432B]" />
               End-to-End Walkthrough
             </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              icon={Plus}
-              onClick={() => setIsAddModalOpen(true)}
-            >
+            <Button variant="primary" size="sm" icon={Plus} onClick={() => setIsAddModalOpen(true)}>
               New Intake Form
             </Button>
           </div>
         }
       />
 
-      {/* Workflow Explainer Banner */}
       <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded bg-[#F5F0E5] text-[#A4432B]">
@@ -286,13 +391,12 @@ export function IntakeList() {
               Standard Firm Clearance Flow
             </h3>
             <p className="text-xs text-[#667085]">
-              1. Enter Prospective Client &rarr; 2. Screen Adverse Parties &rarr; 3. Partner Reviews Conflict &rarr; 4. Convert to Active Client &amp; Open Matter.
+              1. Register Intake &rarr; 2. Run Multi-Entity Conflict Search &rarr; 3. Record Reviewer Determination &rarr; 4. Convert to Client &amp; Open Matter.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Intakes Table */}
       <DataTable
         columns={columns}
         data={intakes}
@@ -305,7 +409,7 @@ export function IntakeList() {
         isOpen={Boolean(selectedIntake)}
         onClose={() => setSelectedIntake(null)}
         title={`Conflict Review: ${selectedIntake?.prospectiveClient}`}
-        subtitle={`Intake ID: ${selectedIntake?.id} • Created on ${formatDate(selectedIntake?.createdAt)}`}
+        subtitle={`Intake ID: ${selectedIntake?.intakeNumber || selectedIntake?.id} • Created on ${formatDate(selectedIntake?.createdAt)}`}
         maxWidth="max-w-2xl"
       >
         {selectedIntake && (
@@ -314,7 +418,7 @@ export function IntakeList() {
               <div>
                 <span className="text-[#667085] font-semibold block uppercase text-[10px]">Prospective Client:</span>
                 <p className="font-bold text-sm text-[#06244B]">{selectedIntake.prospectiveClient}</p>
-                <p className="text-[#667085]">{selectedIntake.contactPerson}</p>
+                {selectedIntake.contactPerson && <p className="text-[#667085]">{selectedIntake.contactPerson}</p>}
               </div>
               <div>
                 <span className="text-[#667085] font-semibold block uppercase text-[10px]">Contact Info:</span>
@@ -323,9 +427,17 @@ export function IntakeList() {
               </div>
             </div>
 
-            <div>
-              <span className="text-[#667085] font-semibold block uppercase text-[10px]">Practice Area:</span>
-              <p className="font-bold text-[#06244B] text-sm">{selectedIntake.practiceAreaName}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <span className="text-[#667085] font-semibold block uppercase text-[10px]">Practice Area:</span>
+                <p className="font-bold text-[#06244B] text-sm">{selectedIntake.practiceAreaName}</p>
+              </div>
+              {selectedIntake.jurisdictionVenue && (
+                <div>
+                  <span className="text-[#667085] font-semibold block uppercase text-[10px]">Jurisdiction / Venue:</span>
+                  <p className="font-semibold text-[#06244B]">{selectedIntake.jurisdictionVenue}</p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -337,37 +449,42 @@ export function IntakeList() {
 
             <div>
               <span className="text-[#667085] font-semibold block uppercase text-[10px]">Matter Summary &amp; Scope:</span>
-              <p className="p-3 bg-white border border-[#D9D6CF] rounded mt-1 leading-relaxed">
+              <p className="p-3 bg-white border border-[#D9D6CF] rounded mt-1 leading-relaxed whitespace-pre-line">
                 {getCleanMatterSummary(selectedIntake.matterSummary) || 'No details provided.'}
               </p>
             </div>
 
-            {/* If Structured PI Data is present, display full 5-section breakdown */}
             {selectedIntake.matterSummary?.includes('[PI_INTAKE_DATA:') && (() => {
               const pi = parsePIIntakeData(selectedIntake.matterSummary);
               return (
                 <div className="p-3 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] space-y-2 text-xs">
                   <span className="text-[#06244B] font-bold block uppercase text-[11px] border-b border-[#D9D6CF] pb-1">
-                    Structured Personal Injury Intake Questionnaire (Utah RPC 1.1)
+                    Structured Personal Injury Intake Questionnaire
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                     <div>
                       <span className="text-[#667085] font-semibold block">Incident / Collision:</span>
-                      <p className="text-[#06244B] font-medium">{pi.accidentType || 'Accident'} on {pi.accidentDate || 'Date Unverified'}</p>
-                      <p className="text-[#667085]">{pi.accidentLocation || 'Location Pending'}</p>
+                      <p className="text-[#06244B] font-medium">
+                        {pi.accidentType || 'Not specified'} {pi.accidentDate ? `on ${pi.accidentDate}` : '(Date pending)'}
+                      </p>
+                      <p className="text-[#667085]">{pi.accidentLocation || 'Location pending'}</p>
                     </div>
                     <div>
                       <span className="text-[#667085] font-semibold block">Adverse Driver &amp; Insurer:</span>
                       <p className="text-[#06244B] font-medium">{pi.opposingParties || 'None identified'}</p>
-                      <p className="text-[#667085]">{pi.insuranceCompany ? `${pi.insuranceCompany} (Claim #: ${pi.claimNumber || 'Pending'})` : 'Insurer Pending'}</p>
+                      <p className="text-[#667085]">
+                        {pi.insuranceCompany
+                          ? `${pi.insuranceCompany} (Claim #: ${pi.claimNumber || 'Pending'})`
+                          : 'Insurer pending'}
+                      </p>
                     </div>
                     <div>
                       <span className="text-[#667085] font-semibold block">Reported Injuries:</span>
-                      <p className="text-[#06244B]">{pi.knownInjuries || 'Under medical evaluation'}</p>
+                      <p className="text-[#06244B]">{pi.knownInjuries || 'Pending medical confirmation'}</p>
                     </div>
                     <div>
                       <span className="text-[#667085] font-semibold block">Treating Providers &amp; Facilities:</span>
-                      <p className="text-[#06244B]">{pi.treatingProviders || pi.medicalFacilities || 'Records requested'}</p>
+                      <p className="text-[#06244B]">{pi.treatingProviders || pi.medicalFacilities || 'Pending provider list'}</p>
                     </div>
                     {pi.outstandingInformation && (
                       <div className="sm:col-span-2 p-2 bg-amber-50 rounded border border-amber-200 text-amber-900">
@@ -384,16 +501,59 @@ export function IntakeList() {
               <div>
                 <span className="text-[#667085] font-semibold uppercase text-[10px] block">Current Conflict Status:</span>
                 <div className="mt-1"><StatusBadge status={selectedIntake.conflictStatus} /></div>
+                {selectedIntake.conflictNotes && (
+                  <p className="text-[11px] text-[#667085] mt-1">{selectedIntake.conflictNotes}</p>
+                )}
               </div>
-              {selectedIntake.reviewedBy && (
-                <div className="text-right">
-                  <span className="text-[#667085] text-[10px] block">Reviewed by:</span>
-                  <span className="font-bold text-[#06244B]">{selectedIntake.reviewedBy}</span>
-                </div>
-              )}
+              <div className="text-right">
+                <span className="text-[#667085] text-[10px] block">Reviewed by:</span>
+                <span className="font-bold text-[#06244B]">
+                  {selectedIntake.reviewedByName || selectedIntake.reviewedBy || 'Pending Review'}
+                </span>
+              </div>
             </div>
 
-            {/* Actions */}
+            {(selectedIntake.convertedClientId || selectedIntake.convertedMatterId) && (
+              <div className="p-3 rounded border border-emerald-200 bg-emerald-50 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="font-bold text-emerald-900 block">Conversion Status</span>
+                  <span className="text-[11px] text-emerald-800">
+                    {selectedIntake.convertedMatterId
+                      ? `Converted to Client ${selectedIntake.convertedClientNumber || ''} and Matter ${selectedIntake.convertedMatterNumber || ''}.`
+                      : `Converted to Client ${selectedIntake.convertedClientNumber || ''}. Matter not yet opened.`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedIntake.convertedClientId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      icon={ExternalLink}
+                      onClick={() => {
+                        setSelectedIntake(null);
+                        navigate(`/clients/${selectedIntake.convertedClientId}`);
+                      }}
+                    >
+                      View Client
+                    </Button>
+                  )}
+                  {selectedIntake.convertedMatterId && (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      icon={Briefcase}
+                      onClick={() => {
+                        setSelectedIntake(null);
+                        navigate(`/matters/${selectedIntake.convertedMatterId}`);
+                      }}
+                    >
+                      Open Matter
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="pt-4 border-t border-[#D9D6CF] flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Button
@@ -401,7 +561,9 @@ export function IntakeList() {
                   variant="primary"
                   className="bg-[#06244B] hover:bg-[#0B356D] text-white"
                   onClick={() => {
-                    setConflictSearchTarget(selectedIntake.adverseParties || selectedIntake.prospectiveClient);
+                    setConflictSearchTarget(
+                      [selectedIntake.prospectiveClient, selectedIntake.adverseParties].filter(Boolean).join(', ')
+                    );
                     setIsConflictSearchOpen(true);
                   }}
                 >
@@ -409,33 +571,30 @@ export function IntakeList() {
                   Run RPC 1.7 Conflict Check
                 </Button>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEngagementModalOpen(true)}
-                >
+                <Button size="sm" variant="outline" onClick={() => setIsEngagementModalOpen(true)}>
                   <FileText className="w-3.5 h-3.5 mr-1" />
                   Engagement Letter
                 </Button>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsSignatureModalOpen(true)}
-                >
+                <Button size="sm" variant="outline" onClick={() => setIsSignatureModalOpen(true)}>
                   <FileCheck className="w-3.5 h-3.5 mr-1" />
                   E-Sign Status
                 </Button>
               </div>
 
-              {selectedIntake.conflictStatus === 'Cleared' && (
+              {isClearedForConversion(selectedIntake.conflictStatus) && !selectedIntake.convertedMatterId && (
                 <Button
                   size="sm"
                   variant="primary"
                   icon={UserPlus}
+                  disabled={convertingIntakeId === selectedIntake.id}
                   onClick={() => handleConvertClient(selectedIntake)}
                 >
-                  Convert to Client &amp; Open Matter
+                  {selectedIntake.convertedClientId
+                    ? 'Open Matter from Intake'
+                    : convertingIntakeId === selectedIntake.id
+                    ? 'Converting...'
+                    : 'Convert to Client & Open Matter'}
                 </Button>
               )}
             </div>
@@ -448,7 +607,7 @@ export function IntakeList() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title="New Prospective Client Intake"
-        subtitle="Capture entity information and adverse parties for immediate conflict search."
+        subtitle="Capture entity information, practice area details, and adverse parties for conflict screening."
         maxWidth="max-w-2xl"
       >
         <form onSubmit={handleCreateIntake} className="space-y-4">
@@ -459,7 +618,7 @@ export function IntakeList() {
                 required
                 value={formData.prospectiveClient}
                 onChange={(e) => setFormData({ ...formData, prospectiveClient: e.target.value })}
-                placeholder="e.g. Clearwater Basin Agricultural Water Co."
+                placeholder="e.g. Jordan Taylor"
               />
             </div>
 
@@ -468,33 +627,35 @@ export function IntakeList() {
                 label="Primary Contact Person"
                 value={formData.contactPerson}
                 onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                placeholder="e.g. LeRoy Jenkins (President)"
+                placeholder="Name & title (if entity)"
               />
             </div>
 
             <div>
               <Select
                 label="Practice Area"
-                value={formData.practiceAreaId}
+                required
+                value={canonicalPAId}
                 onChange={(e) => setFormData({ ...formData, practiceAreaId: e.target.value })}
-                options={PRACTICE_AREAS.map(p => ({ value: p.id, label: p.name }))}
+                options={PRACTICE_AREAS.map((pa) => ({ value: pa.id, label: pa.name }))}
               />
             </div>
 
             <div>
               <Input
-                label="Contact Email"
+                label="Email Address"
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="contact@entity.com"
+                placeholder="client@example.com"
               />
             </div>
 
             <div>
               <Input
                 label="Phone Number"
+                required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="(801) 555-0100"
@@ -503,23 +664,23 @@ export function IntakeList() {
 
             <div>
               <Input
-                label="Estimated Matter Valuation ($)"
+                label="Estimated Dispute / Case Value ($)"
+                type="number"
                 value={formData.disputeAmount}
                 onChange={(e) => setFormData({ ...formData, disputeAmount: e.target.value })}
-                placeholder="e.g. 150000"
+                placeholder="Leave blank if unliquidated / unknown"
               />
             </div>
 
             <div>
               <Input
-                label="Jurisdiction / Court Venue"
+                label={isPI ? 'Jurisdiction / Venue (Optional — Leave Blank if Pre-Litigation)' : 'Jurisdiction / Court Venue'}
                 value={formData.jurisdictionVenue}
                 onChange={(e) => setFormData({ ...formData, jurisdictionVenue: e.target.value })}
-                placeholder="e.g. Utah Third District Court"
+                placeholder={isPI ? 'Optional (Pre-litigation)' : 'e.g. Utah Third Judicial District Court'}
               />
             </div>
 
-            {/* Dynamic Practice-Specific Questionnaire Block */}
             {isPI ? (
               <div className="sm:col-span-2">
                 <PIIntakeQuestionnaire
@@ -527,30 +688,16 @@ export function IntakeList() {
                   onChange={(newPiData) => {
                     setPiData(newPiData);
                     if (newPiData.opposingParties && !formData.adverseParties) {
-                      setFormData(prev => ({ ...prev, adverseParties: newPiData.opposingParties }));
+                      setFormData((prev) => ({ ...prev, adverseParties: newPiData.opposingParties }));
                     }
                   }}
                 />
               </div>
             ) : (
               <div className="sm:col-span-2 p-3 bg-[#F5F0E5]/80 rounded border border-[#D9D6CF] space-y-2">
-                <span className="font-bold text-xs text-[#06244B] block">
-                  {formData.practiceAreaId === 'pa-2' && 'Family Law Specialized Intake: Minor Children & Custody'}
-                  {formData.practiceAreaId === 'pa-3' && 'Criminal Defense Intake: Charges, Arraignment & Bail Status'}
-                  {formData.practiceAreaId === 'pa-4' && 'Estate Planning Intake: Beneficiaries & Asset Inventory'}
-                  {formData.practiceAreaId === 'pa-5' && 'Commercial / Corporate Intake: Entity Structure & Governance'}
-                  {formData.practiceAreaId === 'pa-6' && 'Real Estate & Water Rights Intake: Parcel PIN & Water Decrees'}
-                  {!['pa-2', 'pa-3', 'pa-4', 'pa-5', 'pa-6', 'pa-7', 'pa-pi'].includes(formData.practiceAreaId) && 'Specialized Practice Intake Questionnaire'}
-                </span>
+                <span className="font-bold text-xs text-[#06244B] block">{promptConfig.heading}</span>
                 <Input
-                  label={
-                    formData.practiceAreaId === 'pa-2' ? 'Children Details (Names, DOBs, Current Custody)' :
-                    formData.practiceAreaId === 'pa-3' ? 'Arresting Agency, Citation # & Arraignment Date' :
-                    formData.practiceAreaId === 'pa-4' ? 'Primary Fiduciary / Trustee & Real Property Addresses' :
-                    formData.practiceAreaId === 'pa-5' ? 'State of Incorporation & Ownership % Split' :
-                    formData.practiceAreaId === 'pa-6' ? 'Utah County Parcel # (PIN) & Water Right # (e.g. 55-1234)' :
-                    'Practice Area Custom Attributes & Statutory Notes'
-                  }
+                  label={promptConfig.label}
                   value={formData.practiceSpecificDetail}
                   onChange={(e) => setFormData({ ...formData, practiceSpecificDetail: e.target.value })}
                   placeholder="Enter practice-specific intake responses..."
@@ -560,12 +707,12 @@ export function IntakeList() {
 
             <div className="sm:col-span-2">
               <Input
-                label="Adverse Parties &amp; Associated Entities (For Conflict Search)"
+                label="Adverse Parties & Associated Entities (For Conflict Search)"
                 required
                 value={formData.adverseParties}
                 onChange={(e) => setFormData({ ...formData, adverseParties: e.target.value })}
-                placeholder="List opposing parties, adverse corporations, known affiliates..."
-                helperText="Names will be cross-checked against active and prior firm representations."
+                placeholder="List opposing parties, adverse corporations, insurers, or witnesses..."
+                helperText="Preserved and screened against clients, matters, intakes, related parties, and incident/party records."
               />
             </div>
 
@@ -577,7 +724,7 @@ export function IntakeList() {
                 rows={3}
                 value={formData.matterSummary}
                 onChange={(e) => setFormData({ ...formData, matterSummary: e.target.value })}
-                placeholder="Summarize the legal dispute, proposed transaction, or administrative relief sought..."
+                placeholder="Summarize the legal dispute, incident background, or representation scope..."
                 className="w-full text-sm p-3 rounded border border-[#D9D6CF] focus:outline-none focus:border-[#06244B]"
               />
             </div>
@@ -588,28 +735,29 @@ export function IntakeList() {
               Cancel
             </Button>
             <Button size="sm" variant="primary" type="submit">
-              Submit for Conflict Clearance
+              Submit Intake &amp; Run Initial Scan
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Conflict Search Engine Modal */}
       {isConflictSearchOpen && (
         <ConflictSearchModal
           isOpen={isConflictSearchOpen}
-          onClose={() => setIsConflictSearchOpen(false)}
+          onClose={() => {
+            setIsConflictSearchOpen(false);
+            refreshIntakes();
+          }}
           initialQuery={conflictSearchTarget}
           intakeId={selectedIntake?.id}
-          onConflictResolved={(disposition, reviewer, notes) => {
+          onConflictResolved={async (disposition, reviewer, notes) => {
             if (selectedIntake) {
-              handleSetConflictStatus(selectedIntake.id, disposition, reviewer, notes);
+              await handleSetConflictStatus(selectedIntake.id, disposition, reviewer, notes);
             }
           }}
         />
       )}
 
-      {/* Engagement Letter Generator Modal */}
       {isEngagementModalOpen && selectedIntake && (
         <EngagementLetterModal
           isOpen={isEngagementModalOpen}
@@ -617,16 +765,15 @@ export function IntakeList() {
           clientName={selectedIntake.prospectiveClient}
           contactPerson={selectedIntake.contactPerson || selectedIntake.prospectiveClient}
           email={selectedIntake.email}
-          matterTitle={selectedIntake.matterSummary || `${selectedIntake.practiceAreaName} Representation`}
+          matterTitle={getCleanMatterSummary(selectedIntake.matterSummary) || `${selectedIntake.practiceAreaName} Representation`}
           practiceAreaName={selectedIntake.practiceAreaName}
-          attorneyName={currentUser?.name || 'Thomas Bludworth, Esq.'}
+          attorneyName={currentUser?.name || ''}
           onDispatchSignature={() => {
             setIsSignatureModalOpen(true);
           }}
         />
       )}
 
-      {/* E-Signature Tracking Modal */}
       {isSignatureModalOpen && selectedIntake && (
         <SignatureTrackingModal
           isOpen={isSignatureModalOpen}
@@ -635,12 +782,11 @@ export function IntakeList() {
           signerEmail={selectedIntake.email}
           initialStatus="Sent"
           onSignedSuccessfully={() => {
-            handleSetConflictStatus(selectedIntake.id, 'Cleared');
+            addToast(`Engagement signature recorded for ${selectedIntake.prospectiveClient}.`, 'info');
           }}
         />
       )}
 
-      {/* End-to-End Walkthrough Demo Wizard */}
       {isDemoWizardOpen && (
         <EndToEndDemoWizard
           isOpen={isDemoWizardOpen}
@@ -650,4 +796,3 @@ export function IntakeList() {
     </div>
   );
 }
-

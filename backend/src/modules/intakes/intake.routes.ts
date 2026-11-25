@@ -48,6 +48,12 @@ intakeRouter.post(
   IntakeController.runConflictCheck
 );
 
+intakeRouter.get(
+  '/:id/conflict-logs',
+  requirePermission('intake:view'),
+  IntakeController.getConflictLogs
+);
+
 intakeRouter.post(
   '/:id/clear-conflict',
   requirePermission('intake:conflict_review'),

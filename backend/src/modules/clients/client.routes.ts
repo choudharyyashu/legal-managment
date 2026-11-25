@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ClientController } from './client.controller.js';
+import { relatedPartyRouter } from '../related-parties/related-party.routes.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -28,10 +29,18 @@ clientRouter.get(
 );
 
 clientRouter.get(
+  '/:id/360',
+  requirePermission('clients:view'),
+  ClientController.getClient360
+);
+
+clientRouter.get(
   '/:id/matters',
   requirePermission('clients:view'),
   ClientController.getClientMatters
 );
+
+clientRouter.use('/:clientId/related-parties', relatedPartyRouter);
 
 clientRouter.post(
   '/',

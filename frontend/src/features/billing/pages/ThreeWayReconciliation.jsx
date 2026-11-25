@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { trustService } from '../../../services/trustService';
 import {
   ShieldCheck,
   Landmark,
@@ -36,75 +37,72 @@ export function ThreeWayReconciliation() {
   const [isReconciling, setIsReconciling] = useState(false);
 
   // Pillar 1: Bank Account Figures
-  const bankStatementBalance = 74278.0;
-  const depositsInTransit = 1440.0;
-  const outstandingChecks = 1440.0;
-  const adjustedBankBalance = bankStatementBalance + depositsInTransit - outstandingChecks;
+  // Pillar 1: Bank Account Figures (fetched from backend when available)
+  const [bankStatementBalance, setBankStatementBalance] = useState(null);
+  const [depositsInTransit, setDepositsInTransit] = useState(null);
+  const [outstandingChecks, setOutstandingChecks] = useState(null);
+  const adjustedBankBalance =
+    bankStatementBalance !== null && depositsInTransit !== null && outstandingChecks !== null
+? bankStatementBalance + depositsInTransit - outstandingChecks
+: null;
 
-  // Pillar 2: General Ledger Trust Balance (Account #2100)
-  const glTrustBalance = 74278.0;
+  // Pillar 2: General Ledger Trust Balance (Account #2100) – fetched when endpoint exists
+  const [glTrustBalance, setGlTrustBalance] = useState<number | null>(null);
 
-  // Pillar 3: Client Sub-Ledgers
-  const [clientLedgers, setClientLedgers] = useState([
-    {
-      id: 'TR-1001',
-      clientId: 'CLI-1001',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      balance: 25000.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1002',
-      clientId: 'CLI-1002',
-      clientName: 'Dr. Evelyn Martinez',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      balance: 12500.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1003',
-      clientId: 'CLI-1008',
-      clientName: 'Elena Rostova',
-      matterNumber: '26-IMM-0012',
-      matterTitle: 'Elena Rostova: Marriage-Based Adjustment of Status (I-130 / I-485)',
-      balance: 1440.0,
-      verified: true,
-      lastAudit: '2026-11-11',
-    },
-    {
-      id: 'TR-1004',
-      clientId: 'CLI-1009',
-      clientName: 'Rachel Lynn Walker',
-      matterNumber: '26-25410-JTM',
-      matterTitle: 'Rachel Lynn Walker: Chapter 7 Consumer Debt Liquidation',
-      balance: 338.0,
-      verified: true,
-      lastAudit: '2026-11-12',
-    },
-    {
-      id: 'TR-1005',
-      clientId: 'CLI-1003',
-      clientName: 'Apex Horizon Real Estate Group',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      balance: 35000.0,
-      verified: true,
-      lastAudit: '2026-11-09',
-    },
-  ]);
+  // Pillar 3: Client Sub‑Ledgers – loaded from trust service
+  const [clientLedgers, setClientLedgers] = useState([]);
+
+  // Load data on component mount
+  useEffect(() => {
+    // Load client ledgers
+    trustService
+      .getLedgers({ limit: 100 })
+      .then((res) => {
+        if (Array.isArray(res?.ledgers)) setClientLedgers(res.ledgers);
+      })
+      .catch((err) => {
+        console.warn('Could not load client ledgers:', err?.message);
+        setClientLedgers([]);
+      });
+
+    // Attempt to load bank statement data – placeholder endpoint (may not exist)
+    // If the endpoint is missing, we simply leave the values null and show an empty state.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    fetch('/api/bank/statement')
+      .then((r) => r.json())
+      .then((data) => {
+        setBankStatementBalance(data?.balance ?? null);
+        setDepositsInTransit(data?.depositsInTransit ?? null);
+        setOutstandingChecks(data?.outstandingChecks ?? null);
+      })
+      .catch(() => {
+        // No bank statement endpoint – keep null
+        setBankStatementBalance(null);
+        setDepositsInTransit(null);
+        setOutstandingChecks(null);
+      });
+
+    // Attempt to load GL trust balance – placeholder endpoint
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    fetch('/api/trust/gl-balance')
+      .then((r) => r.json())
+      .then((data) => setGlTrustBalance(data?.balance ?? null))
+      .catch(() => setGlTrustBalance(null));
+  }, []);
+
 
   const totalClientLedgersBalance = clientLedgers.reduce((sum, item) => sum + item.balance, 0);
 
   // Variance Calculation
-  const variance1 = Math.abs(adjustedBankBalance - glTrustBalance);
-  const variance2 = Math.abs(glTrustBalance - totalClientLedgersBalance);
-  const totalVariance = variance1 + variance2;
-  const isReconciled = totalVariance === 0;
+  // Safe variance calculations – handle missing data gracefully
+  const variance1 = adjustedBankBalance !== null && glTrustBalance !== null
+    ? Math.abs(adjustedBankBalance - glTrustBalance)
+    : null;
+  const variance2 = glTrustBalance !== null
+    ? Math.abs(glTrustBalance - totalClientLedgersBalance)
+    : null;
+  const totalVariance = (variance1 !== null && variance2 !== null) ? variance1 + variance2 : null;
+  const isReconciled = totalVariance === 0 && variance1 !== null && variance2 !== null;
 
   // Uncleared items for Tab 2
   const [unclearedItems, setUnclearedItems] = useState([

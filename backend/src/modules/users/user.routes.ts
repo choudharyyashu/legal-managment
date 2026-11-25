@@ -15,6 +15,11 @@ export const userRouter = Router();
 userRouter.use(requireAuth);
 
 userRouter.get(
+  '/directory',
+  UserController.getDirectory
+);
+
+userRouter.get(
   '/',
   requirePermission('users:view'),
   validateRequest({ query: userQuerySchema }),

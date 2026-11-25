@@ -387,18 +387,24 @@ export function ImmigrationCasesList() {
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Pending USCIS Receipts</span>
-          <span className="text-2xl font-bold text-amber-700 mt-1 block">5</span>
-          <span className="text-[11px] text-[#667085]">Nebraska, Texas &amp; Vermont Centers</span>
+          <span className="text-2xl font-bold text-amber-700 mt-1 block">
+            {cases.filter(c => !c.receiptNumber || String(c.status || '').toLowerCase().includes('pending')).length}
+          </span>
+          <span className="text-[11px] text-[#667085]">Active USCIS Filings</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">RFEs Due &lt;30 Days</span>
-          <span className="text-2xl font-bold text-red-700 mt-1 block">1</span>
-          <span className="text-[11px] text-red-600 font-semibold">Dr. Klaus Richter (EB-2 NIW)</span>
+          <span className="text-2xl font-bold text-red-700 mt-1 block">
+            {cases.filter(c => String(c.status || '').toLowerCase().includes('rfe')).length}
+          </span>
+          <span className="text-[11px] text-[#667085]">Requests for Evidence</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
-          <span className="text-xs text-[#667085] uppercase font-bold block">Naturalization Interviews</span>
-          <span className="text-2xl font-bold text-[#06244B] mt-1 block">1</span>
-          <span className="text-[11px] text-emerald-700 font-medium">Nov 24 (Fatima Al-Mansoor)</span>
+          <span className="text-xs text-[#667085] uppercase font-bold block">Scheduled Interviews</span>
+          <span className="text-2xl font-bold text-[#06244B] mt-1 block">
+            {cases.filter(c => Boolean(c.interviewDate)).length}
+          </span>
+          <span className="text-[11px] text-[#667085]">Biometrics &amp; USCIS Appearances</span>
         </div>
       </div>
 

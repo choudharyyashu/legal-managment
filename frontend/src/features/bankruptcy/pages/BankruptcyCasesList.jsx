@@ -351,8 +351,10 @@ export function BankruptcyCasesList() {
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Section 341 Hearings</span>
-          <span className="text-2xl font-bold text-amber-700 mt-1 block">2</span>
-          <span className="text-[11px] text-amber-800 font-semibold">Scheduled via Zoom Video</span>
+          <span className="text-2xl font-bold text-amber-700 mt-1 block">
+            {cases.filter(c => Boolean(c.meeting341Date)).length}
+          </span>
+          <span className="text-[11px] text-amber-800 font-semibold">Scheduled 341 Meetings</span>
         </div>
       </div>
 

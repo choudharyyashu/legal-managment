@@ -123,6 +123,7 @@ model Client {
   paymentRecords   PaymentRecord[]
   documentDrafts   DocumentDraft[]
   communications   Communication[]
+  relatedParties   RelatedParty[]
 
   @@index([name, email, clientNumber], name: "idx_clients_search")
   @@map("clients")
@@ -155,6 +156,7 @@ model Intake {
   convertedClient    Client?             @relation("ConvertedClient", fields: [convertedClientId], references: [id], onDelete: SetNull)
   convertedMatter    Matter?             @relation("ConvertedMatter", fields: [convertedMatterId], references: [id], onDelete: SetNull)
   conflictSearchLogs ConflictSearchLog[]
+  relatedParties     RelatedParty[]
 
   @@map("intakes")
 }
@@ -257,6 +259,7 @@ model Matter {
   appealsCase             AppealsCase?
   evictionsCase           EvictionsCase?
   overviewPanels          MatterOverviewPanels?
+  relatedParties          RelatedParty[]
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -273,6 +276,37 @@ model MatterOverviewPanels {
   matter     Matter   @relation(fields: [matterId], references: [id], onDelete: Cascade)
 
   @@map("matter_overview_panels")
+}
+
+model RelatedParty {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  matterId        String?  @map("matter_id") @db.VarChar(36)
+  clientId        String?  @map("client_id") @db.VarChar(36)
+  intakeId        String?  @map("intake_id") @db.VarChar(36)
+  name            String   @db.VarChar(255)
+  aliases         String?  @db.Text
+  roleId          String   @map("role_id") @db.VarChar(50)
+  roleLabel       String   @map("role_label") @db.VarChar(100)
+  firmName        String?  @map("firm_name") @db.VarChar(255)
+  contactPerson   String?  @map("contact_person") @db.VarChar(255)
+  email           String?  @db.VarChar(255)
+  phone           String?  @db.VarChar(50)
+  address         String?  @db.Text
+  serviceType     String?  @map("service_type") @db.VarChar(150)
+  notes           String?  @db.Text
+  createdByUserId String?  @map("created_by_user_id") @db.VarChar(36)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter Matter? @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  intake Intake? @relation(fields: [intakeId], references: [id], onDelete: SetNull)
+
+  @@index([matterId], name: "idx_related_parties_matter")
+  @@index([clientId], name: "idx_related_parties_client")
+  @@index([intakeId], name: "idx_related_parties_intake")
+  @@index([name], name: "idx_related_parties_name")
+  @@map("related_parties")
 }
 
 model MatterStaffAssignment {

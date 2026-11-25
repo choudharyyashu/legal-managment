@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { useToast } from '../../../components/ui/Toast';
@@ -20,10 +20,16 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
     phone: initialData?.phone || '',
     address: initialData?.address || '',
     primaryContact: initialData?.primaryContact || '',
-    assignedAttorneyId: initialData?.assignedAttorneyId || attorneys[0]?.id || 'usr-2',
+    assignedAttorneyId: initialData?.assignedAttorneyId || attorneys[0]?.id || '',
     status: initialData?.status || 'Active',
     notes: initialData?.notes || '',
   });
+
+  useEffect(() => {
+    if (!formData.assignedAttorneyId && attorneys.length > 0) {
+      setFormData(prev => ({ ...prev, assignedAttorneyId: attorneys[0].id }));
+    }
+  }, [attorneys.length, formData.assignedAttorneyId]);
 
   const [errors, setErrors] = useState({});
 
@@ -60,7 +66,7 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
       const clientPayload = {
         ...formData,
         assignedAttorneyId: attorneyUuid,
-        assignedAttorneyName: assignedAttorney?.name || 'Assigned Counsel',
+        assignedAttorneyName: assignedAttorney?.name || '',
       };
 
       if (initialData?.id) {

@@ -25,21 +25,22 @@ import { LitigationNavigationHeader } from '../components/LitigationNavigationHe
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 
 export function LitigationDashboard() {
   const { matters } = useMatters();
   const cases = React.useMemo(() => {
     return (matters || [])
-      .filter((m) => m.practiceAreaId === 'pa-lit' || m.practiceAreaName?.toLowerCase().includes('litigation') || m.isLitigationContested)
+      .filter((m) => matchesPracticeArea(m.practiceAreaId, 'pa-civ') || m.practiceAreaName?.toLowerCase().includes('litigation') || m.isLitigationContested)
       .map((m) => ({
         id: m.id,
         caseNumber: m.matterNumber,
         caseTitle: m.title,
-        courtName: m.courtName || 'Third Judicial District Court',
-        judge: m.judge || 'Presiding Judge',
+        courtName: m.courtName || '',
+        judge: m.judge || '',
         trialDate: m.nextCourtDate ? new Date(m.nextCourtDate).toISOString().split('T')[0] : '',
-        tier: 'Tier 2 (URCP 26)',
-        leadAttorney: m.responsibleAttorneyName || 'Lead Counsel',
+        tier: m.courtName ? 'District Court' : 'Pre-Trial',
+        leadAttorney: m.responsibleAttorneyName || '',
         status: m.status || 'Active',
       }));
   }, [matters]);
@@ -189,32 +190,46 @@ export function LitigationDashboard() {
         }
       />
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
-          <span className="text-[10px] uppercase font-bold text-[#667085] block">Active Litigation Dockets</span>
-          <div className="text-2xl font-bold font-serif text-[#06244B] mt-1">{cases.length} Matters</div>
-          <span className="text-[11px] text-emerald-700 font-semibold">Third District &amp; District of Utah</span>
-        </div>
+      {/* KPI Cards Row (Computed strictly from active Litigation matters) */}
+      {(() => {
+        const discoveryCount = cases.filter((c) => c.status === 'In Discovery').length;
+        const trialPrepCount = cases.filter((c) => c.status === 'Trial Prep').length;
+        const scheduledCases = [...cases]
+          .filter((c) => c.trialDate)
+          .sort((a, b) => a.trialDate.localeCompare(b.trialDate));
+        const nextTrialCase = scheduledCases[0] || null;
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-[#667085] block">Active Litigation Dockets</span>
+              <div className="text-2xl font-bold font-serif text-[#06244B] mt-1">{cases.length} Matters</div>
+              <span className="text-[11px] text-emerald-700 font-semibold">Utah Civil &amp; Contested Dockets</span>
+            </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
-          <span className="text-[10px] uppercase font-bold text-[#667085] block">Unserved Defendants</span>
-          <div className="text-2xl font-bold text-amber-700 mt-1">0 Pending</div>
-          <span className="text-[11px] text-[#667085]">100% Service Verified under URCP 4</span>
-        </div>
+            <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-[#667085] block">Trial Preparation</span>
+              <div className="text-2xl font-bold text-amber-700 mt-1">{trialPrepCount} Matters</div>
+              <span className="text-[11px] text-[#667085]">Active pre-trial dockets</span>
+            </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
-          <span className="text-[10px] uppercase font-bold text-[#667085] block">Written Discovery Sets</span>
-          <div className="text-2xl font-bold text-[#06244B] mt-1">3 Active Sets</div>
-          <span className="text-[11px] text-amber-800 font-semibold">1 Deficiency Meet-and-Confer</span>
-        </div>
+            <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-[#667085] block">In Discovery</span>
+              <div className="text-2xl font-bold text-[#06244B] mt-1">{discoveryCount} Matters</div>
+              <span className="text-[11px] text-[#667085]">Active URCP 26 discovery phase</span>
+            </div>
 
-        <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
-          <span className="text-[10px] uppercase font-bold text-[#667085] block">Upcoming Pretrial / Trial</span>
-          <div className="text-2xl font-bold text-[#A4432B] mt-1">Oct 14, 2026</div>
-          <span className="text-[11px] text-[#667085]">Wasatch v. Interstate Freightlines</span>
-        </div>
-      </div>
+            <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-[#667085] block">Next Court Appearance</span>
+              <div className="text-2xl font-bold text-[#A4432B] mt-1">
+                {nextTrialCase ? nextTrialCase.trialDate : 'None Scheduled'}
+              </div>
+              <span className="text-[11px] text-[#667085] truncate block">
+                {nextTrialCase ? nextTrialCase.caseTitle : 'No upcoming hearings on docket'}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Search and Table */}
       <div className="space-y-3">

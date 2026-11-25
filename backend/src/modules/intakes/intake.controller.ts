@@ -78,8 +78,20 @@ export class IntakeController {
       res.status(200).json({
         success: true,
         message: result.hasConflicts
-          ? `Conflict Identified: Found ${result.matches.length} prospective adverse match(es).`
-          : 'Conflict Clearance Scan Complete: Zero adverse entity matches identified.',
+          ? `Potential Match: Found ${result.matches.length} prospective conflict match(es). Attorney review required.`
+          : 'Automated Conflict Search Complete: Zero matches identified across searched categories. Pending reviewer sign-off.',
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getConflictLogs(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await IntakeService.getConflictLogs(req.params.id);
+      res.status(200).json({
+        success: true,
         data: result,
       });
     } catch (err) {
@@ -110,6 +122,7 @@ export class IntakeController {
     try {
       const result = await IntakeService.convertToClient(req.params.id, req.body, {
         userId: req.user!.id,
+        userName: req.user!.email,
         userRole: req.user!.role,
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),
@@ -129,6 +142,7 @@ export class IntakeController {
     try {
       const result = await IntakeService.convertToMatter(req.params.id, req.body, {
         userId: req.user!.id,
+        userName: req.user!.email,
         userRole: req.user!.role,
         ipAddress: req.ip,
         userAgent: req.get('user-agent'),

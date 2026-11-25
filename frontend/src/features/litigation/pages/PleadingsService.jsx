@@ -22,21 +22,22 @@ import { Input } from '../../../components/ui/Input';
 import { LitigationNavigationHeader } from '../components/LitigationNavigationHeader';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 
 export function PleadingsService() {
   const { matters } = useMatters();
   const cases = React.useMemo(() => {
     return (matters || [])
-      .filter((m) => m.practiceAreaId === 'pa-lit' || m.practiceAreaName?.toLowerCase().includes('litigation') || m.isLitigationContested)
+      .filter((m) => matchesPracticeArea(m.practiceAreaId, 'pa-civ') || m.practiceAreaName?.toLowerCase().includes('litigation') || m.isLitigationContested)
       .map((m) => ({
         id: m.id,
         caseNumber: m.matterNumber,
         caseTitle: m.title,
-        courtName: m.courtName || 'Third Judicial District Court',
-        judge: m.judge || 'Presiding Judge',
+        courtName: m.courtName || '',
+        judge: m.judge || '',
         trialDate: m.nextCourtDate ? new Date(m.nextCourtDate).toISOString().split('T')[0] : '',
-        tier: 'Tier 2 (URCP 26)',
-        leadAttorney: m.responsibleAttorneyName || 'Lead Counsel',
+        tier: m.courtName ? 'District Court' : 'Pre-Trial',
+        leadAttorney: m.responsibleAttorneyName || '',
         status: m.status || 'Active',
       }));
   }, [matters]);

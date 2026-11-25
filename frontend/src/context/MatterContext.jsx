@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { matterService } from '../services/matterService';
+import { intakeService } from '../services/intakeService';
 import { useAuth } from '../hooks/useAuth';
+import { normalizePracticeAreaId } from '../data/practiceAreas';
 
 const MatterContext = createContext();
 
@@ -13,33 +15,28 @@ const normalizeMatter = (m) => ({
   title: m.title,
   clientName: m.client?.name || m.clientName || 'Client',
   clientId: m.clientId,
-  practiceAreaId: m.practiceAreaId,
+  practiceAreaId: normalizePracticeAreaId(m.practiceAreaId) || m.practiceAreaId,
   practiceAreaName: m.practiceArea?.name || m.practiceAreaName || 'Practice Area',
-  responsibleAttorneyName: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Lead Counsel',
+  responsibleAttorneyName: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Unassigned',
   assignedStaffNames: m.staffAssignments?.map((s) => s.user?.name).filter(Boolean) || m.assignedStaffNames || [],
   assignedStaffIds: m.staffAssignments?.map((s) => s.userId).filter(Boolean) || m.assignedStaffIds || [],
   status: m.status || 'Active',
   billingType: m.billingType || 'Hourly',
-  hourlyRate: m.hourlyRate ? Number(m.hourlyRate) : 0,
-  flatFeeAmount: m.flatFeeAmount ? Number(m.flatFeeAmount) : 0,
+  hourlyRate: m.hourlyRate !== null && m.hourlyRate !== undefined ? Number(m.hourlyRate) : 0,
+  flatFeeAmount: m.flatFeeAmount !== null && m.flatFeeAmount !== undefined ? Number(m.flatFeeAmount) : 0,
+  contingencyPercentage:
+    m.contingencyPercentage !== null && m.contingencyPercentage !== undefined ? Number(m.contingencyPercentage) : 0,
   budget: m.budget ? Number(m.budget) : 0,
   totalBilled: m.totalBilled ? Number(m.totalBilled) : 0,
   unbilledHours: m.unbilledHours ? Number(m.unbilledHours) : 0,
-  openDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+  openDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
   isEthicalWallEnabled: Boolean(m.isEthicalWallEnabled),
   ethicalWallExcludedRole: m.ethicalWallExcludedRole || null,
 });
 
 export function MatterProvider({ children }) {
   const { isAuthenticated, currentUser } = useAuth();
-  const [matters, setMatters] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_matters');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [matters, setMatters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -95,6 +92,7 @@ export function MatterProvider({ children }) {
       setActiveMatterId(null);
       try {
         sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+        localStorage.removeItem('hb_cached_matters');
       } catch {}
     }
   }, [isAuthenticated, refreshMatters]);
@@ -128,6 +126,7 @@ export function MatterProvider({ children }) {
       setActiveMatterId(null);
       try {
         sessionStorage.removeItem(ACTIVE_MATTER_STORAGE_KEY);
+        localStorage.removeItem('hb_cached_matters');
       } catch {}
       return;
     }
@@ -165,35 +164,88 @@ export function MatterProvider({ children }) {
   }, [activeMatter]);
 
   const addMatter = async (matterData) => {
-    try {
-      const payload = {
-        title: matterData.title,
-        clientId: matterData.clientId,
-        practiceAreaId: matterData.practiceAreaId,
-        responsibleAttorneyId: matterData.responsibleAttorneyId,
-        assignedStaffId: matterData.assignedStaffId || null,
-        status: matterData.status || 'Active',
-        billingType: matterData.billingType || 'Hourly',
-        hourlyRate: matterData.billingType === 'Hourly' ? Number(matterData.hourlyRate || 350) : null,
-        flatFeeAmount: matterData.billingType === 'Flat Fee' ? Number(matterData.flatFeeAmount || 25000) : null,
-        contingencyPercentage: matterData.billingType === 'Contingency' ? Number(matterData.contingencyPercentage || 33.3) : null,
-        budget: Number(matterData.budget) || 0,
-        courtName: matterData.courtName || null,
-        judge: matterData.judge || null,
-        nextCourtDate: matterData.nextCourtDate || null,
-        statuteOfLimitations: matterData.statuteOfLimitations || null,
-        description: matterData.description || null,
-        isEthicalWallEnabled: Boolean(matterData.isEthicalWallEnabled),
-        ethicalWallExcludedRole: matterData.ethicalWallExcludedRole || null,
-      };
+    const payload = {
+      title: matterData.title,
+      clientId: matterData.clientId,
+      practiceAreaId: normalizePracticeAreaId(matterData.practiceAreaId) || matterData.practiceAreaId,
+      responsibleAttorneyId: matterData.responsibleAttorneyId,
+      assignedStaffId: matterData.assignedStaffId || null,
+      status: matterData.status || 'Active',
+      billingType: matterData.billingType || 'Hourly',
+      hourlyRate:
+        matterData.billingType === 'Hourly' && matterData.hourlyRate !== '' && matterData.hourlyRate !== null && matterData.hourlyRate !== undefined
+          ? Number(matterData.hourlyRate)
+          : null,
+      flatFeeAmount:
+        matterData.billingType === 'Flat Fee' && matterData.flatFeeAmount !== '' && matterData.flatFeeAmount !== null && matterData.flatFeeAmount !== undefined
+          ? Number(matterData.flatFeeAmount)
+          : null,
+      contingencyPercentage:
+        matterData.billingType === 'Contingency' &&
+        matterData.contingencyPercentage !== '' &&
+        matterData.contingencyPercentage !== null &&
+        matterData.contingencyPercentage !== undefined
+          ? Number(matterData.contingencyPercentage)
+          : null,
+      budget: matterData.budget ? Number(matterData.budget) : 0,
+      courtName: matterData.courtName || null,
+      judge: matterData.judge || null,
+      caseDocketNumber: matterData.caseDocketNumber || null,
+      nextCourtDate: matterData.nextCourtDate || null,
+      statuteOfLimitations: matterData.statuteOfLimitations || null,
+      description: matterData.description || null,
+      isEthicalWallEnabled: Boolean(matterData.isEthicalWallEnabled),
+      ethicalWallExcludedRole: matterData.ethicalWallExcludedRole || null,
+    };
 
-      const created = await matterService.createMatter(payload);
-      const normalized = normalizeMatter(created);
+    const created = await matterService.createMatter(payload);
+    const normalized = normalizeMatter(created);
+    setMatters((prev) => [normalized, ...prev.filter((m) => m.id !== normalized.id)]);
+    return normalized;
+  };
+
+  const convertIntakeToMatter = async (intakeId, matterData) => {
+    const payload = {
+      clientId: matterData.clientId || undefined,
+      responsibleAttorneyId: matterData.responsibleAttorneyId,
+      assignedStaffId: matterData.assignedStaffId || null,
+      title: matterData.title || undefined,
+      practiceAreaId: normalizePracticeAreaId(matterData.practiceAreaId) || matterData.practiceAreaId || undefined,
+      status: matterData.status || 'Active',
+      billingType: matterData.billingType || 'Hourly',
+      hourlyRate:
+        matterData.billingType === 'Hourly' && matterData.hourlyRate !== '' && matterData.hourlyRate !== null && matterData.hourlyRate !== undefined
+          ? Number(matterData.hourlyRate)
+          : undefined,
+      flatFeeAmount:
+        matterData.billingType === 'Flat Fee' && matterData.flatFeeAmount !== '' && matterData.flatFeeAmount !== null && matterData.flatFeeAmount !== undefined
+          ? Number(matterData.flatFeeAmount)
+          : undefined,
+      contingencyPercentage:
+        matterData.billingType === 'Contingency' &&
+        matterData.contingencyPercentage !== '' &&
+        matterData.contingencyPercentage !== null &&
+        matterData.contingencyPercentage !== undefined
+          ? Number(matterData.contingencyPercentage)
+          : undefined,
+      budget: matterData.budget ? Number(matterData.budget) : 0,
+      courtName: matterData.courtName ?? null,
+      judge: matterData.judge ?? null,
+      caseDocketNumber: matterData.caseDocketNumber ?? null,
+      nextCourtDate: matterData.nextCourtDate ?? null,
+      statuteOfLimitations: matterData.statuteOfLimitations ?? null,
+      description: matterData.description ?? null,
+      isEthicalWallEnabled: Boolean(matterData.isEthicalWallEnabled),
+      ethicalWallExcludedRole: matterData.ethicalWallExcludedRole || null,
+    };
+
+    const result = await intakeService.convertToMatter(intakeId, payload);
+    if (result?.matter) {
+      const normalized = normalizeMatter(result.matter);
       setMatters((prev) => [normalized, ...prev.filter((m) => m.id !== normalized.id)]);
-      return normalized;
-    } catch (err) {
-      throw err;
+      return { ...result, matter: normalized };
     }
+    return result;
   };
 
   const updateMatter = async (id, updatedFields) => {
@@ -237,6 +289,7 @@ export function MatterProvider({ children }) {
         clearActiveMatter,
         refreshMatters,
         addMatter,
+        convertIntakeToMatter,
         updateMatter,
         updateMatterStatus,
         getMatter,

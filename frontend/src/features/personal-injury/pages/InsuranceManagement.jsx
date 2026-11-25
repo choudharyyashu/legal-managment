@@ -19,21 +19,19 @@ import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { piService } from '../../../services/piService';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 
 export function InsuranceManagement() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    const filtered = (matters || []).filter(
+    return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
-    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [policies, setPolicies] = useState([]);
   const [loading, setLoading] = useState(false);

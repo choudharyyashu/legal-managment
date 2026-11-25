@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   UserPlus,
@@ -6,71 +6,76 @@ import {
   Mail,
   Phone,
   Building,
-  Scale,
-  ShieldAlert,
   Trash2,
   Edit,
-  ExternalLink,
   MapPin,
-  CheckCircle2,
-  Briefcase
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { useToast } from '../../../components/ui/Toast';
-import { usePermissions } from '../../../hooks/usePermissions';
 import { RELATED_PARTY_ROLES } from '../../../data/mockRelatedParties';
+import { relatedPartyService } from '../../../services/relatedPartyService';
+import { formatDate } from '../../../utils/formatDate';
 
-export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName }) {
+const EMPTY_FORM = {
+  name: '',
+  aliases: '',
+  roleId: 'opposing_party',
+  firmName: '',
+  contactPerson: '',
+  email: '',
+  phone: '',
+  address: '',
+  serviceType: '',
+  notes: '',
+};
+
+export function RelatedPartiesTab({ matterId, clientId }) {
   const { addToast } = useToast();
-  const permissions = usePermissions();
 
-  const [parties, setParties] = useState(() => {
-    try {
-      const stored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
-      if (matterId) {
-        return stored.filter((p) => p.matterId === matterId);
-      }
-      if (clientId) {
-        return stored.filter((p) => p.clientId === clientId);
-      }
-      return stored;
-    } catch {
-      return [];
-    }
-  });
+  const [parties, setParties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [migrationPending, setMigrationPending] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingPartyId, setEditingPartyId] = useState(null);
+  const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
-  // New Party Form State
-  const [formData, setFormData] = useState({
-    name: '',
-    roleId: 'opposing_party',
-    firmName: '',
-    contactPerson: '',
-    email: '',
-    phone: '',
-    address: '',
-    notes: '',
-  });
+  const loadParties = useCallback(async () => {
+    if (!matterId && !clientId) {
+      setParties([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await relatedPartyService.getRelatedParties({
+        ...(matterId ? { matterId } : {}),
+        ...(clientId ? { clientId } : {}),
+      });
+      setParties(result.parties || []);
+      setMigrationPending(Boolean(result.meta?.migrationPending));
+    } catch (err) {
+      console.warn('Failed to load related parties:', err?.message);
+      setParties([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [matterId, clientId]);
+
+  useEffect(() => {
+    loadParties();
+  }, [loadParties]);
 
   const handleOpenAdd = () => {
     setEditingPartyId(null);
-    setFormData({
-      name: '',
-      roleId: 'opposing_party',
-      firmName: '',
-      contactPerson: '',
-      email: '',
-      phone: '',
-      address: '',
-      notes: '',
-    });
+    setFormData({ ...EMPTY_FORM });
     setIsAddModalOpen(true);
   };
 
@@ -78,63 +83,32 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
     setEditingPartyId(party.id);
     setFormData({
       name: party.name || '',
+      aliases: party.aliases || '',
       roleId: party.roleId || 'opposing_party',
       firmName: party.firmName || '',
       contactPerson: party.contactPerson || '',
       email: party.email || '',
       phone: party.phone || '',
       address: party.address || '',
+      serviceType: party.serviceType || '',
       notes: party.notes || '',
     });
     setIsAddModalOpen(true);
   };
 
-  const handleAddParty = (e) => {
+  const handleSaveParty = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       addToast('Please enter the party or firm name.', 'error');
       return;
     }
 
-    const roleObj = RELATED_PARTY_ROLES.find(r => r.id === formData.roleId) || RELATED_PARTY_ROLES[0];
-    let allStored = [];
-    try {
-      allStored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
-    } catch {}
-
-    if (editingPartyId) {
-      // Edit mode: update existing party
-      const updatedParty = {
-        name: formData.name.trim(),
-        roleId: roleObj.id,
-        roleLabel: roleObj.label,
-        firmName: formData.firmName.trim() || null,
-        contactPerson: formData.contactPerson.trim() || null,
-        email: formData.email.trim() || null,
-        phone: formData.phone.trim() || null,
-        address: formData.address.trim() || null,
-        notes: formData.notes.trim() || null,
-      };
-
-      const updatedAll = allStored.map(p => p.id === editingPartyId ? { ...p, ...updatedParty } : p);
-      try {
-        sessionStorage.setItem('hb_related_parties', JSON.stringify(updatedAll));
-      } catch {}
-
-      setParties(prev => prev.map(p => p.id === editingPartyId ? { ...p, ...updatedParty } : p));
-      setIsAddModalOpen(false);
-      setEditingPartyId(null);
-      addToast(`Related party "${formData.name}" updated successfully.`, 'success');
-      return;
-    }
-
-    // Create mode: add new party
-    const newParty = {
-      id: `rp-${Date.now()}`,
-      matterId: matterId || null,
-      matterTitle: matterTitle || 'Direct Client Link',
-      clientId: clientId || null,
+    const roleObj = RELATED_PARTY_ROLES.find((r) => r.id === formData.roleId) || RELATED_PARTY_ROLES[0];
+    const payload = {
+      ...(matterId ? { matterId } : {}),
+      ...(clientId ? { clientId } : {}),
       name: formData.name.trim(),
+      aliases: formData.aliases.trim() || null,
       roleId: roleObj.id,
       roleLabel: roleObj.label,
       firmName: formData.firmName.trim() || null,
@@ -142,70 +116,76 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
       email: formData.email.trim() || null,
       phone: formData.phone.trim() || null,
       address: formData.address.trim() || null,
+      serviceType: formData.serviceType.trim() || null,
       notes: formData.notes.trim() || null,
-      createdAt: new Date().toISOString().split('T')[0],
     };
 
-    // Update state and persistence
-    const updatedAll = [newParty, ...allStored];
+    setSaving(true);
     try {
-      sessionStorage.setItem('hb_related_parties', JSON.stringify(updatedAll));
-    } catch {}
-
-    setParties(prev => [newParty, ...prev]);
-    setIsAddModalOpen(false);
-    setFormData({
-      name: '',
-      roleId: 'opposing_party',
-      firmName: '',
-      contactPerson: '',
-      email: '',
-      phone: '',
-      address: '',
-      notes: '',
-    });
-
-    addToast(`Related party "${newParty.name}" linked as ${newParty.roleLabel}.`, 'success');
+      if (editingPartyId) {
+        const updated = await relatedPartyService.updateRelatedParty(editingPartyId, payload);
+        setParties((prev) => prev.map((p) => (p.id === editingPartyId ? updated : p)));
+        addToast(`Related party "${formData.name}" updated.`, 'success');
+      } else {
+        const created = await relatedPartyService.createRelatedParty(payload);
+        setParties((prev) => [created, ...prev]);
+        addToast(`Related party "${created.name}" linked as ${created.roleLabel}.`, 'success');
+      }
+      setIsAddModalOpen(false);
+      setEditingPartyId(null);
+      setFormData({ ...EMPTY_FORM });
+    } catch (err) {
+      addToast(err?.message || 'Failed to persist related party record.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDeleteParty = (partyId, partyName) => {
-    let allStored = [];
+  const handleDeleteParty = async (partyId, partyName) => {
     try {
-      allStored = JSON.parse(sessionStorage.getItem('hb_related_parties') || '[]');
-    } catch {}
-    const filteredAll = allStored.filter(p => p.id !== partyId);
-    try {
-      sessionStorage.setItem('hb_related_parties', JSON.stringify(filteredAll));
-    } catch {}
-
-    setParties(prev => prev.filter(p => p.id !== partyId));
-    addToast(`Related party "${partyName}" unlinked from matter.`, 'info');
+      await relatedPartyService.deleteRelatedParty(partyId);
+      setParties((prev) => prev.filter((p) => p.id !== partyId));
+      addToast(`Related party "${partyName}" removed.`, 'info');
+    } catch (err) {
+      addToast(err?.message || 'Failed to delete related party record.', 'error');
+    }
   };
 
-  const filteredParties = parties.filter(p => {
+  const filteredParties = parties.filter((p) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.contactPerson && p.contactPerson.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.firmName && p.firmName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.roleLabel && p.roleLabel.toLowerCase().includes(searchQuery.toLowerCase()));
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      (p.aliases && p.aliases.toLowerCase().includes(q)) ||
+      (p.contactPerson && p.contactPerson.toLowerCase().includes(q)) ||
+      (p.firmName && p.firmName.toLowerCase().includes(q)) ||
+      (p.roleLabel && p.roleLabel.toLowerCase().includes(q));
 
     const matchesRole = selectedRoleFilter === 'ALL' || p.roleId === selectedRoleFilter;
     return matchesSearch && matchesRole;
   });
 
   const getRoleBadge = (roleId, label) => {
-    const found = RELATED_PARTY_ROLES.find(r => r.id === roleId);
+    const found = RELATED_PARTY_ROLES.find((r) => r.id === roleId);
     const colorClass = found ? found.badgeColor : 'bg-slate-100 text-slate-800 border-slate-200';
     return (
       <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${colorClass}`}>
-        {label || found?.label}
+        {label || found?.label || roleId}
       </span>
     );
   };
 
   return (
     <div className="space-y-4">
-      {/* Top Controls Bar */}
+      {migrationPending && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>
+            Related parties persistence requires applying the approved MySQL migration (<code className="font-mono">related_parties</code>). Existing records cannot be stored until approved.
+          </span>
+        </div>
+      )}
+
       <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
           <div className="relative flex-1 max-w-md">
@@ -225,7 +205,7 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
             className="text-xs px-2.5 py-1.5 bg-white border border-[#D9D6CF] rounded text-[#202A35] focus:outline-none focus:border-[#06244B]"
           >
             <option value="ALL">All Party Roles ({parties.length})</option>
-            {RELATED_PARTY_ROLES.map(r => (
+            {RELATED_PARTY_ROLES.map((r) => (
               <option key={r.id} value={r.id}>{r.label}</option>
             ))}
           </select>
@@ -242,22 +222,20 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
         </Button>
       </div>
 
-      {/* Directory Grid / Cards */}
-      {filteredParties.length === 0 ? (
+      {loading ? (
+        <div className="bg-white p-8 rounded border border-[#D9D6CF] text-center text-xs text-[#667085]">
+          Loading related parties...
+        </div>
+      ) : filteredParties.length === 0 ? (
         <div className="bg-white p-8 rounded border border-dashed border-[#D9D6CF] text-center">
           <Users className="w-10 h-10 text-[#667085] mx-auto mb-2 opacity-50" />
           <h4 className="text-sm font-semibold text-[#06244B]">No Related Parties Found</h4>
           <p className="text-xs text-[#667085] mt-1 max-w-sm mx-auto">
             {searchQuery
               ? 'No entities matched your search filters. Clear search to view all linked parties.'
-              : 'Add opposing parties, trial counsel, judges, expert witnesses, or insurers to maintain formal case contact records.'}
+              : 'Add opposing parties, trial counsel, judges, expert witnesses, or insurers to persist conflict-indexed records.'}
           </p>
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={handleOpenAdd}
-            className="mt-3"
-          >
+          <Button size="xs" variant="outline" onClick={handleOpenAdd} className="mt-3">
             <UserPlus className="w-3.5 h-3.5 mr-1" />
             Add First Related Party
           </Button>
@@ -280,9 +258,10 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-serif font-bold text-[#06244B]">
-                      {party.name}
-                    </h3>
+                    <h3 className="text-sm font-serif font-bold text-[#06244B]">{party.name}</h3>
+                    {party.aliases && (
+                      <p className="text-[11px] text-[#667085]">Aliases: {party.aliases}</p>
+                    )}
                     {party.firmName && (
                       <p className="text-xs text-[#667085] flex items-center gap-1 mt-0.5">
                         <Building className="w-3 h-3 text-[#A4432B]" />
@@ -342,7 +321,7 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
 
                   {party.notes && (
                     <div className="mt-2 p-2 bg-[#F5F0E5]/60 rounded text-[11px] text-[#667085] border border-[#D9D6CF]/60">
-                      <strong className="text-[#06244B] font-semibold">Litigation Role: </strong>
+                      <strong className="text-[#06244B] font-semibold">Role Notes: </strong>
                       {party.notes}
                     </div>
                   )}
@@ -350,23 +329,22 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
               </div>
 
               <div className="mt-3 pt-2 border-t border-[#D9D6CF]/40 flex items-center justify-between text-[10px] text-[#667085]">
-                <span>Linked on {party.createdAt || '2025-01-20'}</span>
-                <span className="text-[#06244B] font-semibold">Utah RPC 1.7 Index Verified</span>
+                <span>Linked {party.createdAt ? formatDate(party.createdAt, { short: true }) : ''}</span>
+                <span className="text-[#06244B] font-semibold">Indexed for Conflict Search</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Add Related Party Modal */}
       {isAddModalOpen && (
         <Modal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
-          title="Link Related Party or Adverse Entity"
+          title={editingPartyId ? 'Update Related Party' : 'Link Related Party or Adverse Entity'}
           size="lg"
         >
-          <form onSubmit={handleAddParty} className="space-y-4">
+          <form onSubmit={handleSaveParty} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-[#06244B] mb-1">
@@ -387,7 +365,31 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
                 <Select
                   value={formData.roleId}
                   onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}
-                  options={RELATED_PARTY_ROLES.map(r => ({ value: r.id, label: r.label }))}
+                  options={RELATED_PARTY_ROLES.map((r) => ({ value: r.id, label: r.label }))}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#06244B] mb-1">
+                  Known Aliases / DBA (For Conflict Check)
+                </label>
+                <Input
+                  placeholder="Optional alternate names or former surnames"
+                  value={formData.aliases}
+                  onChange={(e) => setFormData({ ...formData, aliases: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#06244B] mb-1">
+                  Service / Notice Method
+                </label>
+                <Input
+                  placeholder="e.g. Electronic Notice (ECF), Personal Service"
+                  value={formData.serviceType}
+                  onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
                 />
               </div>
             </div>
@@ -398,7 +400,7 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
                   Law Firm / Company Entity
                 </label>
                 <Input
-                  placeholder="e.g. Kincaid, Sterling & Morgan LLP"
+                  placeholder="Optional firm or insurer name"
                   value={formData.firmName}
                   onChange={(e) => setFormData({ ...formData, firmName: e.target.value })}
                 />
@@ -409,7 +411,7 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
                   Primary Contact Person / Title
                 </label>
                 <Input
-                  placeholder="e.g. Dennis Vance (Risk VP)"
+                  placeholder="Optional adjuster or partner contact"
                   value={formData.contactPerson}
                   onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                 />
@@ -418,21 +420,17 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#06244B] mb-1">
-                  Email Address
-                </label>
+                <label className="block text-xs font-semibold text-[#06244B] mb-1">Email Address</label>
                 <Input
                   type="email"
-                  placeholder="legal@interstatefreight.com"
+                  placeholder="contact@entity.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#06244B] mb-1">
-                  Phone Number
-                </label>
+                <label className="block text-xs font-semibold text-[#06244B] mb-1">Phone Number</label>
                 <Input
                   placeholder="(801) 555-0199"
                   value={formData.phone}
@@ -454,11 +452,11 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
 
             <div>
               <label className="block text-xs font-semibold text-[#06244B] mb-1">
-                Litigation Representation & Conflict Notes
+                Representation &amp; Conflict Notes
               </label>
               <textarea
                 rows={2}
-                placeholder="Specify relationship, cross-claims, expert witness retainer terms, or adverse party posture..."
+                placeholder="Specify relationship, cross-claims, expert retainer terms, or adverse posture..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="w-full text-xs p-2.5 bg-white border border-[#D9D6CF] rounded text-[#202A35] focus:outline-none focus:border-[#06244B]"
@@ -469,8 +467,8 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
               <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" size="sm">
-                Save &amp; Link Party
+              <Button type="submit" variant="primary" size="sm" disabled={saving}>
+                {saving ? 'Saving...' : editingPartyId ? 'Update Related Party' : 'Save & Link Party'}
               </Button>
             </div>
           </form>
@@ -479,4 +477,3 @@ export function RelatedPartiesTab({ matterId, clientId, matterTitle, clientName 
     </div>
   );
 }
-

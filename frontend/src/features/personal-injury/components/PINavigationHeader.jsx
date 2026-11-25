@@ -121,7 +121,8 @@ export function PINavigationHeader({
             <div>
               <span className="text-slate-400 block">Accident Date &amp; Location:</span>
               <span className="font-semibold text-white truncate block">
-                {selectedCase.incidentDate || selectedCase.dateOfLoss || '2025-08-14'} • {selectedCase.incidentLocation ? selectedCase.incidentLocation.split(',')[0] : 'Salt Lake County, UT'}
+                {selectedCase.incidentDate || selectedCase.dateOfLoss || 'Incident Date Pending'}
+                {selectedCase.incidentLocation ? ` • ${selectedCase.incidentLocation.split(',')[0]}` : ''}
               </span>
             </div>
             <div>
