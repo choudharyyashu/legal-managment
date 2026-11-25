@@ -36,6 +36,18 @@ export function ClientProvider({ children }) {
     ...i,
     id: i.id,
     intakeNumber: i.intakeNumber || i.id,
+    clientName:
+      i.prospectiveClient ||
+      i.client?.name ||
+      i.clientName ||
+      i.contactPerson ||
+      i.contactName ||
+      'Prospective Client',
+    contactName:
+      i.contactPerson ||
+      i.contactName ||
+      i.prospectiveClient ||
+      'Prospective Client',
     practiceAreaName: i.practiceArea?.name || i.practiceAreaName || 'General',
     conflictStatus: i.conflictStatus || 'In Review',
     reviewedBy: i.reviewedByName || i.reviewedBy || null,

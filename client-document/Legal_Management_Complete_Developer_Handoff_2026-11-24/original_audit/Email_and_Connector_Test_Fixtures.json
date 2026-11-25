@@ -1,0 +1,191 @@
+{
+  "date": "2026-11-17",
+  "status": "Synthetic fixture bytes generated; no application/vendor test executed",
+  "messages": [
+    {
+      "id": "MSG-001",
+      "file": "email_test_fixtures/MSG-001.eml",
+      "message_id": "<fixture-msg-1@example.invalid>",
+      "sha256": "f9bef91b5374dd16eed86fad775c5b08173b314b7e329c8c91190a3fc25e2b9a",
+      "attachment_count": 2,
+      "expected_filed_initially": false
+    },
+    {
+      "id": "MSG-002",
+      "file": "email_test_fixtures/MSG-002.eml",
+      "message_id": "<fixture-msg-2@example.invalid>",
+      "sha256": "816be19ac4c7d7be43bcd5a35e0dc1813ad3d4b3daffbdaba4fd1f4aacc52c2f",
+      "attachment_count": 0,
+      "expected_filed_initially": true
+    },
+    {
+      "id": "MSG-003",
+      "file": "email_test_fixtures/MSG-003.eml",
+      "message_id": "<fixture-msg-3@example.invalid>",
+      "sha256": "5702f9035cf8d1d7082bcf39dc8aa2ff0576af32de013ca56ce1b995ce68c231",
+      "attachment_count": 0,
+      "expected_filed_initially": false
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "FIX-MAIL-01",
+      "input": "File MSG-002 only in three-message thread",
+      "expected": "Only middle message has a verified filing record; thread status partial"
+    },
+    {
+      "id": "FIX-MAIL-02",
+      "input": "File MSG-001 twice, replay provider response",
+      "expected": "One original-message record, exact .eml checksum and two separately verified attachments; retries attributable"
+    },
+    {
+      "id": "FIX-MAIL-03",
+      "input": "Text-only connector returns MSG-001 body and attachment metadata",
+      "expected": "Summary may be saved; .eml and attachment byte evidence remains missing"
+    },
+    {
+      "id": "FIX-MAIL-04",
+      "input": "Rename display and override one attachment destination",
+      "expected": "Original MIME bytes and checksum retained; intended destination IDs explicit"
+    },
+    {
+      "id": "FIX-MAIL-05",
+      "input": "Internal task comment plus To/CC/BCC recipients",
+      "expected": "Internal markup absent from outbound payload; client copy rule retained"
+    },
+    {
+      "id": "FIX-MAIL-06",
+      "input": "Session expires after write preview",
+      "expected": "No commit; reconnect checks actor and permissions again"
+    },
+    {
+      "id": "FIX-MAIL-07",
+      "input": "0.10hours with LEDES codes and disabled billing view",
+      "expected": "6minutes captured once and visible in daily review; no inferred rounding policy"
+    },
+    {
+      "id": "FIX-MAIL-08",
+      "input": "Two same-name matters across different organizations",
+      "expected": "No automatic guessing or cross-matter leakage; exact selected matter pinned"
+    }
+  ],
+  "connection_and_route_matrix_R70": {
+    "status": "Synthetic proposed fixtures; not executed",
+    "users": [
+      {
+        "id": "U-A",
+        "sender": "sender-a@example.invalid",
+        "filing_inboxes": [
+          "work-a@example.invalid",
+          "personal-a@example.invalid"
+        ]
+      },
+      {
+        "id": "U-B",
+        "sender": "sender-b@example.invalid",
+        "filing_inboxes": [
+          "work-b@example.invalid"
+        ]
+      }
+    ],
+    "matters": [
+      {
+        "id": "M-A",
+        "name": "Synthetic Alpha 2026",
+        "contacts": [
+          "C-ONE",
+          "C-MULTI"
+        ],
+        "allowed_users": [
+          "U-A"
+        ]
+      },
+      {
+        "id": "M-B",
+        "name": "Synthetic Beta 2026",
+        "contacts": [
+          "C-MULTI"
+        ],
+        "allowed_users": [
+          "U-B"
+        ]
+      }
+    ],
+    "signature_input": "I represent my clients. My letter dated November 17, 2026 remains unchanged.",
+    "source_messages": "Existing MSG-001..MSG-003 byte fixtures retained; do not send them to real recipients.",
+    "cases": [
+      {
+        "test_id": "AT-0569",
+        "requirement_id": "F-0569",
+        "expected": "Synthetic user A has Gmail sender identity and two filing inboxes, while user B has Microsoft identity. Preview changing A’s sender, then simulate replacement and disconnection in a test adapter. Assert B and filing scopes are unaffected; distinguish connected-but-send-disabled state. For each message category compare declared sender with actual envelope/header, Sent copy, bounce and filing receipts. Unknown or contradictory policy blocks an unsupported success claim. No real send or permission grant is part of this fixture.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0570",
+        "requirement_id": "F-0570",
+        "expected": "Create signature versions S1/S2 with formatted text, safe image and link. Select two categories and leave another unselected; assert exactly one correct signature in each preview and none in the excluded category. Change identity and disconnect it; show affected capability states rather than silently rendering a stale sender. Draft fixtures say “I represent my clients” and “November 17, 2026”; rendering must preserve I/me/my and the full year. An unknown year is flagged rather than guessed. No live signature settings changed.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0571",
+        "requirement_id": "F-0571",
+        "expected": "Use personal template P and firm template F with ordinary-user/admin roles. Deny unauthorized firm edits; record authorized revision identity. Start from global Inbox with blank context and from matter A with prefilled context, then deliberately switch to matter B. Require a fresh merge/attachment preview and check all recipient identities. Missing primary email, unresolved merge field or inaccessible attachment blocks final preparation. Ensure unsupported ordinary Email or bill-specific routes do not silently accept the template. A template selection or preview never proves a send.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0572",
+        "requirement_id": "F-0572",
+        "expected": "Create a synthetic contact-only log and a matter-restricted log with billable and non-billable time variants. Verify matter permissions before read/edit/export and preserve actor/source attribution. Correct the assigned matter with permission revalidation; filter by creator, contact, matter, time and bill identity. Export actual CSV under visible/all-column options and compare IDs, headers and values against the fixture oracle, including safe formula-like text. Print one identified log. A manual log cannot satisfy an EML/attachment-byte test; permanent deletion needs an explicit reviewed action and cannot silently erase time/audit evidence.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0256-R70",
+        "requirement_id": "F-0256",
+        "expected": "Use sign-in address, registered alias and unregistered sender against matter-specific and general Maildrop destinations. Verify actual stored EML identity/hash and independently test both attachments from existing MSG-001. Record rejection, partial import and retries explicitly. An attachment-upload limitation or a saved email log cannot prove attachment ingestion; route scope remains unresolved until tested.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0259-R70",
+        "requirement_id": "F-0259",
+        "expected": "Model a contact linked to one matter, a contact linked to two matters, and an existing assigned thread. Test an exact full matter name, omitted name and conflicting names. Show ambiguous messages as unfiled until resolved; preserve per-message IDs, assigned thread context and retry state. A collapsed thread indicator does not prove every original and attachment was stored.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0260-R70",
+        "requirement_id": "F-0260",
+        "expected": "Compare connected-inbox and template routes using the same To/Cc/Bcc fixture. A route without BCC must reject or explicitly re-route that request, never expose BCC or silently drop the client copy. Validate every displayed address and keep internal comments out of outbound MIME. Preserve the standing client-copy requirement as independent user scope.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0265-R70",
+        "requirement_id": "F-0265",
+        "expected": "Simulate provider acceptance with delayed filing, provider rejection, duplicate callback and nonparticipant reply attempt. Assert exact sender/recipient payload, one delivery job and explicit pending filing. Reply/Reply all/Forward must preserve original thread identity and participant checks. A destructive draft discard must be reviewed; these tests make no live send or deletion.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0329-R70",
+        "requirement_id": "F-0329",
+        "expected": "In a synthetic inbox, include contact, coworker-only, private unrelated and ambiguous messages, plus attachments already filed. Preview Contacts→Everyone→Contacts and enumerate additions/removals with matter permission checks and per-item provenance. Revalidate before applying the test adapter operation and preserve an audit/recovery plan. Do not label retroactive scope removal the same as disconnect; do not infer removal or survival of attachments without separate evidence.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0251-R70",
+        "requirement_id": "F-0251",
+        "expected": "Disconnect one of two synthetic filing inboxes and verify future ingestion stops only for that identity while prior archived evidence remains accessible under matter permissions. Separately model a retroactive exclusion and explicit removal from the application; each operation needs its own preview and audit outcome. Original provider mail stays unchanged in all simulated operations.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0252-R70",
+        "requirement_id": "F-0252",
+        "expected": "Evaluate Gmail, Microsoft-hosted Microsoft 365 Business Exchange, third-party-hosted Exchange, unknown hosting and missing administrator consent as separate fixtures. Unsupported or unknown combinations remain explicit, with no claim that every Outlook-branded mailbox works. Never grant real permissions in this audit.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0262-R70",
+        "requirement_id": "F-0262",
+        "expected": "Add billable and non-billable time to one manual log, one filed thread and one individual message. Reconcile IDs and duplicate callbacks into the daily ledger. Verify matter corrections and exported bill references do not double-count time; entries remain reviewable alongside each call/text. Do not infer a new rounding rule or mark daily review complete from email-only coverage.",
+        "status": "Not executed"
+      }
+    ]
+  }
+}

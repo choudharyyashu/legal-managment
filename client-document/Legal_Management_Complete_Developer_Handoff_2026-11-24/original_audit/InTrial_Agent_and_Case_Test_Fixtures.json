@@ -1,0 +1,998 @@
+{
+  "date": "2026-11-15",
+  "status": "Original synthetic acceptance fixtures only; no application execution",
+  "application_commit": null,
+  "application_build": null,
+  "application_environment": null,
+  "common_data": {
+    "M-A": "Synthetic PI matter; ordinary permission",
+    "M-B": "Synthetic restricted matter; same-name client with different DOB",
+    "firm_other": "Synthetic separate tenant",
+    "documents": "Synthetic request sets, medical bills, PDF-v1/v2 and approved test templates only",
+    "letter_policy": "I/me/my attorney voice and four-digit year in every letter date",
+    "time_review": "Every call/text separately retained, regardless of activity-feed visibility"
+  },
+  "new_requirements": [
+    {
+      "feature_id": "F-0450",
+      "acceptance_test": {
+        "id": "AT-0450",
+        "scenario_and_expected_result": "Import synthetic requests numbered 1, 2(a), 2(b), 4 with an intentionally absent No. 3. Preserve the source numbering and flag the gap; do not invent a request. Map each response to its request and selected evidence. Withhold a fact not present in the permitted evidence. A request for outgoing discovery must use a separately specified capability, not silently substitute response drafting. Export editable Word with no served/completed claim, and require attorney review of objections before service.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Incoming request PDF, selected document IDs, structured case data and approved firm discovery template",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Select the incoming set and evidence; generate responses",
+        "output": "Versioned Word draft with request/response mapping and unresolved facts",
+        "exceptions_and_dependencies": "No service, jurisdictional validity or template approval established; objections are suggestions, not legal conclusions."
+      }
+    },
+    {
+      "feature_id": "F-0451",
+      "acceptance_test": {
+        "id": "AT-0451",
+        "scenario_and_expected_result": "Edit responses 1 and 2, then regenerate only 2. Retain both versions of 2 with request ID, evidence snapshot and editor; leave 1 byte-equivalent in the export. Concurrent edits must produce a conflict or explicit merge. A failed generation keeps the last saved draft. Restore an earlier saved version without erasing later history or representing it as served. Background completion must identify the exact set and response version.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Saved discovery set, target response ID and revised evidence",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Regenerate a selected response or restore a saved draft",
+        "output": "New response version and unchanged unrelated responses",
+        "exceptions_and_dependencies": "A restored file is not proof of per-response sign-off; current sales page does not establish a granular approval ledger."
+      }
+    },
+    {
+      "feature_id": "F-0452",
+      "acceptance_test": {
+        "id": "AT-0452",
+        "scenario_and_expected_result": "Propose gross settlement 175000.00 and MedPay 5000.00 on synthetic M-A. Preview all affected negotiation, distribution and phase records, expected versions and follow-on automations. Reject approval: no records change. Approve while a lien is concurrently edited: refresh or reject the stale proposal. Inject failure after the first write: roll back or show the exact partial state and compensating work; never claim complete. Replaying the same approved operation creates no duplicate settlement. No check, transfer or client authority is implied.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Adjuster communication, settlement terms and current financial snapshots",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Preview and approve linked changes",
+        "output": "Auditable settlement records with explicit partial or complete outcome",
+        "exceptions_and_dependencies": "Marketing example only; no atomic vendor transaction or real distribution observed."
+      }
+    },
+    {
+      "feature_id": "F-0453",
+      "acceptance_test": {
+        "id": "AT-0453",
+        "scenario_and_expected_result": "Use synthetic positive, frustrated, sarcastic and Spanish messages plus a restricted case. Show the specific permitted messages, dates, uncertainty and reason for each flag. Do not infer dissatisfaction solely from a missed reply. Allow dismiss, confirm and follow-up assignment with history. A staff member cannot retrieve a restricted flag or its source through search or aggregate counts. No automatic message, representation decision or external disclosure follows a sentiment flag.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Authorized client communications and declared review interval",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Run Client Watch and review candidates",
+        "output": "Concern queue with cited evidence and reviewer disposition",
+        "exceptions_and_dependencies": "Advertised agent; scoring, language coverage and thresholds not demonstrated."
+      }
+    },
+    {
+      "feature_id": "F-0454",
+      "acceptance_test": {
+        "id": "AT-0454",
+        "scenario_and_expected_result": "M-A has an automated note today, last substantive movement 14 days ago, last client update 11 days ago and an impending deadline. Do not reset substantive inactivity merely because a background job wrote a note. Show each clock, its event and threshold. A new adjuster reply before approval invalidates the stale follow-up. Preserve every email/SMS separately; approving one draft must not send the other. Failed send remains failed with retry evidence. A queued task is not completed work.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Case events, communications and deadlines",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review stale-case candidates and proposed messages",
+        "output": "Evidence-backed inactivity report and separately approved follow-ups",
+        "exceptions_and_dependencies": "Threshold and activity definitions must be configured and tested; example UI is not execution evidence."
+      }
+    },
+    {
+      "feature_id": "F-0455",
+      "acceptance_test": {
+        "id": "AT-0455",
+        "scenario_and_expected_result": "Upload five synthetic files: one exact match, two clients sharing a name, a different date of birth, and a corrupt PDF. Reconcile five original hashes and per-file states. Never route by filename alone; show matching evidence and require resolution for ambiguous identities. Do not automatically create a new matter for an unmatched file. Retry extraction without duplicating the stored file, provider or bill. Successful storage, extraction, matching and filing have separate receipts.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Batch of medical files, hashes and authorized client identifiers",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Preview routing and resolve exceptions",
+        "output": "Per-file filing outcomes and unresolved queue",
+        "exceptions_and_dependencies": "No tenant routing observed; permission, OCR and case identity are dependencies."
+      }
+    },
+    {
+      "feature_id": "F-0456",
+      "acceptance_test": {
+        "id": "AT-0456",
+        "scenario_and_expected_result": "Ask for weekly workload using America/Denver and a defined as-of time. Include reassigned, reopened, deleted and restricted tasks. Show time bounds, timezone, ownership basis and denominator of overdue ratio. Recalculate totals from stable source row IDs; paginated results must reconcile. A user cannot infer restricted counts. Save the interpreted query and source snapshot, distinguish task completion from performed/billable work, and show incomplete retrieval rather than an invented firm-wide total.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Natural-language query, permitted task/activity rows and report basis",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review the interpreted query and run report",
+        "output": "Reproducible report with provenance and completeness status",
+        "exceptions_and_dependencies": "Marketing table not independently measured; no vendor report engine inspected."
+      }
+    },
+    {
+      "feature_id": "F-0457",
+      "acceptance_test": {
+        "id": "AT-0457",
+        "scenario_and_expected_result": "Ask the agent to update a phase, create two tasks and prepare a text. Show record IDs, old/new values, recipients, attachments and dependency effects. Reject the proposal and verify no write/send. Edit one recipient: require a new proposal digest. Approval expires if source versions or permissions change. Prompt injection inside an uploaded report cannot authorize extra actions. Return per-action receipts; approval to create a task does not prove completion or approve sending a prepared text.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "User request, permitted case records and evidence snapshot",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Inspect and approve a concrete operation manifest",
+        "output": "Bounded, permission-checked actions with receipts",
+        "exceptions_and_dependencies": "Approval statement is a vendor claim; runtime authorization and atomicity untested."
+      }
+    },
+    {
+      "feature_id": "F-0458",
+      "acceptance_test": {
+        "id": "AT-0458",
+        "scenario_and_expected_result": "Use dates January 1, January 31 and March 3, 2026. With a declared difference-between-dates rule, 30 days is not flagged and 31 days is flagged. Show endpoint difference separately from days with no recorded visit. Insert a newly found February 15 visit and recompute affected gaps. Duplicate visits must not inflate provider or charge totals. A gap means no treatment recorded in the included evidence, not proof no treatment occurred. Link both endpoints to exact document versions/pages.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Reviewed treatment dates and included source records",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Compute gaps and review/correct extracted dates",
+        "output": "Reproducible gap flags and revised timeline",
+        "exceptions_and_dependencies": "Published example has inconsistent provider count and an interval illustration that omits a listed visit; do not treat it as the algorithm."
+      }
+    },
+    {
+      "feature_id": "F-0459",
+      "acceptance_test": {
+        "id": "AT-0459",
+        "scenario_and_expected_result": "With AI disabled, upload a synthetic document and perform ordinary storage/search: confirm no AI-provider call. Enable only chronology and capture the minimized outbound data and policy version in a controlled test. A demand request must remain disabled. Revocation blocks queued work before transmission. Do not log privileged payloads in analytics. Record contractual retention claims separately from verified provider configuration; never label externally processed data as never leaving the firm.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Feature flags, processor configuration and synthetic documents",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Enable or disable a specific processing feature",
+        "output": "Auditable processing decisions with bounded data scope",
+        "exceptions_and_dependencies": "Vendor contractual claim only; no BAA, provider contract or runtime transmission independently inspected."
+      }
+    },
+    {
+      "feature_id": "F-0460",
+      "acceptance_test": {
+        "id": "AT-0460",
+        "scenario_and_expected_result": "Grant a synthetic connector read-only access to M-A. Attempt writes and access to restricted M-B or another firm: deny without revealing metadata. Grant a narrower write scope and verify it does not authorize sending messages or changing financial records. Revoke access: reject existing tokens and queued requests under the documented revocation policy. Log client, actor, scope and record IDs. Reauthorization must not silently expand scopes. No live connector is authorized during this audit.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "OAuth client, organization/user permissions and approved scopes",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review, grant narrowly and revoke test access",
+        "output": "Consistent authorization and auditable denials",
+        "exceptions_and_dependencies": "Policy description is not a verified tool inventory or working connector."
+      }
+    },
+    {
+      "feature_id": "F-0461",
+      "acceptance_test": {
+        "id": "AT-0461",
+        "scenario_and_expected_result": "In a synthetic cost model, distinguish monthly seats from one-time active-case charges, new-case deferral and migrated-case rules. Exercise 49 versus 50 active migrated cases, archive before the new-case charge point, reopen an uncharged archive, and cancel with outstanding installments. Require an explicit policy version and archive edit limits; do not rebill an already charged case merely for reopening. Optional backup must show off/on state and its separately quoted price. No subscription, purchase or charge is initiated by the fixture.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Dated vendor terms, case provenance/status and proposed license configuration",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review entitlements and a nonbinding cost preview",
+        "output": "Auditable cost/dependency model with unresolved terms flagged",
+        "exceptions_and_dependencies": "Current settings price, precise time boundaries and signed contract remain unavailable; not a recommendation to copy vendor billing into the firm app."
+      }
+    },
+    {
+      "feature_id": "F-0462",
+      "acceptance_test": {
+        "id": "AT-0462",
+        "scenario_and_expected_result": "Create a disposable two-signer envelope in a test environment. Enforce declared signing order and reject attempts to sign another signer's field. A partial signature, decline, expiry or void cannot mark the envelope completed. After all required signatures, save the PDF and certificate with the exact documented hash basis and consent/time metadata. Change one byte in a test copy: detect mismatch. A document replacement invalidates outstanding signing links or starts a new envelope. No real agreement is signed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Synthetic PDF, signer identities, field assignments and signing order",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Send and complete a test envelope",
+        "output": "Signed artifact plus auditable per-signer and envelope states",
+        "exceptions_and_dependencies": "No legal-validity opinion; vendor certificate generation and mobile flow untested."
+      }
+    },
+    {
+      "feature_id": "F-0463",
+      "acceptance_test": {
+        "id": "AT-0463",
+        "scenario_and_expected_result": "Share one synthetic file with recipient A and try the forwarded link as B. Require verification for A without exposing content to B. Test expired/wrong/reused codes and rate limits. Revoke after A verified: block subsequent reads, downloads and fresh signed URLs. Test moving/replacing a shared file under the declared version policy. Log view/download events separately from reading or assent. A revoked link cannot retract bytes already downloaded; show that limit.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Recipient email, selected file/version IDs and expiry",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Create a test share, verify, expire and revoke",
+        "output": "Bounded share grant and explicit access evidence",
+        "exceptions_and_dependencies": "No live grant created; claimed immediate revocation across cached sessions/URLs requires testing."
+      }
+    },
+    {
+      "feature_id": "F-0464",
+      "acceptance_test": {
+        "id": "AT-0464",
+        "scenario_and_expected_result": "Queue a manual, scheduled, workflow, broadcast and eSign-reminder text to one synthetic number. Receive STOP before dispatch: suppress all five and preserve reasons/queue history. Repeat with UNSUBSCRIBE, CANCEL, END and QUIT and documented case/whitespace handling. Replaying an inbound opt-out must be idempotent. A shared number across two matters must not bypass suppression. Only an explicitly recorded permitted opt-in path may resume. Test delivery failure separately from suppression; include each inbound/outbound message in daily review.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Consent ledger, destination number and all SMS queues",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Process opt-out and attempt controlled dispatch",
+        "output": "Consistent suppression with per-message evidence",
+        "exceptions_and_dependencies": "Carrier registration, hosting and firm consent policy are dependencies; no real text is sent."
+      }
+    },
+    {
+      "feature_id": "F-0465",
+      "acceptance_test": {
+        "id": "AT-0465",
+        "scenario_and_expected_result": "Use signed A, pending B, declined C and expired envelope D. Request a reminder on a valid test envelope: target only eligible unsigned signers under the declared policy. Block reminders for completed, voided or expired envelopes. With texting unconfigured or B opted out, use only an authorized email route and expose skipped SMS. Duplicate clicks cannot cause duplicate sends. A delivery receipt does not mean a signature. No automatic cadence may be inferred from the manual-reminder feature.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Envelope/signer states, consent and email/SMS readiness",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Request a reminder",
+        "output": "Per-recipient reminder results and skipped reasons",
+        "exceptions_and_dependencies": "Manual reminder claim; no automatic schedule or real delivery observed."
+      }
+    },
+    {
+      "feature_id": "F-0466",
+      "acceptance_test": {
+        "id": "AT-0466",
+        "scenario_and_expected_result": "Import two similarly named reviews at different locations and one edited review. Preserve provider review/location IDs, sync time and edit history. Draft and edit a reply without publishing or revealing private case facts. Change the source review before posting: require rereview. A post timeout must reconcile provider status before retry. Show per-location counts with as-of time; reporting a review or linking it internally to a case must not imply removal by Google. No real reply is posted.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Google profile/location/review IDs and authorized public reply",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Draft, review and publish only in a controlled test",
+        "output": "Public reply receipt and separate internal review workflow",
+        "exceptions_and_dependencies": "Provider permissions, sync interval and public-content policy untested."
+      }
+    },
+    {
+      "feature_id": "F-0467",
+      "acceptance_test": {
+        "id": "AT-0467",
+        "scenario_and_expected_result": "Send synthetic JSON and form-post leads with a stable external ID. Distinguish explicit values from integration defaults; preserve UTM/click IDs only when received. Replayed events create one lead and one eventual case. Conflicting office or assignee changes require a declared precedence rule. A completed retainer creates one case with the approved intake snapshot and office; partial signatures do not. Unknown qualification answers stay unknown, and rejected/conflicted leads retain reasons. Spanish intake and all other practice areas remain required by the firm.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Webhook payload, versioned defaults and retainer completion event",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Capture, qualify and convert a synthetic lead",
+        "output": "Lead-to-case lineage with office and source provenance",
+        "exceptions_and_dependencies": "Private endpoint authentication, signature validation and conversion idempotency not inspected."
+      }
+    },
+    {
+      "feature_id": "F-0468",
+      "acceptance_test": {
+        "id": "AT-0468",
+        "scenario_and_expected_result": "Use approved synthetic template T-v2 with one required missing value, zero witnesses and two providers. Show the missing-field warning and block final release under firm policy. After correction, render DOCX and PDF to M-A/Insurance, omit the declared empty block and preserve both providers. Verify names, I/me/my attorney voice and four-digit date years. Record hashes, template version and case snapshot. A render success with storage failure remains unfiled; retry cannot duplicate files or send anything.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Versioned Word template, case snapshot, folder and output choice",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Validate fields and generate/file",
+        "output": "Versioned DOCX/PDF with durable destination receipt",
+        "exceptions_and_dependencies": "Template syntax and exact field reference not publicly extracted; 300 approved field maps remain pending."
+      }
+    },
+    {
+      "feature_id": "F-0469",
+      "acceptance_test": {
+        "id": "AT-0469",
+        "scenario_and_expected_result": "Select a two-year preset for a synthetic incident, retaining incident date and preset version. Also enter a manual deadline with a different basis. Display both and require attorney resolution; do not infer tolling, notice-of-claim rules or governing law from a preset. Test February 29, timezone and changed incident date. Update reminders at declared intervals without duplicates. A reminder created is not proof of a correct legal deadline, successful external sync or completed filing.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Incident date, selected preset or manual date and attorney basis",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review and approve the limitation date",
+        "output": "Approved date with provenance and separately tracked reminders",
+        "exceptions_and_dependencies": "No rules engine or legal correctness established; defaults are not jurisdictional advice."
+      }
+    },
+    {
+      "feature_id": "F-0470",
+      "acceptance_test": {
+        "id": "AT-0470",
+        "scenario_and_expected_result": "Create synthetic case channel, department channel and direct message. Link a restricted case document in a broader channel: do not grant file access by posting. Reassign/remove a case member and enforce the declared channel-access policy without deleting historical audit records. Mentions and notification previews cannot leak restricted content. Preserve each message ID, edit/version and attachments; identify whether a message is internal or a client communication in daily review.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Channel membership, case restrictions and internal messages",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Post, mention, attach and change test membership",
+        "output": "Audience-controlled chat and traceable links",
+        "exceptions_and_dependencies": "Homepage illustration only; no detailed chat administration documentation or live behavior inspected."
+      }
+    },
+    {
+      "feature_id": "F-0471",
+      "acceptance_test": {
+        "id": "AT-0471",
+        "scenario_and_expected_result": "Use two provider charges totaling 13200.00 and an attorney-entered demand of 75000.00. Render both distinctly; never infer a multiplier or future-treatment cost. Missing demand amount remains unresolved rather than filled by AI. Change an underlying bill after draft review: mark specials/exhibits stale and require rereview without silently changing my demand. Test liability versus UM and under/at-limit selections with an unknown policy limit. Preserve linked exhibits and editable Word output; draft/export never implies send.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Structured medical charges, selected documents, firm template and attorney-entered amount",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Generate and review a demand draft",
+        "output": "Editable demand with separate factual and attorney judgment fields",
+        "exceptions_and_dependencies": "Current detailed page narrows older auto-calculation/PDF-send claims; actual tenant behavior unverified."
+      }
+    },
+    {
+      "feature_id": "F-0472",
+      "acceptance_test": {
+        "id": "AT-0472",
+        "scenario_and_expected_result": "Configure PI and probate test layouts with different tabs/fields while retaining the firm's broader practice scope. Hide a tab, change type and restore it: preserve data, permissions and stable IDs. Pin incident/SOL fields and edit from the header; update the same canonical field with provenance. Unauthorized users cannot reveal protected values through pinned fields or search. Case layout changes cannot silently rewrite approval, timing or form mappings.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Case type, versioned layout and field permissions",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Pin fields and configure tabs",
+        "output": "Consistent shared context with retained data",
+        "exceptions_and_dependencies": "Vendor is PI-focused; multi-practice support is a firm requirement, not an asserted InTrial capability."
+      }
+    },
+    {
+      "feature_id": "F-0473",
+      "acceptance_test": {
+        "id": "AT-0473",
+        "scenario_and_expected_result": "Use gross 175000.00 plus MedPay 5000.00; declare fees on gross settlement only at 33.33%, medicals 21557.50, liens 10409.00 and expenses 910.00. Expected fee is 58327.50 and client net 88796.00. Show rounding and fee basis, reconcile co-counsel splits to the fee and flag unresolved/duplicate payees. Compare percentage and flat-fee modes. Editing a reduction invalidates the prior statement version. Modeled distribution does not prove funds received, checks issued, clearance or client approval.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Reviewed settlement, fee agreement, provider/lien balances and expenses",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review calculation and generate a draft statement",
+        "output": "Balanced statement with source/version and unresolved-item checks",
+        "exceptions_and_dependencies": "Sales illustration only; no trust ledger, fee agreement or transaction execution observed."
+      }
+    },
+    {
+      "feature_id": "F-0474",
+      "acceptance_test": {
+        "id": "AT-0474",
+        "scenario_and_expected_result": "Create one synthetic physician as both treating provider and retained expert on different matters. Preserve one verified contact identity with separate case-role records and authorized contact data. A conflicting expert role must be flagged for attorney review, not silently merged. Removal of a role cannot delete medical records or prior communications. Unknown testimony, opinions, retention and disclosure dates remain unknown. The source establishes an expert-management claim only; no report, disclosure or deposition automation is presumed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Expert identity, case role and authorized contact details",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Create and update expert case roles",
+        "output": "Auditable role records and unresolved identity/role conflicts",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0475",
+      "acceptance_test": {
+        "id": "AT-0475",
+        "scenario_and_expected_result": "Schedule a synthetic weekly report with timezone and interval bounds. Recheck recipient authorization and report scope at send time. A removed user receives no content. Pin the generated report snapshot and distinguish report generation from email delivery. Simulate duplicate scheduler events, a failed export and an email timeout: reconcile before retry and send at most one report for the same schedule occurrence. Do not silently send an incomplete report or count a scheduled event as performed/billable work.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Report definition, schedule, timezone and allowed recipients",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Generate and deliver a controlled scheduled report",
+        "output": "Versioned report plus per-recipient delivery status",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0476",
+      "acceptance_test": {
+        "id": "AT-0476",
+        "scenario_and_expected_result": "Ask a synthetic case question, produce a draft and approve one task. Preserve the request, source IDs/versions, response, draft ID and action receipt as separate linked records. A later answer after records change must show its new evidence snapshot. Case restriction/revocation applies to history, search and notification previews. A conversation mentioning several cases cannot leak restricted cases to a later viewer. Deleting or retaining history follows an explicit policy; no undisclosed lifetime guarantee is inferred.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Case conversation messages, evidence snapshots and action/draft IDs",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Save and revisit a case conversation",
+        "output": "Permissioned history with traceable sources and effects",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0477",
+      "acceptance_test": {
+        "id": "AT-0477",
+        "scenario_and_expected_result": "Upload a synthetic DICOM file and a multi-file imaging study. Verify original hashes, association and permissioned download through a manifest. If the application lacks a compatible viewer, show stored/downloadable and an honest preview limit; do not report clinical image review. Corrupt, unsupported or incomplete series remain flagged. Preview derivatives cannot replace originals. Confirm sensitive metadata stays within authorized matter access. No diagnostic interpretation or DICOM interoperability is inferred from storage alone.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Synthetic imaging file/study, metadata and original hashes",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Store, inspect supported metadata and download",
+        "output": "Intact imaging assets with explicit preview capability",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0478",
+      "acceptance_test": {
+        "id": "AT-0478",
+        "scenario_and_expected_result": "Select two synthetic PDFs with two and three pages plus a generated cover sheet. Preview the recipient fax number, sender, subject, case number and declared five-document-pages versus six-transmitted-pages counts. Change the file set or recipient: invalidate the old preview. Missing case number is visibly unresolved rather than fabricated. Persist the packet hash, order, quality and provider request ID. A cover sheet generated or provider request accepted is not a delivery receipt. No real fax is sent.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Selected PDF versions, recipient fax contact and cover metadata",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Preview and approve a synthetic fax packet",
+        "output": "Traceable cover sheet and outbound packet manifest",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0479",
+      "acceptance_test": {
+        "id": "AT-0479",
+        "scenario_and_expected_result": "Configure two synthetic department fax numbers with separate inbox permissions and outgoing defaults. A user cannot choose another department's endpoint without permission. Track requested, authorized, scheduled, active and failed port states with provider evidence. Letter-of-authorization preparation is not an approved or completed port. Verify inbound routing and outbound identity only in a controlled environment. Changing a default cannot reroute historical faxes or erase their originating number. No actual port or authorization is submitted.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Office/department endpoints, permissions and synthetic port records",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review routing and porting status",
+        "output": "Auditable number ownership/routing and independent readiness state",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0480",
+      "acceptance_test": {
+        "id": "AT-0480",
+        "scenario_and_expected_result": "Create client-only and intake-only synthetic templates, reorder them and preserve stable IDs. An intake send cannot silently select a client-only template. Preview values from the correct case/contact with unknown fields flagged; never merge another client's data. Editing a template does not silently rewrite a queued message: use a frozen version or an explicit rereview policy. Check scheduled, broadcast and workflow uses against current opt-out state. Template changes do not authorize external sending.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Versioned SMS templates, context tags and merge values",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Select a context-appropriate template and preview",
+        "output": "Resolved message draft with template/version lineage",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0481",
+      "acceptance_test": {
+        "id": "AT-0481",
+        "scenario_and_expected_result": "Exercise a synthetic limit in a controlled environment. A throttled read discloses retry timing without protected data; writes retain their operation IDs. Respect a declared Retry-After policy with bounded attempts and a visible queue. A timeout followed by retry cannot duplicate a task, document or message. Per-user and per-tenant limits must not expose another firm's usage. Surface partial retrieval and exhausted retries; do not fabricate a full report after a rate-limited page. Vendor numeric quotas remain unknown.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Synthetic API requests, configured limits and operation IDs",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Throttle and retry controlled reads/writes",
+        "output": "Auditable backpressure with no silent data loss or duplicate actions",
+        "exceptions_and_dependencies": "Current published capability only; actual product image, detailed configuration and application execution are missing."
+      }
+    },
+    {
+      "feature_id": "F-0482",
+      "acceptance_test": {
+        "id": "AT-0482",
+        "scenario_and_expected_result": "Create synthetic partner P-1 with two referrals, one signed matter and one rejected lead. Preserve referral source, dates, correspondence and outcome separately from co-counsel roles. A contact merge retains each referral ID and decision history. Record a proposed fee agreement/version and attorney-review state; do not infer entitlement from source attribution. Restrict partner access to explicitly shared documents. A calculated fee remains unpaid until a separately verified payment record exists.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Partner/contact IDs, referral events, matter outcomes and fee agreement",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Record referral and review partner history",
+        "output": "Traceable referral lineage with distinct obligation/payment states",
+        "exceptions_and_dependencies": "Vendor claim only; exact fields, current UI/limits and approved legal content require independent verification."
+      }
+    },
+    {
+      "feature_id": "F-0483",
+      "acceptance_test": {
+        "id": "AT-0483",
+        "scenario_and_expected_result": "Enter synthetic costs 450.00 filing, 1250.00 expert and 85.50 records, totaling1785.50. Store distinct invoice/receipt IDs and hashes. Import the expert invoice twice: retain duplicate evidence without counting it twice. Record a50.00 credit and mark one cost non-recoverable under a reviewed agreement; show gross cost, net cost and client deduction separately. A concurrent edit invalidates an approved distribution snapshot. A receipt attachment does not prove payment; do not infer recoverability from category or vendor.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Synthetic expense rows, supporting documents and reviewed recovery policy",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Log, categorize, attach and reconcile costs",
+        "output": "Evidence-backed expense totals and separately calculated distribution inputs",
+        "exceptions_and_dependencies": "Vendor claim only; exact fields, current UI/limits and approved legal content require independent verification."
+      }
+    },
+    {
+      "feature_id": "F-0484",
+      "acceptance_test": {
+        "id": "AT-0484",
+        "scenario_and_expected_result": "Create three synthetic exhibits and two witnesses; one exhibit is used by both witnesses. Keep one exhibit identity with two witness links. Track description, version hash, sponsoring witness and attorney-entered contested/stipulated status. Replacing source bytes flags the index and prepared packet stale. A checklist item completed does not mean admitted, filed or served. A trial-date change produces a reviewed deadline change set. Export an ordered packet only from selected versions; no courtroom presentation, enlargement or admission capability is inferred from a blog checklist.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Exhibit/version IDs, witness links, prep tasks and reviewed dates",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Build and review an exhibit/witness index",
+        "output": "Versioned trial preparation package with unresolved steps visible",
+        "exceptions_and_dependencies": "Vendor claim only; exact fields, current UI/limits and approved legal content require independent verification."
+      }
+    },
+    {
+      "feature_id": "F-0485",
+      "acceptance_test": {
+        "id": "AT-0485",
+        "scenario_and_expected_result": "Create synthetic decedent, spouse, adult child, minor child and representative; the representative is not automatically a beneficiary. Link a related probate matter without merging identities or permissions. Store distinct claim/damage records with supporting sources; do not copy one beneficiary's loss to another. Unknown entitlement, minor authority and allocation remain unresolved for attorney review. Permissioned communication and document-copy choices apply per person. A proposed recovery or allocation is not an approved distribution. Preserve probate, survival and wrongful-death labels without assuming jurisdictional availability.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Related matters, party roles, authority evidence and claimed loss records",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Review party/claim relationships and supporting damages",
+        "output": "Role-specific records with explicit unknowns and restricted audiences",
+        "exceptions_and_dependencies": "Vendor claim only; exact fields, current UI/limits and approved legal content require independent verification."
+      }
+    },
+    {
+      "feature_id": "F-0486",
+      "acceptance_test": {
+        "id": "AT-0486",
+        "scenario_and_expected_result": "Map synthetic internal phase P-3 to an approved plain-language message. Include an expected completion date only if supported and reviewed; show its basis and uncertainty. Changing the phase stages a new client update and notification under the declared approval policy. Internal strategy notes and restricted fields remain private. A notification delivered or portal opened is not proof the client read or agreed. Test two clients with different document grants and languages; translations retain source/version. No real message is published.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "workflow": {
+        "input": "Internal phase, approved status text and client access/language settings",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Preview and publish a client-facing progress update",
+        "output": "Versioned client status and separately tracked notification/access evidence",
+        "exceptions_and_dependencies": "Vendor claim only; exact fields, current UI/limits and approved legal content require independent verification."
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0017",
+      "label": "Future-only rule edits",
+      "source_url": "https://manage.intrial.com/features/workflows",
+      "scenario_and_expected_result": "Apply v1 to a case, publish v2 and verify existing tasks are unchanged. A later eligible transition uses v2. No retroactive tasks appear without an explicit backfill preview and approval.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0019",
+      "label": "Four trigger classes",
+      "source_url": "https://manage.intrial.com/features/workflows",
+      "scenario_and_expected_result": "Test phase entry, task completion, approaching case date and manual button with stable event IDs. Repeated events cannot duplicate actions; changing a case date invalidates stale queued runs.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0021",
+      "label": "Declared actions and case-type scope",
+      "source_url": "https://manage.intrial.com/features/workflows",
+      "scenario_and_expected_result": "Exercise task creation and automatic SMS separately, with role resolution and consent checks. Missing assignee produces a visible exception. Do not infer email actions from the case-rule page; lead taskflows have a separate stated email capability.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0041",
+      "label": "Role resolution on each case",
+      "source_url": "https://manage.intrial.com/features/workflows",
+      "scenario_and_expected_result": "Assign the same case role to different people on two cases. Resolve each task to the correct person, retain rule/role/actor snapshots, and expose missing or inactive role members.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0416",
+      "label": "Phase-limited recurring tasks",
+      "source_url": "https://manage.intrial.com/features/workflows",
+      "scenario_and_expected_result": "Run a 30-day recurrence limited to Treatment. Leaving the phase stops future occurrences according to the declared policy; preserve prior tasks. Reentry must explicitly resume or create a new series, without duplicate backdated work.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0033",
+      "label": "One-way per-user calendar publication",
+      "source_url": "https://manage.intrial.com/features/calendar-sync",
+      "scenario_and_expected_result": "Create, update and delete a case event and verify Google/Outlook receipts per user. External personal events are not imported. Tasks do not sync under this source claim. Test disconnected and partially failing users, admin event-type settings and user filters; do not label the whole team synced from one success.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0002",
+      "label": "Document page and passage navigation",
+      "source_url": "https://manage.intrial.com/features/ai-agent",
+      "scenario_and_expected_result": "Answer from synthetic PDF-v2 page 3 and open the cited passage in that version. If the source was replaced, deleted or inaccessible, show unresolved provenance; do not redirect silently to another page or claim every answer has a document citation.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0003",
+      "label": "Current AI error disclosure",
+      "source_url": "https://manage.intrial.com/features/ai-agent",
+      "scenario_and_expected_result": "An unsupported fact must remain unknown; a citation is not proof that the cited text supports an inference. Require source verification and do not display a zero-hallucination guarantee.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0006",
+      "label": "Provider totals and duplicate bill boundaries",
+      "source_url": "https://manage.intrial.com/features/ai-medchrons",
+      "scenario_and_expected_result": "Reconcile each visit/charge to provider and original source. Separate duplicate pages, corrected bills, billed amount, payment and lien balance. Provider counts must equal distinct reviewed identities.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0007",
+      "label": "Chronology Word export versus demand narrative",
+      "source_url": "https://manage.intrial.com/features/ai-medchrons",
+      "scenario_and_expected_result": "Export the selected chronology as Word with its provider totals and source links; a chronology export alone must not be described as a generated demand narrative.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0008",
+      "label": "Correct underlying data",
+      "source_url": "https://manage.intrial.com/features/ai-medchrons",
+      "scenario_and_expected_result": "Edit the provider and record values behind the timeline, retain old values and source pages, and update sort order without duplicating visits.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0009",
+      "label": "Shared extraction snapshot",
+      "source_url": "https://manage.intrial.com/features/ai-demands",
+      "scenario_and_expected_result": "A corrected medical charge invalidates chronology totals and all dependent demand/statement drafts. Show which artifact snapshot is current and which requires rereview.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0011",
+      "label": "Structured fields plus selected documents",
+      "source_url": "https://manage.intrial.com/features/ai-demands",
+      "scenario_and_expected_result": "Record structured field snapshot and selected source document/version IDs. A deselected document must not influence a regenerated narrative; missing or contradictory facts remain visible.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0103",
+      "label": "Omitted empty repeat blocks",
+      "source_url": "https://manage.intrial.com/features/document-generator",
+      "scenario_and_expected_result": "Generate 0/1/2 defendants, providers, liens and witnesses. Confirm the declared empty-block omission and preserve role-specific field boundaries and formatting.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0104",
+      "label": "Warn before generation",
+      "source_url": "https://manage.intrial.com/features/document-generator",
+      "scenario_and_expected_result": "Detect a missing required date and distinguish empty, unknown and inapplicable values before generation. Firm final-release policy blocks unresolved required values; no vendor hard-block behavior is presumed from the word warning.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0133",
+      "label": "Inbound fax filing and review states",
+      "source_url": "https://manage.intrial.com/features/efax",
+      "scenario_and_expected_result": "Retain original fax, provider message ID, suggested matter and filing receipt. An unmatched or ambiguous fax stays reviewable. Distinguish received, analyzed, matched, confirmed, filed and action-approved states; no information is discarded when approval is denied.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0025",
+      "label": "Failed outbound fax recovery",
+      "source_url": "https://manage.intrial.com/features/efax",
+      "scenario_and_expected_result": "Inject provider failure after an outbound request and create a sender review item. Reconcile provider status before resend; preserve original attempt and page count. Delivered does not mean reviewed by the recipient.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0053",
+      "label": "Per-action outcomes",
+      "source_url": "https://manage.intrial.com/features/efax",
+      "scenario_and_expected_result": "Approve only filing and a review task from a fax analysis, leaving proposed lien/status changes unapproved. Show separate results; Run All cannot turn a queued human task into completed legal work.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0153",
+      "label": "Case search versus cross-case AI retrieval",
+      "source_url": "https://manage.intrial.com/features/drives",
+      "scenario_and_expected_result": "Test filename/content search with folder/type/date filters in one case and cross-case AI retrieval separately. Case restrictions must apply to snippets, citations, document bytes and counts.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0134",
+      "label": "File restore and shared version policy",
+      "source_url": "https://manage.intrial.com/features/drives",
+      "scenario_and_expected_result": "Restore prior document bytes with a new auditable version pointer and test what an existing share sees. File-change logs and share-view/download logs remain distinct and export with stable IDs.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0173",
+      "label": "Optional second copy is not a consistent restore",
+      "source_url": "https://manage.intrial.com/terms",
+      "scenario_and_expected_result": "Display whether the paid second storage copy is enabled and its last verified coverage. Database backup, file replication, export and a consistent application restore remain separate evidence. Restore a controlled complete set and reconcile relationships before claiming recovery; no real restore executed here.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0399",
+      "label": "Conflicting exit windows",
+      "source_url": "https://manage.intrial.com/terms",
+      "scenario_and_expected_result": "Record privacy 30-day versus terms 90-day post-termination export descriptions as unresolved. In the firm app expose the approved policy version, cutoff and available formats; do not promise either vendor window without contract clarification.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0400",
+      "label": "Two-part data exit",
+      "source_url": "https://manage.intrial.com/terms",
+      "scenario_and_expected_result": "Reconcile structured CSV and file ZIP against a manifest containing case IDs, document hashes, folder paths, communication records and exclusions. A ZIP alone is not a complete export or backup. Test migration status mappings and signed artifacts separately.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0385",
+      "label": "Thread visibility and daily-ledger completeness",
+      "source_url": "https://manage.intrial.com/features/client-texting",
+      "scenario_and_expected_result": "Optional activity-feed display must not suppress messages in the master daily review. Retain every individual SMS/MMS and call with exact direction, time, participants, source IDs and attachment ingestion status. Team read markers do not mean a client read an SMS.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0276",
+      "label": "Existing number and carrier prerequisites",
+      "source_url": "https://manage.intrial.com/features/client-texting",
+      "scenario_and_expected_result": "Track business-number texting hosting and carrier registration separately from voice service and consent. A configured number or registration submission does not prove send readiness.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0376",
+      "label": "All required signers before conversion",
+      "source_url": "https://manage.intrial.com/features/esign",
+      "scenario_and_expected_result": "Duplicate completion events create one case; a viewed link or one of two signatures cannot trigger case conversion. Store the completed envelope and certificate before post-signature tasks run.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0097",
+      "label": "Explicit rejection reasons",
+      "source_url": "https://manage.intrial.com/features/intake",
+      "scenario_and_expected_result": "Preserve rejected lead answers, origin and reason; resubmission cannot bypass an existing conflict decision. No automatic representation decision follows a star rating.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0027",
+      "label": "Absent source attribution stays absent",
+      "source_url": "https://manage.intrial.com/features/intake",
+      "scenario_and_expected_result": "If the webhook omits UTM/click IDs, retain absence rather than infer an ad source. Record integration defaults separately from client answers, along with office assignment at conversion.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0428",
+      "label": "Consistent case restrictions",
+      "source_url": "https://manage.intrial.com/privacy",
+      "scenario_and_expected_result": "Enforce the same firm/user/case restrictions across UI, AI, MCP, file links, exports, chat notifications and reporting. Broad organization access must not bypass a restricted matter.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0472",
+      "label": "Tab label versus behavior",
+      "source_url": "https://manage.intrial.com/features/case-management",
+      "scenario_and_expected_result": "Retain Discovery, Depositions and Pleadings as individually named workspace entries. A visible tab does not prove transcript analysis, filing or service. Preserve underlying records when layouts change and mark unspecified sub-workflows pending.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0467",
+      "label": "Automatic status transitions",
+      "source_url": "https://manage.intrial.com/features/intake",
+      "scenario_and_expected_result": "Show which documented activity triggered a lead-status transition and preserve prior/new status. Unknown trigger rules remain unconfigured. Replayed events cannot advance a status twice or bypass a rejection/conflict gate.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0467",
+      "label": "Mobile intake access",
+      "source_url": "https://manage.intrial.com/features/intake",
+      "scenario_and_expected_result": "At supported narrow viewport sizes, complete a synthetic intake with required fields, Unsure answers and validation errors intact. Keyboard/focus and readable labels must work; a mobile sales claim alone is not a passed device/browser test.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0091",
+      "label": "Outbound fax quality selection",
+      "source_url": "https://manage.intrial.com/features/efax",
+      "scenario_and_expected_result": "Record Standard versus high-quality selection in packet metadata and show unsupported-format/conversion failures before send. Verify actual provider-request setting in a controlled environment; no readability or delivery guarantee follows from selecting quality.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0462",
+      "label": "Type-tagged signing templates",
+      "source_url": "https://manage.intrial.com/features/esign",
+      "scenario_and_expected_result": "Filter test templates by intake, HIPAA and other declared tags without changing their signer fields or document version. Hidden/unapproved templates cannot be selected through a direct ID. A tag is organizational metadata, not legal approval of an authorization.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0474",
+      "label": "Expert engagement, shared materials and invoice terms",
+      "source_url": "https://www.intrial.com/blog/expert-witness-management-personal-injury",
+      "scenario_and_expected_result": "Retain synthetic expert engagement scope, rate schedule, cancellation terms, deliverables and approved dates as versioned records. Reconcile 2.5 review hours at100.00/hour plus a500.00 report fee to750.00; flag an invoice using an unauthorized rate. Preserve exactly which document versions were shared with that expert and when. A materials-considered list must come from verified sharing/receipt or expert confirmation, not every file in the case. Legal disclosure/privilege judgments require attorney review; vendor blog statements are not controlling law.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0473",
+      "label": "Retainer fee basis and applicable tier",
+      "source_url": "https://www.intrial.com/blog/trust-accounting-and-settlement-distribution-plaintiff-firms",
+      "scenario_and_expected_result": "Use gross300000.00 and costs50000.00 at33%:gross-basis fee99000.00 versus net-after-cost fee82500.00. Show the signed fee-term version and selected basis. Changing litigation stage cannot silently apply a new fee tier to an approved distribution. Flag unknown/disputed terms for attorney resolution; recalculate and invalidate older statements after an approved basis change.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0110",
+      "label": "Cleared funds and proposed distributions remain separate",
+      "source_url": "https://www.intrial.com/blog/trust-accounting-and-settlement-distribution-plaintiff-firms",
+      "scenario_and_expected_result": "Track a synthetic promised300000.00 settlement, received check and separately verified clearance. A generated distribution statement cannot mark funds received, cleared or disbursed. Require the firm's declared approval/hold policy before preparing a payment. Reversed or returned funds invalidate the proposed distribution. No bank transaction or real payment is executed; the vendor article does not establish a working trust ledger or reconciliation engine.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0112",
+      "label": "Disputed liens and held amounts",
+      "source_url": "https://www.intrial.com/blog/trust-accounting-and-settlement-distribution-plaintiff-firms",
+      "scenario_and_expected_result": "Keep asserted15000.00, negotiated10000.00 and disputed5000.00 as distinct reviewed values with sources. Model a hold/reserve only under the attorney-approved matter policy; do not treat a vendor blog as a universal legal rule requiring payment of every asserted lien. Statement versions show the unresolved/disputed status and effect on proposed net. A pending negotiation cannot be labeled lien satisfaction or verified disbursement.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0463",
+      "label": "Co-counsel audience",
+      "source_url": "https://www.intrial.com/blog/co-counsel-and-referral-management-for-law-firms",
+      "scenario_and_expected_result": "Give synthetic co-counsel access to two specific files from one matter. Case membership, a referral relationship or a fee split must not expose internal notes, other cases or all later uploads. Revoke and verify future access and download URLs under the declared policy.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0473",
+      "label": "Referral fee base and split reconciliation",
+      "source_url": "https://www.intrial.com/blog/co-counsel-and-referral-management-for-law-firms",
+      "scenario_and_expected_result": "Use a100000.00 recovery and reviewed one-third attorney fee, then a25% referral share of that fee. Retain exact rational arithmetic and declared rounding; shares must reconcile to the rounded fee. A referral percentage of fee must not silently become a percentage of gross recovery. Unknown agreement/approval blocks final release.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0110",
+      "label": "Obligation versus payment",
+      "source_url": "https://www.intrial.com/blog/co-counsel-and-referral-management-for-law-firms",
+      "scenario_and_expected_result": "Record a referral fee as proposed, approved, due and paid using separate evidence. Generating a statement cannot mark payment issued or cleared. Reconcile a returned payment without erasing the original attempt.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0117",
+      "label": "Contingent revenue forecast",
+      "source_url": "https://www.intrial.com/blog/contingency-fee-management-software-for-law-firms",
+      "scenario_and_expected_result": "Label synthetic 30/60/90-day forecasts with as-of date, probability/expected-close basis and reviewer. Distinguish case value, firm fee, recovered expenses, expected revenue and collected cash. Reopen/delay cases without counting the same recovery twice; stale estimates remain visible.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0385",
+      "label": "Preserve time despite contingency model",
+      "source_url": "https://www.intrial.com/blog/contingency-fee-management-software-for-law-firms",
+      "scenario_and_expected_result": "Keep every individual call, text and email/document interval in the daily review, even on a contingency matter. Include reviewed labor cost in a proposed profitability report with explicit rates and overlap rules. A vendor statement minimizing hourly billing never removes the firm's time-review requirements.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0441",
+      "label": "Portal upload is a distinct proposed path",
+      "source_url": "https://www.intrial.com/blog/client-portal-software-personal-injury-law-firms",
+      "scenario_and_expected_result": "For a synthetic client upload, require durable receipt, original hash, matter/grant checks and extraction status before claiming filed. The blog describes upload as a recommended portal feature, not a demonstrated InTrial upload flow; implementation and competitor availability both remain unverified.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0447",
+      "label": "Appointment requests remain requests",
+      "source_url": "https://www.intrial.com/blog/client-portal-software-personal-injury-law-firms",
+      "scenario_and_expected_result": "Track a proposed portal appointment request separately from confirmation and external calendar sync. Recheck authority, timezone, attendee scope and duplicate requests. This is a design safeguard derived from general portal guidance; no InTrial booking capability is proven.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0440",
+      "label": "Adoption versus access metrics",
+      "source_url": "https://www.intrial.com/blog/client-portal-software-personal-injury-law-firms",
+      "scenario_and_expected_result": "Record onboarding invitation, successful activation, notification, portal visit, document view and message reply as distinct events. Do not treat invitation delivery as adoption or imply the article's call-reduction percentage was measured in this firm.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0469",
+      "label": "Distinct limitation-date bases",
+      "source_url": "https://www.intrial.com/blog/wrongful-death-case-management-plaintiff-firms",
+      "scenario_and_expected_result": "Keep incident date, death date and attorney-approved claim-specific trigger/basis separately. A generic year preset cannot resolve survival/wrongful-death/probate differences. Unknown governing law or tolling stays unresolved; changes stage a reviewed reminder update.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0474",
+      "label": "Preparation status is not testimony completion",
+      "source_url": "https://www.intrial.com/blog/personal-injury-trial-preparation-checklist",
+      "scenario_and_expected_result": "Record synthetic witnesses as availability-unknown, scheduled, prepared, unavailable and testified with supporting event evidence. A prep task completed cannot mark testimony given or subpoena served. Keep each witness's report version and schedule distinct.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0032",
+      "label": "Reverse-calendar change review",
+      "source_url": "https://www.intrial.com/blog/personal-injury-trial-preparation-checklist",
+      "scenario_and_expected_result": "Build synthetic prep deadlines from a reviewed trial date and explicit offsets. Moving trial produces a preview of changed, unchanged, completed and manually overridden items; never silently shift a filed deadline or erase historical tasks.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0013",
+      "label": "Deposition designations versus playback",
+      "source_url": "https://www.intrial.com/blog/personal-injury-trial-preparation-checklist",
+      "scenario_and_expected_result": "Store proposed witness testimony designations with exact transcript version/page/line and, only where verified, linked video timestamps. Missing video alignment is explicit; no excerpt or playback success may be inferred from the article's recommendation to prepare designations.",
+      "status": "Not executed"
+    }
+  ]
+}

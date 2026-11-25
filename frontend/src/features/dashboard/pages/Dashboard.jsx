@@ -157,10 +157,12 @@ export function Dashboard() {
       });
     });
     (intakes || []).slice(0, 2).forEach(i => {
+      const intakeClientLabel =
+        i.prospectiveClient || i.clientName || i.contactName || 'Prospective Client';
       activities.push({
         id: `intake-${i.id}`,
         title: `Intake: ${i.conflictStatus || 'In Review'}`,
-        description: `Client ${i.clientName || i.contactName} - Practice Area: ${i.practiceAreaName || 'General'}`,
+        description: `Client ${intakeClientLabel} - Practice Area: ${i.practiceAreaName || 'General'}`,
         date: i.createdAt || 'Recently',
         color: i.conflictStatus === 'Cleared' ? 'bg-[#287A55]' : 'bg-[#A4432B]',
       });
@@ -190,13 +192,13 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Top Welcome Banner */}
-      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="space-y-1">
+      <div className="bg-white p-4 sm:p-6 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="space-y-1 min-w-0">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#A4432B]/10 text-[#A4432B] border border-[#A4432B]/20 text-[10px] font-mono font-bold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-[#A4432B]" />
             <span>Utah Law Practice Management</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#06244B] tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#06244B] tracking-tight break-words">
             Welcome back, {currentUser.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#475467] pt-0.5">
@@ -246,7 +248,7 @@ export function Dashboard() {
       </div>
 
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           title="Total Clients"
           value={totalClientsCount}

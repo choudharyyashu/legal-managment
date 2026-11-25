@@ -1,0 +1,1723 @@
+{
+  "date": "2026-11-16",
+  "status": "Original proposed synthetic acceptance tests; all Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0545",
+      "workflow": {
+        "input": "Synthetic organization,authorized role,product entitlement,matter types,published timeline and section policy",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Review readiness,edit type-level visibility,save or cancel",
+        "output": "Versioned portal policy and explicit missing-prerequisite state",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0545",
+        "scenario_and_expected_result": "Create synthetic types A/B,one with a published timeline and one with draft-only setup. Verify entitlement and role checks on UI and backend before changing configuration. A missing prerequisite must show its reason and route to configuration rather than enabling a misleading portal. Disable the portal for A and verify client access is withdrawn for A while B remains unchanged. Separately disable billing and full timeline: verify forbidden financial content is absent through both UI and direct requests,while the approved current-step summary remains correctly scoped. Cancel or failed save must retain the previous policy. Test concurrent settings edits and a missing service-user permission without silently widening access. A feature preview is a sample,not a tenant/client execution.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-257",
+        "VR-258"
+      ]
+    },
+    {
+      "feature_id": "F-0546",
+      "workflow": {
+        "input": "Synthetic matter/contact revisions,trigger event,split selector,exclusion fields,language and ranked endpoints",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Evaluate an event and inspect the eligibility/attempt ledger",
+        "output": "One scoped invitation or a reasoned skip/failure with retry eligibility",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0546",
+        "scenario_and_expected_result": "For synthetic MVA,workers-compensation and dog-bite timelines,configure different first trigger phases. Replay the same event and subsequent selected phases;require one successful invitation per intended identity/scope,with independently tracked failed attempts. Missing contact details or a split selector must remain a prerequisite failure. Evaluate deceased flags,age boundaries,custom dropdown/boolean exclusions and unknown values using an explicit versioned policy. Reproduce the vendor's missing-exclusion-data behavior in a comparison fixture,but make the proposed system's unknown-data policy visible and approved rather than treating unknown as consent. Revoke a recipient and ensure later automation does not restore access. No real invitations are sent by this test specification.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-263",
+        "VR-264",
+        "VR-265",
+        "VR-266"
+      ]
+    },
+    {
+      "feature_id": "F-0547",
+      "workflow": {
+        "input": "Synthetic form revision/publication state,phase event,matter-role assignments and exclusion policy",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Configure eligible phases/roles,validate,and evaluate the trigger",
+        "output": "Audited form-instance assignments tied to exact matter,recipient and form revision",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0547",
+        "scenario_and_expected_result": "Configure draft D for phases P/Q and roles Client/Guardian. Confirm no dispatch while D is draft,then publish version V1 and evaluate P. At event time select contacts by roles on this matter,not the same person's global contact type or roles on matter B. Require at least one valid existing role and show unresolved/misspelled roles before enabling. Replay P and enter Q:do not duplicate a successful instance. Inject failure,then verify a later permitted retry targets the same intended scope without reviving a revoked instance. Change roles,phase configuration or publication revision concurrently:retain the event-time snapshot and require an explicit reconciliation policy. Merely configuring automation does not prove that a form was sent,received or submitted.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-268",
+        "VR-269",
+        "VR-270",
+        "VR-271"
+      ]
+    },
+    {
+      "feature_id": "F-0548",
+      "workflow": {
+        "input": "Synthetic phase history,published phase-to-step map,portal state and notification preferences",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Change an internal phase and review the resulting client-visible step/event",
+        "output": "Correct step and one eligible notification with mapping provenance",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0548",
+        "scenario_and_expected_result": "Map phases P1/P2 to step S1 and P3 to S2 in a synthetic published map. P1→P2 retains S1 without a step-change notification;P2→P3 changes to S2 and records one eligible event. Replay the transition and inject delivery failure without duplicate client alerts. Test reverse transitions,an unmapped phase,a revised map,disabled portal and hidden full-timeline view under explicit approved policies. Distinguish updating the step from successful delivery or reading a notification. Preserve legal deadlines and underlying phase history. Actual feature-transition screenshot is missing;the complete guide text is the present evidence.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": []
+    },
+    {
+      "feature_id": "F-0549",
+      "workflow": {
+        "input": "Synthetic batch name,type/phases/contact types,optional filters,recipient snapshot,language/endpoints and approved quota policy",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Save draft,refresh recipients,review count/export,confirm queue andinspect outcomes",
+        "output": "Versioned job and row-level successful,failed,skipped andpending outcomes",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0549",
+        "scenario_and_expected_result": "Use a synthetic approved quota10000 and10001 eligible rows,plus deceased,archived andalready-invited controls. Review the excluded/eligible counts and require deliberate confirmation;zero matches disables dispatch. Queue overflow under an explicit timezone/reset-time policy rather than guessing the meaning of morning. Resume a draft after contact changes:compare its old snapshot with an explicitly regenerated snapshot,record which was approved,and prevent a retry/double-click from creating duplicate jobs. Export and reconcile stable contact,matter andinvite IDs,not display names. Simulate failure,retry andquota reset without losing pending rows orcounting skipped rows as sent. No actual bulk invitations are sent by this proposed test.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-273",
+        "VR-274",
+        "VR-275"
+      ]
+    },
+    {
+      "feature_id": "F-0550",
+      "workflow": {
+        "input": "Synthetic invite/login/message/form events,org/type/timeline/date filters,column layout andselection",
+        "initial_state": "Original synthetic proposed fixture,no tenant/client matter changed",
+        "user_action": "Drill down metrics,filter/sort,select eligible rows or export the complete filtered view",
+        "output": "Explainable aggregates andstable-ID rows withprecisely scoped action/export results",
+        "exceptions_and_dependencies": "Commit/build/environment,current entitlement andpermissions and approved recipient/translation policies remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0550",
+        "scenario_and_expected_result": "Seed the same contact onmatters A/B withdifferent invitation states andknown events arounddate boundaries. Reconcile accepted/sent counts,seven-day activity,form counts andtime-to-complete against an independent event ledger;define timezone,denominators andunfinished-item treatment explicitly. Drill-down must carry its filter without dropping org/type scope. Filter to150 records while showing25 perpage:export all150 in the chosen columns/order/sort,but a select-page resend operates onlyon eligible selected visible rows. Distinguish100 selection cap from100 page default. Changing page,size orfilters clears selection;verify the action label reflects that. Test stale statuses,multiple recipients andinaccessible matters without cross-org leakage. CSV generation anddashboard display do not prove invitation delivery orclient engagement.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-276",
+        "VR-277",
+        "VR-278",
+        "VR-279",
+        "VR-280",
+        "VR-281"
+      ]
+    },
+    {
+      "feature_id": "F-0551",
+      "workflow": {
+        "input": "Matter type A with published revision R1; draft R2 with step names/descriptions, internal phases and optional split selector. Type B supplies a copy template.",
+        "initial_state": "Original proposed synthetic fixtures; no live tenant changes",
+        "user_action": "Create or import a timeline, map phases, group selector options, preview/reorder/delete steps, save a draft and publish.",
+        "output": "One validated published revision for all projects of type A; unchanged source template/type B; explainable blocked selector mappings and preserved internal history.",
+        "exceptions_and_dependencies": "Client Portal entitlement and administration, published type-specific timelines; precise plan/license, selector schema, release and runtime are unresolved. No use of internal phases as court deadlines."
+      },
+      "acceptance_test": {
+        "id": "AT-0551",
+        "scenario_and_expected_result": "Use synthetic A/MVA and A/Mass Tort plus control type B. Draft two split timelines and confirm existing clients retain R1. Publish R2; all A projects must use the same approved revision and B must remain unchanged. Inject invalid mapping in one split and save failure: no partial publication or invitation readiness change. Reload and compare persisted names, descriptions, order and phase/option IDs with approved draft. Preserve previous published revision and audit actor/time. Documented all-split publication motivates this original transactional test; vendor atomic failure handling was not observed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0552",
+      "workflow": {
+        "input": "An authorized timeline step and approved public instructional-video URL; no confidential matter content in external URL.",
+        "initial_state": "Original proposed synthetic fixtures; no live tenant changes",
+        "user_action": "Enter, preview, replace or clear an optional video URL, then publish the step under the timeline publication controls.",
+        "output": "Scoped step/video association or specific validation error; readable step guidance even when media cannot play.",
+        "exceptions_and_dependencies": "Client Portal entitlement and administration, published type-specific timelines; precise plan/license, selector schema, release and runtime are unresolved. No use of internal phases as court deadlines."
+      },
+      "acceptance_test": {
+        "id": "AT-0552",
+        "scenario_and_expected_result": "In an authorized synthetic build first verify the field is actually supported for the recorded plan/version. Test a supported YouTube URL, blank value, malformed URL, non-YouTube host and deceptive hostname. Save/reload and confirm only the intended step association. With a private/deleted or blocked video show unavailable media while preserving readable description, step and navigation; do not mark it watched or completed. Clear the URL and ensure stale embeds disappear. No client viewer/player, validation or playback was observed; current support remains unresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0553",
+      "workflow": {
+        "input": "Organization A/B, client with one or multiple organization memberships, projects with distinct stable IDs and public labels, staff with several team assignments.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Preview name/logo/color changes, choose project-name versus primary-contact label, toggle project ID/business/team visibility and select team roles, then save.",
+        "output": "Approved scoped display and persisted settings; preview is distinct from publication and from authentication/authorization.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement and admin roles; core Filevine billing before portal billing; Payments by Filevine for funding/invoice payments. Exact plan/license/contract, region, processor and permission matrix unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0553",
+        "scenario_and_expected_result": "In synthetic organizations A/B give one client two projects with identical public labels but different stable IDs. Switch the project-label option and confirm each route remains bound to the intended matter. Edit name/logo/header color and verify preview before save; reload after save and confirm approved values across portal pages. Cancel or fail save without falsely marking publication. Toggles must remove the corresponding client-visible data and not merely hide it with CSS. Organization B must remain unchanged; project labels must never act as access credentials.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0554",
+      "workflow": {
+        "input": "Default office D, non-default offices O1/O2, two matter types and dropdown rules across different fields.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Create/edit office details, configure dropdown matches and evaluate client project data.",
+        "output": "One resolved office or default fallback, scoped contact information and auditable saved configuration.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement and admin roles; core Filevine billing before portal billing; Payments by Filevine for funding/invoice payments. Exact plan/license/contract, region, processor and permission matrix unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0554",
+        "scenario_and_expected_result": "Use synthetic D/O1/O2 and matter type A with field Region. Map North to O1 and South to O2. Verify matching projects show the expected office while empty/unmapped values and a type with no rule use D. Attempt duplicate North assignment in O2 through UI and API; require explicit conflict handling. Add a different-field rule that makes one project match both offices: show D with an explainable fallback, not arbitrary first-match selection. Changing office selection must not move the matter, alter its contacts or grant access. Client-result transition screenshot remains missing.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0555",
+      "workflow": {
+        "input": "Organization billing entitlement, enabled/disabled portal billing types, organization contact types and authorized matter links.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Configure portal billing and allowed contact types, inspect as synthetic contacts, disable globally and cancel/confirm the change.",
+        "output": "Explainable billing access decisions with no cross-matter financial exposure and no false fine-grained permissions.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement and admin roles; core Filevine billing before portal billing; Payments by Filevine for funding/invoice payments. Exact plan/license/contract, region, processor and permission matrix unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0555",
+        "scenario_and_expected_result": "Build the matrix of core billing absent/present, portal billing off/on and matter type A enabled/B disabled. Without any prerequisite deny both page and direct API financial access. Give contact C types Client+MedicalProvider and D MedicalProvider only; with Client allowed C qualifies and D does not, subject to their authorized matter links. Adding an organization contact type must not grant access to unrelated matters. Deny via both UI and API after disabling a matter type or global billing; cancel disable must preserve previous configuration. All permitted clients receive the same configured options unless the user program explicitly implements and verifies a separate policy.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0556",
+      "workflow": {
+        "input": "Authorized synthetic matter, due invoice, project-funds ledger, provider entitlement and configured viewing/payment/notification/void options.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "View allowed balances/history, initiate a synthetic funding or invoice payment and reconcile its state separately from notification delivery.",
+        "output": "Correctly scoped financial data and provider-backed payment/ledger states; unsupported actions show dependency reasons.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement and admin roles; core Filevine billing before portal billing; Payments by Filevine for funding/invoice payments. Exact plan/license/contract, region, processor and permission matrix unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0556",
+        "scenario_and_expected_result": "In a sandbox verify funds visibility off prevents funding even if a stale funding flag is submitted. With visibility on but payment entitlement absent, funds remain viewable and both payment routes remain unavailable. Enable an approved sandbox payment provider and confirm funding credits the intended matter/fund ledger while invoice payment targets the exact due invoice. Test duplicate submit, timeout, failed authorization and replayed callback: do not duplicate charges or ledger postings and do not mark paid from a click, notification or provisional request. Record provider event/transaction IDs and reconciliation evidence. No transaction is executed by this audit; exact provider/amount/currency/fee constraints remain unresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0557",
+      "workflow": {
+        "input": "Synthetic project types A/B, recipient C, another contact D and a versioned field schema with static, contact and collection sections.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Build a type-A form, add supported fields, configure labels, help, required/read-only states and conditions, and preview before publication.",
+        "output": "Type-scoped form schema and readable client preview; exact source-field identity and recipient mapping retained.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement,administration,project-type schemas,recipient authorization andtranslation configuration. Exact plan/license,permissions,release andprovider dependencies unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0557",
+        "scenario_and_expected_result": "Create A/B fields with the same display label but different IDs. A form must bind only to A's supported schema and recipient C's contact card, never D or B. Test text, non-calculated amount, date, yes/no, dropdown/multi-select and file-URL fields; calculated, reference, person and deadline fields must be explicitly unavailable where unsupported. Add collection blocks through their separate path rather than treating their fields as standalone static fields. Inspect submission mapping with synthetic values, deny tampered recipient/field IDs, and preserve read-only source values on direct request attempts. Cross-type copy must require an explicit remapping workflow rather than silently reusing foreign IDs. No actual submission performed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0558",
+      "workflow": {
+        "input": "A synthetic matter collection with two existing rows, one hidden field, one required field and two independently authorized recipients.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Add the collection block and configure four prevent-action flags, then inspect client rows and allowed actions.",
+        "output": "Consistent client/API action permissions, ordered supported fields and traceable row changes without unintended disclosure or deletion.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement,administration,project-type schemas,recipient authorization andtranslation configuration. Exact plan/license,permissions,release andprovider dependencies unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0558",
+        "scenario_and_expected_result": "Execute all16 combinations of the four boolean controls against both UI and direct requests. Hidden existing rows must not leak via payloads, counts or guessed IDs; add-only intake must not reveal them. Section read-only overrides an editable field, and field read-only still applies when section editing is allowed. Removal defaults blocked; permitted edits/additions/removals must bind stable row IDs and preserve audit/original values. Test concurrent staff edits, duplicate client retries and a removed source row without overwriting another row by position. Exclude unsupported calculated/person/link/reference/deadline fields explicitly. Static screenshots show controls and example rows only; no action execution observed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0559",
+      "workflow": {
+        "input": "Three notification event templates, portal welcome content, English/Spanish editing variants, current contact endpoint and PWA opt-in.",
+        "initial_state": "Original synthetic proposed fixture; no live tenant changed",
+        "user_action": "Edit template fields and variables, select language, preview, selectively restore and trigger synthetic eligible events.",
+        "output": "One correctly scoped event record with rendered approved content and independently tracked channel delivery; welcome appears only after acceptance.",
+        "exceptions_and_dependencies": "Commercial/paid features fully in scope. Client Portal entitlement,administration,project-type schemas,recipient authorization andtranslation configuration. Exact plan/license,permissions,release andprovider dependencies unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0559",
+        "scenario_and_expected_result": "Use synthetic contacts with email, SMS and PWA opt-in/out combinations. Invitation creation, a mapped step change and a new portal message must render their own configured templates to the selected endpoint; push requires the applicable installed/opted-in state. Do not send to every saved email/phone. A phase change within one mapped step must not create a timeline-update notice. Retry/replay events without duplicate success records. Portal welcome is generated on acceptance, visible in portal messages and project activity, rather than inferred from invite delivery. Preserve per-contact language override and keep ordinary message text in its authored language. Delivery/read/acceptance remain separate statuses; no real notices sent.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0560",
+      "workflow": {
+        "input": "Synthetic team memberships,project overrides,revoked users andadmin-only users.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Resolve effective membership-role rows andexport all documentedidentity columns.",
+        "output": "Role records withstable tenant/org/project/user/role IDs,plus explicitlimitations ofmembership export.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0560",
+        "scenario_and_expected_result": "Compare an independently built role fixture with export rows. Verify overrides,revoked exclusion andadmin-only absence,thencheck effectiveaccess through a separateauthorization test. Null/duplicateroles andcross-tenantjoins mustnot silently disappear orgrant access.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0561",
+      "workflow": {
+        "input": "V5/V6 reporting consumers,static andcollectionrows,tenantjoin keys andextractionwindow checkpoints.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Preview schema migration,validate typedkeys/timestamps andbackfill impactedexports idempotently.",
+        "output": "Versioned mappings,unchanged V5 consumers untilmigration andmeasured repairedrow sets.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0561",
+        "scenario_and_expected_result": "Compare V5/V6 data andassert creationtimestamps areUTC onlyforcollectionrows. Simulate case/type-sensitive tenantjoins around announcedSeptember2026 window;identify dropped rows,rerun withoutduplicates andretain original/repaired datasets andcounts. Creationtime mustnot beinterpreted aslastmodifiedtime.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0562",
+      "workflow": {
+        "input": "Queued/running/completed prompts andidentity-scopedjob records.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Request stop,inspect acknowledgement andterminalstate,thenretry intentionally.",
+        "output": "Auditable cancellation state andlabelled partialoutput withoutfalse rollback claims.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0562",
+        "scenario_and_expected_result": "Test stop beforestart,duringstreaming,aftercompletion andfromanotheruser. Preserve partialoutput withsourcecontext,prevent furtherunapprovedeffects wherepossible andshow whenan effectcannotberolledback. Stoprequest acknowledgement isnot proof ofstoppedexecution.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0563",
+      "workflow": {
+        "input": "Versioned templates,connecteddata,theme/exportsettings andexpectedrenderedcontent.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Generate/export representative variants andinspect outputbytes,Word/PDF rendering andfield provenance.",
+        "output": "Usable artifacts matchingapprovedcontent/format withdiagnostic failures.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0563",
+        "scenario_and_expected_result": "Export a fixture matrix containingperiods/Unicode filenames,Letter/Legal sections,appendices/repeaters,tabletotals,links andparagraphborders/alignment. Check DOCXpackage integrity andactualWord/PDF rendering,notonlypreview. Preserve originaltemplate/data revisions andI/me/my plusfour-digityears inall attorneyletters;do notadopt vendor defaultcopy asapprovedwording.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0564",
+      "workflow": {
+        "input": "Authorizedsynthetic matter,uploadsession andknownbytefixture around5MB threshold.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Upload,interrupt,resume andverify finaldocument receipt separatelyfromprogressdisplay.",
+        "output": "Oneauthorized document withmatchinghash,explicitfailure/retry anddurable ingestion evidence.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0564",
+        "scenario_and_expected_result": "Test interruption,phone lock,duplicatechunks,staleauth,cross-matterchunks andexpiredsession. Completeonlyafterserveracknowledged allbytes andverifiedhash;retry mustnotduplicate docs. Spanish comma-decimal display mustnotchange byte arithmetic. ExactMBunits,sizequota andchunkexpiry unresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0565",
+      "workflow": {
+        "input": "Vinesign job,authorizedFilevineproject,mixedportal/externalsigners,activeinvitation andrequiredfield map.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Choose eachdeliverymethod,configureapprovedmessage,send onlyinauthorizedsandbox andinspect signer/finalartifactstates.",
+        "output": "Scopedrequest/task,individualsignature state andall-recipient completedcopy orreasonedfailure.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0565",
+        "scenario_and_expected_result": "Use eligibleportalcontact,uninvitedcontact andexternaluser acrossmattersA/B. Offerportalonlyfor eligibleA invitation andassociatedjob;switchingdelivery mustnotlose recipient/field identity. Test requiredfields,signerorder andone-of-many completion separatelyfromall-complete. Verifycompletedcopy inportalmessage,Docs,Filevine andVinesign againstjob/recipient/revision/hash. Portal two-factordelivery option isdocumentedunavailable;recordauthentication differences withoutclaiming equivalence orchangingapprovedsecuritypolicy. No signing performed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0566",
+      "workflow": {
+        "input": "Syntheticold/newemail,confirmationtokens,connectedFVIDaccount andphoneclassificationfixtures.",
+        "initial_state": "Original syntheticproposed fixture;no tenant changed",
+        "user_action": "Requestidentitychange,confirmorrejecttoken andvalidate eligiblesigningphone routes.",
+        "output": "Verified endpointchange oractionablevalidationwithoutfalseproductaccess ormessageownershipclaims.",
+        "exceptions_and_dependencies": "Commercialpaid modules/add-ons fullyinscope;Filevine,Vinesign,ClientPortal,DataBridge,LOIS/FVDA entitlements andappropriatepermissions asapplicable. Exactcontract/plan,region,currentversion andAPI/providerlimits unresolved."
+      },
+      "acceptance_test": {
+        "id": "AT-0566",
+        "scenario_and_expected_result": "Test wronguser,expired/replayedtokens,resendlimits andunconfirmednewemail;oldidentityremainsuntilconfirmed. FVIDlogin muststillrespectproduct/tenantrevocation. Validate nonmobile andmalformednumbers whileeditable;mobileclassification doesnotproveownership,consent orsuccessfuldelivery. Exactlimits/currentprotocolunresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0440",
+      "id": "AT-0440-CP58-INVITE",
+      "title": "Keep invite methods,acceptance and access states separate",
+      "scenario_and_expected_result": "Choose a synthetic project contact with two email addresses and two phone labels. Permit SMS only for the approved text-enabled labels,record the selected endpoint,and show the pending-recipient review before sending. Portal ON is not acceptance or a grant to every item. Test resend and switching methods as separate explicit delivery attempts without changing recipient identity. Removing portal membership must close existing sessions and direct-item routes according to policy. Preserve any prior matter invitation without accidentally granting another matter.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/28865773457563-Client-Portal-by-Filevine",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0440",
+      "id": "AT-0440-CP58-LANGUAGE",
+      "title": "Limit invitation-language changes to their actual scope",
+      "scenario_and_expected_result": "Choose Spanish for an invite and verify notification/automated-message language while a separately composed portal message remains exactly as authored unless explicit translation is requested. Test unsupported,missing and changed language preferences. Attorney letters must retain I/me/my and four-digit years in every date;flag unknown years. Do not treat a vendor sample or a language selector as permission to alter those standing requirements.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/28865773457563-Client-Portal-by-Filevine",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0546",
+      "id": "AT-0546-CP58-METHOD",
+      "title": "Choose the first available allowed endpoint without inventing failure fallback",
+      "scenario_and_expected_result": "Set endpoint preference PersonalEmail→Mobile→WorkEmail. Omit the first value and verify the next configured available eligible endpoint is selected. Remove an endpoint class and ensure it is never used. Distinguish an absent value from delivery failure:the guide does not establish automatic fallback after a rejected delivery. Require an explicit retry/fallback policy and ledger. Test no usable endpoint,duplicate labels,invalid address and concurrent contact edit without sending to an obsolete or cross-matter endpoint.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/41499592137755-Auto-Invites-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0546",
+      "id": "AT-0546-CP58-LANGUAGE",
+      "title": "Resolve field-based language with an explicit default",
+      "scenario_and_expected_result": "Exercise English-only,Spanish-only,both,neither,unrecognized and missing values in the selected synthetic contact field. Show the resolved language and reason before dispatch and retain the resolution snapshot. When detection is disabled use the configured default. The screenshot's simple language explanation does not resolve case sensitivity or substring matching;approve those semantics and test them explicitly. A fallback language does not translate ordinary messages or establish client comprehension.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/41499592137755-Auto-Invites-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0489",
+      "id": "AT-0489-CP58-LIFECYCLE",
+      "title": "Manage template status without changing sent-instance identity",
+      "scenario_and_expected_result": "Exercise draft,published anddeactivated templates with independently identified sent instances. Rename only the internal template title;duplicate to a new draft bound to the same template type with explicit version lineage. Deactivate to block new sends while preserving previously issued instances;reactivation does not silently resend. Restrict irreversible deletion to the approved eligible states and permissions,show dependencies and preserve the audit/retention policy. These are proposed tests,no deletion is performed. A template state change must not rewrite completed responses or the source PDF.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/45886324684827-Manage-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0067",
+      "id": "AT-0067-CP58-REVOKE",
+      "title": "Revoke incomplete forms separately from deactivating a template",
+      "scenario_and_expected_result": "Seed two incomplete instances and one submitted instance. Preview the exact affected count and IDs;cancel changes nothing. Apply revocation to eligible incomplete instances and test task-list removal,already-open browser tab,cached link and direct submit endpoint. Submitted responses remain retained under policy. Race a submission against revocation and define one authoritative result rather than showing both accepted and revoked. Deactivation alone must not be displayed as successful revocation. The source screenshot is only the pre-apply warning,not proof of invalidated links.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/45886324684827-Manage-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0030",
+      "id": "AT-0030-CP58-MATRIX",
+      "title": "Preserve original answers across organization and field translation settings",
+      "scenario_and_expected_result": "Use synthetic Spanish answers and an additional non-English script across all four combinations of organization translation and per-field translation. Show the exact effective policy for incoming answers separately from prefilled outgoing values. Record original bytes,language,translated value,engine/version and any reviewer correction without overwriting originals. Compare the saved original-language PDF to the submitted answer revision. The source describes unsupported-language and unsupported-character exceptions differently;keep that ambiguity open until current behavior is verified. Do not silently apply a Spanish-only policy to all languages.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/45886324684827-Manage-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0448",
+      "id": "AT-0448-CP58-MESSAGE",
+      "title": "Distinguish portal delivery,reading,replying and internal tags",
+      "scenario_and_expected_result": "Create a synthetic thread addressed to one selected contact,reply with a permitted attachment,and create a separate subject thread. Verify incoming attachments and replies link to the right matter/identity,and internal tags never appear in client content or exports. Exercise pending,delivered,read and failed delivery as separate events. The source calls read status Received;do not equate the word Received with mere transport delivery. A notification success cannot prove document access or reading. Direct messages remain authored text unless an explicit translation workflow is approved.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/28865773457563-Client-Portal-by-Filevine",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0545",
+      "id": "AT-0545-CP58-BILLING",
+      "title": "Gate invoice visibility and payment routes independently",
+      "scenario_and_expected_result": "In a synthetic billing-enabled matter finalize an invoice and verify the correct immutable PDF/version is eligible for portal viewing. A draft must not leak. Test notification preference off/on separately from visibility and role permissions. Distinguish invoice payment from project-fund deposit and trace each result to the correct ledger. Do not treat portal display as reconciliation,settlement or trust-account verification. Test disabled billing,different allowed contact types,reversed invoice and revoked access;no real funds or payment transaction is performed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/28865773457563-Client-Portal-by-Filevine",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0545",
+      "id": "AT-0545-CP58-SECTIONS",
+      "title": "Keep linked configuration behaviors in scope without inferring review",
+      "scenario_and_expected_result": "Maintain separate requirements for branding/address/team display,automated text settings,document-ingestion tags,timeline mapping,billing contact visibility,bulk invitations and reporting. Test each against its individually reviewed source before acceptance. A navigation item or feature preview cannot establish complete behavior,entitlement or implementation. Preserve these linked-source gaps explicitly;reviewing the manager overview does not mark their individual guides or corresponding videos complete.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/28936811986459-Client-Portal-Manager",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0550",
+      "id": "AT-0550-CP58-COOLDOWN",
+      "title": "Validate resend eligibility independently of selection and status chips",
+      "scenario_and_expected_result": "Under anapproved synthetic one-hour cooldown,test59:59,60:00 and60:01 against the serverclock;do not infer boundary semantics from a RecentlySent label alone. Mix archived,revoked,sending,recently-sent andeligible rows. Show selected count andeligible count separately,andexclude ineligible rows through backend enforcement aswell as UI. Prevent a race where two staff resend the same eligible row simultaneously. A changed/removed contact endpoint mustnot silently redirect an old invitation;require endpoint andidentity reconciliation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/49484090323995-Reports-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0550",
+      "id": "AT-0550-CP58-LAYOUT",
+      "title": "Persist browser-local report layout without changing data permissions",
+      "scenario_and_expected_result": "Test mandatory identity/status columns,optional diagnostic fields,reordering,sort andreset. Persist the approved layout in thesame browser andverify clearing browserdata resets preferences without deleting serverevents orchanging permissions. Export reflects the approved filtered dataset andvisible-column order acrossallmatching pages,not onlycurrentpage. Add formula-like synthetic names andensure the chosen CSV policy preserves data while preventing unintended spreadsheet execution. Missing email onanSMS invite ormissing phone onanemail invite isnot automatically anerror.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/49484090323995-Reports-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0549",
+      "id": "AT-0549-CP58-CRITERIA",
+      "title": "Keep bulk filters and snapshot refresh explicit",
+      "scenario_and_expected_result": "Require batchname,type,atleastone phase andcontacttype;exercise Client default separately from matter roles used byform autosend. Add/remove tags,age range andcustom criteria,andverify each changes the preview in the approved way. Archived/deceased/already-invited exclusions mustbe traceable. Reconcile global identity versus per-matter invitation scope:the overview's once wording cannot suppress a legitimate second matter merely because the same contact appears elsewhere. Test language fallback andfirst available endpoint without assuming a delivery-error fallback notestablished bythe source.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/49484180482203-Bulk-Invites-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0550",
+      "id": "AT-0550-CP58-METRICS",
+      "title": "Define timeline and form analytics units before accepting charts",
+      "scenario_and_expected_result": "For a synthetic timeline withknown entry/exit events,reentries andone unfinished step,calculate distribution percentages andaverage duration using anexplicit approved policy. Do not infer whether open intervals,counted visits orunique projects form the denominator from achart label. Reconcile form sent/submitted counts andcompletionduration for duplicate submissions,revoked instances andmissing timestamps. Changing filters mustchange each appropriatecard/chart consistently andmustnot rewrite event history. A client who accepted butnever accessed differs from one witha recorded login.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/49484090323995-Reports-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test motivated by complete article and selected static-source images. No application execution."
+    },
+    {
+      "feature_id": "F-0551",
+      "id": "AT-0551-CP60-CAP",
+      "title": "Enforce the 12-step limit and phase ownership",
+      "scenario_and_expected_result": "Create 12 valid steps then attempt a 13th through UI and API. Reject the extra step without losing the first 12. Reject a step with zero phases and a phase mapped to two steps in the same split. Permit the same internal phase in a different split when supported. Deleting a step must show displaced mappings and require a valid new map before publication.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0551",
+      "id": "AT-0551-CP60-SPLIT",
+      "title": "Resolve split-selector eligibility and ambiguous multi-value selections",
+      "scenario_and_expected_result": "Offer only supported static-section dropdown fields; show unsupported free text and collection fields as ineligible. Group MVA and Slip and Fall under one timeline, Mass Tort under another. An unmapped or empty selector must explain portal unavailability before an invite is sent. Test a renamed/deleted option by stable identity. The screenshot says multi-select while prose says dropdown: verify actual schema and specify conflict behavior for values belonging to different timelines before implementation acceptance; do not silently select one.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0551",
+      "id": "AT-0551-CP60-EDITOR",
+      "title": "Copy and edit timeline content without reusing foreign phase IDs",
+      "scenario_and_expected_result": "Copy names/descriptions from type B to A, then require mapping to A phase IDs. Verify scratch/preloaded template paths remain distinct. Reorder first/middle/last steps and delete a step; preview must match persisted safe rich-text/link rendering after reload. Imported names are not approved legal templates. When copied content is an attorney letter enforce I/me/my and four-digit years; preserve exact quotes and approved proper plural references. Generic vendor description copy is historical source evidence, not approved attorney wording.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0551",
+      "id": "AT-0551-CP60-DRAFT",
+      "title": "Keep save-draft and publication outcomes separate",
+      "scenario_and_expected_result": "Save Draft with two split configurations, navigate away and reload: both drafts survive and current published clients retain the published revision. Cancel edits and inject a save failure: no false saved/published status. On concurrent editing surface a revision conflict rather than overwriting silently. Record which revision was applied to every affected matter when publishing. Concurrency and rollback behavior are original proposed controls, not observed vendor behavior.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0548",
+      "id": "AT-0548-CP60-UNMAPPED",
+      "title": "Keep the client step unchanged during an unmapped internal phase",
+      "scenario_and_expected_result": "Map Investigation and File Setup to Intake, Treatment to Treatment; leave Review unmapped. Move Investigation to File Setup, then Review: client step remains Intake without a step-change notification. Move Review to Treatment: client step changes once; receipt/read status remains separate. Repeated event processing must not duplicate notifications. The actual client transition and delivery screenshots remain missing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0545",
+      "id": "AT-0545-CP60-HIDE",
+      "title": "Preserve the current-step summary when full timeline is hidden",
+      "scenario_and_expected_result": "With a published eligible timeline disable only its full timeline section: the current step remains on Home while other steps are hidden. Then use an unmapped split-selector option: show portal unavailability rather than the old timeline as valid. Do not equate hiding the timeline section with revoking the portal or disabling notification delivery.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038694533147-Timelines-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution."
+    },
+    {
+      "feature_id": "F-0441",
+      "id": "AT-0441-CP60-DIRECTION",
+      "title": "Apply portal-ingress tags without using tags as ingestion proof",
+      "scenario_and_expected_result": "Configure doc-submission plus Portal Intake; upload an authorized synthetic file from client portal into matter A. Verify original bytes/hash, matter, actor and ingestion outcome before recording success; configured tags apply only to incoming documents. Share a different project document outward to the portal: it must not gain inbound tags merely from sharing. Remove default tag and repeat: immutable provenance remains. Test retry, duplicate, failed upload and unauthorized matter; tag presence alone must never prove ingestion or access.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/37652863857435-Documents-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution.",
+      "visual_reference_ids": [
+        "VR-298"
+      ],
+      "visual_coverage": "Configuration only;upload/ingestion result missing"
+    },
+    {
+      "feature_id": "F-0136",
+      "id": "AT-0136-CP60-ORGTAG",
+      "title": "Create portal intake tags in the organization without retroactive ambiguity",
+      "scenario_and_expected_result": "As authorized organization admin add an absent tag in CPM and verify one organization Tag Manager identity is reused on subsequent incoming uploads. Test another organization, duplicate spelling/case and insufficient permission without cross-organization creation or grants. Preview affected documents before any retroactive retag operation; changing the ingestion policy must not silently rewrite past provenance. Retroactive semantics, tag case policy and precise permissions are not settled by the guide and remain explicit design questions.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/37652863857435-Documents-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed acceptance test derived from source body and static images; no live application execution.",
+      "visual_reference_ids": [
+        "VR-298"
+      ],
+      "visual_coverage": "Configuration only;nested hierarchy/propagation not shown"
+    },
+    {
+      "feature_id": "F-0553",
+      "id": "AT-0553-CP61-LOGO",
+      "title": "Keep login/MFA branding bound to verified context",
+      "scenario_and_expected_result": "Test invitation and notification entry for A, direct entry with only A membership, and direct entry with A+B memberships. Verify documented logo/generic-logo routing without revealing another organization's matter details before authentication. Clearing/replacing a logo must invalidate stale previews safely. SVG/PNG/JPEG and70px/400px are source recommendations, not proof of current upload validation; verify actual allowed types, dimensions, safe SVG handling and size limits. No login/MFA image or runtime transition is currently captured.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038611736475-Display-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0553",
+      "id": "AT-0553-CP61-TEAM",
+      "title": "Resolve visible project team assignments independently of contact types",
+      "scenario_and_expected_result": "Select Primary and Paralegal display roles; show only staff assigned to the current project in those roles. Add an unselected Intake Specialist and a same-role staff member on another matter: neither should leak into this team. Remove/reassign a team member and verify the approved display update. Custom team display title and visibility toggles must not change permissions or organization contact types. Preserve business visibility, project ID and team as separate settings.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038611736475-Display-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0554",
+      "id": "AT-0554-CP61-SAVE",
+      "title": "Keep office-modal persistence separate from unsaved display settings",
+      "scenario_and_expected_result": "Edit header color on the page without saving it, then create or edit an office and click Save in its modal. Reload: office change persists while the unsaved header change does not. Cancel the office modal and inject save failure: no persistence claim. Test page Save separately and identify which change boundary failed. Default sorts first, other offices alphabetically; duplicate display names must retain distinct identities. Static examples contain different addresses/phones and a blank card; do not infer a continuous save sequence or current defect.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038611736475-Display-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0554",
+      "id": "AT-0554-CP61-DEFAULT",
+      "title": "Audit default promotion and deletion fallback",
+      "scenario_and_expected_result": "Promote O1 to default; verify exactly one default and removal of O1's routing rules, while old D becomes non-default and can receive explicit rules. Cancel promotion without changes. Reject deletion of current default through UI/API. Confirm deletion of a non-default office; previously matched projects fall back to the current default with no stale office contact details. Record actor, previous rules and affected matters. Concurrency/failure controls are proposed tests, not observed vendor outcomes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038611736475-Display-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0555",
+      "id": "AT-0555-CP61-NAMESPACE",
+      "title": "Keep three role namespaces and matter grants separate",
+      "scenario_and_expected_result": "Use one person with organization type Client, matter-specific role Witness in matter A, and no staff team assignment. Test billing selection by organization type independently of form auto-send selection by matter role and public team rendering by team assignment. Rename a label without remapping identities and verify no unintended grants. Revoking matter A invitation/item grants must still deny its financial data even if Client remains selected globally. Contact labels/tags are not interchangeable with any role namespace.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038812851227-Billing-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0556",
+      "id": "AT-0556-CP61-FUNDS",
+      "title": "Validate funding amounts and ledger classification explicitly",
+      "scenario_and_expected_result": "Verify supported amount precision, currency, minimum/maximum and fee behavior from current provider contract/sandbox before approving payment tests. The source's any-amount wording is not evidence of unlimited amounts. Invalid, zero, negative, excessive-precision and over-limit requests must not create a payment or ledger entry. Preserve designated account/fund classification and matter allocation; never treat a project-funds display as proof of a trust-account balance or successful three-way reconciliation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038812851227-Billing-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0556",
+      "id": "AT-0556-CP61-VOID",
+      "title": "Separate void visibility from reversal, settlement and balances",
+      "scenario_and_expected_result": "Create synthetic ordinary/voided invoices, funds entries and payments. With Show all voids off hide eligible void rows from the client list without deleting audit history or changing ledger calculations. With it on include each class with explicit status; voided items must not be offered as payable merely because visible. Verify resulting due/available balances from source ledger, settlement/reversal status and matter allocation; exact competitor calculation rules are not described here.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038812851227-Billing-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0556",
+      "id": "AT-0556-CP61-NOTICE",
+      "title": "Trigger invoice notices from finalization without equating them with payment",
+      "scenario_and_expected_result": "Save an invoice draft without sending a finalized-invoice notification. Finalize under enabled notice policy: produce one eligible notice per approved contact/channel preference and record recipient, matter, invoice revision and event ID. Replay finalization or retry a failed channel without duplicate successful alerts. SMS/email/push preference and invoice/payment status remain separate; no false delivered/read/paid state from the static sample email. Verify link authorization after role removal or billing disable.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39038812851227-Billing-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0557",
+      "id": "AT-0557-CP63-LABEL",
+      "title": "Separate internal template titles, client labels and stable fields",
+      "scenario_and_expected_result": "Give internal title Intake-A-v2 and display title Employment. Staff pickers use the internal title; clients and sent form-name variables use the display title. Rename a visible question and add helper text without renaming/remapping the source field. Keep title/description/logo at the top; omit empty description and add/remove the approved portal logo without affecting other templates. Record source field section/tab so identical labels remain distinguishable. The screenshot's formTitle and prose's formname variable spellings differ: verify exact tokens rather than assuming aliases.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0557",
+      "id": "AT-0557-CP63-CONDITION",
+      "title": "Evaluate contingent fields with explicit data and preview state",
+      "scenario_and_expected_result": "Make B contingent on A=Yes. With A omitted from the form, test stored project A=Yes/No/empty; B follows the authorized stored value. Include A and toggle it in preview/client state; B appears only when its condition is met. Hidden required fields must not make submission impossible; untrusted hidden-field payloads must not bypass policy. Do not erase an existing B value merely because its question is hidden without an approved change policy. Verify every submission against the actual saved condition revision.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0557",
+      "id": "AT-0557-CP63-LAYOUT",
+      "title": "Keep mobile layout, section ordering and supported-type gaps explicit",
+      "scenario_and_expected_result": "Test phone and desktop previews with long labels, instructions, warning blocks and section breaks. Each question occupies one line; reorder standalone fields using drag/order tools while collection fields retain project-defined order. Preview must not count as a saved answer or sent instance. Keyboard navigation, validation focus and long bilingual content must remain usable. Record unsupported fields as exclusions; layout blocks must not become matter data. Source wording about fields without a collection block is inconsistent with surrounding reorder guidance; verify the actual ordering boundary.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0559",
+      "id": "AT-0559-CP63-RESTORE",
+      "title": "Restore only selected language/event template fields",
+      "scenario_and_expected_result": "Customize English/Spanish invitation, update, new-message and welcome templates. Restore only selected fields in the chosen language; preserve all other edits. Cancel or failed restore retains prior saved content. Render First Name,Full Name andBusiness Name with Unicode/missing values under explicit fallback rules; do not let variables inject markup or another matter's data. Recheck I/me/my and four-digit years whenever content is an attorney letter; restoring vendor defaults is not approval to break either rule. Actual restore modal/result screenshots remain unreviewed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39039326904859-Communication-and-Translation-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0030",
+      "id": "AT-0030-CP63-MATRIX",
+      "title": "Separate interface locale, authored messages and field-value translation",
+      "scenario_and_expected_result": "Using the already reviewed Manage Forms outcome table as an additional source, test organization Translate to English ON/OFF crossed with field Translate Field Values ON/OFF for English,Spanish and another language/script. Browser locale controls labels/interface, notification language has its own default/override and ordinary message content remains authored. Preserve exact originals alongside translation and record direction,policy and revision. The vendor table says unsupported characters may be translated even when field translation is OFF; verify this exception explicitly and never silently replace names or original evidence. Original submitted PDF must remain exact and untranslated. Precise current character support and translation quality are unresolved; no translation output was observed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39039326904859-Communication-and-Translation-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0489",
+      "id": "AT-0489-CP63-LIVE",
+      "title": "Audit edits affecting already-sent forms rather than assuming immutable snapshots",
+      "scenario_and_expected_result": "Send synthetic revision R1, begin a client draft and then edit the published template to R2. Source says edits appear immediately and warns about outstanding jobs; verify actual scope,warning and the treatment of in-progress/expired/revoked/submitted instances. The user program must retain the schema/version used for each answer and show a reviewed change/diff before applying changes to outstanding work. Do not claim vendor snapshot isolation. Removing a required field,changing type orrecipient mapping must not orphan answers or mutate a completed original PDF. Publication,activation,revocation andediting are distinct states.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0027",
+      "id": "AT-0027-CP63-RECEIPT",
+      "title": "Reconcile submission PDF, activity reference, document tags and mapped values",
+      "scenario_and_expected_result": "Submit a synthetic form once; independently verify mapped fields,Activity note attachment andDocs record point to the same exact original response artifact. Configured form-submission tags apply at completion,not merely viewing or sending. Changing/removing a tag must not erase provenance. Test partial write failure,retry andduplicate submit with preserved original bytes and no duplicate rows/docs. Contact updates must target the recipient and expose shared-contact effects for review. This is a proposed workflow test; no actual PDF or ingestion result captured.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0489",
+      "id": "AT-0489-CP63-EXPIRY",
+      "title": "Verify expiration limits and resend as distinct instance actions",
+      "scenario_and_expected_result": "The body describes7-day default; settings screenshot also labels maximum30. Verify default7 and boundaries1/30/31,zero,negative andnoninteger using current tenant/server rules; minimum,timezone andcalendar-day semantics are unresolved. Immediately before/at/after expiry test open,edit andsubmit,including an already-open session anddirect calls. Expired form must not accept late writes; resending must identify the new instance/revision without reviving unrelated revoked links or duplicating completed evidence. Do not treat a static max30 label as proof of backend enforcement.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38190774774939-Create-Forms-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposed test; no application execution or provider transaction."
+    },
+    {
+      "feature_id": "F-0559",
+      "id": "AT-0559-CP64-WHEN",
+      "title": "Reconcile invitation versus acceptance welcome timing",
+      "scenario_and_expected_result": "Create an invitation butleave it unopened;record whether any portal welcome/activity entry exists before acceptance. Accept once andinspect both portal message andactivity,then replay acceptance. Compare event IDs andtimestamps;ensure exactly one approved welcome instance andno false acceptance fromdelivery. Caption says first invited whilebody says acceptance:record actualplan/version andexplicitly resolve the trigger. The proposed user policy is acceptance-based welcome;do notpresent it as verified vendor behavior. No actual event execution ormessage send performed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39039326904859-Communication-and-Translation-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Source/static ambiguity andoriginal proposed test;no runtime execution."
+    },
+    {
+      "feature_id": "F-0553",
+      "id": "AT-0553-CP64-EMAILLOGO",
+      "title": "Keep email,portal andform logo assets andrendering separate",
+      "scenario_and_expected_result": "Configure synthetic assets A forportalheader andB fornotificationemail. Verify editing/restoring B doesnot overwriteA orform logo selection. Screenshot labels230px emaildisplay width whileportal guidance uses70px height/400px width recommendations;verify actualrendering/safeupload constraints separately. Check mobileemail,missingimage fallback andapproved organization identity. No actualemailrendering ordelivery observed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/39039326904859-Communication-and-Translation-in-the-CPM",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Source/static ambiguity andoriginal proposed test;no runtime execution."
+    },
+    {
+      "feature_id": "F-0560",
+      "id": "AT-0560-R65-6059-01",
+      "title": "Role export is membership scoped",
+      "scenario_and_expected_result": "Build team roles,project overrides,revoked users andadmin-only access. Export must resolve overrides,exclude revoked andadmin-only rows,and retain tenant/org/project/user/role identities. Do not use absence fromthis view as proof ofno effectiveadminaccess.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0263",
+      "id": "AT-0263-R65-6059-02",
+      "title": "Outlook draft context",
+      "scenario_and_expected_result": "Draft/reply in synthetic Outlook thread;verify exact recipient,thread andmatter sources before approval. Unsaved draft andsend are distinct;switching messages must invalidate stale context.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0476",
+      "id": "AT-0476-R65-6059-03",
+      "title": "Embedded case AI context",
+      "scenario_and_expected_result": "Switch the in-project AI panel between authorized matters. Retain conversation provenance anddeny inaccessible content;verify panelcontext cannot silently remain bound topreviousmatter.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0023",
+      "id": "AT-0023-R65-6059-04",
+      "title": "Grouped variable presentation",
+      "scenario_and_expected_result": "Reopen anexisting workflow withsaved expressions. Expanded Variables grouping mustnot alter expression bytes,types orreferences. Compare exported definition before/after UI migration.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0025",
+      "id": "AT-0025-R65-6059-05",
+      "title": "Latest attempt output",
+      "scenario_and_expected_result": "Create two attempts withdistinct outputs. Opening fromhistory or test mustshow latestattempt output withattempt identity andaccess toearlier attempts,notlabel stepdefinition asresult.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0023",
+      "id": "AT-0023-R65-6059-06",
+      "title": "Reject nested interpolation",
+      "scenario_and_expected_result": "Submit nested interpolation inside aloop arithmetic expression. Reject invalidsyntax before activation withoutsilently saving an expression thatnever updates. Verify supported replacement expression produces expectedper-iteration values inabuild.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0562",
+      "id": "AT-0562-R65-6059-07",
+      "title": "Cancel submitted AI work",
+      "scenario_and_expected_result": "Stop asynthetic queued prompt andastreaming prompt. Acknowledge cancellation request separately fromconfirmed stop;retain partial output withstatus,prevent duplicateeffects onretry anddeny cancellation ofanother user job.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6059-08",
+      "title": "Preserve filename punctuation",
+      "scenario_and_expected_result": "Export names containing severalperiods,Unicode andextension-like substrings. Preserve intendedbasename andone correctextension withoutpath traversal orcollision.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6059-09",
+      "title": "Open exported Word package",
+      "scenario_and_expected_result": "Export multiple representative templates;validate DOCX package relationships andopen inWord withoutrepair prompt. Preserve original andrecord converter/build;static download success alone isinsufficient.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6059-10",
+      "title": "Apply export page size",
+      "scenario_and_expected_result": "Select Letter thenLegal inexport dialog. Inspect DOCXsection page dimensions forboth;do notaccept onlypreview orfilename asproof ofsize.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0565",
+      "id": "AT-0565-R65-6059-11",
+      "title": "All-signer delivery gate",
+      "scenario_and_expected_result": "Withmixed portal/email signers,complete onlyone signature. No final-copy success untilall requiredparties finish;then reconcile signed artifact,portal message,Docs entry andsender copy withhashes/job IDs.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6059-12",
+      "title": "Apply theme page size",
+      "scenario_and_expected_result": "Set theme Legal/Letter andexport DOCX/PDF. Verifyactualpage geometry andexplicit precedence whenexportdialog overrides theme;recordunsupported formats.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6059-13",
+      "title": "Handle trailing URL punctuation",
+      "scenario_and_expected_result": "Export links followed bycomma,period andclosingparenthesis. Verify hyperlink target excludes prosepunctuation onlywhen appropriate andpreserves intentionallyencoded characters.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0433",
+      "id": "AT-0433-R65-6059-14",
+      "title": "Address condition inputs",
+      "scenario_and_expected_result": "Use present,empty andpartiallyfilled addresses inconditional clauses. Compare sourceaddress identity andrendered branches;do nottreat missing importedaddress asaffirmative condition.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0433",
+      "id": "AT-0433-R65-6059-15",
+      "title": "Keep calculation identity through rename",
+      "scenario_and_expected_result": "Rename acolumn consumed bycalculated variables. Recompute against stablefield identity withoutrelinking bydisplay label;preserve priorresults andflag incompatibletype changes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0468",
+      "id": "AT-0468-R65-6059-16",
+      "title": "Map contact country",
+      "scenario_and_expected_result": "Generate fromtwocontacts withdifferent Country values andoneblank. Assertcorrectrecipient/source fieldmapping andexplicitblank fallback withoutcopying anothercontact country.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0433",
+      "id": "AT-0433-R65-6059-17",
+      "title": "Distinguish Unknown dropdown state",
+      "scenario_and_expected_result": "Exercise literal Unknown,empty,missing andselected knownvalue inprefilters. Verify documenteddefault semantics withstable option IDs;do notcollapse Unknown intofalse orstring-null.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0500",
+      "id": "AT-0500-R65-6059-18",
+      "title": "No-match selector scope",
+      "scenario_and_expected_result": "Exercise prefilter withzero matches. Verify described fallback andvisible filteredcolumn,while makingfallback scope explicit so userscannotmistake allrows forfilteredmatches. Recheck authorization onallreturnedrows.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0460",
+      "id": "AT-0460-R65-6059-19",
+      "title": "Delegate AI as signed-in user",
+      "scenario_and_expected_result": "Connect synthetic leastprivileged identity. Attempt supported read/write andforbidden actions;preserve userattribution,tenant scope andrevocation. Release announcement isnotcurrentcapability matrix orconsent proof.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0024",
+      "id": "AT-0024-R65-6059-20",
+      "title": "Filter jobs by date andtime",
+      "scenario_and_expected_result": "Create runs straddling chosen boundaries andtimezone changes. Filter byexplicit zone andinclusive/exclusive bounds;match export/pagination totals withoutdropping adjacent records.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0024",
+      "id": "AT-0024-R65-6059-21",
+      "title": "Status color andtext agree",
+      "scenario_and_expected_result": "Render completed,failed,in-progress andpartial/retry states. Statuspill text/icon mustagree withstored state andremainreadable withoutcolor;do notinfer success fromgreen styling.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0561",
+      "id": "AT-0561-R65-6059-22",
+      "title": "Repair tenant-key migration window",
+      "scenario_and_expected_result": "Test consumers joining oldlowercaseUUID versusnewuppercaseVARCHAR tenant keys. Identify affected extraction window September9,2026 11:25 throughSeptember10,2026 13:05 MT,backfill idempotently andcompare rowcounts/hashes. Do notassume normalization repairs missing historicalrows.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0566",
+      "id": "AT-0566-R65-6059-23",
+      "title": "FVID connected-account login",
+      "scenario_and_expected_result": "Test Vinesign navigation andFVID login forconnected account,revoked entitlement andwrongtenant. Existing session andportal signingauthentication areseparate;do notgrant productaccess merely becauseidentity authenticated.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0564",
+      "id": "AT-0564-R65-6059-24",
+      "title": "Resume large portal upload",
+      "scenario_and_expected_result": "Test threshold below/equal/above5MB withinterruptednetwork,locked phone andretry. Resume acknowledgedchunks underone uploadidentity,check finalhash anddeny cross-matterchunk reuse. Define actualMB unit andserverlimits beforeacceptance.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0546",
+      "id": "AT-0546-R65-6059-25",
+      "title": "Code language per invitation",
+      "scenario_and_expected_result": "Invite onecontact todifferent matters usingdifferent selectedlanguages. Confirmationcodes andmessages mustfollow thecorrectinvite withoutleaking anothermatter context ordefaulting basedonlastusedlocale.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0551",
+      "id": "AT-0551-R65-6059-26",
+      "title": "Move selector between timelines",
+      "scenario_and_expected_result": "Move onecase-type option fromtimelineA toB. Verify exactlyoneeffective mapping,coherent publication andno duplicateinvites;cancel/failure retains previousmap.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0564",
+      "id": "AT-0564-R65-6059-27",
+      "title": "Locale-safe upload progress",
+      "scenario_and_expected_result": "Upload underSpanish comma-decimal andEnglish locales. Progress derives fromacknowledgedbytes asnumeric data;render correctly,stay bounded anddo notmark ingested solely from100percent display.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55420679436059-September-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0153",
+      "id": "AT-0153-R65-6315-01",
+      "title": "Filter explicit mentions",
+      "scenario_and_expected_result": "Create ordinary @ and+@ mentions pluslookalikeplaintext. Filter Activity,userfeed andtasks foroneidentity;verify resultscope andpermissions ratherthanstringmatchingleakednotes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0559",
+      "id": "AT-0559-R65-6315-02",
+      "title": "Invite-language notice matrix",
+      "scenario_and_expected_result": "Forinvite,phase,newmessage andinvoice events,compare selectedinvite language withorgdefault andbrowserlocale. Correcteventuses correctoverride;replay andchannel failure cannotduplicate successfulnotices.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0030",
+      "id": "AT-0030-R65-6315-03",
+      "title": "Three-letter locale reload",
+      "scenario_and_expected_result": "Test Krio,Cebuano andHawaiian browserlocales acrossfirstload,reload andsubmission. Recordactualsupported mapping/fallback andretain originalanswers. Thislaterrelease mayqualify earlierfixedlanguage list;do notassume everythree-letterlanguage supported.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0399",
+      "id": "AT-0399-R65-6315-04",
+      "title": "First date-sort direction",
+      "scenario_and_expected_result": "Open docs datecolumn withknown timestamps includingties/nulls. Firstclick mustapply declared newest-first order withstabletie-breaker;pagination/export matchvisible scope.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0131",
+      "id": "AT-0131-R65-6315-05",
+      "title": "Large audiovisual preview",
+      "scenario_and_expected_result": "Test audio/video above2GB byactualbytes,format andplan. Record whetherstreamingpreview works andspecific limit/errors;thisrelease also announces genericlargefile warning,so usecapabilitymatrix ratherthanblanket rule.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-06",
+      "title": "Caption border fidelity",
+      "scenario_and_expected_result": "Export captioned paragraphs withsingle/differentborders. Compare editor,DOCX andPDF forduplicate/missinglines usingactualrendering,notonlyXMLpresence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-07",
+      "title": "Appendix repeater numbering",
+      "scenario_and_expected_result": "Generate multipleappendices withrepeaters. Numbering inherits intendedappendix style anddoesnotrestart orbleed acrossunrelatedsections;verify DOCXandPDF.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0462",
+      "id": "AT-0462-R65-6315-08",
+      "title": "Remove party with residual block",
+      "scenario_and_expected_result": "Remove aparty butleave itsoldsignatureblock. Verify requiredsigner set,orphanfield disposition andaudit trail beforecompletion;never auto-mark a requiredunsignedparty complete merelyfromstale blockremoval.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0036",
+      "id": "AT-0036-R65-6315-09",
+      "title": "Invoice approval authorization",
+      "scenario_and_expected_result": "Use non-OrgAdmin roles withandwithout invoiceapproval grant. Test SendforApproval/MarkApproved UIandAPI,deny unauthorized users,andrecord exactinvoice revision ratherthanassuming allnonadmins qualify.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0265",
+      "id": "AT-0265-R65-6315-10",
+      "title": "Billing email identifiers",
+      "scenario_and_expected_result": "Render ProjectNumber andClientMatterID variables fortwomatters withsameclient. Verify exactsource andmissingvalue handling;previewedemail isnotfiled/sent andmustretain I/me/my andfour-digityears whenattorneylettercontent.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0021",
+      "id": "AT-0021-R65-6315-11",
+      "title": "Four step-card choices",
+      "scenario_and_expected_result": "Inspect fourdocumented steptype cards undercurrentplan andselecteach. Confirm label-to-step schema mapping;do notinfer undocumentedtype semantics fromcardappearance.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0021",
+      "id": "AT-0021-R65-6315-12",
+      "title": "Removing conditions changeslogic",
+      "scenario_and_expected_result": "Remove lastcondition andsave. Verify conditiongroup iscleared ratherthanmerelyhidden,withreviewed executablepredicate change andno emptygroup validationdeadend.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0021",
+      "id": "AT-0021-R65-6315-13",
+      "title": "Conditions label migration",
+      "scenario_and_expected_result": "Open legacyIfElse workflow undertheConditions label. Compare serializedpredicate andbranchoutputs before/after;label change mustnotrewrite semantics orbreakoldreference links.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0017",
+      "id": "AT-0017-R65-6315-14",
+      "title": "Duplicate workflow safely",
+      "scenario_and_expected_result": "Duplicate syntheticworkflow withtriggers,variables andexternalactions. Preserve editabledefinition butassign newidentity andexplicitactivation state;copy mustnotstartduplicatedproduction jobs withoutreview.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0022",
+      "id": "AT-0022-R65-6315-15",
+      "title": "Search iteration outputs",
+      "scenario_and_expected_result": "Create alargerun withknownoutputs andduplicatequerytext. Searchiterations,verify matchcounts,stableiteration IDs andpagination. ResponsiveUI mustnotimply fullresults oromit failediterations.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0021",
+      "id": "AT-0021-R65-6315-16",
+      "title": "Preserve canvas ontrigger edit",
+      "scenario_and_expected_result": "Edit triggerconditions inworkflow withseveralsteps. Persist andreopen;allsteps andedges remainvisible andmatchsaveddefinition. Failededit cannotdelete hiddensteps.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0561",
+      "id": "AT-0561-R65-6315-17",
+      "title": "V6 collection creation dates",
+      "scenario_and_expected_result": "Compare V5/V6 consumers. InV6 verify COLLECTION_ITEM_CREATED_DATE isUTC forcollectionrows andnull forstaticsections,retaining GUID/FIELD_OBJECT. ExistingV5 pipelines remainstable untilreviewedmigration;createddate isnotlastmodifieddate.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0566",
+      "id": "AT-0566-R65-6315-18",
+      "title": "Confirm changed login email",
+      "scenario_and_expected_result": "Request changeold→newaddress. Keepoldidentity untilnewaddress confirmation succeeds;test expired,replayed andwronguser tokens,rate-limited resend andsession revocation withoutsending realemail inthisaudit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0566",
+      "id": "AT-0566-R65-6315-19",
+      "title": "Validate signing phone atentry",
+      "scenario_and_expected_result": "Enter supportedmobile,landline,ambiguous andinvalidnumbers. Explainvalidation whileeditable withoutcreating a signingjob. Do notinfer SMSownership orvalidconsent frommobile classification.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0557",
+      "id": "AT-0557-R65-6315-20",
+      "title": "Download both attachment origins",
+      "scenario_and_expected_result": "Prepare formwithstaffpreloaded andclientuploaded files. Bothauthorized downloadroutes mustreturn exactbytes;deny otherrecipient/matter andexpired/revoked routes. FileURL label isnotproof ofaccessibleartifact.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0131",
+      "id": "AT-0131-R65-6315-21",
+      "title": "Explicit oversize preview failure",
+      "scenario_and_expected_result": "Attempt genericfiles above2GB. Showaccurate format/size-specific message withoutdeleting original orblockingauthorizeddownload. Reconcileaudio/videostreaming exception withactualcurrentlimits.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-22",
+      "title": "PDF non-left alignment",
+      "scenario_and_expected_result": "Export centered,rightaligned andjustified content. Compare actualPDFgeometry,noteditorpreview;preserve unaffectedparagraphs andpagebreaks.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-23",
+      "title": "Export clickable URLs",
+      "scenario_and_expected_result": "Generate DOCX/PDF withmultipleURLtypes. Inspect clickabletargets andrenderedtext afterexport,includingunsafe schemes underapprovedpolicy.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-24",
+      "title": "Border width follows paragraph",
+      "scenario_and_expected_result": "Use variedindentation,width andborderstyles. Compare editor,DOCXandPDF borderpositions againstparagraphbounds withoutduplicating lines.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0402",
+      "id": "AT-0402-R65-6315-25",
+      "title": "Cross-team template copy isolation",
+      "scenario_and_expected_result": "Duplicate acrossteams andimport.vine. Re-resolve themes,workflows andconnections in targetteam;do notcarry inaccessibleforeign settings oractivate sourceautomation. Preserve content andexplicitunresolved mappings.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-26",
+      "title": "Repeater alignment fidelity",
+      "scenario_and_expected_result": "Export left,center,right repeatersections. Verify eachrow retains alignment andnestedstyles acrosspagebreaks.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0563",
+      "id": "AT-0563-R65-6315-27",
+      "title": "Connected table totals",
+      "scenario_and_expected_result": "Generate variantswith0,1,manyrows andtotalrows. Verify totalpresence,formularesults andstyles afterDOCXexport;exclude unauthorizedrecords fromboth rowsandtotals.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0433",
+      "id": "AT-0433-R65-6315-28",
+      "title": "Retire deleted party variables",
+      "scenario_and_expected_result": "Delete partyafterdraftgeneration,thenregenerate. Remove/flagstalebindings accordingtoapprovedrevisionpolicy;do noterase historicalfinaldocuments orreuseanotherparty identity.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0005",
+      "id": "AT-0005-R65-6315-29",
+      "title": "Multiple encounters ononepage",
+      "scenario_and_expected_result": "Useone pagewiththree datedencounters plusanoverlappingnote. Produce separatecandidate events withpage/region citations;reviewwrongmerges/splits andretainoriginalsource.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0011",
+      "id": "AT-0011-R65-6315-30",
+      "title": "Explain inferred missing records",
+      "scenario_and_expected_result": "Supply incompleteencounter packet. Eachcandidate missingrecord hasatype,reason andsourcecitation;staffcanaccept/reject withoutturning anAIinference intoprovenabsence. Newdocuments mustresolve/reassess flags.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0005",
+      "id": "AT-0005-R65-6315-31",
+      "title": "Boundary andrefresh ofcare gaps",
+      "scenario_and_expected_result": "Test adjacentencounters29,30,31days apart andunknown dates. Flagpotential >30-day gaps underdeclaredzone/date rules,rerun onnewrecords andpreservereviewdecisions. Absencefrompacket isnotproof ofnotreatment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/54134150636315-August-2026-Release-Notes",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Individually read vendorreleasebullet;proposed userprogram test,not reproducedfix orruntime result."
+    },
+    {
+      "feature_id": "F-0565",
+      "id": "AT-0565-R65-REVOKE",
+      "title": "Recheck portal eligibility atsend time",
+      "scenario_and_expected_result": "Prepare eligibleportalrecipient,thenrevoke itsmatterinvitation beforedispatch. Sendmustfail withreason andno falseportalreceipt. ResendEmail/SMS requiresreviewed recipient/method,not silentfallback;failure/retry cannotduplicate signingjobs. Guideprovides noactualfailed-job screenshot.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55673727987611-Vinesign-in-Client-Portal",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposedtest;static source ambiguity,not reproducedvendorfailure."
+    },
+    {
+      "feature_id": "F-0565",
+      "id": "AT-0565-R65-ARTIFACT",
+      "title": "Reconcile sample identities andcompleted artifacts",
+      "scenario_and_expected_result": "Staticguide stages showEmmaLaurel andShakiraVergara names,andmessage/Docs sizes232.4KB versus221.9KB. Preserveoriginalimages;do notassume onecontinuousjob orbyteidentity. Inactualsandbox useone stablematter/recipient/job andhash finalcopies;explain deliberateformat/certificate differences. SignatureComplete foronesigner mustnotbeall-recipientcomplete.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55673727987611-Vinesign-in-Client-Portal",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Original proposedtest;static source ambiguity,not reproducedvendorfailure."
+    }
+  ]
+}

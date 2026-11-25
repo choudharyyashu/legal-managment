@@ -1,5 +1,237 @@
 import { MissingFieldFlag } from './draft.types.js';
 
+export interface FieldDictionaryEntity {
+  entity: string;
+  label: string;
+  fields: Array<{ field: string; label: string; exampleTag: string; defaultFormat?: string }>;
+}
+
+export const FIELD_DICTIONARY: FieldDictionaryEntity[] = [
+  {
+    entity: 'Client',
+    label: 'Client Profile',
+    fields: [
+      { field: 'name', label: 'Full Legal Name', exampleTag: '{{Client.Name}}' },
+      { field: 'clientNumber', label: 'Client Number', exampleTag: '{{Client.ClientNumber}}' },
+      { field: 'clientType', label: 'Client Type', exampleTag: '{{Client.ClientType}}' },
+      { field: 'primaryContact', label: 'Primary Contact', exampleTag: '{{Client.PrimaryContact}}' },
+      { field: 'email', label: 'Email Address', exampleTag: '{{Client.Email}}' },
+      { field: 'phone', label: 'Phone Number', exampleTag: '{{Client.Phone}}', defaultFormat: 'PHONE_STANDARD' },
+      { field: 'address', label: 'Mailing Address', exampleTag: '{{Client.Address}}' },
+    ],
+  },
+  {
+    entity: 'Matter',
+    label: 'Legal Matter',
+    fields: [
+      { field: 'matterNumber', label: 'Matter Number', exampleTag: '{{Matter.MatterNumber}}' },
+      { field: 'title', label: 'Matter Title / Caption', exampleTag: '{{Matter.Title}}' },
+      { field: 'status', label: 'Matter Status', exampleTag: '{{Matter.Status}}' },
+      { field: 'courtName', label: 'Court Name', exampleTag: '{{Matter.CourtName}}' },
+      { field: 'judge', label: 'Presiding Judge', exampleTag: '{{Matter.Judge}}' },
+      { field: 'caseDocketNumber', label: 'Case / Docket Number', exampleTag: '{{Matter.CaseDocketNumber}}' },
+      { field: 'billingType', label: 'Billing Type', exampleTag: '{{Matter.BillingType}}' },
+      { field: 'hourlyRate', label: 'Hourly Rate', exampleTag: '{{Matter.HourlyRate}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'flatFeeAmount', label: 'Flat Fee Amount', exampleTag: '{{Matter.FlatFeeAmount}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'contingencyPercentage', label: 'Contingency %', exampleTag: '{{Matter.ContingencyPercentage}}' },
+      { field: 'openDate', label: 'Open Date', exampleTag: '{{Matter.OpenDate}}', defaultFormat: 'DATE_LONG' },
+      { field: 'statuteOfLimitations', label: 'Statute of Limitations', exampleTag: '{{Matter.StatuteOfLimitations}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'ResponsibleAttorney',
+    label: 'Responsible Attorney',
+    fields: [
+      { field: 'name', label: 'Attorney Name', exampleTag: '{{Attorney.Name}}' },
+      { field: 'email', label: 'Attorney Email', exampleTag: '{{Attorney.Email}}' },
+      { field: 'phone', label: 'Attorney Phone', exampleTag: '{{Attorney.Phone}}', defaultFormat: 'PHONE_STANDARD' },
+      { field: 'title', label: 'Title / Bar Role', exampleTag: '{{Attorney.Title}}' },
+    ],
+  },
+  {
+    entity: 'Court',
+    label: 'Court & Caption',
+    fields: [
+      { field: 'name', label: 'Court Name', exampleTag: '{{Court.Name}}' },
+      { field: 'judge', label: 'Judge Name', exampleTag: '{{Court.Judge}}' },
+      { field: 'caseDocketNumber', label: 'Docket Number', exampleTag: '{{Court.CaseDocketNumber}}' },
+    ],
+  },
+  {
+    entity: 'Intake',
+    label: 'Intake & Conflicts',
+    fields: [
+      { field: 'intakeNumber', label: 'Intake Number', exampleTag: '{{Intake.IntakeNumber}}' },
+      { field: 'adverseParties', label: 'Adverse Parties', exampleTag: '{{Intake.AdverseParties}}' },
+      { field: 'matterSummary', label: 'Matter Summary', exampleTag: '{{Intake.MatterSummary}}' },
+      { field: 'disputeAmount', label: 'Dispute Amount', exampleTag: '{{Intake.DisputeAmount}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'jurisdictionVenue', label: 'Jurisdiction / Venue', exampleTag: '{{Intake.JurisdictionVenue}}' },
+    ],
+  },
+  {
+    entity: 'Incident',
+    label: 'PI Incident & Liability',
+    fields: [
+      { field: 'accidentDate', label: 'Incident / Accident Date', exampleTag: '{{Incident.AccidentDate}}', defaultFormat: 'DATE_LONG' },
+      { field: 'accidentType', label: 'Accident Type', exampleTag: '{{Incident.AccidentType}}' },
+      { field: 'incidentLocation', label: 'Incident Location', exampleTag: '{{Incident.IncidentLocation}}' },
+      { field: 'policeAgency', label: 'Police Agency', exampleTag: '{{Incident.PoliceAgency}}' },
+      { field: 'reportNumber', label: 'Police Report Number', exampleTag: '{{Incident.ReportNumber}}' },
+      { field: 'description', label: 'Incident Description', exampleTag: '{{Incident.Description}}' },
+    ],
+  },
+  {
+    entity: 'Insurance',
+    label: 'PI Insurance & Adjuster',
+    fields: [
+      { field: 'insuranceCompany', label: 'Carrier Name', exampleTag: '{{Insurance.CarrierName}}' },
+      { field: 'policyNumber', label: 'Policy Number', exampleTag: '{{Insurance.PolicyNumber}}' },
+      { field: 'claimNumber', label: 'Claim Number', exampleTag: '{{Insurance.ClaimNumber}}' },
+      { field: 'adjusterName', label: 'Adjuster Name', exampleTag: '{{Insurance.AdjusterName}}' },
+      { field: 'adjusterPhone', label: 'Adjuster Phone', exampleTag: '{{Insurance.AdjusterPhone}}' },
+      { field: 'adjusterEmail', label: 'Adjuster Email', exampleTag: '{{Insurance.AdjusterEmail}}' },
+    ],
+  },
+  {
+    entity: 'MedicalProvider',
+    label: 'Medical Provider',
+    fields: [
+      { field: 'name', label: 'Provider Name', exampleTag: '{{MedicalProvider.Name}}' },
+      { field: 'address', label: 'Facility Address', exampleTag: '{{MedicalProvider.Address}}' },
+      { field: 'phone', label: 'Provider Phone', exampleTag: '{{MedicalProvider.Phone}}' },
+      { field: 'fax', label: 'Provider Fax', exampleTag: '{{MedicalProvider.Fax}}' },
+    ],
+  },
+  {
+    entity: 'Demand',
+    label: 'PI Settlement Demand',
+    fields: [
+      { field: 'recipientCarrier', label: 'Recipient Carrier', exampleTag: '{{Demand.RecipientCarrier}}' },
+      { field: 'claimNumber', label: 'Claim Number', exampleTag: '{{Demand.ClaimNumber}}' },
+      { field: 'demandedAmount', label: 'Demanded Amount', exampleTag: '{{Demand.DemandedAmount}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'policyLimitAmount', label: 'Policy Limit', exampleTag: '{{Demand.PolicyLimitAmount}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'deadlineDate', label: 'Response Deadline', exampleTag: '{{Demand.DeadlineDate}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'Litigation',
+    label: 'Civil & Commercial Litigation',
+    fields: [
+      { field: 'courtJurisdiction', label: 'Jurisdiction', exampleTag: '{{Litigation.CourtJurisdiction}}' },
+      { field: 'caseDocketNumber', label: 'Docket Number', exampleTag: '{{Litigation.CaseDocketNumber}}' },
+      { field: 'presidingJudge', label: 'Presiding Judge', exampleTag: '{{Litigation.PresidingJudge}}' },
+      { field: 'litigationStage', label: 'Litigation Stage', exampleTag: '{{Litigation.LitigationStage}}' },
+      { field: 'trialDate', label: 'Trial Date', exampleTag: '{{Litigation.TrialDate}}', defaultFormat: 'DATE_LONG' },
+      { field: 'discoveryCutoffDate', label: 'Discovery Cutoff', exampleTag: '{{Litigation.DiscoveryCutoffDate}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'Bankruptcy',
+    label: 'Bankruptcy Case',
+    fields: [
+      { field: 'chapter', label: 'Chapter (7/11/13)', exampleTag: '{{Bankruptcy.Chapter}}' },
+      { field: 'caseNumber', label: 'Bankruptcy Case No.', exampleTag: '{{Bankruptcy.CaseNumber}}' },
+      { field: 'courtDistrict', label: 'Court District', exampleTag: '{{Bankruptcy.CourtDistrict}}' },
+      { field: 'trusteeName', label: 'Assigned Trustee', exampleTag: '{{Bankruptcy.TrusteeName}}' },
+      { field: 'meeting341Date', label: '341 Meeting Date', exampleTag: '{{Bankruptcy.Meeting341Date}}', defaultFormat: 'DATE_LONG' },
+      { field: 'monthlyGrossIncome', label: 'Monthly Gross Income', exampleTag: '{{Bankruptcy.MonthlyGrossIncome}}', defaultFormat: 'CURRENCY_USD' },
+    ],
+  },
+  {
+    entity: 'Immigration',
+    label: 'Immigration Case',
+    fields: [
+      { field: 'visaCategory', label: 'Visa Category', exampleTag: '{{Immigration.VisaCategory}}' },
+      { field: 'beneficiaryName', label: 'Beneficiary Name', exampleTag: '{{Immigration.BeneficiaryName}}' },
+      { field: 'alienRegistrationNum', label: 'A-Number', exampleTag: '{{Immigration.AlienRegistrationNum}}' },
+      { field: 'i94Number', label: 'I-94 Number', exampleTag: '{{Immigration.I94Number}}' },
+      { field: 'priorityDate', label: 'Priority Date', exampleTag: '{{Immigration.PriorityDate}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'Probate',
+    label: 'Probate & Estate',
+    fields: [
+      { field: 'decedentName', label: 'Decedent Name', exampleTag: '{{Probate.DecedentName}}' },
+      { field: 'dateOfDeath', label: 'Date of Death', exampleTag: '{{Probate.DateOfDeath}}', defaultFormat: 'DATE_LONG' },
+      { field: 'probateType', label: 'Probate Type', exampleTag: '{{Probate.ProbateType}}' },
+      { field: 'personalRepName', label: 'Personal Representative', exampleTag: '{{Probate.PersonalRepName}}' },
+      { field: 'courtCaseNumber', label: 'Probate Case No.', exampleTag: '{{Probate.CourtCaseNumber}}' },
+    ],
+  },
+  {
+    entity: 'FamilyLaw',
+    label: 'Family Law',
+    fields: [
+      { field: 'caseType', label: 'Case Type', exampleTag: '{{FamilyLaw.CaseType}}' },
+      { field: 'marriageDate', label: 'Marriage Date', exampleTag: '{{FamilyLaw.MarriageDate}}', defaultFormat: 'DATE_LONG' },
+      { field: 'separationDate', label: 'Separation Date', exampleTag: '{{FamilyLaw.SeparationDate}}', defaultFormat: 'DATE_LONG' },
+      { field: 'custodyArrangement', label: 'Custody Arrangement', exampleTag: '{{FamilyLaw.CustodyArrangement}}' },
+      { field: 'monthlyChildSupport', label: 'Monthly Child Support', exampleTag: '{{FamilyLaw.MonthlyChildSupport}}', defaultFormat: 'CURRENCY_USD' },
+    ],
+  },
+  {
+    entity: 'Criminal',
+    label: 'Criminal Defense',
+    fields: [
+      { field: 'defendantName', label: 'Defendant Name', exampleTag: '{{Criminal.DefendantName}}' },
+      { field: 'prosecutingAgency', label: 'Prosecuting Agency', exampleTag: '{{Criminal.ProsecutingAgency}}' },
+      { field: 'custodyStatus', label: 'Custody Status', exampleTag: '{{Criminal.CustodyStatus}}' },
+      { field: 'bailAmount', label: 'Bail Amount', exampleTag: '{{Criminal.BailAmount}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'arraignmentDate', label: 'Arraignment Date', exampleTag: '{{Criminal.ArraignmentDate}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'Appeals',
+    label: 'Appeals',
+    fields: [
+      { field: 'appellateCourt', label: 'Appellate Court', exampleTag: '{{Appeals.AppellateCourt}}' },
+      { field: 'appellateDocketNumber', label: 'Appellate Docket No.', exampleTag: '{{Appeals.AppellateDocketNumber}}' },
+      { field: 'lowerCourtName', label: 'Lower Court Name', exampleTag: '{{Appeals.LowerCourtName}}' },
+      { field: 'openingBriefDeadline', label: 'Opening Brief Deadline', exampleTag: '{{Appeals.OpeningBriefDeadline}}', defaultFormat: 'DATE_LONG' },
+    ],
+  },
+  {
+    entity: 'Evictions',
+    label: 'Landlord-Tenant / Evictions',
+    fields: [
+      { field: 'propertyAddress', label: 'Property Address', exampleTag: '{{Evictions.PropertyAddress}}' },
+      { field: 'tenantName', label: 'Tenant Name', exampleTag: '{{Evictions.TenantName}}' },
+      { field: 'landlordName', label: 'Landlord Name', exampleTag: '{{Evictions.LandlordName}}' },
+      { field: 'monthlyRent', label: 'Monthly Rent', exampleTag: '{{Evictions.MonthlyRent}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'outstandingBalance', label: 'Outstanding Balance', exampleTag: '{{Evictions.OutstandingBalance}}', defaultFormat: 'CURRENCY_USD' },
+      { field: 'noticeType', label: 'Statutory Notice Type', exampleTag: '{{Evictions.NoticeType}}' },
+    ],
+  },
+  {
+    entity: 'Firm',
+    label: 'Law Firm Identity',
+    fields: [
+      { field: 'name', label: 'Firm Name', exampleTag: '{{Firm.Name}}' },
+      { field: 'address', label: 'Firm Address', exampleTag: '{{Firm.Address}}' },
+      { field: 'phone', label: 'Firm Phone', exampleTag: '{{Firm.Phone}}' },
+      { field: 'email', label: 'Firm Email', exampleTag: '{{Firm.Email}}' },
+    ],
+  },
+  {
+    entity: 'CurrentDate',
+    label: 'Current Date',
+    fields: [
+      { field: 'long', label: 'Long Date (November 25, 2026)', exampleTag: '{{CurrentDate.Long}}' },
+      { field: 'short', label: 'Short Date (11/25/2026)', exampleTag: '{{CurrentDate.Short}}' },
+      { field: 'court', label: 'Court Caption Date', exampleTag: '{{CurrentDate.Court}}' },
+      { field: 'year', label: 'Four-Digit Year', exampleTag: '{{CurrentDate.Year}}' },
+    ],
+  },
+  {
+    entity: 'CustomField',
+    label: 'Custom / Override Field',
+    fields: [
+      { field: 'customValue', label: 'Custom Field Key', exampleTag: '{{CustomField.CustomValue}}' },
+    ],
+  },
+];
+
 export class DraftDataResolver {
   private static formatOrdinal(day: number): string {
     const s = ['th', 'st', 'nd', 'rd'];
@@ -14,7 +246,7 @@ export class DraftDataResolver {
 
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'July', 'August', 'September', 'October', 'November', 'December',
     ];
 
     const day = date.getDate();
@@ -80,9 +312,6 @@ export class DraftDataResolver {
     }
   }
 
-  /**
-   * Helper mapping missing fields to their respective source records, navigation URLs, and task suggestions.
-   */
   private static getSourceRecordDetails(
     sourceEntity: string,
     sourceField: string
@@ -186,6 +415,31 @@ export class DraftDataResolver {
       };
     }
 
+    if (sEntity === 'litigation') {
+      return { recordType: 'Civil Litigation Case', navigationUrl: '/litigation/dashboard', suggestedTitle: `Follow-up: Missing Litigation ${sourceField}`, suggestedDescription: `Litigation ${sourceField} is required for pleading/discovery drafting.`, priority: 'High' };
+    }
+    if (sEntity === 'bankruptcy') {
+      return { recordType: 'Bankruptcy Case', navigationUrl: '/bankruptcy/cases', suggestedTitle: `Follow-up: Missing Bankruptcy ${sourceField}`, suggestedDescription: `Bankruptcy ${sourceField} is required for petition/schedule drafting.`, priority: 'High' };
+    }
+    if (sEntity === 'immigration') {
+      return { recordType: 'Immigration Case', navigationUrl: '/immigration/cases', suggestedTitle: `Follow-up: Missing Immigration ${sourceField}`, suggestedDescription: `Immigration ${sourceField} is required for USCIS/EOIR filing.`, priority: 'High' };
+    }
+    if (sEntity === 'probate') {
+      return { recordType: 'Probate Case', navigationUrl: '/probate', suggestedTitle: `Follow-up: Missing Probate ${sourceField}`, suggestedDescription: `Probate ${sourceField} is required for estate filings.`, priority: 'Medium' };
+    }
+    if (sEntity === 'familylaw') {
+      return { recordType: 'Family Law Case', navigationUrl: '/family-law', suggestedTitle: `Follow-up: Missing Family Law ${sourceField}`, suggestedDescription: `Family law ${sourceField} is required for domestic relations filings.`, priority: 'Medium' };
+    }
+    if (sEntity === 'criminal') {
+      return { recordType: 'Criminal Defense Case', navigationUrl: '/criminal', suggestedTitle: `Follow-up: Missing Criminal ${sourceField}`, suggestedDescription: `Criminal case ${sourceField} is required for defense filings.`, priority: 'High' };
+    }
+    if (sEntity === 'appeals') {
+      return { recordType: 'Appellate Case', navigationUrl: '/appeals', suggestedTitle: `Follow-up: Missing Appeals ${sourceField}`, suggestedDescription: `Appellate ${sourceField} is required for appellate filings.`, priority: 'High' };
+    }
+    if (sEntity === 'evictions') {
+      return { recordType: 'Evictions Case', navigationUrl: '/evictions', suggestedTitle: `Follow-up: Missing Evictions ${sourceField}`, suggestedDescription: `Unlawful detainer ${sourceField} is required for notice/pleading drafting.`, priority: 'High' };
+    }
+
     if (sEntity === 'client') {
       return {
         recordType: 'Client Profile',
@@ -213,6 +467,14 @@ export class DraftDataResolver {
       suggestedDescription: `Field '${sourceEntity}.${sourceField}' is required for document drafting. Please review and update the matter records.`,
       priority: 'Medium',
     };
+  }
+
+  private static lookupFieldCaseInsensitive(obj: Record<string, any> | undefined, field: string): any {
+    if (!obj || !field) return undefined;
+    if (obj[field] !== undefined) return obj[field];
+    const target = field.toLowerCase();
+    const key = Object.keys(obj).find((k) => k.toLowerCase() === target);
+    return key ? obj[key] : undefined;
   }
 
   static resolve(
@@ -246,7 +508,15 @@ export class DraftDataResolver {
     const wageLossRecord = matter.wageLossRecords?.[0] || {};
     const billingSummary = matter.medicalBillingSummaries?.[0] || {};
 
-    // Calculate aggregate totals from related collections
+    const litCase = matter.litigationCase || {};
+    const bkCase = matter.bankruptcyCase || {};
+    const immCase = matter.immigrationCase || {};
+    const probCase = matter.probateCase || {};
+    const famCase = matter.familyLawCase || {};
+    const crimCase = matter.criminalCase || {};
+    const appCase = matter.appealsCase || {};
+    const evictCase = matter.evictionsCase || {};
+
     const totalMedicalBilled = (matter.medicalBillingSummaries || []).reduce(
       (sum: number, b: any) => sum + Number(b.totalBilled || 0),
       0
@@ -270,7 +540,6 @@ export class DraftDataResolver {
 
     const now = new Date();
 
-    // 1. Establish Standard Enterprise Field Dictionary
     const rawEntityLookup: Record<string, Record<string, any>> = {
       Client: {
         id: client.id,
@@ -288,9 +557,10 @@ export class DraftDataResolver {
         matterNumber: matter.matterNumber,
         title: matter.title,
         status: matter.status,
-        courtName: matter.courtName,
-        judge: matter.judge,
-        caseDocketNumber: matter.caseDocketNumber,
+        courtName: matter.courtName || litCase.courtName || crimCase.courtJurisdiction,
+        judge: matter.judge || litCase.presidingJudge || crimCase.presidingJudge,
+        caseDocketNumber: matter.caseDocketNumber || litCase.caseDocketNumber || crimCase.caseDocketNumber || famCase.courtDocketNumber,
+        docketNumber: matter.caseDocketNumber || litCase.caseDocketNumber || crimCase.caseDocketNumber || famCase.courtDocketNumber,
         description: matter.description,
         billingType: matter.billingType,
         hourlyRate: matter.hourlyRate,
@@ -336,9 +606,9 @@ export class DraftDataResolver {
         name: pa.name,
       },
       Court: {
-        name: matter.courtName,
-        judge: matter.judge,
-        caseDocketNumber: matter.caseDocketNumber,
+        name: matter.courtName || litCase.courtName || bkCase.courtDistrict || appCase.appellateCourt,
+        judge: matter.judge || litCase.presidingJudge || bkCase.assignedJudge || crimCase.presidingJudge,
+        caseDocketNumber: matter.caseDocketNumber || litCase.caseDocketNumber || bkCase.caseNumber || appCase.appellateDocketNumber,
       },
       Intake: {
         intakeNumber: intake.intakeNumber,
@@ -359,6 +629,7 @@ export class DraftDataResolver {
       },
       Insurance: {
         insuranceCompany: customOverrides?.insurance_company || policyRecord.insuranceCompany || customOverrides?.['Insurance.insuranceCompany'] || null,
+        carrierName: customOverrides?.insurance_company || policyRecord.insuranceCompany || customOverrides?.['Insurance.carrierName'] || null,
         claimNumber: customOverrides?.claim_number || policyRecord.claimNumber || customOverrides?.['Insurance.claimNumber'] || null,
         policyNumber: customOverrides?.policy_number || policyRecord.policyNumber || customOverrides?.['Insurance.policyNumber'] || null,
         adjusterName: customOverrides?.adjuster_name || policyRecord.adjusterName || customOverrides?.['Insurance.adjusterName'] || null,
@@ -384,7 +655,7 @@ export class DraftDataResolver {
       Demand: {
         demandTitle: customOverrides?.demand_title || demandPackage.demandTitle || customOverrides?.['Demand.demandTitle'] || 'Personal Injury Settlement Demand',
         demandedAmount: customOverrides?.demand_amount !== undefined ? customOverrides.demand_amount : (demandPackage.demandedAmount !== undefined ? demandPackage.demandedAmount : customOverrides?.['Demand.demandedAmount'] || null),
-        policyLimitAmount: customOverrides?.policy_limit !== undefined ? customOverrides.policy_limit : (demandPackage.policyLimitAmount !== undefined ? demandPackage.policyLimitAmount : policyRecord.policyLimit || customOverrides?.['Demand.policyLimitAmount'] || null),
+        policyLimitAmount: customOverrides?.policy_limit !== undefined ? customOverrides.policy_limit : (demandPackage.policyLimitAmount !== undefined ? demandPackage.policyLimitAmount : policyRecord.policyLimits || customOverrides?.['Demand.policyLimitAmount'] || null),
         isPolicyLimitDemand: customOverrides?.is_policy_limit_demand !== undefined ? customOverrides.is_policy_limit_demand : (demandPackage.isPolicyLimitDemand !== undefined ? demandPackage.isPolicyLimitDemand : false),
         recipientCarrier: customOverrides?.recipient_carrier || demandPackage.recipientCarrier || policyRecord.insuranceCompany || customOverrides?.['Demand.recipientCarrier'] || null,
         claimNumber: customOverrides?.claim_number || demandPackage.claimNumber || policyRecord.claimNumber || customOverrides?.['Demand.claimNumber'] || null,
@@ -425,6 +696,85 @@ export class DraftDataResolver {
         totalSpecialDamages: customOverrides?.total_special_damages !== undefined ? customOverrides.total_special_damages : (calculatedSpecials > 0 ? calculatedSpecials : null),
         totalGeneralDamages: customOverrides?.total_general_damages !== undefined ? customOverrides.total_general_damages : null,
       },
+      Litigation: {
+        courtJurisdiction: litCase.courtJurisdiction || null,
+        courtName: litCase.courtName || matter.courtName || null,
+        caseDocketNumber: litCase.caseDocketNumber || matter.caseDocketNumber || null,
+        presidingJudge: litCase.presidingJudge || matter.judge || null,
+        litigationStage: litCase.litigationStage || null,
+        filingDate: litCase.filingDate || null,
+        trialDate: litCase.trialDate || null,
+        discoveryCutoffDate: litCase.discoveryCutoffDate || null,
+      },
+      Bankruptcy: {
+        chapter: bkCase.chapter || null,
+        caseNumber: bkCase.caseNumber || matter.caseDocketNumber || null,
+        courtDistrict: bkCase.courtDistrict || 'District of Utah',
+        courtDivision: bkCase.courtDivision || 'Salt Lake City',
+        assignedJudge: bkCase.assignedJudge || matter.judge || null,
+        trusteeName: bkCase.trusteeName || null,
+        debtorType: bkCase.debtorType || null,
+        meeting341Date: bkCase.meeting341Date || null,
+        monthlyGrossIncome: bkCase.monthlyGrossIncome || null,
+        totalSecuredDebt: bkCase.totalSecuredDebt || null,
+        totalUnsecuredDebt: bkCase.totalUnsecuredDebt || null,
+      },
+      Immigration: {
+        visaCategory: immCase.visaCategory || null,
+        alienRegistrationNum: immCase.alienRegistrationNum || null,
+        usCISOnlineAccountNum: immCase.usCISOnlineAccountNum || null,
+        beneficiaryName: immCase.beneficiaryName || client.name || null,
+        countryOfCitizenship: immCase.countryOfCitizenship || null,
+        currentImmigrationStatus: immCase.currentImmigrationStatus || null,
+        i94Number: immCase.i94Number || null,
+        priorityDate: immCase.priorityDate || null,
+      },
+      Probate: {
+        decedentName: probCase.decedentName || null,
+        dateOfDeath: probCase.dateOfDeath || null,
+        countyJurisdiction: probCase.countyJurisdiction || null,
+        courtCaseNumber: probCase.courtCaseNumber || matter.caseDocketNumber || null,
+        probateType: probCase.probateType || null,
+        personalRepName: probCase.personalRepName || null,
+        inventoryValue: probCase.inventoryValue || null,
+      },
+      FamilyLaw: {
+        caseType: famCase.caseType || null,
+        courtDocketNumber: famCase.courtDocketNumber || matter.caseDocketNumber || null,
+        marriageDate: famCase.marriageDate || null,
+        separationDate: famCase.separationDate || null,
+        custodyArrangement: famCase.custodyArrangement || null,
+        monthlyChildSupport: famCase.monthlyChildSupport || null,
+        monthlyAlimony: famCase.monthlyAlimony || null,
+      },
+      Criminal: {
+        defendantName: crimCase.defendantName || client.name || null,
+        courtJurisdiction: crimCase.courtJurisdiction || matter.courtName || null,
+        caseDocketNumber: crimCase.caseDocketNumber || matter.caseDocketNumber || null,
+        presidingJudge: crimCase.presidingJudge || matter.judge || null,
+        prosecutingAgency: crimCase.prosecutingAgency || null,
+        bailAmount: crimCase.bailAmount || null,
+        custodyStatus: crimCase.custodyStatus || null,
+        arraignmentDate: crimCase.arraignmentDate || null,
+      },
+      Appeals: {
+        appellateCourt: appCase.appellateCourt || null,
+        appellateDocketNumber: appCase.appellateDocketNumber || matter.caseDocketNumber || null,
+        lowerCourtName: appCase.lowerCourtName || null,
+        lowerCourtDocketNumber: appCase.lowerCourtDocketNumber || null,
+        noticeOfAppealDate: appCase.noticeOfAppealDate || null,
+        openingBriefDeadline: appCase.openingBriefDeadline || null,
+      },
+      Evictions: {
+        propertyAddress: evictCase.propertyAddress || null,
+        unitNumber: evictCase.unitNumber || null,
+        tenantName: evictCase.tenantName || null,
+        landlordName: evictCase.landlordName || client.name || null,
+        monthlyRent: evictCase.monthlyRent || null,
+        outstandingBalance: evictCase.outstandingBalance || null,
+        noticeType: evictCase.noticeType || null,
+        noticeServedDate: evictCase.noticeServedDate || null,
+      },
       Firm: {
         name: 'Heugly & Bludworth, Attorneys at Law',
         address: '136 E South Temple, Suite 1400, Salt Lake City, UT 84111',
@@ -439,13 +789,20 @@ export class DraftDataResolver {
         court: this.formatDate(now, 'DATE_COURT'),
         year: now.getFullYear(),
       },
+      CustomField: {
+        ...(customOverrides || {}),
+      },
     };
 
-    // 2. Pre-populate common token variants so docxtemplater resolves regardless of case or syntax
+    // Pre-populate nested objects & repeating collections for docxtemplater loops
     resolvedData['client'] = { ...rawEntityLookup.Client };
+    resolvedData['Client'] = { ...rawEntityLookup.Client, Name: rawEntityLookup.Client.name };
     resolvedData['matter'] = { ...rawEntityLookup.Matter };
+    resolvedData['Matter'] = { ...rawEntityLookup.Matter, Title: rawEntityLookup.Matter.title, MatterNumber: rawEntityLookup.Matter.matterNumber };
     resolvedData['attorney'] = { ...rawEntityLookup.ResponsibleAttorney };
+    resolvedData['Attorney'] = { ...rawEntityLookup.ResponsibleAttorney, Name: rawEntityLookup.ResponsibleAttorney.name };
     resolvedData['court'] = { ...rawEntityLookup.Court };
+    resolvedData['Court'] = { ...rawEntityLookup.Court, Name: rawEntityLookup.Court.name };
     resolvedData['incident'] = { ...rawEntityLookup.Incident };
     resolvedData['insurance'] = { ...rawEntityLookup.Insurance };
     resolvedData['medicalProvider'] = { ...rawEntityLookup.MedicalProvider };
@@ -455,19 +812,47 @@ export class DraftDataResolver {
     resolvedData['wageLoss'] = { ...rawEntityLookup.WageLoss };
     resolvedData['medicalBilling'] = { ...rawEntityLookup.MedicalBilling };
     resolvedData['specials'] = { ...rawEntityLookup.Specials };
+    resolvedData['litigation'] = { ...rawEntityLookup.Litigation };
+    resolvedData['bankruptcy'] = { ...rawEntityLookup.Bankruptcy };
+    resolvedData['immigration'] = { ...rawEntityLookup.Immigration };
+    resolvedData['probate'] = { ...rawEntityLookup.Probate };
+    resolvedData['familyLaw'] = { ...rawEntityLookup.FamilyLaw };
+    resolvedData['criminal'] = { ...rawEntityLookup.Criminal };
+    resolvedData['appeals'] = { ...rawEntityLookup.Appeals };
+    resolvedData['evictions'] = { ...rawEntityLookup.Evictions };
     resolvedData['firm'] = { ...rawEntityLookup.Firm };
+    resolvedData['Firm'] = { ...rawEntityLookup.Firm };
     resolvedData['today'] = rawEntityLookup.CurrentDate.long;
     resolvedData['currentYear'] = rawEntityLookup.CurrentDate.year;
+
+    // Repeating sections arrays for {{#providers}}...{{/providers}}, {{#creditors}}, etc.
+    resolvedData['providers'] = matter.medicalProviders || [];
+    resolvedData['policies'] = matter.insurancePolicies || [];
+    resolvedData['liens'] = matter.liens || [];
+    resolvedData['creditors'] = bkCase.creditors || [];
+    resolvedData['beneficiaries'] = probCase.beneficiaries || [];
+    resolvedData['charges'] = crimCase.charges || [];
+    resolvedData['hearings'] = litCase.hearings || [];
+    resolvedData['discoveryRequests'] = litCase.discoveryRequests || [];
+    resolvedData['parties'] = immCase.parties || [];
 
     // Conditionals flags
     resolvedData['isContingency'] = matter.billingType === 'Contingency';
     resolvedData['isHourly'] = matter.billingType === 'Hourly';
     resolvedData['isFlatFee'] = matter.billingType === 'Flat Fee';
-    resolvedData['hasCourt'] = Boolean(matter.courtName);
-    resolvedData['hasJudge'] = Boolean(matter.judge);
-    resolvedData['hasDocketNumber'] = Boolean(matter.caseDocketNumber);
+    resolvedData['hasCourt'] = Boolean(matter.courtName || litCase.courtName);
+    resolvedData['hasJudge'] = Boolean(matter.judge || litCase.presidingJudge);
+    resolvedData['hasDocketNumber'] = Boolean(matter.caseDocketNumber || litCase.caseDocketNumber);
+    resolvedData['hasProviders'] = (matter.medicalProviders || []).length > 0;
+    resolvedData['hasLiens'] = (matter.liens || []).length > 0;
+    resolvedData['hasCreditors'] = (bkCase.creditors || []).length > 0;
+    resolvedData['hasParties'] = (immCase.parties || []).length > 0;
+    resolvedData['hasHearings'] = (litCase.hearings || []).length > 0;
+    resolvedData['hasBeneficiaries'] = (probCase.beneficiaries || []).length > 0;
+    resolvedData['hasCharges'] = (crimCase.charges || []).length > 0;
+    resolvedData['hasDiscoveryRequests'] = (litCase.discoveryRequests || []).length > 0;
 
-    // 3. Process Configured Field Mappings for this Template Version
+    // Process Configured Field Mappings for this Template Version
     const mappings = templateVersion.fieldMappings || [];
 
     for (const mapping of mappings) {
@@ -478,41 +863,49 @@ export class DraftDataResolver {
         if (sEntity === 'attorney' || sEntity === 'responsibleattorney') {
           entity = rawEntityLookup.Attorney || rawEntityLookup.ResponsibleAttorney;
         } else {
-          const matchKey = Object.keys(rawEntityLookup).find(k => k.toLowerCase() === sEntity);
+          const matchKey = Object.keys(rawEntityLookup).find((k) => k.toLowerCase() === sEntity);
           entity = matchKey ? rawEntityLookup[matchKey] : {};
         }
       }
-      let val = entity ? entity[mapping.sourceField] : undefined;
+      let val = this.lookupFieldCaseInsensitive(entity, mapping.sourceField);
 
-      // Special fallback for Attorney.Name or any attorney name token
-      if ((val === null || val === undefined || val === '') && 
-          (cleanTag.toLowerCase() === 'attorney.name' || (sEntity.includes('attorney') && mapping.sourceField === 'name'))) {
-        val = rawEntityLookup.Attorney?.name || rawEntityLookup.ResponsibleAttorney?.name || attorney?.name || matter?.responsibleAttorneyName || matter?.responsibleAttorney?.name;
+      if (
+        (val === null || val === undefined || val === '') &&
+        (cleanTag.toLowerCase() === 'attorney.name' || (sEntity.includes('attorney') && mapping.sourceField.toLowerCase() === 'name'))
+      ) {
+        val =
+          rawEntityLookup.Attorney?.name ||
+          rawEntityLookup.ResponsibleAttorney?.name ||
+          attorney?.name ||
+          matter?.responsibleAttorneyName ||
+          matter?.responsibleAttorney?.name;
       }
 
-      // Special fallback for MedicalProvider name and address tokens
-      if ((val === null || val === undefined || val === '') &&
-          (cleanTag.toLowerCase() === 'medicalprovider.name' || (sEntity.includes('provider') && (mapping.sourceField === 'name' || mapping.sourceField === 'providerName')))) {
+      if (
+        (val === null || val === undefined || val === '') &&
+        (cleanTag.toLowerCase() === 'medicalprovider.name' ||
+          (sEntity.includes('provider') && (mapping.sourceField.toLowerCase() === 'name' || mapping.sourceField.toLowerCase() === 'providername')))
+      ) {
         val = rawEntityLookup.MedicalProvider?.name || rawEntityLookup.MedicalProvider?.providerName || providerRecord?.providerName;
       }
-      if ((val === null || val === undefined || val === '') &&
-          (cleanTag.toLowerCase() === 'medicalprovider.address' || (sEntity.includes('provider') && (mapping.sourceField === 'address' || mapping.sourceField === 'facilityAddress')))) {
+      if (
+        (val === null || val === undefined || val === '') &&
+        (cleanTag.toLowerCase() === 'medicalprovider.address' ||
+          (sEntity.includes('provider') && (mapping.sourceField.toLowerCase() === 'address' || mapping.sourceField.toLowerCase() === 'facilityaddress')))
+      ) {
         val = rawEntityLookup.MedicalProvider?.address || rawEntityLookup.MedicalProvider?.facilityAddress || providerRecord?.facilityAddress;
       }
 
-      // Check for user-provided custom overrides
       if (customOverrides && customOverrides[cleanTag] !== undefined) {
         val = customOverrides[cleanTag];
       } else if (customOverrides && customOverrides[mapping.sourceField] !== undefined) {
         val = customOverrides[mapping.sourceField];
       }
 
-      // Fallback to default value if empty
       if ((val === null || val === undefined || val === '') && mapping.defaultValue) {
         val = mapping.defaultValue;
       }
 
-      // Check required vs optional validation
       if (val === null || val === undefined || val === '') {
         const details = this.getSourceRecordDetails(mapping.sourceEntity, mapping.sourceField);
         const flag: MissingFieldFlag = {
@@ -538,16 +931,13 @@ export class DraftDataResolver {
         }
       }
 
-      // Apply formatting rule
       const formatted = this.formatValue(val, mapping.formattingRule);
 
-      // Populate resolved data under multiple keys to support any template syntax
       resolvedData[cleanTag] = formatted ?? '';
       resolvedData[mapping.placeholderTag] = formatted ?? '';
       resolvedData[`{{${cleanTag}}}`] = formatted ?? '';
       resolvedData[cleanTag.toLowerCase()] = formatted ?? '';
 
-      // Also set path in nested object (e.g. Client.Name -> resolvedData.Client.Name)
       const parts = cleanTag.split('.');
       if (parts.length === 2) {
         if (!resolvedData[parts[0]]) resolvedData[parts[0]] = {};
@@ -555,6 +945,15 @@ export class DraftDataResolver {
         const lowerFirst = parts[0].charAt(0).toLowerCase() + parts[0].slice(1);
         if (!resolvedData[lowerFirst]) resolvedData[lowerFirst] = {};
         resolvedData[lowerFirst][parts[1]] = formatted ?? '';
+      }
+    }
+
+    // Apply any explicit customOverrides directly so ad-hoc tags resolve cleanly
+    if (customOverrides) {
+      for (const [k, v] of Object.entries(customOverrides)) {
+        if (resolvedData[k] === undefined || resolvedData[k] === '') {
+          resolvedData[k] = v;
+        }
       }
     }
 

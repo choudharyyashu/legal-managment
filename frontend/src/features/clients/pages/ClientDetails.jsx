@@ -608,25 +608,13 @@ export function ClientDetails() {
               Browse All Documents
             </Button>
           </div>
-          <div className="divide-y divide-[#D9D6CF]/50 text-xs">
-            <div className="py-3 flex justify-between items-center">
-              <div>
-                <p className="font-bold text-[#06244B]">Engagement Letter &amp; Hourly Fee Schedule.pdf</p>
-                <p className="text-[#667085]">Uploaded on 2025-01-16 by Rachel Adams • 520 KB</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => addToast('Opening secure document preview: Engagement Letter.pdf', 'info')}>
-                Preview
-              </Button>
-            </div>
-            <div className="py-3 flex justify-between items-center">
-              <div>
-                <p className="font-bold text-[#06244B]">Corporate Certificate of Good Standing &amp; Articles.pdf</p>
-                <p className="text-[#667085]">Uploaded on 2025-01-18 by Marcus Vance • 1.8 MB</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => addToast('Opening secure document preview: Corporate Certificate.pdf', 'info')}>
-                Preview
-              </Button>
-            </div>
+          <div className="p-6 text-center bg-slate-50 border border-dashed border-[#D9D6CF] rounded text-xs text-[#667085] space-y-2">
+            <p className="font-semibold text-[#06244B]">
+              Open the Document Management Repository to view uploaded files for {client.name}.
+            </p>
+            <Button size="sm" variant="primary" onClick={() => navigate('/documents')}>
+              Open Document Repository
+            </Button>
           </div>
         </div>
       )}
@@ -653,19 +641,19 @@ export function ClientDetails() {
           <ActivityTimeline
             activities={[
               {
-                title: 'Engagement Initialized',
+                title: 'Client Profile Created',
                 timestamp: client.createdAt,
                 type: 'document',
-                description: 'Client intake cleared conflict review and signed master fee agreement.',
-                author: client.assignedAttorneyName,
+                description: `Client record (${client.clientNumber || client.id}) added to firm directory.`,
+                author: client.assignedAttorneyName || 'Assigned Counsel',
               },
-              {
-                title: 'Initial Matter Opened',
-                timestamp: '2025-01-20',
+              ...clientMatters.map((m) => ({
+                title: `Matter Opened: ${m.title}`,
+                timestamp: m.openDate || client.createdAt,
                 type: 'task',
-                description: 'First lawsuit matter opened in Utah Third District Court.',
-                author: 'Thomas Bludworth, Esq.',
-              },
+                description: `${m.matterNumber} — ${m.practiceAreaName || 'Legal Matter'} (${m.status})`,
+                author: m.responsibleAttorneyName || client.assignedAttorneyName || 'Assigned Counsel',
+              })),
             ]}
           />
         </div>
@@ -712,7 +700,7 @@ export function ClientDetails() {
           clientName={client.name}
           contactPerson={client.primaryContact || client.name}
           email={client.email}
-          attorneyName={client.assignedAttorneyName || 'Thomas Bludworth, Esq.'}
+          attorneyName={client.assignedAttorneyName || 'Assigned Counsel'}
         />
       )}
     </div>

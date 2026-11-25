@@ -200,7 +200,7 @@ export function LitigationDashboard() {
         <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">
           <span className="text-[10px] uppercase font-bold text-[#667085] block">Unserved Defendants</span>
           <div className="text-2xl font-bold text-amber-700 mt-1">0 Pending</div>
-          <span className="text-[11px] text-[#667085]">100% Service Verified under URCP 4</span>
+          <span className="text-[11px] text-[#667085]">Service tracking under URCP 4</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm">

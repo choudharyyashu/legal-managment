@@ -11,6 +11,8 @@ import { DraftDataResolver } from './draft.data-resolver.js';
 import { DraftEngine } from './draft.engine.js';
 import { TaskService } from '../../tasks/task.service.js';
 import { DocumentService } from '../document.service.js';
+import { StorageService } from '../storage/storage.service.js';
+import { OcrService } from '../ocr/ocr.service.js';
 import {
   ValidateDraftInput,
   GenerateDraftInput,
@@ -32,13 +34,7 @@ import {
 export class DraftService {
   public static resolveStoragePath(storageKey: string): string {
     if (!storageKey) return '';
-    if (path.isAbsolute(storageKey)) return storageKey;
-    const normalized = storageKey.replace(/^[\\/]*/, '').replace(/^storage[\\/]/, '');
-    const candidate1 = path.resolve(process.cwd(), 'storage', normalized);
-    if (fsSync.existsSync(candidate1)) return candidate1;
-    const candidate2 = path.resolve(process.cwd(), storageKey);
-    if (fsSync.existsSync(candidate2)) return candidate2;
-    return candidate1;
+    return StorageService.resolvePath(storageKey);
   }
 
   private static async generateDraftCode(): Promise<string> {
@@ -126,6 +122,15 @@ export class DraftService {
         damagesRecords: { orderBy: { createdAt: 'desc' } },
         wageLossRecords: { orderBy: { createdAt: 'desc' } },
         medicalBillingSummaries: { orderBy: { createdAt: 'desc' } },
+        liens: { orderBy: { createdAt: 'desc' } },
+        litigationCase: { include: { hearings: true, discoveryRequests: true } },
+        bankruptcyCase: { include: { creditors: true, schedules: true } },
+        immigrationCase: { include: { parties: true, receipts: true } },
+        probateCase: { include: { beneficiaries: true, assets: true } },
+        familyLawCase: { include: { orders: true } },
+        criminalCase: { include: { charges: true } },
+        appealsCase: true,
+        evictionsCase: true,
       },
     });
 
@@ -267,6 +272,15 @@ export class DraftService {
         damagesRecords: { orderBy: { createdAt: 'desc' } },
         wageLossRecords: { orderBy: { createdAt: 'desc' } },
         medicalBillingSummaries: { orderBy: { createdAt: 'desc' } },
+        liens: { orderBy: { createdAt: 'desc' } },
+        litigationCase: { include: { hearings: true, discoveryRequests: true } },
+        bankruptcyCase: { include: { creditors: true, schedules: true } },
+        immigrationCase: { include: { parties: true, receipts: true } },
+        probateCase: { include: { beneficiaries: true, assets: true } },
+        familyLawCase: { include: { orders: true } },
+        criminalCase: { include: { charges: true } },
+        appealsCase: true,
+        evictionsCase: true,
       },
     });
 
@@ -363,10 +377,9 @@ export class DraftService {
     }
 
     // 4. Read Template DOCX Binary from Storage
-    const templateAbsolutePath = this.resolveStoragePath(version.docxStorageKey);
     let templateBuffer: Buffer;
     try {
-      templateBuffer = await fs.readFile(templateAbsolutePath);
+      templateBuffer = await StorageService.readFile(version.docxStorageKey);
     } catch {
       throw AppError.notFound(
         `Template document binary file could not be read from storage ('${version.docxStorageKey}').`,
@@ -379,12 +392,8 @@ export class DraftService {
 
     // 6. Write Generated DOCX to Safe Storage
     const draftCode = await this.generateDraftCode();
-    const draftStorageDir = path.resolve('storage', 'drafts', matter.id);
-    const draftStorageKey = `drafts/${matter.id}/${draftCode}.docx`;
-    const draftAbsolutePath = path.join(draftStorageDir, `${draftCode}.docx`);
-
-    await fs.mkdir(draftStorageDir, { recursive: true });
-    await fs.writeFile(draftAbsolutePath, generatedBuffer);
+    const storedDraft = await StorageService.writeFile(`drafts/${matter.id}/${draftCode}.docx`, generatedBuffer);
+    const draftStorageKey = storedDraft.storageKey;
 
     // 7. Save Draft Metadata in Database
     const title = input.title || `${template.templateName} - ${matter.title}`;
@@ -474,12 +483,16 @@ export class DraftService {
     }
 
     // Convert to PDF using DraftEngine
-    const pdfBuffer = await DraftEngine.convertDocxToPdf(docxBuffer, draft.draftCode);
+    const pdfBuffer = await DraftEngine.convertDocxToPdf(docxBuffer, draft.draftCode, {
+      title: draft.title,
+      draftCode: draft.draftCode,
+      matterNumber: draft.matter?.matterNumber || undefined,
+      clientName: draft.client?.name || undefined,
+    });
 
     // Save PDF to storage
-    const pdfStorageKey = `drafts/${draft.matterId}/${draft.draftCode}.pdf`;
-    const pdfAbsolutePath = path.resolve('storage', pdfStorageKey);
-    await fs.writeFile(pdfAbsolutePath, pdfBuffer);
+    const storedPdf = await StorageService.writeFile(`drafts/${draft.matterId}/${draft.draftCode}.pdf`, pdfBuffer);
+    const pdfStorageKey = storedPdf.storageKey;
 
     // Update database
     const updated = await prisma.documentDraft.update({
@@ -604,24 +617,36 @@ export class DraftService {
     const draft = await this.getDraftById(draftId, currentUser);
 
     const isPdf = format.toLowerCase() === 'pdf';
-    const storageKey = isPdf ? draft.pdfStorageKey : draft.docxStorageKey;
+    let storageKey = isPdf ? draft.pdfStorageKey : draft.docxStorageKey;
 
-    if (!storageKey) {
-      if (isPdf) {
-        throw AppError.notFound(
-          'PDF rendering has not yet been generated for this draft. Use DOCX format or request PDF conversion.',
-          'PDF_NOT_GENERATED'
-        );
-      }
-      throw AppError.notFound('Draft document file is missing from storage.', 'FILE_NOT_FOUND');
-    }
-
-    const absolutePath = path.resolve('storage', storageKey);
     let buffer: Buffer;
-    try {
-      buffer = await fs.readFile(absolutePath);
-    } catch {
-      throw AppError.notFound('Draft physical document file could not be read from disk.', 'FILE_NOT_FOUND');
+    if (isPdf && (!storageKey || !StorageService.exists(storageKey))) {
+      // Automatically convert DOCX draft to PDF on demand if not yet cached
+      if (!draft.docxStorageKey) {
+        throw AppError.notFound('Draft DOCX file is missing from storage for PDF conversion.', 'FILE_NOT_FOUND');
+      }
+      const docxBuffer = await StorageService.readFile(draft.docxStorageKey);
+      buffer = await DraftEngine.convertDocxToPdf(docxBuffer, draft.draftCode, {
+        title: draft.title,
+        draftCode: draft.draftCode,
+        matterNumber: draft.matterNumber || undefined,
+        clientName: draft.clientName || undefined,
+      });
+      const storedPdf = await StorageService.writeFile(`drafts/${draft.matterId}/${draft.draftCode}.pdf`, buffer);
+      storageKey = storedPdf.storageKey;
+      await prisma.documentDraft.update({
+        where: { id: draft.id },
+        data: { pdfStorageKey: storageKey },
+      }).catch(() => {});
+    } else {
+      if (!storageKey) {
+        throw AppError.notFound('Draft document file is missing from storage.', 'FILE_NOT_FOUND');
+      }
+      try {
+        buffer = await StorageService.readFile(storageKey);
+      } catch {
+        throw AppError.notFound('Draft physical document file could not be read from disk.', 'FILE_NOT_FOUND');
+      }
     }
 
     const ext = isPdf ? 'pdf' : 'docx';
@@ -837,19 +862,21 @@ export class DraftService {
       throw AppError.badRequest(`Draft '${draft.draftCode}' is marked stale due to underlying matter data changes. Regenerate before approval.`, 'DRAFT_STALE');
     }
 
-    // 4. File existence & checksum calculation
+    // 4. File existence, checksum calculation, and OCR text extraction
     let fileSizeBytes = BigInt(0);
     let sha256Checksum = 'pending-checksum';
     let docxFileName = `${draft.draftCode}.docx`;
+    let extractedOcrText: string | null = null;
 
     if (draft.docxStorageKey) {
       docxFileName = path.basename(draft.docxStorageKey);
-      const physicalPath = this.resolveStoragePath(draft.docxStorageKey);
       try {
-        if (fsSync.existsSync(physicalPath)) {
-          const fileBuffer = await fs.readFile(physicalPath);
+        if (StorageService.exists(draft.docxStorageKey)) {
+          const fileBuffer = await StorageService.readFile(draft.docxStorageKey);
           fileSizeBytes = BigInt(fileBuffer.length);
           sha256Checksum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+          const ocr = await OcrService.extract(fileBuffer, docxFileName, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+          if (ocr.text) extractedOcrText = ocr.text;
         }
       } catch {
         sha256Checksum = crypto.createHash('sha256').update(Buffer.from(draft.id)).digest('hex');
@@ -869,6 +896,7 @@ export class DraftService {
         category: (draft.template as any)?.category || 'Legal Draft',
         currentVersion: 'v1.0',
         isPrivileged: false,
+        ocrContent: extractedOcrText,
       },
     });
 
@@ -911,7 +939,7 @@ export class DraftService {
       const reviewTasks = await prisma.task.findMany({
         where: {
           matterId: draft.matterId,
-          status: { in: ['Pending', 'In Progress'] },
+          status: { in: ['Not Started', 'Pending', 'In Progress'] },
           OR: [
             { description: { contains: draft.draftCode } },
             { title: { contains: draft.draftCode } },
@@ -1054,7 +1082,7 @@ export class DraftService {
       const reviewTasks = await prisma.task.findMany({
         where: {
           matterId: draft.matterId,
-          status: { in: ['Pending', 'In Progress'] },
+          status: { in: ['Not Started', 'Pending', 'In Progress'] },
           OR: [
             { description: { contains: draft.draftCode } },
             { title: { contains: draft.draftCode } },

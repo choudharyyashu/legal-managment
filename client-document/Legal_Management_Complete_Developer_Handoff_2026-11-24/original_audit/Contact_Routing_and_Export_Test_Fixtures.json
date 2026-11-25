@@ -1,0 +1,266 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic fixture design only;all application tests not executed",
+  "contacts": [
+    {
+      "id": "C-A",
+      "display_name": "Synthetic Same Name",
+      "role": "insurer",
+      "linked_matters": [
+        "M-1",
+        "M-2"
+      ],
+      "email": "claims-a@example.invalid"
+    },
+    {
+      "id": "C-B",
+      "display_name": "Synthetic Same Name",
+      "role": "insurer",
+      "linked_matters": [
+        "M-4"
+      ],
+      "email": "claims-b@example.invalid"
+    },
+    {
+      "id": "P-NORTH",
+      "parent": "ORG-1",
+      "physical": "Synthetic North Office",
+      "billing": "Synthetic Billing Department",
+      "records": "Synthetic Records Department"
+    },
+    {
+      "id": "P-SOUTH",
+      "parent": "ORG-1",
+      "physical": "Synthetic South Office"
+    },
+    {
+      "id": "L-1",
+      "role": "separate lien holder"
+    }
+  ],
+  "matters": [
+    {
+      "id": "M-1",
+      "state": "open"
+    },
+    {
+      "id": "M-2",
+      "state": "closed"
+    },
+    {
+      "id": "M-3",
+      "state": "restricted"
+    },
+    {
+      "id": "M-4",
+      "state": "new"
+    }
+  ],
+  "task_selection": {
+    "filtered_match_count": 35,
+    "selected_ids": [
+      "T-1",
+      "T-2"
+    ],
+    "scope": "explicit IDs unless all matching deliberately selected"
+  },
+  "export_fixtures": {
+    "M-1": [
+      "Folder A/Subfolder/document.docx",
+      "photos/photo.jpg",
+      "recordings/call.wav"
+    ],
+    "M-2": [],
+    "M-3": [
+      "case-data.csv"
+    ],
+    "states": [
+      "requested",
+      "preparing",
+      "ready",
+      "failed",
+      "expired"
+    ],
+    "complete_restore_proved": false
+  },
+  "tests": [
+    {
+      "id": "AT-0389",
+      "scenario_and_expected_result": "With contact IDs C-A and C-B sharing a name but different routes and linked matters,an unauthorized user cannot merge. An authorized preview identifies survivor,duplicate,all affected links and conflicting fields;Cancel changes nothing. Confirmation commits one attributable transaction. Retry the same request without duplicate moves;an injected failure preserves both records. Display irreversible consequences before confirmation;never advertise undo until separately implemented and tested.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0390",
+      "scenario_and_expected_result": "Link contact C-A to open M-1,closed M-2 and restricted M-3. The directory and matter routes resolve the same C-A. Display authorized links with stable IDs and state;do not leak restricted matter details or counts. Refresh after an authorized contact merge and confirm permitted links remain reachable;global contact history is not a complete audit-change log.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0391",
+      "scenario_and_expected_result": "Create SYNTHETIC Regional Clinic north/south locations with different addresses and the same parent. Link two matters to different locations;history,reports and request drafts retain the selected location. Name similarity alone cannot merge them. Changing one office route does not alter the other or rewrite previously issued documents.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0392",
+      "scenario_and_expected_result": "Attempt to remove contact C-A referenced by an active matter,a closed matter and an issued claim. Prevent destructive deletion;offer clearly labeled archival or merge controls only when supported. Archived contacts remain resolvable from prior documents and matter history. A new selection must show archival state. Verify retention behavior with configured policy;no production contact is removed by this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0393",
+      "scenario_and_expected_result": "Create a standalone General contact and attach it later without duplication. The chosen contact type exposes its own schema. Attempt an adjuster through an unsupported directory path:route to the required case flow while preserving typed values. Reject an unusable Office-type save or provide a tested supported equivalent;never create a selectable record that downstream screens cannot use. Unknown required fields prevent silent truncation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0394",
+      "scenario_and_expected_result": "Assign adjuster A-1 to client insurance in M-1 and defendant insurance in M-2. Change a shared contact note and verify both authorized views and a later M-4 show the approved version. A private M-1 strategy note never propagates. Show a shared-scope warning before save. Preserve first-stage edits when the assignment save fails and report its state;do not falsely show both stages successful.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0395",
+      "scenario_and_expected_result": "Set distinct office,billing and records addresses on provider P-1. A billing draft uses billing and a records draft uses records. Remove only billing:show physical fallback and the source field;records still uses records. If all addresses are missing,block delivery with a correction task. Changing an address after a prepared draft requires a reviewed refresh and cannot silently rewrite an issued request.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0396",
+      "scenario_and_expected_result": "Mark P-1 as restricted through each supported entry route;all searches display the same persisted warning and preserve existing treatment history. A records-integration request is blocked before network submission with an attributable reason. Test a stale search result against a newly restricted provider. Clearing the flag requires permission and reason;it does not retroactively erase earlier warnings or request evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0397",
+      "scenario_and_expected_result": "Create provider P-1 and separate lien holder L-1;link a treatment bill and preview settlement payment. Payee resolves to L-1 while treatment history retains P-1. With no separate entity,the intended provider payee is shown explicitly. Switching lien ownership requires revalidation and cannot change an issued check. Same display names with different IDs cannot silently redirect payment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0398",
+      "scenario_and_expected_result": "Filter synthetic tasks T-1 through T-35;select two visible rows and reassign. Only those IDs move;35 matching rows are not implied selected. Then deliberately choose all matching rows and show the expanded count. Preserve due dates,status and matter links. Reject an inactive destination;report per-row authorization/concurrency failures. Retrying a completed job cannot create duplicate tasks or notifications.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0399",
+      "scenario_and_expected_result": "An unauthorized export request fails without creating a job. An authorized job records scope and request ID;preparing never implies ready. Simulate success,failure,expired access and duplicate readiness events. Download validation checks the job ID and manifest digest. A case-data-only archive cannot be labeled a complete backup or complete migration;no paid export is ordered during the audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0400",
+      "scenario_and_expected_result": "Use M-1 with nested folders,documents,photos and recordings,M-2 with no assets and M-3 with data only. The manifest records each expected ID,hash,original folder path and inclusion/exclusion reason. Reconcile every file and row before declaring complete. A source export that flattens folders must be labeled and rebuilt from verified mapping,or recorded as an unresolved migration loss. Exact vendor schemas,fees,delivery times and standalone-contact coverage require confirmation;synthetic validation cannot establish a successful restore.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0401",
+      "scenario_and_expected_result": "Create one matter with client/defendant insurers and multiple adjusters. Generate first-party and liability letters;each uses its intended company,claim,policy and contact tokens. Templates with a different context are absent or explain incompatibility. Documents-tab generation offers only supported contexts;missing context does not mean no templates exist. Snapshot exact recipient ID,role,source values and approved template version;review revalidation after contact merge or reassignment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0402",
+      "scenario_and_expected_result": "Configure offices O-1/O-2 and teams T-1/T-2 with users having overlapping,missing and changed memberships. Only eligible templates appear and can be generated through direct requests. A revoked membership invalidates a stale menu. Unauthorized users cannot alter assignments. Distinguish plan entitlement,Office Suite configuration,template-management permission and matter access;unknown AND/OR and unassigned behavior must be explicitly configured and tested,not guessed from the guide.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0403",
+      "scenario_and_expected_result": "Reject unsupported files with an actionable error. Upload synthetic template V1 and inventory exact fields;change context and upload V2 under the intended stable template identity. New generations use the published version,while old generated files retain V1 provenance and attorney edits. Concurrent uploads cannot silently overwrite each other. Validate missing fields,formatter tokens and unresolved manual blanks before publishing. Vendor sample language is reference-only;letters must use I/me/my and four-digit years without an exception.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0404",
+      "scenario_and_expected_result": "Generate a synthetic letter with and without OneDrive. Verify correct matter folder,file ID,version and accessible download/native Word actions. Cloud-saved does not imply locally downloaded;launch requested does not prove Word opened;generated does not prove sent. Simulate revoked cloud permission,missing folder,blocked pop-up and failed save;retain recoverable output and an actionable status. Retry does not produce duplicate matter files or correspondence. No live letter is generated or sent in this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0405",
+      "scenario_and_expected_result": "Render synthetic dates November15,2026 and December31,1999 using numeric,long and localized date formats and text with accents,mixed case and punctuation. Every letter date has a four-digit year,including earlier-correspondence references. Preserve raw values and distinguish user-generating fields from lead-attorney fields. Unknown formatter names fail validation;do not silently remove a year or rewrite quotations/proper plural references. A screenshot example is not a successful runtime formatter test.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "claim_requirement_preserved": [
+    "F-0086",
+    "F-0087",
+    "F-0088",
+    "F-0089",
+    "F-0090",
+    "F-0091",
+    "F-0092",
+    "F-0093"
+  ],
+  "additional_global_rules": [
+    "Keep all practice areas and intake corrections",
+    "Shared matter context and Exchange/Gmail filing/client copies",
+    "Each individual call/text in the single daily ledger;unknown mapping stays unresolved",
+    "Insurer contact/form directory,automatic form completion and AI insurer calls remain required",
+    "Attorney letters use I/me/my and four-digit years"
+  ],
+  "additional_tests": [
+    {
+      "id": "AT-0389-INSURER-SCOPE",
+      "scenario_and_expected_result": "Create same-name adjusters under insurer I-1 and I-2. Show the selected insurer scope before candidate selection;do not merge different-company identities merely because names match. Confirm main versus duplicate IDs and data disposition using a preview. Resolve ambiguous legacy narration against current documentation and an eventual observed build;all tests remain unexecuted.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "template_test_variants": [
+    {
+      "requirement": "F-0110",
+      "scenario_and_expected_result": "With projected client net64350 and issued client check15000,verify each merge field uses its intended state. No issued check yields an explicit missing/unissued value rather than the projection. Preserve ledger identity;issued remains distinct from cleared and from remaining trust balance.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0114",
+      "scenario_and_expected_result": "Generate a synthetic disbursement sheet before issuance,after issuance and after clearance;show amount/state/source separately. Voiding or reissuing a check preserves the historical document and requires reviewed regeneration.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0089",
+      "scenario_and_expected_result": "Map raw tokens from the reference catalog to approved field IDs with recipient context. Preserve token spelling/whitespace variants and flag unresolved syntax instead of silently guessing. Test first-party insurer prefixes separately from defendant-insurer prefixes;verify dates,attorney identity and contact routes. An unmapped token or manual payment blank prevents release.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0104",
+      "scenario_and_expected_result": "Remove a required claim number,recipient route and injury date. Draft generation reports each missing source field and where to correct it;it cannot present a clean letter with silent blanks. Optional omissions are explicit. Keep generation/download/save/transmission statuses separate.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0395",
+      "scenario_and_expected_result": "Set different Office,Billing and Records routes. A generated records request must follow the approved mapping for that template/request type. Flag the vendor sample mismatch for review;do not globally substitute integration routing or assume a live vendor defect.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0087",
+      "scenario_and_expected_result": "Retain exact approved form edition,document bytes and field map per generated claim. Replacement does not retroactively alter an old submission. Source sample download is not attorney approval or proof that the300-document catalog is implemented.",
+      "status": "Not executed"
+    }
+  ],
+  "sample_field_reference": "CASEpeer_Template_Field_Reference.json"
+}

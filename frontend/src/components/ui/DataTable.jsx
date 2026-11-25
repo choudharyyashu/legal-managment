@@ -54,9 +54,9 @@ export function DataTable({
   }, [sortedData, currentPage, pageSize]);
 
   return (
-    <div className={`w-full overflow-hidden rounded border border-[#D9D6CF] bg-white shadow-subtle ${className}`}>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[#D9D6CF] text-left text-sm">
+    <div className={`w-full max-w-full overflow-hidden rounded border border-[#D9D6CF] bg-white shadow-subtle ${className}`}>
+      <div className="w-full overflow-x-auto">
+        <table className="w-full divide-y divide-[#D9D6CF] text-left text-xs sm:text-sm">
           <thead className="bg-[#F5F0E5]/80 text-[#06244B]">
             <tr>
               {columns.map((col, idx) => (
@@ -64,7 +64,7 @@ export function DataTable({
                   key={col.key || idx}
                   scope="col"
                   onClick={() => col.sortable && handleSort(col.sortField || col.key)}
-                  className={`px-2.5 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${
+                  className={`px-2.5 sm:px-3 py-2.5 sm:py-3 text-[11px] sm:text-xs font-semibold uppercase tracking-wider leading-tight ${
                     col.sortable ? 'cursor-pointer select-none hover:bg-[#D9D6CF]/40' : ''
                   } ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
                 >

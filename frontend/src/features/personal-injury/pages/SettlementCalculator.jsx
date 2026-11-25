@@ -127,8 +127,9 @@ export function SettlementCalculator() {
   const activeCase = cases.find(c => c.id === activeCaseId) || cases[0];
 
   const fullSettlementObject = {
-    matterTitle: activeCase?.matterTitle || 'Personal Injury Settlement',
-    clientName: activeCase?.clientName || 'Sarah Jenkins',
+    matterTitle: activeCase?.matterTitle || activeCase?.title || 'Personal Injury Settlement',
+    clientName: activeCase?.clientName || 'Client',
+    attorneyName: activeCase?.responsibleAttorneyName || 'Managing Attorney',
     grossRecovery: numericGross,
     contingencyFeePercentage: Number(feeRate),
     contingencyFeeAmount,

@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-16",
+  "status": "Original synthetic fixtures; all application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0505",
+      "workflow": {
+        "input": "Remote document/version ID, tracked local path and local edited bytes",
+        "initial_state": "Proposed synthetic fixture; no live firm data used",
+        "user_action": "Launch compatible editor, save and reconcile remote version",
+        "output": "Verified new version or recoverable unsynced change with explicit reason",
+        "exceptions_and_dependencies": "Tracked-path changes, stale credentials, permission loss, absent handler and template configuration require real execution. Proposed safeguards exceed what static source images prove."
+      },
+      "acceptance_test": {
+        "id": "AT-0505",
+        "scenario_and_expected_result": "Open synthetic PDF D1/V1, change text and use ordinary Save. Show download, editor launch, local save, upload started and remote-version verified as distinct states. Verify the returned version ID, byte hash and reopened content. Then use Save As and move the local file: preserve the unsynced edits, identify the broken binding and offer reviewed recovery without silently replacing a different remote document. Test an editor that writes through a temporary rename, offline save, permission revocation, failed upload and a timeout after remote acceptance. Retry reconciles the existing version before uploading; no duplicate versions or false success. A notification or refresh is not proof of saved remote bytes.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0506",
+      "workflow": {
+        "input": "User/org identity, browser handoff and outstanding edit-session IDs",
+        "initial_state": "Proposed synthetic fixture; no live firm data used",
+        "user_action": "Switch organization, reauthenticate or relaunch and resume authorized work",
+        "output": "Context-correct session or explicit authorization/launch failure",
+        "exceptions_and_dependencies": "Tracked-path changes, stale credentials, permission loss, absent handler and template configuration require real execution. Proposed safeguards exceed what static source images prove."
+      },
+      "acceptance_test": {
+        "id": "AT-0506",
+        "scenario_and_expected_result": "Use two synthetic organizations with identical filenames and overlapping-looking project IDs. Open Org A/D1, switch the browser to Org B and request Org B/D1. Revalidate user/org authorization for each launch and save; an old Org A callback cannot overwrite Org B. If reauthentication is required, show a blocked/recoverable state. Test sign-out, app quit, relaunch and revoked access separately, keeping unsent work attributable to its original context. Notifications disabled or suppressed by a meeting must not be interpreted as no operation or successful completion. After more than two minutes without opening, expose diagnostics and the failed stage rather than spawning unlimited editor sessions.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0507",
+      "workflow": {
+        "input": "Project type/section, widget selector and permitted template versions",
+        "initial_state": "Proposed synthetic fixture; no live firm data used",
+        "user_action": "Configure fixed/project-choice widget and generate a reviewed draft",
+        "output": "Allowed-template draft with traceable field and configuration bindings",
+        "exceptions_and_dependencies": "Tracked-path changes, stale credentials, permission loss, absent handler and template configuration require real execution. Proposed safeguards exceed what static source images prove."
+      },
+      "acceptance_test": {
+        "id": "AT-0507",
+        "scenario_and_expected_result": "Configure one fixed widget using approved T1 and one project-choice widget with authorized T1/T2. Verify only project types with the correct widget/connection expose generation. A fixed widget cannot be changed to T2 through a stale UI or request. A selectable widget shows only templates permitted for that project and user. Changing the widget prompt auto-populates its selector under an explicit collision-safe rule; inspect rather than assume selector stability after later renaming. Validate contact/collection fields from other sections of the same matter without leaking another matter. Pin the approved template edition and source data, preserve I/me/my and four-digit date years, and reject generation if connection or required fields are unresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0404",
+      "title": "Office route compatibility and launch evidence",
+      "test": "Test the documented Office type matrix:doc/docx,xls/xlsx,vsdx,pub,ppt/pptx,mpp. Verify lowercase and uppercase extensions separately; the guide requires lowercase. Check Windows/Office2013+ and current macOS/Office2016+ as documented prerequisites, not a current security support guarantee. Test desktop/mobile with/without the relevant installed app and project/edit permission. Denying the browser launch prompt must remain cancelled, never opened/saved. Confirm saved bytes through every existing project reference.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360007200592",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0134",
+      "title": "Version receipts after native edits",
+      "test": "Capture original and new remote version IDs/hashes and reopen both. A save-started OS notification and a visible Version5 screenshot do not establish the current edit reached storage. Test stale preview requiring refresh, retry after partial upload and duplicate callback handling without corrupting the version history.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38378905441819",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0501",
+      "title": "Editing lease recovery after sign-out or quit",
+      "test": "Sign out or quit with a dirty native file and an active lock. Keep recoverable edits and an attributable session. Reauthentication or relaunch must not blindly release or reuse another user’s lock; reconcile stale sessions and permissions before a late save. Capture separate evidence for client failure, lock status and remote accepted version.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38379577049499",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0428",
+      "title": "Managed installation and diagnostic-log boundaries",
+      "test": "Verify an authorized admin obtains the correct OS installer through the documented resource route and records actual version/publisher/integrity evidence. Do not automatically bypass endpoint policy because a guide suggests running past a warning. Test managed approval, missing default handlers and each device/user separately. Collect only reviewed/redacted error logs from the documented platform-specific location; never expose credentials or unrelated case content. Source statements about Electron or platform authorization are not independent binary verification.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/38378289414939",
+      "status": "Not executed"
+    }
+  ]
+}

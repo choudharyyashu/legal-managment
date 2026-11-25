@@ -1,0 +1,148 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design only;application tests not executed",
+  "routines": {
+    "scheduled_at": "2026-11-16T08:00:00-07:00",
+    "completed_at": "2026-11-16T08:07:00-07:00",
+    "timezone": "America/Denver",
+    "quota": 10,
+    "reauthorization_check_days": [
+      44,
+      45,
+      59,
+      60
+    ]
+  },
+  "depositions": {
+    "matter": "M-1",
+    "external_case": "D-1",
+    "durations_minutes": [
+      30,
+      31
+    ],
+    "policy_current_confirmed": false,
+    "fee_amount": null
+  },
+  "templates": [
+    "mixed-header",
+    "schoolbook",
+    "zero-dependent-calc",
+    "delete-populated-list",
+    "disabled-import-letterhead",
+    "contact-label-child-override"
+  ],
+  "tests": [
+    {
+      "id": "AT-0346",
+      "scenario_and_expected_result": "Create ten synthetic routines for user A and one for B. Reject A’s eleventh according to configured quota without affecting B. Authentication missing, expired or revoked prevents execution. Scope-all still enforces current project permissions; an instruction naming a tag is not an authorization boundary.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0347",
+      "scenario_and_expected_result": "Schedule a synthetic long-running brief at 08:00 America/Denver on November16,2026. At 08:00 show running, not delivered. Finish at 08:07 and link the output to immutable run ID and source version. Exercise DST, overlap, retry and failed delivery without duplicate jobs or false completion.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0348",
+      "scenario_and_expected_result": "Use a synthetic clock for days44,45,59 and60. Show renewal notice and exact expiry; stop unauthorized future runs at configured expiry. Duplicating produces a new inactive identity rather than reusing credentials. Editing pins the next run’s version and does not rewrite prior results. No real automation is changed in this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0349",
+      "scenario_and_expected_result": "A non-admin can inspect packages but cannot install/uninstall. Install a synthetic package as admin and expose its versioned skills to authorized users. Explicit and suggested invocation both preserve package provenance and matter permissions. Uninstall removes future availability without deleting prior outputs; bundled definitions cannot be silently edited.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0350",
+      "scenario_and_expected_result": "Model mandatory, removable-default and optional packages. Enforce verified flags in UI and backend, showing why an action is unavailable. Leave unknown vendor policy unresolved. An update must preserve custom user routines and report missing dependencies before the next run.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0351",
+      "scenario_and_expected_result": "Use synthetic matters with overdue, upcoming and waiting-on-party tasks. Rank visible priorities with evidence, cutoff and missing-data flags. Link each prepared draft to the source and matter. Do not report filing, sending or completion from a draft; restricted matters must not appear. Published screenshot truncates the skill description; omitted behavior remains unknown.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0352",
+      "scenario_and_expected_result": "Link existing deposition case D-1 to matter M-1 instead of creating another case. Change caption/jurisdiction separately on each side; show the conflict and authoritative source without silent overwrites. A retried first-deposition setup creates one linked case. Preserve party IDs, claim/case numbers and update history.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0353",
+      "scenario_and_expected_result": "Create a non-hosted placeholder for goals without booking a reporter or incurring a hosted reservation. Import an eligible past transcript from matter documents without claiming live recording. For hosted proceedings, expose summary/notes/issues/designations only as their artifacts become available. Replacing a rough transcript retains version and citation lineage.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0354",
+      "scenario_and_expected_result": "Use remote and in-person fixtures with valid/invalid email, interpreter language, location instructions and billing contact. Block an incomplete notice requirement at the appropriate stage. Apply November release participant toggles independently; queue only enabled notifications. Removing an exhibit association preserves the matter original. A saved booking is not proof of participant receipt.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0355",
+      "scenario_and_expected_result": "Configure a synthetic provider policy, event timezone, business holidays and vendor-specific cutoffs. Test remote versus in-person notice, weekend/holiday boundaries, last-minute requests and interpreter cancellation. Flag coverage unconfirmed until provider acceptance. A warning cannot invent a fee amount or guarantee service. Confirm current vendor policy before using retrieved historical thresholds.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0356",
+      "scenario_and_expected_result": "Use synthetic events of30 and31 minutes, and separate absent witness from absent scheduling attorney. Report configured grace period and fee risk without asserting a certificate exists. Request, receive and verify signed certificate metadata before enabling filed status; document availability or email alone never proves court filing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0357",
+      "scenario_and_expected_result": "For a synthetic matter enable custom updates and suppress generic alerts. One change yields the intended message once. If workflow fails, show failed delivery and pending follow-up rather than inferring generic fallback. Preserve firm sender identity on welcome/form requests, and safely open read-only form URLs in a new tab.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0358",
+      "scenario_and_expected_result": "Test duplicate contact/project/role rows without collapsing distinct roles. Read team V2 without inventing TEAM_ID; V3 maps stable ID despite duplicate names. Preserve API identity on updates. Export project ID/name/link with CSV escaping and permission checks; an export link does not prove invite delivery or portal engagement.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0359",
+      "scenario_and_expected_result": "Generate from synthetic Home, Work and custom Service-address labels. Sync the parent while a child uses its own selected address; validate intended inheritance and override without losing options. Missing/renamed labels produce actionable errors. Bind exact approved template edition and field IDs before enabling production generation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0360",
+      "scenario_and_expected_result": "Use synthetic templates covering mixed-style header spacing with pleading borders, Century Schoolbook rendering, chained calculations reaching exactly zero, populated list-section deletion and imported letterhead disabled. Compare DOM preview, DOCX text and rendered PDF, including hidden header/template labels. Preserve four-digit letter dates and I/me/my. Cascade deletion must leave no orphan list items; zero must not serialize as negative zero.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0361",
+      "scenario_and_expected_result": "Use synthetic entitled, unentitled and revoked accounts. A valid identity session alone does not grant document access. Log user attribution across products, prevent cross-tenant leakage, and preserve already saved documents through logout. Test failed renewal without reporting successful sign-in.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ]
+}

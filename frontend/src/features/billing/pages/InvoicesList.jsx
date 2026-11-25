@@ -524,8 +524,8 @@ export function InvoicesList() {
       <Modal
         isOpen={isPrintPreviewOpen}
         onClose={() => setIsPrintPreviewOpen(false)}
-        title={`Invoice: ${selectedInvoice?.invoiceNumber}`}
-        subtitle={`Client: ${selectedInvoice?.clientName}`}
+        title={selectedInvoice ? `Invoice: ${selectedInvoice.invoiceNumber}` : 'Invoice Preview'}
+        subtitle={selectedInvoice ? `Client: ${selectedInvoice.clientName || 'Client'}` : ''}
         maxWidth="max-w-3xl"
       >
         {selectedInvoice && (

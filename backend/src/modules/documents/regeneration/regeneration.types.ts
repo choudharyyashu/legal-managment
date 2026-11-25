@@ -30,7 +30,7 @@ export interface DocumentDiffComparison {
 
 export interface DetectChangesInput {
   matterId: string;
-  changedEntity: 'Client' | 'Matter' | 'Incident' | 'Insurance' | 'MedicalProvider' | 'MedicalRecords';
+  changedEntity: string;
   changedFields: Record<string, any>;
   changeSummary?: string;
 }

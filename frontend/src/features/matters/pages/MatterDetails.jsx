@@ -61,8 +61,8 @@ import { DocumentRequestModal } from '../components/DocumentRequestModal';
 
 const buildInitialNextActions = (matter) => {
   if (!matter) return [];
-  const leadAttorney = matter.responsibleAttorneyName || 'Thomas Bludworth, Esq.';
-  const staffMember = matter.assignedStaffNames?.[0] || 'Marcus Vance';
+  const leadAttorney = matter.responsibleAttorneyName || 'Assigned Counsel';
+  const staffMember = matter.assignedStaffNames?.[0] || 'Assigned Staff';
   const clientName = matter.clientName || 'Client';
 
   return [
@@ -178,8 +178,8 @@ const buildInitialUnresolvedRequests = (matter) => {
 
 const buildInitialApprovals = (matter) => {
   if (!matter) return [];
-  const attorney = matter.responsibleAttorneyName || 'Thomas Bludworth, Esq.';
-  const staff = matter.assignedStaffNames?.[0] || 'Marcus Vance';
+  const attorney = matter.responsibleAttorneyName || 'Assigned Counsel';
+  const staff = matter.assignedStaffNames?.[0] || 'Assigned Staff';
   return [
     {
       id: `${matter.id}-ap-1`,
@@ -196,7 +196,7 @@ const buildInitialApprovals = (matter) => {
       id: `${matter.id}-ap-2`,
       itemName: 'Written Discovery Objections & Privilege Log Draft',
       itemType: 'Discovery Response',
-      submittedBy: 'Sarah Jenkins, Esq.',
+      submittedBy: attorney,
       submissionDate: '2026-11-09',
       assignedAttorney: attorney,
       status: 'In Review',

@@ -277,7 +277,7 @@ export function TimeProvider({ children }) {
     }
   };
 
-  const exportApprovedToCosmoLex = (entryIds, userName = 'Rachel Adams') => {
+  const exportApprovedToCosmoLex = (entryIds, userName = 'Billing Staff') => {
     const selectedEntries = timeEntries.filter((t) => entryIds.includes(t.id) && t.status === 'Approved');
     if (selectedEntries.length === 0) return null;
 

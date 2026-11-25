@@ -1,0 +1,31 @@
+SOFTWARE REQUIREMENT ADDENDUM — November 14, 2026
+AI insurance claim opening and follow-up
+Status: Required by Dusten; implementation and integration not yet verified.
+Reference: ScreenRecording_11-14-2026 15-34-49_1.mp4 (InTrial Manage advertisement). Requirements below specify desired behavior; the advertisement is not proof of working capabilities.
+
+1. Upload police/accident reports into the existing intake and matter workflow. Extract incident date, location, parties, vehicles, insurers and policy numbers. Show source page/text for each proposed field; flag missing, conflicting or uncertain information. Avoid duplicate parties, vehicles, insurers and claims.
+2. Present proposed changes for individual or batch approval, correction or rejection before applying them. Preserve the original report and an audit trail.
+3. From the approved insurer record, provide an AI call action to open a claim. Use approved matter information, navigate telephone menus, wait on hold and speak with the insurer. Give staff progress visibility and a way to stop or take over. Missing required facts must trigger a staff task rather than invented answers.
+4. Save insurer confirmation, claim number, adjuster name/contact information, call date/time/duration, transcript, outcome and any authorized recording to the correct matter. Distinguish confirmed claim creation from attempted calls, voicemail, failure and follow-up needed.
+5. Schedule assigned follow-up tasks with due dates and retry limits. Prevent duplicate calls/claims after retries or interrupted connections. Maintain one history of each attempt and its result.
+6. Pass approved data and results through the existing case-management/CosmoLex integration where supported. Identify unsupported fields or interfaces explicitly. Calls must appear in the normal daily activity/time review; AI operating duration must be distinguished from attorney or staff billable time.
+7. Restrict calls to approved administrative purposes and approved facts. Escalate requests for substantive legal positions, settlement authority or unknown facts to staff. Do not allow the system to improvise those answers.
+
+COMPLETION DEMONSTRATION
+Use a test matter and controlled insurer-call destination: upload a report, review and correct extracted fields, approve updates, complete an AI claim-opening call, retrieve the confirmed claim number/adjuster, and verify the saved matter history and follow-up task. Also demonstrate missing information, insurer unavailability, disconnected calls and retry deduplication. UI mockups alone do not satisfy this requirement.
+
+ADDITIONAL FEATURE VISIBLE IN THE RECORDING
+Firm/matter question answering with document attachments and a client-watch agent that flags potentially unhappy clients. Scope and acceptance criteria for those features require separate definition; the claim workflow above is the primary demonstrated sequence.
+
+INTEGRATION STATUS
+This addendum captures the requested scope. No source code, developer backlog or master specification has been changed or verified in this session. The current repository or master requirements location is needed to merge this into the active program.
+
+ADDITIONAL REQUIRED SCOPE — November 14, 2026
+Include in the next software developer directions alongside the AI call workflow.
+
+8. Automatically maintain a reusable insurance company directory with claims email addresses, phone numbers, fax numbers where used, portal URLs, blank claim forms and submission instructions. Retain information discovered during authorized case work with its source and last-verified date. Deduplicate companies; flag conflicting contacts and obsolete forms. Separate general insurer contacts from matter-specific adjuster details. Organize forms by company, claim type and applicable state. Blank reusable templates must contain no client data.
+9. Automatically select and fill the appropriate company claim form using approved intake, police report and matter data: claimant, insured, incident, vehicles, policy/claim numbers and attorney details. Support fillable PDFs and supported online forms; identify unsupported formats. Flag missing or conflicting required answers rather than guessing. Retain original templates and completed forms separately; save each completed form in the correct matter.
+10. Display the completed form and intended destination for review. Automatic preparation does not itself send, sign or submit forms; submission follows the separately authorized workflow. When enabled, retain submitted copies, receipts, confirmation numbers and follow-up tasks.
+
+ADDITIONAL ACCEPTANCE DEMONSTRATION
+Use two test matters for the same insurer. Save verified insurer contacts and a blank template from the first; reuse them for the second, automatically complete its form and flag a missing required answer. Verify no cross-client data, correct matter storage, and handling of changed templates and conflicting contact details.

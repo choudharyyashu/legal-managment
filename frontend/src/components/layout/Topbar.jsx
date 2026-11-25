@@ -123,9 +123,9 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
   };
 
   return (
-    <header ref={topbarRef} className="sticky top-0 z-30 h-16 bg-white border-b border-[#D9D6CF] shadow-subtle flex items-center justify-between px-4 sm:px-6">
+    <header ref={topbarRef} className="sticky top-0 z-30 h-16 bg-white border-b border-[#D9D6CF] shadow-subtle flex items-center justify-between gap-2 px-3 sm:px-6">
       {/* Left: Mobile menu button & Global Search */}
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 max-w-xl">
         <button
           onClick={onMenuToggle}
           className="md:hidden p-2 rounded text-[#06244B] hover:bg-[#F5F0E5] transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"

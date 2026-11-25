@@ -15,21 +15,39 @@ export const insurancePolicySchema = z.object({
   status: z.string().max(30).default('Active'),
 });
 
-export const incidentSchema = z.object({
-  incidentDate: z.string().optional().nullable(),
-  incidentTime: z.string().max(20).optional().nullable(),
-  incidentLocation: z.string().max(255).optional().nullable(),
-  accidentType: z.string().max(100).optional().nullable(),
-  description: z.string().optional().nullable(),
-  policeAgency: z.string().max(150).optional().nullable(),
-  reportNumber: z.string().max(100).optional().nullable(),
-  investigatingOfficer: z.string().max(150).optional().nullable(),
-  liabilityAssessment: z.string().max(50).optional().nullable(),
-  plaintiffFaultPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
-  adverseFaultPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
-  notes: z.string().optional().nullable(),
-  insurancePolicy: insurancePolicySchema.optional().nullable(),
-});
+export const incidentSchema = z
+  .object({
+    incidentDate: z.string().optional().nullable(),
+    incidentTime: z.string().max(20).optional().nullable(),
+    incidentLocation: z.string().max(255).optional().nullable(),
+    accidentType: z.string().max(100).optional().nullable(),
+    description: z.string().optional().nullable(),
+    policeAgency: z.string().max(150).optional().nullable(),
+    reportNumber: z.string().max(100).optional().nullable(),
+    investigatingOfficer: z.string().max(150).optional().nullable(),
+    liabilityAssessment: z.string().max(150).optional().nullable(),
+    plaintiffFaultPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
+    adverseFaultPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
+    notes: z.string().optional().nullable(),
+    insurancePolicy: insurancePolicySchema.optional().nullable(),
+  })
+  .superRefine((val, ctx) => {
+    if (
+      val.plaintiffFaultPercentage !== undefined &&
+      val.plaintiffFaultPercentage !== null &&
+      val.adverseFaultPercentage !== undefined &&
+      val.adverseFaultPercentage !== null
+    ) {
+      const sum = Number(val.plaintiffFaultPercentage) + Number(val.adverseFaultPercentage);
+      if (Math.abs(sum - 100) > 0.01) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Plaintiff and adverse fault percentages must total 100%.',
+          path: ['plaintiffFaultPercentage'],
+        });
+      }
+    }
+  });
 
 export const medicalProviderSchema = z.object({
   providerName: z.string().min(1, 'Provider name is required').max(200),

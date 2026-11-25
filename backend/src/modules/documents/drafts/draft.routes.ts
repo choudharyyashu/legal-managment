@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { DraftController } from './draft.controller.js';
+import { RegenerationController } from '../regeneration/regeneration.controller.js';
 import { requireAuth, requirePermission } from '../../../middleware/auth.js';
 import { validateRequest } from '../../../middleware/validate.js';
 import {
@@ -41,11 +42,17 @@ draftRouter.post(
   DraftController.generateDraft
 );
 
-// 4. Conversion of existing generated draft to PDF
+// 4. Safe Regeneration & Change Propagation endpoints (mounted before /:id)
 draftRouter.post(
-  '/:id/pdf',
-  requirePermission('documents:upload'),
-  DraftController.convertDraftToPdf
+  '/detect-changes',
+  requirePermission('documents:view'),
+  RegenerationController.detectChanges
+);
+
+draftRouter.get(
+  '/outdated',
+  requirePermission('documents:view'),
+  RegenerationController.getOutdatedDrafts
 );
 
 // 5. Listing generated drafts with pagination & filtering
@@ -56,7 +63,45 @@ draftRouter.get(
   DraftController.getDrafts
 );
 
-// 6. Approval: Finalize draft into legal document and complete review task
+// 6. Conversion of existing generated draft to PDF
+draftRouter.post(
+  '/:id/pdf',
+  requirePermission('documents:upload'),
+  DraftController.convertDraftToPdf
+);
+
+// 7. Safe Regeneration candidate lifecycle & manual edit preservation
+draftRouter.post(
+  '/:id/regenerate',
+  requirePermission('documents:upload'),
+  RegenerationController.generateCandidate
+);
+
+draftRouter.get(
+  '/:id/compare/:candidateId',
+  requirePermission('documents:view'),
+  RegenerationController.compareVersions
+);
+
+draftRouter.post(
+  '/:id/accept/:candidateId',
+  requirePermission('documents:approve'),
+  RegenerationController.acceptCandidate
+);
+
+draftRouter.post(
+  '/:id/reject/:candidateId',
+  requirePermission('documents:approve'),
+  RegenerationController.rejectCandidate
+);
+
+draftRouter.patch(
+  '/:id/manual-edits',
+  requirePermission('documents:upload'),
+  RegenerationController.markManualEdits
+);
+
+// 8. Approval: Finalize draft into legal document and complete review task
 draftRouter.post(
   '/:id/approve',
   requirePermission('documents:approve'),
@@ -64,7 +109,7 @@ draftRouter.post(
   DraftController.approveDraft
 );
 
-// 7. Rejection: Reject draft with required reason and create correction task
+// 9. Rejection: Reject draft with required reason and create correction task
 draftRouter.post(
   '/:id/reject',
   requirePermission('documents:approve'),
@@ -72,7 +117,7 @@ draftRouter.post(
   DraftController.rejectDraft
 );
 
-// 8. Transmission: Send approved document with verifiable transmission evidence
+// 10. Transmission: Send approved document with verifiable transmission evidence
 draftRouter.post(
   '/:id/send',
   requirePermission('documents:send'),
@@ -80,18 +125,16 @@ draftRouter.post(
   DraftController.sendDraft
 );
 
-// 9. Retrieve specific draft metadata
+// 11. Retrieve specific draft metadata
 draftRouter.get(
   '/:id',
   requirePermission('documents:view'),
   DraftController.getDraftById
 );
 
-// 10. Download generated document draft (format=docx or format=pdf)
+// 12. Download generated document draft (format=docx or format=pdf)
 draftRouter.get(
   '/:id/download',
   requirePermission('documents:view'),
   DraftController.downloadDraft
 );
-
-

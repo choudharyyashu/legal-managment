@@ -9,7 +9,7 @@ export function createLegalDocumentPdf({
   draftCode = 'DFT-2026-0001',
   client = 'Client Records',
   matter = 'General Legal Matter',
-  attorney = 'Thomas Bludworth, Esq.',
+  attorney = 'Assigned Counsel',
   date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
   customBodyLines = null,
 }) {

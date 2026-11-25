@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic test design;not executed against any application",
+  "matters": [
+    "M-A",
+    "M-B"
+  ],
+  "documents": [
+    {
+      "id": "D-1",
+      "source_case": "M-A",
+      "memberships": [
+        "Trial",
+        "Discovery"
+      ],
+      "relation_in_copied_case": "must be explicitly classified:reference or independent copy"
+    }
+  ],
+  "date_arithmetic_example": {
+    "start": "2024-01-01",
+    "end": "2027-01-01",
+    "calendar_days": 1096,
+    "legal_deadline_determined": false
+  },
+  "tests": [
+    {
+      "id": "AT-0406",
+      "scenario_and_expected_result": "Copy synthetic case M-A into M-B with emails,notes,staff,tasks,deadlines,insurer and provider rows. Preview every page family and flag omissions. A document pointer is labeled linked-only until an independent copy is verified. Deleting the original cannot silently remove the only expected evidence from M-B;the system must block,retain a valid version or explicitly require a reviewed dependency change. Retries preserve stable lineage and create no duplicate matters.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0407",
+      "scenario_and_expected_result": "Use two same-name matters with different clients,claim IDs,permissions and document versions. Preview source/destination IDs and all collisions before confirmation. Cancel makes no change. Confirm under authorization and retain an auditable ID redirect and per-record outcome. Inject a partial failure:avoid a success banner until reconciliation completes. Do not infer reversibility or field precedence from a historical guide.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0408",
+      "scenario_and_expected_result": "Place document D-1 in two case folders and a case list. Remove one membership:the source and other membership remain. A destructive delete identifies every affected reference and requires the configured authorization. Folder names do not imply independent file copies. Reconcile restore behavior and grouped Category/Subcategory views without moving or duplicating source bytes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0409",
+      "scenario_and_expected_result": "Select D-1/D-2 and two authorized destinations;preview four intended results and rejected destinations. Test keeping original document dates versus new dates while preserving separate source,created and copy timestamps. Compare hashes,category and subcategory. Inject one failed destination and retry only missing outputs. Verify whether copies are independently retained;the guide does not prove byte-storage or future-edit isolation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0410",
+      "scenario_and_expected_result": "Compose names from case number/name,category/subcategory,description,document date,counter,user,from/to,original filename and custom text. Preview final names,extensions,collisions and sanitized separators. Reorder/remove tokens and save a per-user default without altering source metadata. Verify all selected files and manifest hashes after export. Folder-layout options shown in the reference screen require explicit structure verification;folder-view single-item limits cannot silently drop a bulk selection.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0411",
+      "scenario_and_expected_result": "Generate a synthetic multi-plaintiff letter with local mode on and off. Require the intended party ID even when the desktop-side selection prompt differs. Generated,downloaded,Word-opened,merged,validated and sent are separate states. Block release with unresolved prompts or fields. Repeat with Word unavailable and verify a recoverable draft rather than a false completion. Preserve I/me/my voice and four-digit years in every letter date.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0412",
+      "scenario_and_expected_result": "Hide and reveal emails/photos for user U-1;source counts and matter evidence remain unchanged. U-2 sees their own preferences. Change U-1\u2019s new-note style;existing notes and U-2 defaults remain stable. A filtered document screen cannot prove an email was never filed. Daily review still includes every individual available call/text,with uncertain mappings retained and inaccessible sources identified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "extended_tests": [
+    {
+      "requirement": "F-0031",
+      "scenario_and_expected_result": "Use an approved deadline date and rule/jurisdiction version as source,then schedule90/60/30/7-day reminders. Include leap-year spans,changed incident dates,tolling inputs,missing anchors,role reassignment and timezone boundaries. A tutorial\u2019s1095-day shortcut is not legal authority;uncertain rule inputs stay unresolved.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0032",
+      "scenario_and_expected_result": "Preview exactly which synthetic matters and attorney/paralegal roles receive the plan. Test a single fixture before bulk activation;show old/new dates and require reviewed recomputation after an anchor changes. Do not claim reminders set without per-item schedule evidence.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0256",
+      "scenario_and_expected_result": "Send only in a future authorized sandbox:verify provider message ID,Sent-folder evidence and separate matter-file association. Test a failed filing after a successful send and an omitted client copy. Neither Sent-folder presence nor document-screen display can close the filing/client-copy task.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0404",
+      "scenario_and_expected_result": "Keep opening Word,merging and validating separate. An unresolved party prompt after opening prevents a ready-to-send state and reports the correct recovery step.",
+      "status": "Not executed"
+    }
+  ],
+  "preserved_scope": "All practice areas,intake,shared matter context,Exchange/Gmail filing/client copies,every individual call/text,insurer directory,claim forms andAI calls remain required. Attorney letters use I/me/my andfour-digit years."
+}

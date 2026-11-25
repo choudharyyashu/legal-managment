@@ -1,81 +1,199 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  FileText,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   Printer,
-  Lock,
   Download,
-  DollarSign,
   Award,
   Layers,
   RefreshCw,
-  Eye,
   Check,
-  User,
-  ExternalLink,
-  ChevronRight,
-  Info
+  Plus,
+  Save,
+  AlertCircle,
 } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useToast } from '../../../components/ui/Toast';
+import { immigrationService } from '../../../services/immigrationService';
+import { createLegalDocumentPdf } from '../../../utils/pdfGenerator';
 
-export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, onPackageCleared }) {
+export function FilingPackageAssemblerModal({
+  isOpen,
+  onClose,
+  immigrationCase,
+  cases = [],
+  onSelectCase,
+  onOpenCreatePetition,
+  onCaseSaved,
+  onPackageCleared,
+}) {
   const { addToast } = useToast();
   const [activeStep, setActiveStep] = useState(1);
-  const [isAttorneyCleared, setIsAttorneyCleared] = useState(immigrationCase?.filingPackage?.clearedByAttorney || false);
-  const [clearingAttorney, setClearingAttorney] = useState(immigrationCase?.assignedAttorneyName || 'Sarah Jenkins, Esq.');
+  const [isAttorneyCleared, setIsAttorneyCleared] = useState(false);
+  const [clearingAttorney, setClearingAttorney] = useState('');
   const [ethicsConfirmation, setEthicsConfirmation] = useState(false);
   const [showPrintCover, setShowPrintCover] = useState(false);
+  const [savingCase, setSavingCase] = useState(false);
 
-  // Multi-Form Auto-Fill Questionnaire State (Docketwise Single-Source-of-Truth)
   const [formData, setFormData] = useState({
-    beneficiaryName: immigrationCase?.beneficiaryName || 'Maria Santos Gomez',
-    maidenName: 'Maria Santos Rivera',
-    dob: '1994-08-22',
-    cob: 'Guadalajara, Jalisco, Mexico',
-    countryOfCitizenship: 'Mexico',
-    alienNumber: immigrationCase?.alienNumber || 'A-214-890-123',
-    ssnMasked: '***-**-3829',
-    classOfAdmission: 'B-2 Visitor for Pleasure',
-    i94Number: '92837482910',
-    lastEntryDate: '2025-06-15',
-    portOfEntry: 'Salt Lake City International Airport (SLC)',
-    petitionerName: immigrationCase?.petitionerName || 'David Aaron Santos',
-    petitionerCitizenship: 'U.S. Citizen by Birth (Utah Birth Certificate #142-92-0081)',
-    petitionerDob: '1992-04-10',
-    petitionerSsn: '***-**-5910',
-    marriageDate: '2024-11-18',
-    marriagePlace: 'Salt Lake City, Utah',
-    currentAddress: '742 South 1100 East, Salt Lake City, UT 84102',
-    category: immigrationCase?.category || 'Immediate Relative (Spouse of USC)',
+    beneficiaryName: '',
+    dob: '',
+    countryOfCitizenship: '',
+    alienNumber: '',
+    classOfAdmission: '',
+    i94Number: '',
+    lastEntryDate: '',
+    petitionerName: '',
+    currentAddress: '',
+    category: '',
   });
 
-  const [activeFormPreview, setActiveFormPreview] = useState('i130'); // 'g28', 'i130', 'i485', 'i765', 'i864'
+  const [activeFormPreview, setActiveFormPreview] = useState('i130');
 
-  if (!immigrationCase) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    setActiveStep(1);
+    setShowPrintCover(false);
+    setEthicsConfirmation(false);
+    setIsAttorneyCleared(Boolean(immigrationCase?.filingPackage?.clearedByAttorney));
+    setClearingAttorney(
+      immigrationCase?.assignedAttorneyName || immigrationCase?.assignedAttorney || ''
+    );
+    setFormData({
+      beneficiaryName:
+        immigrationCase?.beneficiaryName && immigrationCase.beneficiaryName !== '—'
+          ? immigrationCase.beneficiaryName
+          : '',
+      dob: immigrationCase?.beneficiaryDob || '',
+      countryOfCitizenship: immigrationCase?.countryOfCitizenship || '',
+      alienNumber:
+        immigrationCase?.alienNumber && immigrationCase.alienNumber !== '—'
+          ? immigrationCase.alienNumber
+          : '',
+      classOfAdmission: immigrationCase?.classOfAdmission || '',
+      i94Number: immigrationCase?.i94Number || '',
+      lastEntryDate: immigrationCase?.priorityDate || '',
+      petitionerName:
+        immigrationCase?.petitionerName && immigrationCase.petitionerName !== '—'
+          ? immigrationCase.petitionerName
+          : '',
+      currentAddress: immigrationCase?.currentAddress || '',
+      category: immigrationCase?.category || '',
+    });
+  }, [immigrationCase, isOpen]);
+
+  if (!isOpen) return null;
+
+  // Visible Empty / Case-Selection State when no petition is selected yet (fixes dead button on 0 petitions)
+  if (!immigrationCase) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="USCIS Multi-Form Auto-Fill Studio"
+        subtitle="Select or create an immigration petition to map fields across Forms G-28, I-130, I-485, I-765, and I-864"
+        maxWidth="max-w-2xl"
+      >
+        <div className="space-y-4 text-xs text-[#202A35]">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-bold text-sm text-amber-950">
+                No Active Immigration Petition Selected
+              </h4>
+              <p className="text-xs text-amber-900 mt-1">
+                Multi-Form Auto-Fill binds questionnaire values directly to an Immigration Matter record. Create a new petition or choose an existing immigration matter to begin.
+              </p>
+            </div>
+          </div>
+
+          {cases.length > 0 && (
+            <div className="p-3 bg-slate-50 border border-[#D9D6CF] rounded-lg space-y-2">
+              <label className="font-bold text-[#06244B] block uppercase text-[11px]">
+                Select Existing Immigration Matter
+              </label>
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  const found = cases.find((c) => c.id === e.target.value);
+                  if (found && onSelectCase) onSelectCase(found);
+                }}
+                className="w-full p-2 border border-[#D9D6CF] rounded bg-white font-medium"
+              >
+                <option value="" disabled>
+                  Choose an immigration petition...
+                </option>
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.matterNumber} — {c.title} ({c.beneficiaryName})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#D9D6CF]">
+            <Button size="sm" variant="outline" onClick={onClose}>
+              Close
+            </Button>
+            {onOpenCreatePetition && (
+              <Button
+                size="sm"
+                variant="primary"
+                icon={Plus}
+                onClick={onOpenCreatePetition}
+                className="bg-[#A4432B] hover:bg-[#8B3824]"
+              >
+                Create New Immigration Petition
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   const pkg = immigrationCase.filingPackage || {
     packageId: `PKG-IMM-2026-${immigrationCase.matterNumber?.replace(/\D/g, '') || '01'}`,
-    status: 'Paralegal Assembled',
-    g28Executed: true,
-    checkVoucherAmount: 1975,
+    status: 'Draft Assembly',
     exhibitTabs: [
-      { tab: 'Tab A', title: 'Form G-28 Notice of Entry of Appearance as Attorney of Record', status: 'Verified' },
-      { tab: 'Tab B', title: 'Primary Petitions: Form I-130, Form I-485, and Form I-765', status: 'Verified' },
-      { tab: 'Tab C', title: "Petitioner's Proof of U.S. Citizenship (Certified Utah Birth Certificate)", status: 'Verified' },
-      { tab: 'Tab D', title: "Beneficiary's Civil Records (Mexican Birth Certificate with Certified English Translation)", status: 'Verified' },
-      { tab: 'Tab E', title: 'Evidence of Bona Fide Marriage (Certified Marriage Certificate, Joint Lease, Joint Bank Statements, Photos)', status: 'Verified' },
-      { tab: 'Tab F', title: 'Form I-864 Affidavit of Support with Sponsor 2023-2025 IRS Tax Transcripts & W-2s', status: 'Verified' },
-      { tab: 'Tab G', title: 'Form G-1145 E-Notification & Two (2) Passport-Style Photographs (DHS Specifications)', status: 'Verified' }
-    ]
+      { tab: 'Tab A', title: 'Form G-28 Notice of Entry of Appearance as Attorney of Record' },
+      { tab: 'Tab B', title: 'Primary Petitions: Form I-130, Form I-485, and Form I-765' },
+      { tab: 'Tab C', title: "Petitioner's Proof of U.S. Citizenship / Status" },
+      { tab: 'Tab D', title: "Beneficiary's Civil Records & Certified Translations" },
+      { tab: 'Tab E', title: 'Supporting Relationship / Employment Eligibility Evidence' },
+      { tab: 'Tab F', title: 'Form I-864 Affidavit of Support & Financial Records' },
+      { tab: 'Tab G', title: 'Form G-1145 E-Notification & Supporting Photographs' },
+    ],
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveToCase = async () => {
+    const matterId = immigrationCase.matterId || immigrationCase.id;
+    if (!matterId) return;
+    setSavingCase(true);
+    try {
+      await immigrationService.saveImmigrationCase(matterId, {
+        visaCategory: formData.category || immigrationCase.category,
+        beneficiaryName: formData.beneficiaryName || undefined,
+        alienRegistrationNum: formData.alienNumber || undefined,
+        countryOfCitizenship: formData.countryOfCitizenship || undefined,
+        classOfAdmission: formData.classOfAdmission || undefined,
+        i94Number: formData.i94Number || undefined,
+        priorityDate: formData.lastEntryDate || undefined,
+      });
+      addToast('Questionnaire fields saved to Immigration Case record.', 'success');
+      if (onCaseSaved) await onCaseSaved();
+    } catch (err) {
+      addToast(err?.message || 'Could not persist questionnaire fields.', 'error');
+    } finally {
+      setSavingCase(false);
+    }
   };
 
   const handleClearPackage = () => {
@@ -85,46 +203,108 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
     }
     setIsAttorneyCleared(true);
     if (onPackageCleared) {
-      onPackageCleared(immigrationCase.id, clearingAttorney);
+      onPackageCleared(immigrationCase.id, clearingAttorney || 'Supervising Counsel');
     }
     addToast(
-      `Package officially certified by ${clearingAttorney}! Locked for USCIS dispatch.`,
+      `Package certified for filing review by ${clearingAttorney || 'Supervising Counsel'}.`,
       'success'
     );
   };
+
+  const handleDownloadPdfPackage = () => {
+    const lines = [
+      'HEUGLY & BLUDWORTH, ATTORNEYS AT LAW',
+      'IMMIGRATION FILING PACKAGE & FORM FIELD SUMMARY',
+      '=========================================================================',
+      `Matter Number: ${immigrationCase.matterNumber}`,
+      `Package Reference: ${pkg.packageId}`,
+      `Category: ${formData.category || 'Immigration Petition'}`,
+      `Beneficiary: ${formData.beneficiaryName || 'Pending Entry'}`,
+      `A-Number: ${formData.alienNumber || 'Pending'}`,
+      `I-94 Record: ${formData.i94Number || 'Pending'}`,
+      `Citizenship: ${formData.countryOfCitizenship || 'Pending'}`,
+      `Petitioner / Sponsor: ${formData.petitionerName || 'Pending'}`,
+      `Counsel: ${clearingAttorney || 'Assigned Counsel'}`,
+      ' ',
+      'INCLUDED FORMS & INDEXED EXHIBITS:',
+      ...pkg.exhibitTabs.map((t) => `- ${t.tab}: ${t.title}`),
+      ' ',
+      'NOTE: Draft package prepared for attorney verification prior to USCIS submission.',
+    ];
+
+    const pdfBlob = createLegalDocumentPdf({
+      title: `USCIS Filing Package - ${immigrationCase.matterNumber}`,
+      draftCode: pkg.packageId,
+      client: formData.beneficiaryName || immigrationCase.clientName || 'Client',
+      matter: `${immigrationCase.matterNumber} - ${immigrationCase.title}`,
+      attorney: clearingAttorney || 'Assigned Counsel',
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      customBodyLines: lines,
+    });
+
+    const url = window.URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${immigrationCase.matterNumber || 'IMM'}_Filing_Package.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    addToast('USCIS Filing Package PDF generated and downloaded.', 'success');
+  };
+
+  const beneficiaryParts = (formData.beneficiaryName || '').trim().split(/\s+/);
+  const firstName = beneficiaryParts[0] || '—';
+  const lastName = beneficiaryParts.length > 1 ? beneficiaryParts[beneficiaryParts.length - 1] : '—';
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={`USCIS Multi-Form Auto-Fill & Package Assembler: ${immigrationCase.matterNumber}`}
-      subtitle={`Beneficiary: ${formData.beneficiaryName} • Category: ${formData.category}`}
+      subtitle={`Beneficiary: ${formData.beneficiaryName || 'Unassigned'} • Category: ${formData.category || 'General'}`}
       maxWidth="max-w-4xl"
     >
       <div className="space-y-5 text-xs text-[#202A35]">
-        {/* Simulation Notice Banner */}
-        <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-lg flex items-center justify-between text-amber-900">
+        {/* Operational Notice Banner */}
+        <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg flex flex-wrap items-center justify-between gap-2 text-emerald-950">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-amber-700 shrink-0" />
+            <Layers className="w-4 h-4 text-emerald-700 shrink-0" />
             <span>
-              <strong>[DEMO SIMULATION] Docketwise-Engineered Multi-Form Auto-Fill:</strong> Changes to questionnaire inputs map simultaneously across Forms G-28, I-130, I-485, I-765, and I-864 without duplicate data entry.
+              <strong>Connected Multi-Form Auto-Fill:</strong> Fields map simultaneously across Forms G-28, I-130, I-485, I-765, and I-864 and save to the Immigration Case record.
             </span>
           </div>
-          <span className="font-bold bg-amber-200 px-2 py-0.5 rounded text-[10px]">PROTOTYPE</span>
+          {cases.length > 1 && onSelectCase && (
+            <select
+              value={immigrationCase.id}
+              onChange={(e) => {
+                const found = cases.find((c) => c.id === e.target.value);
+                if (found) onSelectCase(found);
+              }}
+              className="text-[11px] px-2 py-1 rounded border border-emerald-300 bg-white font-semibold"
+            >
+              {cases.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.matterNumber} — {c.beneficiaryName}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Stepper Header */}
-        <div className="grid grid-cols-4 gap-2 border-b border-[#D9D6CF] pb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-b border-[#D9D6CF] pb-3">
           {[
             { num: 1, label: '1. Multi-Form Auto-Fill', sub: 'Simultaneous Mapping' },
             { num: 2, label: '2. Indexed Exhibits', sub: 'Tabs A through G' },
-            { num: 3, label: '3. Fee Vouchers', sub: 'Trust Disbursement' },
-            { num: 4, label: '4. Attorney Clearance', sub: 'Cover Page & Export' },
-          ].map(s => (
+            { num: 3, label: '3. Fee Schedule', sub: 'USCIS Filing Fees' },
+            { num: 4, label: '4. Attorney Clearance', sub: 'Cover Page & PDF' },
+          ].map((s) => (
             <button
               key={s.num}
+              type="button"
               onClick={() => setActiveStep(s.num)}
-              className={`p-2.5 rounded-lg text-left transition-all border ${
+              className={`p-2.5 rounded-lg text-left transition-all border cursor-pointer ${
                 activeStep === s.num
                   ? 'bg-[#06244B] border-[#06244B] text-white font-bold shadow-sm'
                   : 'bg-slate-50 border-[#D9D6CF] text-[#667085] hover:bg-slate-100 font-medium'
@@ -141,25 +321,28 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 bg-[#F5F0E5] p-3 rounded-lg border border-[#D9D6CF]">
               <div className="flex items-center gap-2 text-[#06244B]">
-                <RefreshCw className="w-4 h-4 text-emerald-700 animate-spin-slow" />
-                <span className="font-bold">Docketwise Auto-Fill Active:</span>
+                <RefreshCw className="w-4 h-4 text-emerald-700" />
+                <span className="font-bold">Live Form Mapping Active:</span>
                 <span className="text-[#667085]">
-                  Updating any field updates 5 core USCIS forms simultaneously.
+                  Updating any input syncs G-28, I-130, I-485, I-765, and I-864 previews.
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                  <Check className="w-3 h-3" /> 5 Forms Synchronized (0 Errors)
-                </span>
-              </div>
+              <Button
+                size="xs"
+                variant="primary"
+                icon={Save}
+                onClick={handleSaveToCase}
+                disabled={savingCase}
+              >
+                {savingCase ? 'Saving...' : 'Save Fields to Case'}
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Left Column: Shared Client Questionnaire Fields */}
               <div className="p-4 bg-slate-50 border border-[#D9D6CF] rounded-lg space-y-3">
                 <h4 className="font-bold text-xs uppercase text-[#06244B] border-b border-slate-200 pb-1.5 flex items-center justify-between">
-                  <span>Intake Questionnaire Data (Single Source of Truth)</span>
-                  <span className="text-[10px] text-[#A4432B] font-mono font-bold">CLIENT INPUT</span>
+                  <span>Intake Questionnaire Data</span>
+                  <span className="text-[10px] text-[#A4432B] font-mono font-bold">CASE INPUT</span>
                 </h4>
 
                 <div className="space-y-2.5">
@@ -167,6 +350,7 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                     <Input
                       label="Beneficiary Full Legal Name"
                       value={formData.beneficiaryName}
+                      placeholder="Enter beneficiary full legal name"
                       onChange={(e) => handleInputChange('beneficiaryName', e.target.value)}
                     />
                     <span className="text-[10px] text-emerald-700 font-mono">
@@ -175,62 +359,55 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Input
-                        label="Alien # (A-Number)"
-                        value={formData.alienNumber}
-                        onChange={(e) => handleInputChange('alienNumber', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        label="Date of Birth"
-                        type="date"
-                        value={formData.dob}
-                        onChange={(e) => handleInputChange('dob', e.target.value)}
-                      />
-                    </div>
+                    <Input
+                      label="Alien # (A-Number)"
+                      value={formData.alienNumber}
+                      placeholder="A-###-###-###"
+                      onChange={(e) => handleInputChange('alienNumber', e.target.value)}
+                    />
+                    <Input
+                      label="Date of Birth"
+                      type="date"
+                      value={formData.dob}
+                      onChange={(e) => handleInputChange('dob', e.target.value)}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Input
-                        label="Country of Citizenship"
-                        value={formData.countryOfCitizenship}
-                        onChange={(e) => handleInputChange('countryOfCitizenship', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        label="Current I-94 Record #"
-                        value={formData.i94Number}
-                        onChange={(e) => handleInputChange('i94Number', e.target.value)}
-                      />
-                    </div>
+                    <Input
+                      label="Country of Citizenship"
+                      value={formData.countryOfCitizenship}
+                      placeholder="Country"
+                      onChange={(e) => handleInputChange('countryOfCitizenship', e.target.value)}
+                    />
+                    <Input
+                      label="Current I-94 Record #"
+                      value={formData.i94Number}
+                      placeholder="11-char I-94 #"
+                      onChange={(e) => handleInputChange('i94Number', e.target.value)}
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Input
-                        label="Most Recent Entry Date"
-                        type="date"
-                        value={formData.lastEntryDate}
-                        onChange={(e) => handleInputChange('lastEntryDate', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        label="Class of Admission"
-                        value={formData.classOfAdmission}
-                        onChange={(e) => handleInputChange('classOfAdmission', e.target.value)}
-                      />
-                    </div>
+                    <Input
+                      label="Priority / Entry Date"
+                      type="date"
+                      value={formData.lastEntryDate}
+                      onChange={(e) => handleInputChange('lastEntryDate', e.target.value)}
+                    />
+                    <Input
+                      label="Class of Admission"
+                      value={formData.classOfAdmission}
+                      placeholder="e.g. B-2, H-1B, F-1"
+                      onChange={(e) => handleInputChange('classOfAdmission', e.target.value)}
+                    />
                   </div>
 
                   <div>
                     <Input
                       label="Petitioner / Qualifying Sponsor"
                       value={formData.petitionerName}
+                      placeholder="Petitioner / Sponsor name"
                       onChange={(e) => handleInputChange('petitionerName', e.target.value)}
                     />
                     <span className="text-[10px] text-emerald-700 font-mono">
@@ -238,26 +415,23 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                     </span>
                   </div>
 
-                  <div>
-                    <Input
-                      label="Joint Residential Address"
-                      value={formData.currentAddress}
-                      onChange={(e) => handleInputChange('currentAddress', e.target.value)}
-                    />
-                  </div>
+                  <Input
+                    label="Residential Address"
+                    value={formData.currentAddress}
+                    placeholder="Street, City, State, ZIP"
+                    onChange={(e) => handleInputChange('currentAddress', e.target.value)}
+                  />
                 </div>
               </div>
 
-              {/* Right Column: Live Target Form Preview */}
               <div className="p-4 bg-white border border-[#D9D6CF] rounded-lg space-y-3 shadow-sm flex flex-col">
                 <div className="flex items-center justify-between border-b border-[#D9D6CF] pb-2">
                   <h4 className="font-bold text-xs uppercase text-[#06244B]">
                     Real-Time Populated Form Field Inspector
                   </h4>
-                  <span className="text-[10px] text-[#667085]">Previewing Auto-Fill</span>
+                  <span className="text-[10px] text-[#667085]">Live Field Preview</span>
                 </div>
 
-                {/* Form Selector Tabs */}
                 <div className="flex gap-1 overflow-x-auto text-xs pb-1">
                   {[
                     { id: 'i130', name: 'Form I-130' },
@@ -265,11 +439,12 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                     { id: 'i765', name: 'Form I-765' },
                     { id: 'g28', name: 'Form G-28' },
                     { id: 'i864', name: 'Form I-864' },
-                  ].map(f => (
+                  ].map((f) => (
                     <button
                       key={f.id}
+                      type="button"
                       onClick={() => setActiveFormPreview(f.id)}
-                      className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-all ${
+                      className={`px-2.5 py-1 rounded text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                         activeFormPreview === f.id
                           ? 'bg-[#A4432B] text-white shadow-sm'
                           : 'bg-slate-100 text-[#06244B] hover:bg-slate-200'
@@ -280,40 +455,34 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                   ))}
                 </div>
 
-                {/* Preview Box */}
                 <div className="flex-1 p-3.5 bg-slate-50 border border-slate-300 rounded font-mono text-xs space-y-2 overflow-y-auto max-h-80">
                   {activeFormPreview === 'i130' && (
                     <div className="space-y-1.5 text-slate-800">
                       <div className="font-bold text-[#06244B] border-b pb-1">
-                        FORM I-130: PETITION FOR ALIEN RELATIVE (EDITION 04/01/24)
+                        FORM I-130: PETITION FOR ALIEN RELATIVE
                       </div>
-                      <div><strong>Part 1. Relationship:</strong> 1.a. Spouse</div>
-                      <div><strong>Part 2. Petitioner Legal Name:</strong> {formData.petitionerName}</div>
-                      <div><strong>Part 2, Item 13.a. Citizenship:</strong> {formData.petitionerCitizenship}</div>
-                      <div><strong>Part 4, Item 4.a. Beneficiary Family Name:</strong> {formData.beneficiaryName.split(' ').slice(-1)[0]}</div>
-                      <div><strong>Part 4, Item 4.b. Beneficiary Given Name:</strong> {formData.beneficiaryName.split(' ')[0]}</div>
-                      <div><strong>Part 4, Item 10. Alien Registration Number:</strong> {formData.alienNumber}</div>
-                      <div><strong>Part 4, Item 11. Date of Birth:</strong> {formData.dob}</div>
-                      <div><strong>Part 4, Item 13. Country of Birth:</strong> {formData.cob}</div>
-                      <div><strong>Part 4, Item 46.a. Date of Arrival:</strong> {formData.lastEntryDate}</div>
-                      <div><strong>Part 4, Item 46.b. I-94 Arrival Number:</strong> {formData.i94Number}</div>
-                      <div><strong>Part 4, Item 46.c. Class of Admission:</strong> {formData.classOfAdmission}</div>
+                      <div><strong>Part 2. Petitioner Legal Name:</strong> {formData.petitionerName || '—'}</div>
+                      <div><strong>Part 4, Family Name:</strong> {lastName}</div>
+                      <div><strong>Part 4, Given Name:</strong> {firstName}</div>
+                      <div><strong>Part 4, Alien Registration #:</strong> {formData.alienNumber || '—'}</div>
+                      <div><strong>Part 4, Date of Birth:</strong> {formData.dob || '—'}</div>
+                      <div><strong>Part 4, Citizenship:</strong> {formData.countryOfCitizenship || '—'}</div>
+                      <div><strong>Part 4, I-94 Number:</strong> {formData.i94Number || '—'}</div>
+                      <div><strong>Part 4, Class of Admission:</strong> {formData.classOfAdmission || '—'}</div>
                     </div>
                   )}
 
                   {activeFormPreview === 'i485' && (
                     <div className="space-y-1.5 text-slate-800">
                       <div className="font-bold text-[#06244B] border-b pb-1">
-                        FORM I-485: APPLICATION TO ADJUST STATUS (EDITION 04/01/24)
+                        FORM I-485: APPLICATION TO ADJUST STATUS
                       </div>
-                      <div><strong>Part 1, Item 1.a. Alien Registration #:</strong> {formData.alienNumber}</div>
-                      <div><strong>Part 1, Item 2. Social Security Number:</strong> {formData.ssnMasked}</div>
-                      <div><strong>Part 1, Item 3. Legal Name:</strong> {formData.beneficiaryName}</div>
-                      <div><strong>Part 1, Item 7. Physical Address:</strong> {formData.currentAddress}</div>
-                      <div><strong>Part 1, Item 22. Date of Last Entry:</strong> {formData.lastEntryDate}</div>
-                      <div><strong>Part 1, Item 23. Port of Entry:</strong> {formData.portOfEntry}</div>
-                      <div><strong>Part 1, Item 24. Current Status:</strong> {formData.classOfAdmission}</div>
-                      <div><strong>Part 2, Item 1. Filing Category:</strong> Immediate Relative (INA § 201(b))</div>
+                      <div><strong>Part 1, Alien Registration #:</strong> {formData.alienNumber || '—'}</div>
+                      <div><strong>Part 1, Legal Name:</strong> {formData.beneficiaryName || '—'}</div>
+                      <div><strong>Part 1, Physical Address:</strong> {formData.currentAddress || '—'}</div>
+                      <div><strong>Part 1, Entry / Priority Date:</strong> {formData.lastEntryDate || '—'}</div>
+                      <div><strong>Part 1, Current Status:</strong> {formData.classOfAdmission || '—'}</div>
+                      <div><strong>Part 2, Category:</strong> {formData.category || '—'}</div>
                     </div>
                   )}
 
@@ -322,11 +491,10 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                       <div className="font-bold text-[#06244B] border-b pb-1">
                         FORM I-765: APPLICATION FOR EMPLOYMENT AUTHORIZATION
                       </div>
-                      <div><strong>Part 1. Reason for Applying:</strong> 1.a. Initial permission to accept employment</div>
-                      <div><strong>Part 2, Item 1. Full Legal Name:</strong> {formData.beneficiaryName}</div>
-                      <div><strong>Part 2, Item 8. Alien Registration #:</strong> {formData.alienNumber}</div>
-                      <div><strong>Part 2, Item 21.a. Form I-94 Number:</strong> {formData.i94Number}</div>
-                      <div><strong>Part 2, Item 27. Eligibility Category:</strong> (c)(9) Adjustment Applicant</div>
+                      <div><strong>Part 2, Full Legal Name:</strong> {formData.beneficiaryName || '—'}</div>
+                      <div><strong>Part 2, Alien Registration #:</strong> {formData.alienNumber || '—'}</div>
+                      <div><strong>Part 2, Form I-94 Number:</strong> {formData.i94Number || '—'}</div>
+                      <div><strong>Part 2, Citizenship:</strong> {formData.countryOfCitizenship || '—'}</div>
                     </div>
                   )}
 
@@ -335,50 +503,50 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                       <div className="font-bold text-[#06244B] border-b pb-1">
                         FORM G-28: NOTICE OF ENTRY OF APPEARANCE AS ATTORNEY
                       </div>
-                      <div><strong>Part 1. Attorney Name:</strong> {clearingAttorney}</div>
-                      <div><strong>Part 1, Item 3. Law Practice:</strong> Heugly &amp; Bludworth, Attorneys at Law</div>
-                      <div><strong>Part 1, Item 6. Utah State Bar Number:</strong> 14902</div>
-                      <div><strong>Part 3, Item 1. Client Legal Name:</strong> {formData.beneficiaryName}</div>
-                      <div><strong>Part 3, Item 4. Client Entity:</strong> Beneficiary / Adjustment Applicant</div>
+                      <div><strong>Part 1. Attorney Name:</strong> {clearingAttorney || 'Assigned Counsel'}</div>
+                      <div><strong>Part 1, Law Firm:</strong> Heugly &amp; Bludworth, Attorneys at Law</div>
+                      <div><strong>Part 3, Client Legal Name:</strong> {formData.beneficiaryName || '—'}</div>
+                      <div><strong>Matter Reference:</strong> {immigrationCase.matterNumber}</div>
                     </div>
                   )}
 
                   {activeFormPreview === 'i864' && (
                     <div className="space-y-1.5 text-slate-800">
                       <div className="font-bold text-[#06244B] border-b pb-1">
-                        FORM I-864: AFFIDAVIT OF SUPPORT UNDER SECTION 213A
+                        FORM I-864: AFFIDAVIT OF SUPPORT
                       </div>
-                      <div><strong>Part 1. Sponsor Legal Name:</strong> {formData.petitionerName}</div>
-                      <div><strong>Part 2. Immigrant Principal:</strong> {formData.beneficiaryName}</div>
-                      <div><strong>Part 3. Household Size:</strong> 2 (Sponsor + Spouse Beneficiary)</div>
-                      <div><strong>Part 5. 125% Poverty Line Benchmark:</strong> $25,550 (Sponsor Income: $92,500 ✓)</div>
+                      <div><strong>Part 1. Sponsor Legal Name:</strong> {formData.petitionerName || '—'}</div>
+                      <div><strong>Part 2. Immigrant Principal:</strong> {formData.beneficiaryName || '—'}</div>
+                      <div><strong>Part 2, Mailing Address:</strong> {formData.currentAddress || '—'}</div>
                     </div>
                   )}
                 </div>
 
                 <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 text-[11px] flex items-center justify-between">
-                  <span>Cross-form field integrity certified by Heugly &amp; Bludworth engine.</span>
-                  <span className="font-bold">100% Synced ✓</span>
+                  <span>Cross-form values synchronized with current questionnaire state.</span>
+                  <span className="font-bold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Synced
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 2: Indexed Exhibit Tabs & Evidentiary Binder */}
+        {/* STEP 2: Indexed Exhibit Tabs */}
         {activeStep === 2 && (
           <div className="space-y-3">
             <div className="flex justify-between items-center border-b border-[#D9D6CF] pb-2">
               <div>
                 <h4 className="font-bold text-sm text-[#06244B]">
-                  Two-Column Statutory Indexed Exhibit Tabs (USCIS Submission Binder)
+                  Indexed Exhibit Tabs (USCIS Submission Binder)
                 </h4>
                 <span className="text-xs text-[#667085]">
-                  Tabbed according to USCIS Adjudicator's Field Manual (AFM) packaging standards.
+                  Organized packet structure for attorney verification before filing.
                 </span>
               </div>
-              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-300">
-                7 of 7 Tabs Compliant ✓
+              <span className="text-xs font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded border">
+                {pkg.exhibitTabs.length} Tabs Configured
               </span>
             </div>
 
@@ -388,31 +556,13 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                   <tr>
                     <th className="p-3 w-20">Tab ID</th>
                     <th className="p-3">Exhibit Description &amp; Evidentiary Category</th>
-                    <th className="p-3">Requirement Basis</th>
-                    <th className="p-3 text-right">Verification</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9D6CF]">
                   {pkg.exhibitTabs.map((tab, idx) => (
                     <tr key={idx} className="hover:bg-slate-50">
                       <td className="p-3 font-bold text-[#A4432B] font-mono text-sm">{tab.tab}</td>
-                      <td className="p-3 font-semibold text-[#06244B]">
-                        {tab.title}
-                      </td>
-                      <td className="p-3 text-[#667085] text-[11px]">
-                        {idx === 0 && '8 CFR § 292.4(a)'}
-                        {idx === 1 && '8 CFR § 245.2 Concurrent Filing'}
-                        {idx === 2 && '8 CFR § 204.1(g)(1)'}
-                        {idx === 3 && '8 CFR § 103.2(b)(3) Translation'}
-                        {idx === 4 && '8 CFR § 204.2(a)(1)(i)(B)'}
-                        {idx === 5 && '8 CFR § 213a.2(a)(1)'}
-                        {idx === 6 && 'Form Instructions Part 8'}
-                      </td>
-                      <td className="p-3 text-right">
-                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold">
-                          Indexed &amp; Verified ✓
-                        </span>
-                      </td>
+                      <td className="p-3 font-semibold text-[#06244B]">{tab.title}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -421,126 +571,67 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
           </div>
         )}
 
-        {/* STEP 3: Statutory Filing Fee Vouchers */}
+        {/* STEP 3: Filing Fee Schedule Reference */}
         {activeStep === 3 && (
           <div className="space-y-3">
             <h4 className="font-bold text-sm text-[#06244B]">
-              Statutory USCIS Filing Fee Vouchers &amp; Client Trust Disbursement
+              USCIS Filing Fee Reference (Verify Current Fee Schedule Before Disbursement)
             </h4>
             <div className="p-4 bg-slate-50 rounded-lg border border-[#D9D6CF] space-y-3">
               <div className="flex justify-between items-center text-xs py-1.5 border-b border-slate-200">
-                <div>
-                  <span className="font-bold text-[#06244B]">Form I-130 Petition for Alien Relative:</span>
-                  <span className="text-[11px] text-[#667085] block">Payable to: U.S. Department of Homeland Security</span>
-                </div>
-                <span className="font-mono font-bold text-sm text-[#06244B]">$535.00</span>
+                <span className="font-bold text-[#06244B]">Form I-130 Petition for Alien Relative</span>
+                <span className="font-mono text-[#06244B]">Per current USCIS G-1055 fee schedule</span>
               </div>
               <div className="flex justify-between items-center text-xs py-1.5 border-b border-slate-200">
-                <div>
-                  <span className="font-bold text-[#06244B]">Form I-485 Application to Register Permanent Residence / Adjust Status:</span>
-                  <span className="text-[11px] text-[#667085] block">Includes mandatory biometrics services fee</span>
-                </div>
-                <span className="font-mono font-bold text-sm text-[#06244B]">$1,440.00</span>
+                <span className="font-bold text-[#06244B]">Form I-485 Application to Adjust Status</span>
+                <span className="font-mono text-[#06244B]">Per current USCIS G-1055 fee schedule</span>
               </div>
-              <div className="flex justify-between items-center text-xs py-1.5 border-b border-slate-200">
-                <div>
-                  <span className="font-bold text-[#06244B]">Form I-765 (EAD) &amp; Form I-131 (Advance Parole):</span>
-                  <span className="text-[11px] text-[#667085] block">Concurrent adjustment applicant discount tier</span>
-                </div>
-                <span className="font-mono font-semibold text-[#667085]">$0.00</span>
-              </div>
-              <div className="pt-2 flex justify-between items-center font-bold text-base text-[#06244B]">
-                <span>Total Statutory Check Voucher:</span>
-                <span className="text-[#A4432B] font-mono text-lg">$1,975.00</span>
-              </div>
-              <div className="p-3 bg-white rounded border border-[#D9D6CF] text-xs space-y-1">
-                <div className="flex justify-between text-[#06244B]">
-                  <span>Trust Account Drawn On:</span>
-                  <strong>Heugly &amp; Bludworth Client Trust / IOLTA Account (Chase #****4912)</strong>
-                </div>
-                <div className="flex justify-between text-emerald-700">
-                  <span>Client Dedicated Trust Balance:</span>
-                  <strong>$15,000.00 Available (Sufficient Funds Confirmed ✓)</strong>
-                </div>
+              <div className="text-[11px] text-[#667085]">
+                Disbursements require separate trust/operating approval in the Billing &amp; Trust module.
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 4: Supervising Attorney Clearance & Full Submission Package */}
+        {/* STEP 4: Supervising Attorney Clearance & PDF Package Export */}
         {activeStep === 4 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-[#D9D6CF] pb-2">
               <div>
                 <h4 className="font-bold text-sm text-[#06244B] flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-[#A4432B]" />
-                  Supervising Attorney Clearance Gate &amp; Formal Submission Cover
+                  Supervising Attorney Clearance &amp; Package Export
                 </h4>
                 <span className="text-xs text-[#667085]">
-                  Formal certification required under Utah Rules of Professional Conduct (RPC 1.1 &amp; 5.3).
+                  Preparation does not file with USCIS. Attorney verification is required before dispatch.
                 </span>
               </div>
               {isAttorneyCleared && (
                 <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-1 rounded text-xs flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  CERTIFIED FOR FILING
+                  CLEARED FOR DISPATCH
                 </span>
               )}
             </div>
 
-            {isAttorneyCleared ? (
-              <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    <span>PACKAGE OFFICIALLY CERTIFIED &amp; LOCKED FOR USCIS DISPATCH</span>
-                  </div>
-                  <span className="font-mono text-xs font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">
-                    LOCKED
-                  </span>
-                </div>
-                <p className="text-emerald-950 text-xs leading-relaxed">
-                  Supervising attorney <strong>{clearingAttorney}</strong> has reviewed the petition, G-28 appearance, 7 indexed exhibit tabs, and verified the $1,975 trust disbursement. The formal legal submission cover letter and table of contents are ready for courier dispatch.
-                </p>
-                <div className="pt-2 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    icon={Printer}
-                    onClick={() => setShowPrintCover(!showPrintCover)}
-                    className="bg-[#06244B] hover:bg-[#0B356D]"
-                  >
-                    {showPrintCover ? 'Hide Full Submission Package' : 'View / Print USCIS Submission Package'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
+            {!isAttorneyCleared ? (
               <div className="p-4 bg-slate-50 border border-[#D9D6CF] rounded-lg space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
-                    Supervising &amp; Certifying Attorney
-                  </label>
-                  <select
-                    value={clearingAttorney}
-                    onChange={(e) => setClearingAttorney(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded border border-[#D9D6CF] bg-white font-medium"
-                  >
-                    <option value="Sarah Jenkins, Esq.">Sarah Jenkins, Esq. (Immigration Lead Partner • Bar #14902)</option>
-                    <option value="Thomas Bludworth, Esq.">Thomas Bludworth, Esq. (Managing Partner • Bar #11204)</option>
-                    <option value="Eleanor Heugly, Esq.">Eleanor Heugly, Esq. (Senior Partner • Bar #08491)</option>
-                  </select>
-                </div>
-
+                <Input
+                  label="Certifying Attorney"
+                  value={clearingAttorney}
+                  placeholder="Enter supervising attorney name"
+                  onChange={(e) => setClearingAttorney(e.target.value)}
+                />
                 <div className="flex items-start gap-2.5 p-3.5 bg-white rounded border border-[#D9D6CF]">
                   <input
                     type="checkbox"
                     id="ethicsCheck"
                     checked={ethicsConfirmation}
                     onChange={(e) => setEthicsConfirmation(e.target.checked)}
-                    className="w-4 h-4 text-[#A4432B] rounded mt-0.5 focus:ring-[#A4432B]"
+                    className="w-4 h-4 text-[#A4432B] rounded mt-0.5"
                   />
                   <label htmlFor="ethicsCheck" className="text-xs text-[#202A35] leading-relaxed cursor-pointer">
-                    <strong>Attorney Attestation (8 CFR § 292.1 &amp; Utah RPC 5.3):</strong> I certify that I have supervised the preparation of Forms G-28, I-130, I-485, I-765, and I-864; verified the foreign national's statutory eligibility; inspected the 7 indexed exhibit tabs and translations; and authorized the $1,975 filing fee check voucher payable to the U.S. Department of Homeland Security.
+                    <strong>Attorney Review Confirmation:</strong> I have reviewed the mapped forms, eligibility criteria, and attached exhibit tabs for matter {immigrationCase.matterNumber}.
                   </label>
                 </div>
 
@@ -551,92 +642,44 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
                   onClick={handleClearPackage}
                   className="w-full bg-[#A4432B] hover:bg-[#8B3824]"
                 >
-                  Certify &amp; Clear Immigration Package for Filing
+                  Mark Package Reviewed &amp; Ready for Export
                 </Button>
+              </div>
+            ) : (
+              <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  <span>PACKAGE CLEARED BY {clearingAttorney || 'SUPERVISING COUNSEL'}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    icon={Printer}
+                    onClick={() => setShowPrintCover(!showPrintCover)}
+                  >
+                    {showPrintCover ? 'Hide Cover Preview' : 'Preview Submission Cover'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    icon={Download}
+                    onClick={handleDownloadPdfPackage}
+                  >
+                    Download Package (.PDF)
+                  </Button>
+                </div>
               </div>
             )}
 
-            {/* Complete USCIS Submission Package & Cover Letter */}
             {showPrintCover && (
-              <div className="p-6 bg-white border border-[#06244B] rounded-lg shadow-lg space-y-4 font-serif text-xs text-[#06244B] max-h-96 overflow-y-auto">
-                <div className="text-center border-b-2 border-[#06244B] pb-3 space-y-0.5">
-                  <div className="font-bold text-base tracking-wider">HEUGLY &amp; BLUDWORTH, ATTORNEYS AT LAW</div>
-                  <div className="text-[11px] font-sans text-slate-600">
-                    175 South Main Street, Suite 900 • Salt Lake City, Utah 84111 • (801) 555-0100
-                  </div>
-                  <div className="text-[10px] font-sans text-[#A4432B] font-bold">IMMIGRATION &amp; NATIONALITY LAW PRACTICE GROUP</div>
+              <div className="p-4 bg-white border border-[#06244B] rounded-lg font-serif text-xs text-[#06244B] space-y-2">
+                <div className="font-bold text-sm border-b pb-1">
+                  SUBMISSION SUMMARY — {immigrationCase.matterNumber}
                 </div>
-
-                <div className="flex justify-between text-xs pt-1">
-                  <div>
-                    <div><strong>Date:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
-                    <div><strong>Delivery Method:</strong> VIA FEDEX PRIORITY OVERNIGHT (Tracking: 7749 2018 9012)</div>
-                  </div>
-                  <div className="text-right">
-                    <div><strong>Filing Location:</strong></div>
-                    <div>USCIS Chicago Lockbox / Attn: FBAS</div>
-                    <div>131 South Dearborn - 3rd Floor</div>
-                    <div>Chicago, IL 60603-5517</div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-300 space-y-1">
-                  <div><strong>RE: CONCURRENT FORM I-130 &amp; FORM I-485 ADJUSTMENT OF STATUS PACKAGE</strong></div>
-                  <div><strong>Petitioner:</strong> {formData.petitionerName} (U.S. Citizen Spouse)</div>
-                  <div><strong>Beneficiary:</strong> {formData.beneficiaryName} (A# {formData.alienNumber})</div>
-                  <div><strong>Matter Reference:</strong> {immigrationCase.matterNumber}</div>
-                </div>
-
-                <p className="leading-relaxed">
-                  Dear Adjudications Officer:
-                  Please accept for filing the enclosed Form G-28 Notice of Entry of Appearance and one-step concurrent adjustment of status application submitted pursuant to 8 U.S.C. § 1255(a) and 8 CFR § 245.2.
-                </p>
-
-                <div className="border border-slate-300 rounded p-3 space-y-1.5 bg-slate-50 font-sans text-xs">
-                  <div className="font-bold text-[#06244B]">TABLE OF CONTENTS &amp; INDEXED EXHIBIT BINDER:</div>
-                  <div className="grid grid-cols-1 gap-1 text-[11px]">
-                    <div><strong>• Check Voucher:</strong> $535.00 (Form I-130) + $1,440.00 (Form I-485) = $1,975.00 Total DHS Fee</div>
-                    <div><strong>• Tab A:</strong> Form G-28 Notice of Appearance as Attorney of Record</div>
-                    <div><strong>• Tab B:</strong> Form I-130, Form I-485, and Form I-765 with Original Signatures</div>
-                    <div><strong>• Tab C:</strong> Petitioner's Proof of U.S. Citizenship (Certified Utah Birth Certificate)</div>
-                    <div><strong>• Tab D:</strong> Beneficiary's Birth Certificate with Certified English Translation and Form I-94 Record</div>
-                    <div><strong>• Tab E:</strong> Certified Marriage Certificate, Joint Apartment Lease, and Joint Bank Account Statements</div>
-                    <div><strong>• Tab F:</strong> Form I-864 Affidavit of Support with Sponsor W-2s and IRS Tax Transcripts</div>
-                    <div><strong>• Tab G:</strong> Form G-1145 E-Notification and Two (2) Passport-Style Photographs</div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-300 flex justify-between items-end">
-                  <div>
-                    <div>Respectfully submitted,</div>
-                    <div className="font-bold mt-3 text-sm">{clearingAttorney}</div>
-                    <div className="text-[11px] text-slate-600">Utah State Bar ID #14902</div>
-                    <div className="text-[11px] text-slate-600">Counsel for Petitioner and Beneficiary</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      icon={Printer}
-                      onClick={() => {
-                        window.print();
-                        addToast('Document sent to system print dialog.', 'info');
-                      }}
-                    >
-                      Print Package
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      icon={Download}
-                      onClick={() => {
-                        addToast('Submission Package (.pdf) downloaded!', 'success');
-                      }}
-                    >
-                      Download PDF
-                    </Button>
-                  </div>
-                </div>
+                <div><strong>Petitioner:</strong> {formData.petitionerName || '—'}</div>
+                <div><strong>Beneficiary:</strong> {formData.beneficiaryName || '—'} (A# {formData.alienNumber || '—'})</div>
+                <div><strong>Category:</strong> {formData.category || '—'}</div>
               </div>
             )}
           </div>
@@ -648,23 +691,25 @@ export function FilingPackageAssemblerModal({ isOpen, onClose, immigrationCase, 
             Close
           </Button>
           <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Download}
+              onClick={handleDownloadPdfPackage}
+            >
+              Export Summary PDF
+            </Button>
             {activeStep > 1 && (
-              <Button size="sm" variant="outline" onClick={() => setActiveStep(prev => prev - 1)}>
-                &larr; Previous Step
+              <Button size="sm" variant="outline" onClick={() => setActiveStep((prev) => prev - 1)}>
+                &larr; Previous
               </Button>
             )}
             {activeStep < 4 ? (
-              <Button size="sm" variant="primary" onClick={() => setActiveStep(prev => prev + 1)}>
-                Next Step &rarr;
+              <Button size="sm" variant="primary" onClick={() => setActiveStep((prev) => prev + 1)}>
+                Next &rarr;
               </Button>
             ) : (
-              <Button
-                size="sm"
-                variant="primary"
-                icon={CheckCircle2}
-                onClick={onClose}
-                className="bg-emerald-700 hover:bg-emerald-800"
-              >
+              <Button size="sm" variant="primary" icon={CheckCircle2} onClick={onClose}>
                 Done
               </Button>
             )}

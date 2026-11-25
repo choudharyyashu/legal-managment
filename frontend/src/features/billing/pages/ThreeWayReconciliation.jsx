@@ -279,14 +279,14 @@ export function ThreeWayReconciliation() {
           </div>
 
           <div class="box-summary">
-            <h3>AUDIT FINDING: ZERO DISCREPANCY RECONCILIATION VERIFIED</h3>
+            <h3>THREE-WAY RECONCILIATION WORKSHEET SUMMARY</h3>
             <div class="pillars-summary">
               <div>Pillar 1 (Adjusted Bank): $${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
               <div>= Pillar 2 (General Ledger #2100): $${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
               <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             </div>
             <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Net Audit Discrepancy: $0.00 — All fiduciary client balances in exact mathematical equilibrium.
+              Calculated Variance: $${Math.abs(adjustedBankBalance - glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })} — Subject to manual bank statement and partner sign-off.
             </div>
           </div>
 
@@ -336,19 +336,19 @@ export function ThreeWayReconciliation() {
           </table>
 
           <div class="cert-block">
-            <strong>OFFICIAL ATTORNEY CERTIFICATION UNDER UTAH RPC 1.15:</strong><br>
-            I hereby certify under penalty of perjury under the laws of the State of Utah that I am the managing partner responsible for trust accounting compliance at Heugly &amp; Bludworth, LLC. I have examined the firm's IOLTA bank statements, general ledger control accounts, and itemized client subsidiary ledgers for the period indicated above. The three components are in complete mathematical reconciliation with zero discrepancy ($0.00 variance), no client trust account is overdrawn, and client funds are strictly segregated in accordance with Utah Supreme Court Rule 1.15.
+            <strong>RECONCILIATION REVIEW &amp; ATTESTATION DRAFT (UTAH RPC 1.15 REFERENCE):</strong><br>
+            This report summarizes internal system figures for the IOLTA bank balance, trust control account, and client subsidiary ledgers for the period indicated above. Supervising counsel and firm accounting must verify figures against official bank statements and execute required sign-offs separately.
           </div>
 
           <div class="sig-row">
             <div class="sig-line">
-              <strong>Eleanor Heugly, Esq.</strong><br>
-              Managing Partner, Utah State Bar License #UT-8819<br>
-              Auditor &amp; Trust Account Manager
+              <strong>Reviewed By (Supervising Attorney / CPA):</strong><br>
+              Signature: ___________________________<br>
+              License / Title: ________________________
             </div>
             <div class="sig-line" style="text-align: right;">
-              <strong>Date Certified:</strong> ${auditTimestamp}<br>
-              <strong>Status:</strong> Approved for Utah Bar Records
+              <strong>Generated Date:</strong> ${auditTimestamp}<br>
+              <strong>Status:</strong> Draft Worksheet (Pending Sign-off)
             </div>
           </div>
         </body>
@@ -370,7 +370,7 @@ export function ThreeWayReconciliation() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Autonomous Trust Accounting Active:</strong> This firm operates completely independent of CosmoLex. All trust accounts, client sub-ledgers, and monthly three-way reconciliations are maintained locally under Utah Bar Rule 1.15.
+            <strong>Trust Accounting Sub-Ledger (Utah RPC 1.15 Reference):</strong> Track trust accounts, client sub-ledgers, and monthly three-way reconciliation worksheets for supervising attorney and accounting review.
           </span>
         </div>
         <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">

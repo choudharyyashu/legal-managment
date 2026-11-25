@@ -243,7 +243,7 @@ export function ClientDamages() {
               {totalInjuries} Anatomical Sites
             </span>
             <span className="text-[11px] text-blue-600 font-medium">
-              100% Objective MRI/CT findings
+              Documented in treatment records
             </span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold">

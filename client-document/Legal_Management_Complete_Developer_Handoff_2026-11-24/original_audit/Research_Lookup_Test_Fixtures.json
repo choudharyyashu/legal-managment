@@ -1,0 +1,176 @@
+{
+  "date": "2026-11-14",
+  "status": "Synthetic proposed fixtures; no application or competitor tests executed",
+  "documents": [
+    {
+      "id": "SYN-A",
+      "title": "Example v. Sample",
+      "citation": "100 SYN 123",
+      "jurisdiction": "Fixture-A",
+      "date": "1983-01-01",
+      "text": "contract damages"
+    },
+    {
+      "id": "SYN-B",
+      "title": "Example v. Other",
+      "citation": "101 SYN 456",
+      "jurisdiction": "Fixture-B",
+      "date": "1987-12-31",
+      "text": "contract remedy"
+    },
+    {
+      "id": "SYN-C",
+      "title": "Third v. Sample",
+      "citation": "100 SYN 124",
+      "jurisdiction": "Fixture-A",
+      "date": "1982-12-31",
+      "text": "damages remedy"
+    },
+    {
+      "id": "SYN-D",
+      "title": "Later v. Other",
+      "citation": "102 SYN 100",
+      "jurisdiction": "Fixture-A",
+      "date": "1988-01-01",
+      "text": "remedy"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "FIX-LOOKUP-01",
+      "features": [
+        "F-0228",
+        "F-0229"
+      ],
+      "input": [
+        "100 SYN 123",
+        "100 syn 123",
+        "100  SYN  123"
+      ],
+      "expected": "SYN-A for each variant; raw input retained; punctuation policy explicitly defined before extending variants"
+    },
+    {
+      "id": "FIX-LOOKUP-02",
+      "features": [
+        "F-0229",
+        "F-0230"
+      ],
+      "input": {
+        "prefix": "Example",
+        "out_of_order_response": true
+      },
+      "expected": "SYN-A and SYN-B remain distinct; exact selected ID opened; obsolete responses discarded"
+    },
+    {
+      "id": "FIX-LOOKUP-03",
+      "features": [
+        "F-0231"
+      ],
+      "input": [
+        "contract AND damages",
+        "contract OR damages",
+        "contract NOT remedy"
+      ],
+      "expected_ids": [
+        [
+          "SYN-A"
+        ],
+        [
+          "SYN-A",
+          "SYN-B",
+          "SYN-C"
+        ],
+        [
+          "SYN-A"
+        ]
+      ],
+      "limit": "Fixture adapter semantics only; no claim these exact strings reproduce current vendor syntax"
+    },
+    {
+      "id": "FIX-LOOKUP-04",
+      "features": [
+        "F-0232",
+        "F-0177"
+      ],
+      "input": "Two scopes, one viewed document, changed user default",
+      "expected": "Distinct query and document histories with recorded scope and times; access isolated; no automatic billing"
+    },
+    {
+      "id": "FIX-LOOKUP-05",
+      "features": [
+        "F-0122",
+        "F-0121"
+      ],
+      "input": {
+        "from": "1983-01-01",
+        "through": "1987-12-31",
+        "boundary_policy": "inclusive"
+      },
+      "expected_ids": [
+        "SYN-A",
+        "SYN-B"
+      ],
+      "limit": "Expected inclusivity is proposed program behavior, not verified legacy vendor policy"
+    },
+    {
+      "id": "FIX-LOOKUP-06",
+      "features": [
+        "F-0233"
+      ],
+      "input": "Synthetic alpha-only, beta-only, both, neither documents",
+      "expected": "OR-default equals explicitOR; AND and ANDNOT differ; adapter contract recorded"
+    },
+    {
+      "id": "FIX-LOOKUP-07",
+      "features": [
+        "F-0234"
+      ],
+      "input": [
+        "alpha beta",
+        "alpha, beta",
+        "beta alpha",
+        "alpha extra beta"
+      ],
+      "expected_ids": [
+        0,
+        1
+      ],
+      "limit": "Proposed punctuation-normalizing phrase contract"
+    },
+    {
+      "id": "FIX-LOOKUP-08",
+      "features": [
+        "F-0235"
+      ],
+      "input": [
+        "negotiate",
+        "negotiation",
+        "renegotiate"
+      ],
+      "query": "negoti*",
+      "expected_ids": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "FIX-LOOKUP-09",
+      "features": [
+        "F-0236"
+      ],
+      "input": {
+        "token_position_distances": [
+          19,
+          20,
+          21,
+          29,
+          30,
+          31
+        ],
+        "explicit_distance": 20
+      },
+      "expected": "Under declared maximum position-distance20, retain19/20 and exclude larger; confirm real backend counting before applying this contract",
+      "limit": "Not executed; implicit default and nested operators unresolved"
+    }
+  ]
+}

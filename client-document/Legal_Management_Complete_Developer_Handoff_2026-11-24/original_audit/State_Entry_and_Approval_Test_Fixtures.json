@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-15",
+  "type": "Original synthetic test fixtures;not executed",
+  "new_requirement": "F-0431",
+  "state_entry": {
+    "transition": "Review→Approved",
+    "updates": {
+      "internal_reviewed": true,
+      "reviewer_id": "synthetic-stable-user-B"
+    },
+    "failure_cases": [
+      "unknown field",
+      "wrong type",
+      "protected field",
+      "later synchronous task failure"
+    ],
+    "retries": [
+      "same event twice",
+      "allowed re-entry"
+    ]
+  },
+  "role_matrix": {
+    "synthetic-A": [
+      "approver"
+    ],
+    "synthetic-B": [
+      "approver"
+    ],
+    "synthetic-C": [
+      "state-editor-only"
+    ]
+  },
+  "notification_modes": [
+    "disabled:no job/no email",
+    "enabled:recipient/delivery/retry evidence required"
+  ],
+  "negative_paths": [
+    "reject",
+    "return for correction",
+    "cancel",
+    "stale approval"
+  ],
+  "acceptance_tests": [
+    {
+      "id": "AT-0431",
+      "scenario_and_expected_result": "Configure Review→Approved to set an internal reviewed flag and reviewer identifier. Verify declared values, stable actor identity and before/after history. Reject an unknown field, invalid type or unauthorized protected-field update without partially changing state. Fail a later synchronous task: verify the transactional update and state rollback together. Retry the same event and re-enter the state through an allowed path: follow an explicit overwrite/re-entry policy without duplicating history or side effects. Never replace an approved signed document silently.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0017-SYNCBRICKS-ACTIVATION",
+      "scenario_and_expected_result": "Save a draft workflow without activating it; verify the effective active configuration remains unchanged. Activate it explicitly, then test both a newly created matter/document and one created before activation. Record which workflow revision each follows; do not assume the tutorial proves migration of existing pending records.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0422-SYNCBRICKS-NEGATIVE-PATHS",
+      "scenario_and_expected_result": "The normal-case example is insufficient acceptance evidence. Add rejection, return-for-correction, cancellation and stale-record attempts. Verify lifecycle status separately from approval labels. A rejected orfailed record must not be treated as submitted orready to file.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0426-SYNCBRICKS-ALERTS-OFF",
+      "scenario_and_expected_result": "Disable email alerts, advance to approval, and verify that no notification wasqueued orsent. Keep the approval task independently visible. Re-enable alerts and test actual recipient, content, delivery failure and retry evidence. Never treat narration about an email as proof of sending orreceipt.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0428-SYNCBRICKS-ROLE-MATRIX",
+      "scenario_and_expected_result": "Create two users with the approver role and one user with only state-specific edit rights. Verify editing and transitioning are distinct permissions. Do not interpret a role grant as a unique person. Attempt all transitions as each user, then revoke a role and test immediate access including direct API endpoints.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "build": null,
+  "environment": null,
+  "real_actions_performed": false
+}

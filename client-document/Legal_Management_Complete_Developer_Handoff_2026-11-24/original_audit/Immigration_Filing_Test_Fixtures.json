@@ -1,0 +1,117 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic only;no executed application tests",
+  "filing_states": [
+    "queued",
+    "transferred",
+    "principal-reviewed",
+    "G28-transferred",
+    "submitted",
+    "receipt-confirmed"
+  ],
+  "account_ids": [
+    "SYNTH-REP-A",
+    "SYNTH-APPLICANT-B"
+  ],
+  "credentials": "Vault references only;no real secrets",
+  "receipt_fixture": "ABC1234567890;synthetic not a real case",
+  "polling_cases": [
+    "Basic/no-auto",
+    "Pro/Saturday-weekly",
+    "Advanced/daily",
+    "outage/stale"
+  ],
+  "edition_cases": [
+    "new-version",
+    "previous-accepted",
+    "previous-expired",
+    "DS-toggle-unavailable",
+    "bundle-mixed-eligibility"
+  ],
+  "tests": [
+    {
+      "id": "AT-0362",
+      "scenario_and_expected_result": "Use synthetic capability rows for each documented catalog form. Reject an unsupported agency/form pair and distinguish paper preparation from e-filing support. Keep optional companion forms explicit; no planned feature is marked available. Verify current tenant and agency compatibility before production use.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0363",
+      "scenario_and_expected_result": "Use synthetic applicant-account and representative-account fixtures. Reject unsupported account type. An I-129 employer without required linked-company confirmation cannot proceed. Changing party roles invalidates prior review; never infer representation authority from an email address or form existence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0364",
+      "scenario_and_expected_result": "Omit required synthetic principal and G-28 fields in turn. Navigate each error to the right question, repair and revalidate only the current snapshot. Passing software checks does not prove agency completeness. A later questionnaire edit marks reviewed transfer data stale instead of silently updating an already-transferred draft.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0365",
+      "scenario_and_expected_result": "Use synthetic vault references only. Unauthorized staff cannot read credentials or initiate transfers. Reject expired consent and redact secrets from screenshots, errors and exports. Record who authorized each job and the destination account. This design does not authorize changing real MFA or sending any account secret during the audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0366",
+      "scenario_and_expected_result": "Simulate a successful draft transfer with final government submission absent. Display transferred draft,never filed. Require independent evidence for portal review,evidence upload,signature,submission and receipt. A vendor complete prompt or local Confirm click cannot substitute for a government acknowledgement or prove receipt.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0367",
+      "scenario_and_expected_result": "Give synthetic case A the continuation URL of case B and reject the mismatch before transfer. Validate approved host,account and case identity; never log session-bound URL tokens. Retry with the correct reference without duplicating the principal application or claiming representation-stage success prematurely.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0368",
+      "scenario_and_expected_result": "Simulate authentication failure,validation failure and a timeout after remote draft creation. Preserve redacted error image,stage and attempt ID. Reconcile existing remote draft before retry; create one application. Notifications open the exact job/form. A missing notification is not proof that the remote action failed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0369",
+      "scenario_and_expected_result": "Offer conversion for the configured synthetic N-400/G-28 pair and reject other pairs unless separately verified supported. Keep old PDFs immutable and show changes in role,edition and answers. Conversion neither withdraws nor duplicates a previously submitted application.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0370",
+      "scenario_and_expected_result": "Add two synthetic receipts to one matter and replay one import. Keep one receipt identity with original evidence; preserve distinct applications. Search full and partial numbers across authorized reports. Invalid format or agency lookup error remains unresolved rather than becoming a fabricated case status.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0371",
+      "scenario_and_expected_result": "Test synthetic Basic,Pro and Advanced schedules with timezone and plan changes. Manual refresh records its outcome independently. On outage retain last known status with stale marker,never label it real-time. A weekly screenshot is an example,not proof of every account’s cadence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0372",
+      "scenario_and_expected_result": "A changed status alerts only current authorized assignees. Share receipt to portal P-1;queue one client notice and preserve audience. No email or portal grant implies the client opened or understood it. Reassignment,revocation and retries must not leak to former assignees or another portal.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0373",
+      "scenario_and_expected_result": "Use a synthetic bundle with two eligible USCIS forms,one expired prior edition and one DS form. Preview exactly which editions can change and leave unsupported items explicit. Preserve answer mapping and generated-output hashes. Reverting one allowed form must not silently downgrade all forms or invalidate signed outputs.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ]
+}

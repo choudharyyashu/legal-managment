@@ -111,7 +111,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0E5] text-[#202A35] flex">
+    <div className="min-h-screen bg-[#F5F0E5] text-[#202A35] flex overflow-x-hidden">
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
@@ -128,8 +128,8 @@ export function AppLayout() {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300 ${
-          sidebarCollapsed ? 'md:ml-20' : 'md:ml-64 lg:ml-72'
+        className={`flex-1 flex flex-col min-h-screen min-w-0 max-w-full transition-all duration-300 ${
+          sidebarCollapsed ? 'md:ml-20' : 'md:ml-60 xl:ml-64'
         }`}
       >
         <Topbar
@@ -142,19 +142,19 @@ export function AppLayout() {
         {/* Global Persistent Client & Matter Context Bar */}
         <PersistentMatterBar />
 
-        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto min-w-0">
           <Outlet />
         </main>
 
         {/* Global Footer */}
-        <footer className="border-t border-[#D9D6CF] py-4 px-6 text-xs text-[#667085] flex flex-col sm:flex-row justify-between items-center gap-2 bg-[#F5F0E5]/50">
+        <footer className="border-t border-[#D9D6CF] py-4 px-4 sm:px-6 text-xs text-[#667085] flex flex-col sm:flex-row justify-between items-center gap-2 bg-[#F5F0E5]/50 text-center sm:text-left">
           <div>
             <span className="font-semibold text-[#06244B]">HEUGLY &amp; BLUDWORTH</span> — Legal Management Software v1.0
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[#A4432B] font-medium">CosmoLex Accounting Bridge Ready</span>
-            <span>•</span>
-            <span>Confidential Attorney-Client Privileged</span>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-1">
+            <span className="text-[#A4432B] font-medium">Practice Management &amp; Trust Sub-Ledger</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Internal Firm Workspace (Attorney Review Required)</span>
           </div>
         </footer>
       </div>

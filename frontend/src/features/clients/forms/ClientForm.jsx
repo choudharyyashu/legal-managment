@@ -20,7 +20,7 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
     phone: initialData?.phone || '',
     address: initialData?.address || '',
     primaryContact: initialData?.primaryContact || '',
-    assignedAttorneyId: initialData?.assignedAttorneyId || attorneys[0]?.id || 'usr-2',
+    assignedAttorneyId: initialData?.assignedAttorneyId || attorneys[0]?.id || '',
     status: initialData?.status || 'Active',
     notes: initialData?.notes || '',
   });

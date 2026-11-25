@@ -17,12 +17,12 @@ import { useToast } from '../../../components/ui/Toast';
 export function EngagementLetterModal({
   isOpen,
   onClose,
-  clientName = 'Wasatch Mountain Logistics LLC',
-  contactPerson = 'Robert H. Henderson',
-  email = 'rhenderson@wasatchlogistics.com',
-  matterTitle = 'Commercial Contract Enforcement & Carrier Defense',
-  practiceAreaName = 'Civil Litigation & Dispute Resolution',
-  attorneyName = 'Thomas Bludworth, Esq.',
+  clientName = 'Client',
+  contactPerson = 'Primary Contact',
+  email = '',
+  matterTitle = 'Legal Representation Matter',
+  practiceAreaName = 'General Practice',
+  attorneyName = 'Assigned Counsel',
   onDispatchSignature = null
 }) {
   const { addToast } = useToast();

@@ -217,11 +217,11 @@ export function PostFilingAdminTab({ currentCase, postFilingAdmin, onUpdatePostF
 
   return (
     <div className="space-y-5">
-      {/* Demo / Mock Data Scope Notice */}
+      {/* Operational Workspace Scope Notice */}
       <div className="p-3 bg-slate-50 border border-[#D9D6CF] rounded-lg flex items-start gap-2.5 text-xs text-[#202A35]">
         <Info className="w-4 h-4 text-[#06244B] shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-[#06244B]">Post-Filing Administration Workspace (Demo Mock Docket Data):</span>{' '}
+          <span className="font-semibold text-[#06244B]">Post-Filing Administration Workspace:</span>{' '}
           Track trustee notices, Section 341 meetings, formal objections, plan confirmation milestones, and discharge/conversion/reopening events for{' '}
           <strong>{currentCase.caseNumber}</strong>.
         </div>
@@ -734,11 +734,10 @@ export function PostFilingAdminTab({ currentCase, postFilingAdmin, onUpdatePostF
         <form onSubmit={handleSaveMeeting} className="space-y-3 text-xs">
           <div>
             <label className="block font-semibold text-[#06244B] mb-1">
-              Meeting Date &amp; Time <span className="text-[#A4432B]">*</span>
+              Section 341 Meeting Date <span className="text-[#A4432B]">*</span>
             </label>
             <input
-              type="text"
-              placeholder="e.g., 2026-04-28 • 10:30 AM MT"
+              type="date"
               value={meetingForm.meetingDateTime}
               onChange={(e) => {
                 setMeetingForm({ ...meetingForm, meetingDateTime: e.target.value });

@@ -1,0 +1,124 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design;not executed",
+  "raw_seconds": [
+    9,
+    10,
+    29,
+    30,
+    31,
+    59,
+    61
+  ],
+  "billing_units_minutes": [
+    1,
+    6,
+    15
+  ],
+  "clock": "2026-11-15T23:59:30-07:00",
+  "activities": [
+    "EMAIL-READ-1",
+    "EMAIL-REREAD-1",
+    "EMAIL-DRAFT-1",
+    "CALL-UNMAPPED-1",
+    "TEXT-1",
+    "FILE-PREVIEW-1"
+  ],
+  "matter_types": [
+    "unset",
+    "hourly",
+    "fixed",
+    "appearance",
+    "contingency-percent",
+    "contingency-amount",
+    "nonbillable"
+  ],
+  "tests": [
+    {
+      "id": "AT-0382",
+      "scenario_and_expected_result": "Use synthetic activity lengths29,30,31,59 and61 seconds with1,6,15-minute and custom billing units. Preserve raw seconds and show each transformation once. Switching billing units must not silently rewrite captured duration or idle periods. A user-unit entry of2 is interpreted through its explicit configured increment,not assumed to mean2 hours.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0383",
+      "scenario_and_expected_result": "Use synthetic open,focus,scroll,idle,resume,close and document-switch events. Separate previewing from opening the file;avoid concurrent double counting. Label missed subthreshold activity as a capture limitation. Retain AI interaction evidence separately from background processing or history-pane viewing;no inference that leaving a window open proves continuous work.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0384",
+      "scenario_and_expected_result": "Create a synthetic past appointment with no attendance evidence and a completed task with no duration. Preserve both in daily review as unresolved rather than asserting attendance or worked time. Changing calendar duration cannot overwrite a previously approved billing snapshot without review. Old memo activity requiring manual entry remains an explicit capture gap.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0385",
+      "scenario_and_expected_result": "Seed synthetic internal/external messages,file-preview intervals and one phone call with no matter. Preserve individual event IDs,threshold/method and unresolved assignment. If a file is opened from a message,link its document activity and detect overlapping intervals before proposing totals. No internal-message preference or unknown matter may silently remove source rows from daily review.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0386",
+      "scenario_and_expected_result": "Use synthetic unset,hourly,fixed-fee,appearance-fee,contingency-percent,contingency-amount and nonbillable matters. Keep captured work in all cases. Missing classification requires review in this program rather than inheriting a charge without explanation. Nonbillable effort can inform internal costing;it does not automatically become an invoice or client statement.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0387",
+      "scenario_and_expected_result": "Create synthetic records on days30,31 and32 and filter by two users. Explain view boundaries and link older records to the full ledger. Manual conversion of retroactive activity reconciles one source event to one proposed entry across repeated runs. Date/timezone changes must not drop cross-midnight calls or texts from the daily review.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0388",
+      "scenario_and_expected_result": "Group synthetic document,email,call and text activities without losing IDs. Edit one child’s description,hours or billability;recalculate totals and preserve raw events. Add/delete a child through reviewed transitions. Hiding invoice detail cannot hide it from internal approval. Reject unsupported activity-code combinations explicitly and label desktop-only additions versus web editing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "extended_tests": [
+    {
+      "id": "F-0072",
+      "expected": "Toggle only conversion for synthetic user A while B remains enabled. Both retain raw source activity. Show one-unit meaning,category exclusions,closed/lead/UTBMS state and user billability separately. No setting change invoices anything.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0073",
+      "expected": "Read a synthetic email twice across a date boundary. Preserve both source events and the configured first-read policy;subject grouping does not merge different matters or hide individual calls/texts. An excluded reread remains reviewable,not silently lost.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0074",
+      "expected": "Create synthetic unmapped,zero-duration,lead,closed,UTBMS-disabled,ignored-type,user-disabled,excluded-fee and source-nonbillable activities. Every raw row receives an explicit conversion disposition or unresolved reason. Review completeness cannot be inferred from zero pending fees.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0075",
+      "expected": "Feed synthetic9-second and10-second views plus repeated qualifying views to versioned adapters. Label New Outlook-derived minutes as view-based estimates,not measured continuous attention. Keep measured drafting duration separate and allow review corrections without rewriting provider evidence.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0076",
+      "expected": "Edit synthetic pending duration,date,rate and description,exclude one row,and filter earlier entries by user/date. Preserve raw activity and approval history. Split-pane invoice preview must show proposed billing only;nightly conversion or a preview never proves invoice issuance.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0077",
+      "expected": "Filter synthetic missing-duration and unmapped call/text rows. Correct mapping and run conversion twice for the same date;one proposed entry results per approved source set. Reconcile exclusions,failures and unconverted events and retain per-user source accessibility gaps.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0280",
+      "expected": "In the daily master ledger preserve each synthetic provider call ID,number,date,duration and available source regardless of mapping. Match only with evidence and keep ambiguous calls unresolved. Provider/app limitations are explicit;an activity category labeled Task does not erase its underlying call type.",
+      "status": "Not executed"
+    }
+  ]
+}

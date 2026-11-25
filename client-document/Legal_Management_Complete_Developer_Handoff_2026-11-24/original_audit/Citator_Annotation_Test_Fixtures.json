@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-16",
+  "status": "Original synthetic fixtures;application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0516",
+      "workflow": {
+        "input": "Citing/cited authority IDs,all occurrence spans andclassification policy",
+        "initial_state": "Original synthetic proposed fixture;no live authority verified",
+        "user_action": "Review occurrences thencompute an explained aggregate",
+        "output": "Traceable occurrence records plus an explicit,qualified summary",
+        "exceptions_and_dependencies": "Requires authoritative source resolution,approved taxonomy,court/statute metadata andhuman review. No current implementation inspected."
+      },
+      "acceptance_test": {
+        "id": "AT-0516",
+        "scenario_and_expected_result": "Use a synthetic citing opinion with three references to the same authority:positive,contrast andexpress disapproval in a footnote. Record separate anchors,labels,quoted evidence,reasons andreviewer state. Compute any summary only under an identified taxonomy/version andapproved aggregation policy. Show the occurrence that drives the warning without deleting others. Test missing footnotes,duplicate references,changed source text andan unreviewed occurrence. A benign first match cannot silently suppress a later adverse one. A color alone cannot claim the authority is universally invalid.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0517",
+      "workflow": {
+        "input": "Authority graph,source passages,court metadata andproposition IDs",
+        "initial_state": "Original synthetic proposed fixture;no live authority verified",
+        "user_action": "Identify relationship target andreview supporting context",
+        "output": "Context-supported classification or an explicit unresolved state",
+        "exceptions_and_dependencies": "Requires authoritative source resolution,approved taxonomy,court/statute metadata andhuman review. No current implementation inspected."
+      },
+      "acceptance_test": {
+        "id": "AT-0517",
+        "scenario_and_expected_result": "Seed text containing distinction language about authority B while authority A is being followed. Require the proposed A/B relationship to show the relevant surrounding passage andtarget identity. Separately test sparse contrast,reasoned factual distinction,same-court repudiation andanother-court disapproval. Record jurisdiction,court,date andproposition scope;do not derive legal force from a color orword alone. For a statutory effect,link the actual statute/version andeffective date before any current-law conclusion. Ambiguous references remain unresolved for review. Automatic transcript examples do not supply verified case holdings.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0518",
+      "workflow": {
+        "input": "Versioned rubric,reviewer assignments andindependent decisions",
+        "initial_state": "Original synthetic proposed fixture;no live authority verified",
+        "user_action": "Capture decisions,compare disagreements andapprove a resolution",
+        "output": "Auditable assessment history andpolicy-bound current result",
+        "exceptions_and_dependencies": "Requires authoritative source resolution,approved taxonomy,court/statute metadata andhuman review. No current implementation inspected."
+      },
+      "acceptance_test": {
+        "id": "AT-0518",
+        "scenario_and_expected_result": "Give two reviewers independent synthetic occurrence assignments under taxonomy v1. One selects a statutory-codification label withone warning level;another proposes a different level. Preserve both assessments,evidence,reasons andtaxonomy version. A supervisor resolution records its own basis without erasing originals or treating majority agreement as correctness. Updating v2 identifies affected summaries andrecomputes only under approved policy. Test a failed label dropdown:provide an explicit unresolved/draft recovery path,not a default benign label. Do not hard-code the training discussion’s disputed color choice as current law.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0042",
+      "timestamp": "10:49–17:29;43:38–45:57",
+      "title": "Treatment evidence andscope",
+      "test": "Open a synthetic adverse-treatment summary andinspect every underlying occurrence,not just the first highlighted passage. Preserve exact source/version,date,court,classification reason andproposition scope. Test a later statute without verified statutory text:leave present-law status unresolved rather than importing the lecture’s legal conclusion.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0043",
+      "timestamp": "1:00:03–1:02:07",
+      "title": "Warning colors andcoverage are separate",
+      "test": "Show label,severity,taxonomy version,corpus coverage andlast verification date separately. A disputed warning level stays reviewable;it cannot silently become a universal invalidity statement. Unsupported jurisdiction/time periods retain an open verification task.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0328",
+      "timestamp": "6:17–6:47",
+      "title": "Failed citation anchor recovery",
+      "test": "Break a synthetic citation-linked highlight while keeping full text available. Show the intended cited authority andpassage/search fallback without claiming the highlight succeeded. Test browser search landing on an unrelated occurrence;require manual confirmation andretain the broken-anchor report.",
+      "status": "Not executed"
+    }
+  ]
+}

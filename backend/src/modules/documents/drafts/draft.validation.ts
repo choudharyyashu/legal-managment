@@ -36,7 +36,7 @@ export const draftQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).optional().default(20),
   matterId: z.string().optional(),
   clientId: z.string().optional(),
-  status: z.enum(['Draft', 'Under Review', 'Approved', 'Rejected', 'Sent', 'Finalized', 'Stale']).optional(),
+  status: z.enum(['Draft', 'Under Review', 'Approved', 'Rejected', 'Sent', 'Finalized', 'Stale', 'Candidate', 'Superseded']).optional(),
   search: z.string().optional(),
 });
 
@@ -45,17 +45,25 @@ export const approveDraftSchema = z.object({
   approvalEvidence: z.record(z.string(), z.any()).optional(),
 });
 
-export const rejectDraftSchema = z.object({
-  rejectionReason: z
-    .string({
-      required_error: 'rejectionReason is required',
-      invalid_type_error: 'rejectionReason must be a string',
-    })
-    .trim()
-    .min(3, 'rejectionReason must be at least 3 characters')
-    .max(1000, 'rejectionReason must not exceed 1000 characters'),
-  notes: z.string().max(1000).optional(),
-});
+export const rejectDraftSchema = z.preprocess(
+  (val: any) => {
+    if (val && typeof val === 'object' && !val.rejectionReason && typeof val.reason === 'string') {
+      return { ...val, rejectionReason: val.reason };
+    }
+    return val;
+  },
+  z.object({
+    rejectionReason: z
+      .string({
+        required_error: 'rejectionReason is required',
+        invalid_type_error: 'rejectionReason must be a string',
+      })
+      .trim()
+      .min(3, 'rejectionReason must be at least 3 characters')
+      .max(1000, 'rejectionReason must not exceed 1000 characters'),
+    notes: z.string().max(1000).optional(),
+  })
+);
 
 export const sendDraftSchema = z.object({
   recipient: z

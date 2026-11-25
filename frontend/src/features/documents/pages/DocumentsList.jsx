@@ -3,37 +3,55 @@ import {
   Upload,
   FileText,
   Search,
-  Filter,
   Eye,
   Download,
   ShieldCheck,
-  ShieldAlert,
-  Plus,
   CheckCircle2,
   Lock,
   Unlock,
-  History,
-  FileCode,
-  Tag,
-  Clock,
   Sparkles,
-  ArrowRight,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  HardDrive,
+  ScanText,
+  History,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 import { documentService } from '../../../services/documentService';
-import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
-import { SearchBar } from '../../../components/shared/SearchBar';
 import { Modal } from '../../../components/ui/Modal';
 import { GenerateDraftModal } from '../components/GenerateDraftModal';
 import { DraftReviewModal } from '../components/DraftReviewModal';
 import { formatDate } from '../../../utils/formatDate';
-import { createLegalDocumentPdf } from '../../../utils/pdfGenerator';
+
+const DOCUMENT_CATEGORIES = [
+  'Pleading',
+  'Motion',
+  'Discovery',
+  'Correspondence',
+  'Contract',
+  'Evidence',
+  'Court Order',
+  'Billing / Receipt',
+  'Engagement',
+  'Personal Injury',
+  'Civil Litigation',
+  'Bankruptcy',
+  'Immigration',
+  'Probate',
+  'Family Law',
+  'Criminal Defense',
+  'Appeals',
+  'Landlord-Tenant',
+  'Legal Draft',
+  'Other',
+];
 
 export function DocumentsList() {
   const { matters } = useMatters();
@@ -41,16 +59,59 @@ export function DocumentsList() {
   const { addToast } = useToast();
 
   const [documents, setDocuments] = useState([]);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [privilegeFilter, setPrivilegeFilter] = useState('all');
   const [searchOCR, setSearchOCR] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  const [viewMode, setViewMode] = useState('documents'); // 'documents' | 'drafts' | 'automations'
+  const [drafts, setDrafts] = useState([]);
+  const [selectedReviewDraft, setSelectedReviewDraft] = useState(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  // Storage stats
+  const [storageStats, setStorageStats] = useState(null);
+
+  // 300-Automation Catalog state
+  const [automations, setAutomations] = useState([]);
+  const [automationSummary, setAutomationSummary] = useState(null);
+  const [automationPracticeArea, setAutomationPracticeArea] = useState('');
+  const [automationMatterId, setAutomationMatterId] = useState('');
+  const [triggeringCatId, setTriggeringCatId] = useState(null);
+
+  // Modals
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const [previewOcrData, setPreviewOcrData] = useState(null);
+  const [runningOcr, setRunningOcr] = useState(false);
+  const [integrityResult, setIntegrityResult] = useState(null);
+  const [versionDoc, setVersionDoc] = useState(null);
+
+  // Upload Form State
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadCategory, setUploadCategory] = useState('Pleading');
+  const [uploadMatterId, setUploadMatterId] = useState('');
+  const [isNewDocPrivileged, setIsNewDocPrivileged] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // New Revision Form State
+  const [revisionFile, setRevisionFile] = useState(null);
+  const [revisionNotes, setRevisionNotes] = useState('');
+
+  // Editable Display Title & Delete Confirmation State
+  const [renameDoc, setRenameDoc] = useState(null);
+  const [renameTitle, setRenameTitle] = useState('');
+  const [deleteDocTarget, setDeleteDocTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const loadDocuments = useCallback(async () => {
     try {
-      const res = await documentService.getDocuments({ limit: 100 });
+      const res = await documentService.getDocuments({
+        limit: 100,
+        ...(searchOCR && searchQuery ? { search: searchQuery, ocrSearch: 'true' } : {}),
+      });
       if (Array.isArray(res)) {
         setDocuments(
           res.map((d) => ({
@@ -58,31 +119,31 @@ export function DocumentsList() {
             id: d.id,
             title: d.title,
             fileName: d.versions?.[0]?.fileName || `${d.title.replace(/\s+/g, '_')}.pdf`,
-            matterTitle: d.matterTitle || d.matter?.title || d.matterName || 'Matter Document',
+            fileSize: d.versions?.[0]?.fileSizeBytes
+              ? `${Math.max(1, Math.round(Number(d.versions[0].fileSizeBytes) / 1024))} KB`
+              : '—',
+            matterTitle: d.matterTitle || d.matter?.title || 'Matter Document',
             clientName: d.clientName || d.client?.name || 'Firm Client',
             category: d.category || 'Pleading',
-            version: d.currentVersion || (d.versions?.[0]?.versionLabel) || 'v1.0',
-            uploadedAt: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
-            uploadedByName: d.versions?.[0]?.uploadedByName || d.createdBy?.name || 'Firm Staff',
+            version: d.currentVersion || d.versions?.[0]?.versionLabel || 'v1.0',
+            uploadedAt: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '',
+            uploadedByName: d.versions?.[0]?.uploadedByName || 'Firm Staff',
             isPrivileged: Boolean(d.isPrivileged),
             privilegeType: d.privilegeType || null,
-            ocrText: d.ocrContent || 'Document content indexed into firm full-text search engine.',
+            ocrText: d.ocrContent || '',
             isDbRecord: true,
-            versionHistory: Array.isArray(d.versions) && d.versions.length > 0
-              ? d.versions.map((v) => ({
-                  version: v.versionLabel,
-                  date: v.uploadedAt ? new Date(v.uploadedAt).toISOString().split('T')[0] : '2026-11-13',
-                  author: v.uploadedByName || 'Firm Staff',
-                  note: v.revisionNotes || 'Uploaded version',
-                }))
-              : [
-                  {
-                    version: d.currentVersion || 'v1.0',
-                    date: d.createdAt ? new Date(d.createdAt).toISOString().split('T')[0] : '2026-11-13',
-                    author: 'Firm Staff',
-                    note: 'Original filed instrument',
-                  },
-                ],
+            versionHistory:
+              Array.isArray(d.versions) && d.versions.length > 0
+                ? d.versions.map((v) => ({
+                    id: v.id,
+                    version: v.versionLabel,
+                    fileName: v.fileName,
+                    sha256Checksum: v.sha256Checksum,
+                    date: v.uploadedAt ? new Date(v.uploadedAt).toISOString().split('T')[0] : '',
+                    author: v.uploadedByName || 'Firm Staff',
+                    note: v.revisionNotes || 'Uploaded version',
+                  }))
+                : [],
           }))
         );
       } else {
@@ -92,71 +153,84 @@ export function DocumentsList() {
       console.warn('Could not load documents from API:', err?.message);
       setDocuments([]);
     }
-  }, []);
-
-  const [viewMode, setViewMode] = useState('documents'); // 'documents' | 'drafts'
-  const [drafts, setDrafts] = useState([]);
-  const [selectedReviewDraft, setSelectedReviewDraft] = useState(null);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  }, [searchOCR, searchQuery]);
 
   const loadDrafts = useCallback(async () => {
     try {
       const res = await documentService.getDrafts({ limit: 100 });
-      if (Array.isArray(res)) {
-        setDrafts(res);
-      } else {
-        setDrafts([]);
-      }
-    } catch (err) {
-      console.warn('Could not load drafts from API:', err?.message);
+      setDrafts(Array.isArray(res) ? res : []);
+    } catch {
       setDrafts([]);
     }
   }, []);
 
+  const loadStorageStats = useCallback(async () => {
+    try {
+      const stats = await documentService.getStorageStats();
+      setStorageStats(stats);
+    } catch {
+      // optional
+    }
+  }, []);
+
+  const loadAutomations = useCallback(async () => {
+    try {
+      const [listRes, summaryRes] = await Promise.all([
+        documentService.getAutomations({
+          practiceAreaId: automationPracticeArea || undefined,
+          search: searchQuery || undefined,
+          limit: 100,
+        }),
+        documentService.getAutomationSummary(),
+      ]);
+      setAutomations(listRes?.items || []);
+      setAutomationSummary(summaryRes || null);
+    } catch {
+      setAutomations([]);
+    }
+  }, [automationPracticeArea, searchQuery]);
+
   useEffect(() => {
     loadDocuments();
+  }, [loadDocuments]);
+
+  useEffect(() => {
     loadDrafts();
-  }, [loadDocuments, loadDrafts]);
+    loadStorageStats();
+  }, [loadDrafts, loadStorageStats]);
 
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState(null);
-  const [versionDoc, setVersionDoc] = useState(null);
+  useEffect(() => {
+    if (viewMode === 'automations') {
+      loadAutomations();
+    }
+  }, [viewMode, loadAutomations]);
 
-  // Upload Form State
-  const [uploadTitle, setUploadTitle] = useState('');
-  const [uploadCategory, setUploadCategory] = useState('Pleading');
-  const [uploadMatterId, setUploadMatterId] = useState('');
-  const [isNewDocPrivileged, setIsNewDocPrivileged] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState('');
-  const [selectedFileBase64, setSelectedFileBase64] = useState('');
-  const [fileSizeBytes, setFileSizeBytes] = useState(1024);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSelectedFileName(file.name);
-    setFileSizeBytes(file.size);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === 'string') {
-        const base64 = result.includes(',') ? result.split(',')[1] : result;
-        setSelectedFileBase64(base64);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
+  useEffect(() => {
+    if (matters.length > 0 && !automationMatterId) {
+      setAutomationMatterId(matters[0].id);
+    }
+  }, [matters, automationMatterId]);
 
   const filteredDocs = useMemo(() => {
     return documents.filter((doc) => {
       const q = searchQuery.toLowerCase();
+      const matchesVersion =
+        Array.isArray(doc.versionHistory) &&
+        doc.versionHistory.some(
+          (v) =>
+            (v.fileName && v.fileName.toLowerCase().includes(q)) ||
+            (v.sha256Checksum && v.sha256Checksum.toLowerCase().includes(q)) ||
+            (v.note && v.note.toLowerCase().includes(q))
+        );
       const matchesStandard =
         searchQuery === '' ||
         doc.title.toLowerCase().includes(q) ||
+        (doc.documentCode && doc.documentCode.toLowerCase().includes(q)) ||
         (doc.fileName && doc.fileName.toLowerCase().includes(q)) ||
+        (doc.batesNumberStart && doc.batesNumberStart.toLowerCase().includes(q)) ||
         (doc.matterTitle && doc.matterTitle.toLowerCase().includes(q)) ||
-        (doc.clientName && doc.clientName.toLowerCase().includes(q));
+        (doc.clientName && doc.clientName.toLowerCase().includes(q)) ||
+        matchesVersion;
 
       const matchesOCR = searchOCR && doc.ocrText && doc.ocrText.toLowerCase().includes(q);
       const matchesSearch = matchesStandard || matchesOCR;
@@ -173,54 +247,46 @@ export function DocumentsList() {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    const effectiveMatterId = uploadMatterId || matters[0]?.id;
-    if (!uploadTitle.trim() || !effectiveMatterId) {
-      addToast('Please provide a document title and select an active matter.', 'error');
+    if (!uploadTitle.trim() || !uploadMatterId) {
+      addToast('Please provide a document title and select a Linked Matter.', 'error');
+      return;
+    }
+    if (!selectedFile) {
+      addToast('Please select a file (PDF, DOCX, TXT, or Image) to upload.', 'error');
       return;
     }
 
-    const matter = matters.find((m) => m.id === effectiveMatterId || m.matterNumber === effectiveMatterId);
-    if (!matter?.id || !matter?.clientId) {
-      addToast('Selected matter must be associated with an active client.', 'error');
+    const matter = matters.find((m) => m.id === uploadMatterId || m.matterNumber === uploadMatterId);
+    if (!matter?.id) {
+      addToast('Selected matter not found.', 'error');
       return;
     }
 
     try {
       setIsUploading(true);
-      const validCategory = ['Pleading', 'Motion', 'Discovery', 'Correspondence', 'Contract', 'Evidence', 'Court Order', 'Billing / Receipt', 'Other'].includes(uploadCategory)
-        ? uploadCategory
-        : 'Pleading';
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('matterId', matter.id);
+      if (matter.clientId) formData.append('clientId', matter.clientId);
+      formData.append('title', uploadTitle.trim());
+      formData.append('category', uploadCategory);
+      formData.append('isPrivileged', String(Boolean(isNewDocPrivileged)));
+      if (isNewDocPrivileged) {
+        formData.append('privilegeType', 'Attorney Work Product (Utah RPC 1.6)');
+      }
 
-      // 1. Create document in backend database
-      const createdDoc = await documentService.createDocument({
-        matterId: matter.id,
-        clientId: matter.clientId,
-        title: uploadTitle.trim(),
-        category: validCategory,
-        isPrivileged: Boolean(isNewDocPrivileged),
-        privilegeType: isNewDocPrivileged ? 'Attorney Work Product (Utah RPC 1.6)' : undefined,
-      });
-
-      // 2. Upload initial document binary version to vault
-      const docId = createdDoc.id;
-      const fileName = selectedFileName || `${uploadTitle.replace(/\s+/g, '_')}.pdf`;
-      const base64Content = selectedFileBase64 || btoa(`Vault Document Content: ${uploadTitle}\nMatter: ${matter.matterNumber}\nUploaded By: ${currentUser.name}\nUtah Legal Professional Work Product.`);
-
-      await documentService.uploadVersion(docId, {
-        fileName,
-        fileType: fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
-        fileSizeBytes: Number(fileSizeBytes) || 1024,
-        fileContentBase64: base64Content,
-        revisionNotes: 'Initial document filing in firm vault.',
-      });
-
-      addToast(`Document "${uploadTitle}" (v1.0) securely archived to vault for matter ${matter.matterNumber}.`, 'success');
+      const uploaded = await documentService.uploadNewDocument(formData);
+      const ocrWords = uploaded?.ocrExtraction?.wordCount || 0;
+      addToast(
+        `Document "${uploadTitle}" (${uploaded?.document?.documentCode || 'v1.0'}) uploaded. OCR indexed ${ocrWords} words.`,
+        'success'
+      );
       setIsUploadModalOpen(false);
       setUploadTitle('');
-      setSelectedFileName('');
-      setSelectedFileBase64('');
+      setSelectedFile(null);
       setIsNewDocPrivileged(false);
       await loadDocuments();
+      await loadStorageStats();
     } catch (err) {
       addToast(err?.message || 'Failed to upload document to vault.', 'error');
     } finally {
@@ -228,99 +294,199 @@ export function DocumentsList() {
     }
   };
 
-  const handleUploadNewVersion = async (docId) => {
+  const handleUploadNewVersion = async (e) => {
+    e.preventDefault();
+    if (!versionDoc) return;
+    if (!revisionFile) {
+      addToast('Please choose a file to upload as the new revision.', 'warning');
+      return;
+    }
     try {
       setIsUploading(true);
-      const targetDoc = documents.find((d) => d.id === docId);
-      const nextVerNum = (parseFloat((targetDoc?.version || 'v1.0').replace('v', '')) + 1.0).toFixed(1);
-      const fileName = targetDoc?.fileName || `${(targetDoc?.title || 'Document').replace(/\s+/g, '_')}_v${nextVerNum}.pdf`;
-      const base64Content = btoa(`Revision ${nextVerNum} content for ${targetDoc?.title}. Annotated by ${currentUser.name} on ${new Date().toISOString()}.`);
+      const formData = new FormData();
+      formData.append('file', revisionFile);
+      formData.append('revisionNotes', revisionNotes.trim() || `Uploaded revision by ${currentUser?.name || 'Staff'}`);
 
-      if (targetDoc?.isDbRecord) {
-        await documentService.uploadVersion(docId, {
-          fileName,
-          fileType: 'application/pdf',
-          fileSizeBytes: 2048,
-          fileContentBase64: base64Content,
-          revisionNotes: `Revision v${nextVerNum} updated with partner annotations.`,
-        });
-        await loadDocuments();
-      } else {
-        setDocuments((prev) =>
-          prev.map((d) => {
-            if (d.id === docId) {
-              const updatedHistory = [
-                { version: `v${nextVerNum}`, date: new Date().toISOString().split('T')[0], author: currentUser.name, note: 'Revised version with updated annotations' },
-                ...d.versionHistory,
-              ];
-              return { ...d, version: `v${nextVerNum}`, versionHistory: updatedHistory };
-            }
-            return d;
-          })
-        );
-      }
-
-      addToast(`Revision v${nextVerNum} uploaded for "${targetDoc?.title}". Previous revisions archived.`, 'success');
+      const res = await documentService.uploadVersion(versionDoc.id, formData);
+      addToast(`Uploaded ${res.versionLabel || 'new version'} for "${versionDoc.title}".`, 'success');
+      setRevisionFile(null);
+      setRevisionNotes('');
       setVersionDoc(null);
+      await loadDocuments();
+      await loadStorageStats();
     } catch (err) {
-      addToast(err?.message || 'Failed to upload new revision to vault.', 'error');
+      addToast(err?.message || 'Failed to upload new revision.', 'error');
     } finally {
       setIsUploading(false);
     }
   };
 
+  const handleRestoreVersion = async (docId, versionId, versionLabel) => {
+    try {
+      setIsUploading(true);
+      const restored = await documentService.restoreVersion(docId, versionId);
+      addToast(`Restored ${versionLabel} as new active version ${restored.versionLabel}.`, 'success');
+      setVersionDoc(null);
+      await loadDocuments();
+    } catch (err) {
+      addToast(err?.message || 'Failed to restore version.', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleOpenPreview = async (doc) => {
+    setPreviewDoc(doc);
+    setPreviewOcrData(null);
+    setIntegrityResult(null);
+    try {
+      const [ocrRes, integrityRes] = await Promise.all([
+        documentService.getOcrDetails(doc.id).catch(() => null),
+        documentService.verifyIntegrity(doc.id).catch(() => null),
+      ]);
+      setPreviewOcrData(ocrRes);
+      setIntegrityResult(integrityRes);
+    } catch {
+      // non-blocking
+    }
+  };
+
+  const handleRunOcr = async () => {
+    if (!previewDoc) return;
+    setRunningOcr(true);
+    try {
+      const res = await documentService.runOcrExtraction(previewDoc.id);
+      setPreviewOcrData({
+        ocrContent: res.ocrContent,
+        extractedFields: res.extraction?.extractedFields,
+        method: res.extraction?.method,
+        wordCount: res.extraction?.wordCount,
+        confidence: res.extraction?.confidence,
+        warnings: res.extraction?.warnings,
+      });
+      addToast(`OCR extraction complete (${res.extraction?.method}, ${res.extraction?.wordCount || 0} words).`, 'success');
+      await loadDocuments();
+    } catch (err) {
+      addToast(err?.message || 'OCR extraction failed.', 'error');
+    } finally {
+      setRunningOcr(false);
+    }
+  };
+
+  const handleTriggerCatalogItem = async (item) => {
+    const targetMatterId = automationMatterId || matters[0]?.id;
+    if (!targetMatterId) {
+      addToast('Please select a target matter first.', 'warning');
+      return;
+    }
+    setTriggeringCatId(item.catalogId);
+    try {
+      const res = await documentService.triggerAutomation(item.catalogId, targetMatterId);
+      addToast(
+        res?.isDuplicate
+          ? `Draft ${res?.draft?.draftCode} already active for ${item.catalogId}.`
+          : `Triggered ${item.catalogId}: generated draft ${res?.draft?.draftCode}.`,
+        'success'
+      );
+      await loadDrafts();
+      setViewMode('drafts');
+    } catch (err) {
+      addToast(err?.message || `Failed to trigger ${item.catalogId}.`, 'error');
+    } finally {
+      setTriggeringCatId(null);
+    }
+  };
+
   const handleDownloadDocument = async (doc) => {
     try {
-      if (doc.isDbRecord) {
-        addToast(`Downloading "${doc.fileName || doc.title}" from vault...`, 'info');
-        await documentService.downloadDocument(doc.id, doc);
-        addToast(`Document "${doc.fileName || doc.title}" downloaded.`, 'success');
-      } else {
-        // High-fidelity client-side PDF document generation
-        const pdfBlob = createLegalDocumentPdf({
-          title: doc.title || 'Legal Document Instrument',
-          draftCode: doc.id ? `DOC-${doc.id.slice(0, 8)}` : 'DOC-CERT',
-          client: doc.clientName || 'Client Records',
-          matter: doc.matterTitle || 'Legal Matter Records',
-          attorney: 'Thomas Bludworth, Esq.',
-          date: doc.uploadedAt || new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        });
-        const url = window.URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        const filename = (doc.fileName && doc.fileName.toLowerCase().endsWith('.pdf'))
-          ? doc.fileName
-          : `${(doc.title || 'Legal_Document').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        addToast(`Document "${filename}" downloaded as PDF.`, 'success');
-      }
+      await documentService.downloadDocument(doc.id, doc);
+      addToast(`Document "${doc.fileName || doc.title}" downloaded.`, 'success');
     } catch (err) {
       addToast(err?.message || 'Failed to download document from vault.', 'error');
     }
   };
 
+  const handleTogglePrivilege = async (doc) => {
+    try {
+      const nextPrivileged = !doc.isPrivileged;
+      await documentService.updateDocument(doc.id, {
+        isPrivileged: nextPrivileged,
+        privilegeType: nextPrivileged ? 'Attorney Work Product (Utah RPC 1.6)' : null,
+      });
+      addToast(
+        nextPrivileged
+          ? `"${doc.title}" marked as Privileged (Utah RPC 1.6).`
+          : `"${doc.title}" set to Standard / Court Record.`,
+        'success'
+      );
+      await loadDocuments();
+    } catch (err) {
+      addToast(err?.message || 'Failed to update privilege tag.', 'error');
+    }
+  };
+
+  const handleDownloadVersion = async (docId, versionId, fileName) => {
+    try {
+      await documentService.downloadDocumentVersion(docId, versionId, fileName);
+      addToast(`Version "${fileName}" downloaded.`, 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to download document version.', 'error');
+    }
+  };
+
+  const handleConfirmDeleteDocument = async () => {
+    if (!deleteDocTarget) return;
+    setIsDeleting(true);
+    try {
+      await documentService.deleteDocument(deleteDocTarget.id);
+      addToast(`Document "${deleteDocTarget.title}" deleted.`, 'success');
+      setDeleteDocTarget(null);
+      await loadDocuments();
+      await loadStorageStats();
+    } catch (err) {
+      addToast(err?.message || 'Failed to delete document.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleRenameSubmit = async (e) => {
+    e.preventDefault();
+    if (!renameDoc || !renameTitle.trim()) return;
+    try {
+      await documentService.updateDocument(renameDoc.id, { title: renameTitle.trim() });
+      addToast(`Display title updated (origin code ${renameDoc.documentCode} & checksums preserved).`, 'success');
+      setRenameDoc(null);
+      setRenameTitle('');
+      await loadDocuments();
+    } catch (err) {
+      addToast(err?.message || 'Failed to rename document.', 'error');
+    }
+  };
+
+  const pendingDraftCount = drafts.filter((d) => ['Draft', 'Under Review'].includes(d.status)).length;
+
   return (
     <div className="space-y-6">
-      {/* Filevine Document Architecture Banner */}
-      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex items-center justify-between text-xs text-emerald-950">
+      {/* Architecture & Storage Banner */}
+      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Document Integrity &amp; Versioning Engine (Filevine Model):</strong> Full document revision history (v1, v2, v3), searchable text/OCR index, and strict Utah Rule of Professional Conduct 1.6 privileged access controls.
+            <strong>Document Vault, Versioning, OCR &amp; 300-Automation Engine:</strong> Real multipart upload, PDF/DOCX/Image OCR indexing, immutable SHA-256 versioning, and Word/PDF generation.
           </span>
         </div>
-        <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          VERSIONING &amp; OCR
-        </span>
+        {storageStats && (
+          <span className="inline-flex items-center gap-1.5 bg-emerald-200 text-emerald-900 font-bold px-2.5 py-0.5 rounded text-[10px]">
+            <HardDrive className="w-3 h-3" />
+            {storageStats.totalFiles} Files ({Math.round((storageStats.totalBytes || 0) / 1024)} KB)
+          </span>
+        )}
       </div>
 
       <PageHeader
         title="Document Management &amp; Repository"
-        subtitle="Centralized firm repository for pleadings, discovery disclosures, contracts, transcripts, and court orders."
+        subtitle="Centralized firm repository for uploaded filings, OCR extraction, version history, draft approvals, and 300 automations."
         breadcrumbs={[{ label: 'Clients & Matters', to: '/clients' }, { label: 'Documents' }]}
         actions={
           <div className="flex items-center gap-2">
@@ -345,277 +511,281 @@ export function DocumentsList() {
         }
       />
 
-      {/* View Mode Segmented Tab Switcher */}
-      <div className="flex items-center gap-2 border-b border-[#EAECF0] pb-2 text-xs">
+      {/* View Mode Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#EAECF0] pb-2 text-xs">
         <button
           type="button"
           onClick={() => setViewMode('documents')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
             viewMode === 'documents'
               ? 'bg-[#06244B] text-white shadow-sm'
-              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 hover:text-slate-900 border border-[#D0D5DD]'
+              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 border border-[#D0D5DD]'
           }`}
         >
           <FileText className="w-4 h-4" />
           <span>Repository Documents ({documents.length})</span>
         </button>
+
         <button
           type="button"
           onClick={() => setViewMode('drafts')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
             viewMode === 'drafts'
               ? 'bg-[#06244B] text-white shadow-sm'
-              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 hover:text-slate-900 border border-[#D0D5DD]'
+              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 border border-[#D0D5DD]'
           }`}
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>PI Automation Workflows &amp; Drafts ({drafts.length})</span>
-          {drafts.some((d) => d.status === 'Drafted') && (
+          <span>Workflow Drafts &amp; Approvals ({drafts.length})</span>
+          {pendingDraftCount > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#A4432B] text-white">
-              {drafts.filter((d) => d.status === 'Drafted').length} Pending Review
+              {pendingDraftCount} Pending
             </span>
           )}
         </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('automations')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all cursor-pointer ${
+            viewMode === 'automations'
+              ? 'bg-[#06244B] text-white shadow-sm'
+              : 'bg-[#F9FAFB] text-[#475467] hover:bg-slate-100 border border-[#D0D5DD]'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-amber-400" />
+          <span>300 Document Automations ({automationSummary?.totalAutomations || 300})</span>
+        </button>
       </div>
 
-      {/* Search, Filters & OCR Toggle Toolbar */}
+      {/* Search & Filters Toolbar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#EAECF0] shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          {/* Search Input */}
           <div className="relative w-full md:flex-1">
             <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-[#98A2B3]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={searchOCR ? "Full-text / OCR search inside document body and transcripts..." : "Search by title, file name, client, or docket..."}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-[#F9FAFB] border border-[#D0D5DD] rounded-lg text-[#1D2939] placeholder-[#98A2B3] focus:outline-none focus:ring-2 focus:ring-[#06244B] focus:bg-white transition-all"
+              placeholder={
+                viewMode === 'automations'
+                  ? 'Search 300 automations by ID (CAT-001), title, trigger, or mapped fields...'
+                  : searchOCR
+                  ? 'Full-text / OCR search inside extracted document contents...'
+                  : 'Search by title, code, file name, client, or matter...'
+              }
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[#F9FAFB] border border-[#D0D5DD] rounded-lg text-[#1D2939] focus:outline-none focus:ring-2 focus:ring-[#06244B] focus:bg-white"
             />
           </div>
 
-          {/* OCR Toggle */}
-          <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
+          {viewMode === 'documents' && (
             <button
               type="button"
               onClick={() => {
                 setSearchOCR(!searchOCR);
-                addToast(
-                  !searchOCR ? 'Full-text / OCR search enabled. Querying document text content.' : 'Standard metadata search active.',
-                  'info'
-                );
+                addToast(!searchOCR ? 'OCR full-text content search enabled.' : 'Standard metadata search active.', 'info');
               }}
-              className={`text-xs px-3 py-2 rounded-lg font-semibold border flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`text-xs px-3 py-2 rounded-lg font-semibold border flex items-center gap-1.5 cursor-pointer shrink-0 ${
                 searchOCR
-                  ? 'bg-[#06244B] text-white border-[#06244B] shadow-sm'
-                  : 'bg-[#F9FAFB] text-[#475467] border-[#D0D5DD] hover:bg-slate-100 hover:text-[#1D2939]'
+                  ? 'bg-[#06244B] text-white border-[#06244B]'
+                  : 'bg-[#F9FAFB] text-[#475467] border-[#D0D5DD]'
               }`}
             >
-              <Sparkles className={`w-3.5 h-3.5 ${searchOCR ? 'text-amber-300' : 'text-[#667085]'}`} />
-              <span>OCR Content Search:</span>
-              <span className={`font-mono font-bold text-[10px] px-1.5 py-0.2 rounded ${searchOCR ? 'bg-amber-400/20 text-amber-200' : 'bg-slate-200 text-slate-700'}`}>
-                {searchOCR ? 'ON' : 'OFF'}
-              </span>
+              <ScanText className={`w-3.5 h-3.5 ${searchOCR ? 'text-amber-300' : 'text-[#667085]'}`} />
+              <span>OCR Search: {searchOCR ? 'ON' : 'OFF'}</span>
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Filter Pills & Category Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#EAECF0] text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-semibold text-[#475467] uppercase text-[10px] tracking-wider font-mono mr-1">Privilege Tag:</span>
-            {[
-              { id: 'all', label: 'All Files' },
-              { id: 'privileged', label: 'Privileged Only (Rule 1.6)', icon: Lock },
-              { id: 'public', label: 'Court Filings / Public', icon: Unlock },
-            ].map(f => {
-              const Icon = f.icon;
-              const isActive = privilegeFilter === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setPrivilegeFilter(f.id)}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#06244B] text-white border-[#06244B] shadow-sm'
-                      : 'bg-[#F9FAFB] text-[#344054] border-[#D0D5DD] hover:bg-white hover:border-[#98A2B3]'
-                  }`}
-                >
-                  {Icon && <Icon className={`w-3 h-3 ${isActive ? 'text-amber-300' : 'text-slate-400'}`} />}
-                  <span>{f.label}</span>
-                </button>
-              );
-            })}
-          </div>
+        {viewMode === 'documents' && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#EAECF0] text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { id: 'all', label: 'All Files' },
+                { id: 'privileged', label: 'Privileged Only (Rule 1.6)', icon: Lock },
+                { id: 'public', label: 'Court Filings / Public', icon: Unlock },
+              ].map((f) => {
+                const Icon = f.icon;
+                const isActive = privilegeFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setPrivilegeFilter(f.id)}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border cursor-pointer ${
+                      isActive ? 'bg-[#06244B] text-white border-[#06244B]' : 'bg-[#F9FAFB] text-[#344054] border-[#D0D5DD]'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-3 h-3" />}
+                    <span>{f.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="flex items-center gap-2.5">
-            <span className="font-semibold text-[#475467] uppercase text-[10px] tracking-wider font-mono">Category:</span>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-[#F9FAFB] text-xs text-[#344054] font-medium focus:outline-none focus:ring-2 focus:ring-[#06244B] cursor-pointer"
-            >
-              <option value="">All Categories</option>
-              <option value="Pleadings">Pleadings</option>
-              <option value="Discovery">Discovery</option>
-              <option value="Orders">Orders</option>
-              <option value="Contracts">Contracts</option>
-            </select>
-
-            {(searchQuery || privilegeFilter !== 'all' || categoryFilter || searchOCR) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setPrivilegeFilter('all');
-                  setCategoryFilter('');
-                  setSearchOCR(false);
-                }}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-[#667085] hover:text-[#A4432B] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                title="Reset all filters and search"
+            <div className="flex items-center gap-2">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-[#F9FAFB] text-xs text-[#344054] font-medium"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset</span>
-              </button>
-            )}
+                <option value="">All Categories</option>
+                {DOCUMENT_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+
+              {(searchQuery || privilegeFilter !== 'all' || categoryFilter || searchOCR) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setPrivilegeFilter('all');
+                    setCategoryFilter('');
+                    setSearchOCR(false);
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-[#667085] hover:text-[#A4432B]"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Reset
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Conditional View: Documents Repository vs. PI Automation Drafts */}
-      {viewMode === 'drafts' ? (
+      {/* View 1: Documents Repository */}
+      {viewMode === 'documents' && (
         <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] tracking-wider border-b border-[#EAECF0]">
+              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] border-b border-[#EAECF0]">
                 <tr>
-                  <th className="py-3 px-4 font-semibold">Draft Code &amp; Title</th>
-                  <th className="py-3 px-3 font-semibold">PI Workflow</th>
-                  <th className="py-3 px-3 font-semibold">Status</th>
-                  <th className="py-3 px-3 font-semibold">Missing Fields</th>
-                  <th className="py-3 px-4 font-semibold">Linked Matter</th>
-                  <th className="py-3 px-3 font-semibold">Generated Date</th>
-                  <th className="py-3 px-4 text-right font-semibold">Review Actions</th>
+                  <th className="py-3 px-4">Document Title &amp; File</th>
+                  <th className="py-3 px-3 text-center">Versions</th>
+                  <th className="py-3 px-3">Privilege Tag</th>
+                  <th className="py-3 px-3">Category</th>
+                  <th className="py-3 px-4">Linked Matter &amp; Client</th>
+                  <th className="py-3 px-3">Uploaded By</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAECF0]">
-                {drafts
-                  .filter((d) => {
-                    if (!d) return false;
-                    const q = searchQuery.toLowerCase();
-                    return (
-                      searchQuery === '' ||
-                      d.title?.toLowerCase().includes(q) ||
-                      d.draftCode?.toLowerCase().includes(q) ||
-                      d.template?.templateCode?.toLowerCase().includes(q) ||
-                      d.template?.templateName?.toLowerCase().includes(q)
-                    );
-                  })
-                  .map((d) => {
-                    const code = d.template?.templateCode || '';
-                    let workflowLabel = 'PI General Document';
-                    if (code.includes('096')) workflowLabel = '096 - Representation Letter';
-                    else if (code.includes('112')) workflowLabel = '112 - Medical Authorization';
-                    else if (code.includes('113')) workflowLabel = '113 - Records Request';
-                    else if (code.includes('116')) workflowLabel = '116 - Incomplete Follow-up';
-                    else if (code.includes('140')) workflowLabel = '140 - PI Demand Letter';
-
-                    const missingCount = d.missingFieldsFlags?.length || 0;
-
-                    return (
-                      <tr key={d.id} className="hover:bg-[#F9FAFB]/70 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-[#06244B] text-white shrink-0">
-                              <Sparkles className="w-4 h-4 text-amber-300" />
-                            </div>
-                            <div>
-                              <span
-                                onClick={() => {
-                                  setSelectedReviewDraft(d);
-                                  setIsReviewModalOpen(true);
-                                }}
-                                className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
-                              >
-                                {d.title}
-                              </span>
-                              <span className="font-mono text-[11px] text-[#667085] mt-0.5 block">
-                                {d.draftCode} • {d.template?.templateName || 'Legal Document Draft'}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="inline-block whitespace-nowrap font-semibold text-[#06244B] bg-[#F5F0E5] px-2.5 py-1 rounded text-[11px] border border-[#E0D9C8]">
-                            {workflowLabel}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
+                {filteredDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-[#F9FAFB]/70">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-lg bg-[#06244B] text-white shrink-0">
+                          <FileText className="w-4 h-4 text-amber-300" />
+                        </div>
+                        <div>
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-bold border ${
-                              d.status === 'Approved'
-                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                                : d.status === 'Rejected'
-                                ? 'bg-rose-100 text-rose-800 border-rose-200'
-                                : 'bg-amber-100 text-amber-800 border-amber-200'
-                            }`}
+                            onClick={() => handleOpenPreview(doc)}
+                            className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer"
                           >
-                            {d.status || 'Drafted'}
+                            {doc.title}
                           </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          {missingCount > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                              <AlertTriangle className="w-3 h-3 text-amber-600" />
-                              {missingCount} missing
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              Ready
-                            </span>
+                          <span className="text-[11px] text-[#667085] block">
+                            {doc.documentCode} • {doc.fileName} • {doc.fileSize}
+                          </span>
+                          {searchOCR && doc.ocrText && searchQuery && doc.ocrText.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                            <div className="mt-1 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-900 max-w-md">
+                              <strong>OCR Match:</strong> {doc.ocrText.slice(0, 120)}...
+                            </div>
                           )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-xs font-semibold text-[#1D2939] block">
-                            {d.matter?.matterNumber || d.matterId || 'PI Matter'}
-                          </span>
-                          <span className="text-[11px] text-[#667085] block truncate max-w-xs">
-                            {d.matter?.title || 'Personal Injury Claim'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="text-xs text-slate-700">
-                            {d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'Recent'}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              icon={Eye}
-                              onClick={() => {
-                                setSelectedReviewDraft(d);
-                                setIsReviewModalOpen(true);
-                              }}
-                              className="text-xs py-1 text-[#06244B] border-[#06244B] hover:bg-[#06244B]/5"
-                            >
-                              Review &amp; Approve
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                {drafts.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-500">
-                      <Sparkles className="w-8 h-8 text-amber-400 mx-auto mb-2 opacity-60" />
-                      <span className="font-semibold text-slate-800 block text-sm">No Document Drafts Generated Yet</span>
-                      <span className="text-xs text-slate-500 mt-1 block max-w-md mx-auto">
-                        Personal injury document drafts are automatically prepared when saving incident details (096), adding medical providers (112, 113), reporting deficiencies (116), or creating demand packages (140).
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setVersionDoc(doc)}
+                        className="font-mono font-semibold text-[11px] px-2.5 py-0.5 rounded-md bg-[#F9FAFB] text-[#06244B] border border-[#D0D5DD] hover:border-[#06244B] cursor-pointer"
+                      >
+                        {doc.version} ({doc.versionHistory?.length || 1})
+                      </button>
+                    </td>
+                    <td className="py-3 px-3">
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePrivilege(doc)}
+                        title="Click to toggle Attorney-Client Privilege (Utah RPC 1.6)"
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold border cursor-pointer ${
+                          doc.isPrivileged ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100' : 'bg-slate-50 text-[#475467] border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {doc.isPrivileged ? <Lock className="w-3 h-3 text-amber-700" /> : <Unlock className="w-3 h-3 text-slate-400" />}
+                        {doc.isPrivileged ? 'Privileged (RPC 1.6)' : 'Standard / Court'}
+                      </button>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-100 text-[#344054] font-medium border">
+                        {doc.category}
                       </span>
+                    </td>
+                    <td className="py-3 px-4 max-w-xs">
+                      <span className="text-xs font-semibold text-[#1D2939] block truncate">{doc.matterTitle}</span>
+                      <span className="text-[11px] text-[#667085] block">{doc.clientName}</span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className="text-xs font-medium text-[#1D2939] block">{doc.uploadedByName}</span>
+                      <span className="text-[11px] text-[#667085]">{doc.uploadedAt ? formatDate(doc.uploadedAt, { short: true }) : ''}</span>
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPreview(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] cursor-pointer"
+                          title="Preview & OCR Extraction"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRenameDoc(doc);
+                            setRenameTitle(doc.title);
+                          }}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] cursor-pointer"
+                          title="Rename Display Title (Preserves Immutable Code & Versions)"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVersionDoc(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] cursor-pointer"
+                          title="Version History & Restore"
+                        >
+                          <History className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadDocument(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] cursor-pointer"
+                          title="Download Latest Version"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteDocTarget(doc)}
+                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-rose-600 hover:bg-rose-50 hover:border-rose-300 cursor-pointer"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredDocs.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-10 text-center text-slate-500">
+                      No documents found in repository. Upload a document or approve a draft to store it here.
                     </td>
                   </tr>
                 )}
@@ -623,173 +793,276 @@ export function DocumentsList() {
             </table>
           </div>
         </div>
-      ) : (
-        /* Documents Table */
+      )}
+
+      {/* View 2: Drafts & Approvals */}
+      {viewMode === 'drafts' && (
         <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] tracking-wider border-b border-[#EAECF0]">
+              <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] border-b border-[#EAECF0]">
                 <tr>
-                  <th className="py-3 px-4 font-semibold">Document Title &amp; File</th>
-                  <th className="py-3 px-3 text-center font-semibold">Version History</th>
-                  <th className="py-3 px-3 font-semibold">Privilege &amp; Confidentiality Tag</th>
-                  <th className="py-3 px-3 font-semibold">Category</th>
-                  <th className="py-3 px-4 font-semibold">Linked Matter &amp; Client</th>
-                  <th className="py-3 px-3 font-semibold">Uploaded By</th>
-                  <th className="py-3 px-4 text-right font-semibold">Actions</th>
+                  <th className="py-3 px-4">Draft Code &amp; Title</th>
+                  <th className="py-3 px-3">Template</th>
+                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Missing Fields</th>
+                  <th className="py-3 px-4">Linked Matter</th>
+                  <th className="py-3 px-3">Generated</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EAECF0]">
-                {filteredDocs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-[#F9FAFB]/70 transition-colors">
-                    {/* Title & File */}
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-lg bg-[#06244B] text-white shrink-0 shadow-xs">
-                          <FileText className="w-4 h-4 text-amber-300" />
-                        </div>
-                        <div>
+                {(() => {
+                  const filteredDrafts = drafts.filter((d) => {
+                    if (!d) return false;
+                    const q = searchQuery.toLowerCase();
+                    return (
+                      !q ||
+                      d.title?.toLowerCase().includes(q) ||
+                      d.draftCode?.toLowerCase().includes(q) ||
+                      d.templateCode?.toLowerCase().includes(q)
+                    );
+                  });
+                  if (filteredDrafts.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan={7} className="py-10 text-center text-slate-500">
+                          {drafts.length === 0
+                            ? 'No document drafts generated yet. Click "Generate Draft" or trigger one from the 300 Document Automations tab.'
+                            : 'No drafts match the current search query.'}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return filteredDrafts.map((d) => {
+                    const missingCount = Array.isArray(d.missingFieldsFlags)
+                      ? d.missingFieldsFlags.filter((f) => f && f.type !== 'TRANSMISSION_EVIDENCE' && f.type !== 'REJECTION_NOTICE').length
+                      : 0;
+                    return (
+                      <tr key={d.id} className="hover:bg-[#F9FAFB]/70">
+                        <td className="py-3 px-4">
                           <span
-                            onClick={() => setPreviewDoc(doc)}
-                            className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer transition-colors"
+                            onClick={() => {
+                              setSelectedReviewDraft(d);
+                              setIsReviewModalOpen(true);
+                            }}
+                            className="font-serif font-bold text-sm text-[#06244B] hover:text-[#A4432B] block cursor-pointer"
                           >
-                            {doc.title}
+                            {d.title}
                           </span>
-                          <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.fileName} • {doc.fileSize}</span>
-                          {searchOCR && doc.ocrText && searchQuery && doc.ocrText.toLowerCase().includes(searchQuery.toLowerCase()) && (
-                            <div className="mt-1.5 p-1.5 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-900 max-w-md">
-                              <span className="font-bold">OCR Match:</span> "...{doc.ocrText.slice(0, 80)}..."
-                            </div>
+                          <span className="font-mono text-[11px] text-[#667085]">{d.draftCode}</span>
+                        </td>
+                        <td className="py-3 px-3 font-mono text-[11px]">{d.templateCode || d.template?.templateCode || 'N/A'}</td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2.5 py-0.5 rounded text-[11px] font-bold border ${
+                              ['Approved', 'Sent'].includes(d.status)
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                                : d.status === 'Rejected'
+                                ? 'bg-rose-100 text-rose-800 border-rose-200'
+                                : 'bg-amber-100 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {d.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          {missingCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              <AlertTriangle className="w-3 h-3" /> {missingCount} missing
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" /> Ready
+                            </span>
                           )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Version History Pill */}
-                    <td className="py-3 px-3 text-center">
-                      <button
-                        onClick={() => setVersionDoc(doc)}
-                        className="font-mono font-semibold text-[11px] px-2.5 py-0.5 rounded-md bg-[#F9FAFB] text-[#06244B] border border-[#D0D5DD] hover:border-[#06244B] hover:bg-white transition-all cursor-pointer"
-                        title="Click to view revision history"
-                      >
-                        {doc.version} ({doc.versionHistory?.length || 1})
-                      </button>
-                    </td>
-
-                    {/* Privilege Tag Button */}
-                    <td className="py-3 px-3">
-                      <button
-                        onClick={() => handleTogglePrivilege(doc.id)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-all cursor-pointer ${
-                          doc.isPrivileged
-                            ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
-                            : 'bg-slate-50 text-[#475467] border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {doc.isPrivileged ? (
-                          <>
-                            <Lock className="w-3 h-3 text-amber-700" />
-                            <span>Privileged (RPC 1.6)</span>
-                          </>
-                        ) : (
-                          <>
-                            <Unlock className="w-3 h-3 text-slate-400" />
-                            <span>Court Record / Public</span>
-                          </>
-                        )}
-                      </button>
-                    </td>
-
-                    {/* Category */}
-                    <td className="py-3 px-3">
-                      <span className="text-[11px] px-2.5 py-0.5 rounded-md bg-slate-100 text-[#344054] font-medium border border-slate-200">
-                        {doc.category}
-                      </span>
-                    </td>
-
-                    {/* Matter & Client */}
-                    <td className="py-3 px-4 max-w-xs">
-                      <span className="text-xs font-semibold text-[#1D2939] block truncate">{doc.matterTitle}</span>
-                      <span className="text-[11px] text-[#667085] mt-0.5 block">{doc.clientName}</span>
-                    </td>
-
-                    {/* Uploaded By */}
-                    <td className="py-3 px-3">
-                      <span className="text-xs font-medium text-[#1D2939] block">{doc.uploadedByName}</span>
-                      <span className="text-[11px] text-[#667085]">{formatDate(doc.uploadedAt, { short: true })}</span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setPreviewDoc(doc)}
-                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
-                          title="Preview Document"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadDocument(doc)}
-                          className="p-1.5 rounded-lg border border-[#D0D5DD] bg-white text-[#344054] hover:text-[#06244B] hover:bg-[#F9FAFB] hover:border-[#06244B] transition-all cursor-pointer shadow-xs"
-                          title="Download Document"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xs font-semibold block">{d.matterNumber || d.matter?.matterNumber || d.matterId}</span>
+                          <span className="text-[11px] text-[#667085] block truncate max-w-xs">{d.matterTitle || d.matter?.title}</span>
+                        </td>
+                        <td className="py-3 px-3">{d.createdAt ? new Date(d.createdAt).toLocaleDateString() : ''}</td>
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            icon={Eye}
+                            onClick={() => {
+                              setSelectedReviewDraft(d);
+                              setIsReviewModalOpen(true);
+                            }}
+                            className="text-xs py-1 text-[#06244B] border-[#06244B]"
+                          >
+                            Review &amp; Approve
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Version History Modal */}
+      {/* View 3: 300 Document Automations Catalog */}
+      {viewMode === 'automations' && (
+        <div className="space-y-4">
+          <div className="bg-white p-3.5 rounded-xl border border-[#EAECF0] flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={automationPracticeArea}
+                onChange={(e) => setAutomationPracticeArea(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-[#F9FAFB] text-xs font-medium"
+              >
+                <option value="">All 10 Practice Categories ({automationSummary?.totalAutomations || 300})</option>
+                {(automationSummary?.practiceAreas || []).map((pa) => (
+                  <option key={pa.practiceArea} value={pa.practiceAreaId}>
+                    {pa.practiceArea} ({pa.count})
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={automationMatterId}
+                onChange={(e) => setAutomationMatterId(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-white text-xs font-semibold text-[#06244B]"
+              >
+                {matters.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    Target Matter: {m.matterNumber} — {m.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="text-[11px] text-slate-500">
+              Showing {automations.length} automations (total catalog: {automationSummary?.totalAutomations || 300})
+            </span>
+          </div>
+
+          <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-[#F9FAFB] text-[#475467] uppercase font-semibold text-[11px] border-b border-[#EAECF0]">
+                  <tr>
+                    <th className="py-3 px-4">Catalog ID</th>
+                    <th className="py-3 px-3">Automation Document</th>
+                    <th className="py-3 px-3">Practice Area</th>
+                    <th className="py-3 px-3">Trigger Event</th>
+                    <th className="py-3 px-3">Mapped Fields</th>
+                    <th className="py-3 px-4 text-right">Run Automation</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#EAECF0]">
+                  {automations.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-slate-500">
+                        No document automations match the current practice area or search filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    automations.map((item) => (
+                      <tr key={item.catalogId} className="hover:bg-[#F9FAFB]">
+                        <td className="py-2.5 px-4 font-mono font-bold text-[#06244B] whitespace-nowrap">{item.catalogId}</td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-900">{item.title}</td>
+                        <td className="py-2.5 px-3 text-slate-600">{item.practiceArea}</td>
+                        <td className="py-2.5 px-3">
+                          <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 text-[11px]">
+                            {item.trigger}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-[11px] text-slate-600 max-w-xs truncate">{item.fields}</td>
+                        <td className="py-2.5 px-4 text-right">
+                          <Button
+                            size="xs"
+                            variant="primary"
+                            icon={Zap}
+                            loading={triggeringCatId === item.catalogId}
+                            onClick={() => handleTriggerCatalogItem(item)}
+                            className="bg-[#06244B] text-white"
+                          >
+                            Trigger Draft
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Version History & Upload Revision Modal */}
       {versionDoc && (
         <Modal
           isOpen={!!versionDoc}
           onClose={() => setVersionDoc(null)}
           title={`Document Version History: ${versionDoc.title}`}
-          subtitle={`Current Version: ${versionDoc.version} | Linked Matter: ${versionDoc.matterTitle}`}
+          subtitle={`Current: ${versionDoc.version} | Code: ${versionDoc.documentCode}`}
           maxWidth="max-w-xl"
         >
           <div className="space-y-4 text-xs text-[#202A35]">
-            <div className="flex justify-between items-center p-3 bg-slate-50 border border-[#D9D6CF] rounded">
-              <div>
-                <span className="font-bold text-[#06244B] block">Revision Audit Trail</span>
-                <span className="text-[11px] text-[#667085]">Full immutable timestamp log of all file updates</span>
+            <form onSubmit={handleUploadNewVersion} className="p-3 bg-slate-50 border border-[#D9D6CF] rounded-lg space-y-2.5">
+              <span className="font-bold text-[#06244B] block">Upload New File Revision</span>
+              <input
+                type="file"
+                accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+                onChange={(e) => setRevisionFile(e.target.files?.[0] || null)}
+                className="w-full text-xs p-1.5 rounded border border-[#D9D6CF] bg-white"
+              />
+              <input
+                type="text"
+                value={revisionNotes}
+                onChange={(e) => setRevisionNotes(e.target.value)}
+                placeholder="Revision notes (e.g. Updated with attorney redlines)"
+                className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white"
+              />
+              <div className="flex justify-end">
+                <Button size="sm" variant="primary" icon={Upload} type="submit" disabled={isUploading}>
+                  {isUploading ? 'Uploading...' : 'Upload Revision'}
+                </Button>
               </div>
-              <Button
-                size="sm"
-                variant="primary"
-                icon={Upload}
-                onClick={() => handleUploadNewVersion(versionDoc.id)}
-              >
-                Upload Revision (v{(parseFloat(versionDoc.version.replace('v', '')) + 1.0).toFixed(1)})
-              </Button>
-            </div>
+            </form>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
               {versionDoc.versionHistory?.map((vh, i) => (
-                <div key={i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono font-bold text-xs bg-[#06244B] text-white px-2 py-0.5 rounded">
-                      {vh.version}
-                    </span>
-                    <div>
-                      <span className="font-bold text-xs text-[#06244B] block">{vh.note}</span>
-                      <span className="text-[11px] text-[#667085]">
-                        Updated by <strong>{vh.author}</strong> on {vh.date}
+                <div key={vh.id || i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-xs bg-[#06244B] text-white px-2 py-0.5 rounded">
+                        {vh.version}
                       </span>
+                      <span className="font-semibold text-[#06244B] truncate">{vh.fileName}</span>
                     </div>
+                    <span className="text-[11px] text-slate-600 block mt-1">{vh.note}</span>
+                    <span className="text-[10px] text-[#667085] block">
+                      {vh.author} • {vh.date} • SHA256: {vh.sha256Checksum?.slice(0, 12)}...
+                    </span>
                   </div>
-                  <Button size="xs" variant="outline" onClick={() => addToast(`Reverted view to ${vh.version}.`, 'info')}>
-                    Restore View
-                  </Button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {vh.id && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        icon={Download}
+                        onClick={() => handleDownloadVersion(versionDoc.id, vh.id, vh.fileName)}
+                      >
+                        Get
+                      </Button>
+                    )}
+                    {vh.id && vh.version !== versionDoc.version && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => handleRestoreVersion(versionDoc.id, vh.id, vh.version)}
+                      >
+                        Restore
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -803,42 +1076,69 @@ export function DocumentsList() {
         </Modal>
       )}
 
-      {/* Document Preview Modal */}
+      {/* Document Preview, OCR & Storage Integrity Modal */}
       {previewDoc && (
         <Modal
           isOpen={!!previewDoc}
           onClose={() => setPreviewDoc(null)}
-          title={`Document Preview: ${previewDoc.title}`}
-          subtitle={`${previewDoc.fileName} • ${previewDoc.fileSize} • Version ${previewDoc.version}`}
+          title={`Document Preview & OCR: ${previewDoc.title}`}
+          subtitle={`${previewDoc.documentCode} • ${previewDoc.fileName} • Version ${previewDoc.version}`}
           maxWidth="max-w-2xl"
         >
-          <div className="space-y-4 text-xs text-[#202A35]">
-            <div className="flex justify-between items-center p-3 bg-[#FAF8F5] border border-[#D9D6CF] rounded">
+          <div className="space-y-3 text-xs text-[#202A35]">
+            <div className="flex flex-wrap justify-between items-center gap-2 p-3 bg-[#FAF8F5] border border-[#D9D6CF] rounded">
               <div className="flex items-center gap-2">
-                {previewDoc.isPrivileged ? (
-                  <span className="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded text-[11px]">
-                    <Lock className="w-3.5 h-3.5 text-amber-700" /> {previewDoc.privilegeType}
+                {integrityResult?.allVerified ? (
+                  <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> SHA-256 Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[11px]">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Court Filed Pleading
+                  <span className="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                    Storage Key: {previewDoc.versions?.[0]?.s3StorageKey || 'vault'}
                   </span>
                 )}
               </div>
-              <span className="text-[#667085]">Linked: {previewDoc.matterTitle}</span>
+              <Button size="xs" variant="outline" icon={ScanText} loading={runningOcr} onClick={handleRunOcr}>
+                Run / Refresh OCR Extraction
+              </Button>
             </div>
 
+            {previewOcrData?.method && (
+              <div className="flex flex-wrap items-center gap-2 text-[11px] px-2.5 py-1.5 bg-blue-50 border border-blue-200 rounded text-blue-900">
+                <span><strong>OCR Method:</strong> {previewOcrData.method}</span>
+                {typeof previewOcrData.wordCount === 'number' && <span>• <strong>Words:</strong> {previewOcrData.wordCount}</span>}
+                {typeof previewOcrData.confidence === 'number' && <span>• <strong>Confidence:</strong> {previewOcrData.confidence}%</span>}
+                {previewOcrData.warnings?.length > 0 && <span className="text-amber-800">• {previewOcrData.warnings.join('; ')}</span>}
+              </div>
+            )}
+
+            {previewOcrData?.extractedFields && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Dates Detected</span>
+                  <span className="text-[11px]">{previewOcrData.extractedFields.dates?.join(', ') || 'None'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Monetary Amounts</span>
+                  <span className="text-[11px]">{previewOcrData.extractedFields.monetaryAmounts?.join(', ') || 'None'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Case / Claim IDs</span>
+                  <span className="text-[11px]">
+                    {[...(previewOcrData.extractedFields.caseOrDocketNumbers || []), ...(previewOcrData.extractedFields.claimOrPolicyNumbers || [])].join(', ') || 'None'}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="p-4 bg-white border border-[#D9D6CF] rounded-lg shadow-inner font-mono text-xs whitespace-pre-line leading-relaxed max-h-64 overflow-y-auto">
-              <p className="font-bold text-sm text-[#06244B] pb-2 border-b border-slate-100">{previewDoc.title}</p>
-              <p className="pt-2">{previewDoc.ocrText}</p>
+              {previewOcrData?.ocrContent || previewDoc.ocrText || 'No OCR text extracted yet. Click "Run / Refresh OCR Extraction" above.'}
             </div>
 
             <div className="flex justify-between items-center pt-2 border-t border-[#D9D6CF]">
               <span className="text-[11px] text-[#667085]">Uploaded by {previewDoc.uploadedByName}</span>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setPreviewDoc(null)}>
-                  Close
-                </Button>
+                <Button size="sm" variant="outline" onClick={() => setPreviewDoc(null)}>Close</Button>
                 <Button size="sm" variant="primary" icon={Download} onClick={() => handleDownloadDocument(previewDoc)}>
                   Download File
                 </Button>
@@ -853,19 +1153,17 @@ export function DocumentsList() {
         <Modal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          title="Upload &amp; Index Legal Document"
-          subtitle="Index new pleading, discovery exhibit, or confidential work product into firm vault."
+          title="Upload &amp; OCR Index Legal Document"
+          subtitle="Multipart binary upload to unified storage with automatic PDF/DOCX/Image OCR extraction."
           maxWidth="max-w-lg"
         >
           <form onSubmit={handleUploadSubmit} className="space-y-4 text-xs text-[#202A35]">
             <div>
-              <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                Document Title *
-              </label>
+              <label className="text-xs font-bold text-[#667085] uppercase block mb-1">Document Title *</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Defendant Motion to Dismiss &amp; Supporting Memorandum"
+                placeholder="e.g. Medical Records Packet or Motion to Dismiss"
                 value={uploadTitle}
                 onChange={(e) => setUploadTitle(e.target.value)}
                 className="w-full text-xs p-2.5 rounded border border-[#D9D6CF]"
@@ -874,75 +1172,66 @@ export function DocumentsList() {
 
             <div>
               <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                Select Binary File (PDF / DOCX)
+                Select File (PDF / DOCX / TXT / PNG / JPG) *
               </label>
               <input
                 type="file"
-                accept=".pdf,.docx,.doc,.txt,.png,.jpg"
-                onChange={handleFileChange}
+                required
+                accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.tif,.tiff"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                 className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white cursor-pointer"
               />
-              {selectedFileName && (
+              {selectedFile && (
                 <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">
-                  Selected: {selectedFileName} ({(fileSizeBytes / 1024).toFixed(1)} KB)
+                  Selected: {selectedFile.name} ({Math.max(1, Math.round(selectedFile.size / 1024))} KB)
                 </span>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                  Category *
-                </label>
+                <label className="text-xs font-bold text-[#667085] uppercase block mb-1">Category *</label>
                 <select
                   value={uploadCategory}
                   onChange={(e) => setUploadCategory(e.target.value)}
                   className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-medium"
                 >
-                  <option value="Pleading">Pleading</option>
-                  <option value="Motion">Motion</option>
-                  <option value="Discovery">Discovery</option>
-                  <option value="Correspondence">Correspondence</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Evidence">Evidence</option>
-                  <option value="Court Order">Court Order</option>
-                  <option value="Billing / Receipt">Billing / Receipt</option>
-                  <option value="Other">Other</option>
+                  {DOCUMENT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-[#667085] uppercase block mb-1">
-                  Linked Matter *
-                </label>
+                <label className="text-xs font-bold text-[#667085] uppercase block mb-1">Linked Matter *</label>
                 <select
                   value={uploadMatterId}
                   onChange={(e) => setUploadMatterId(e.target.value)}
+                  required
                   className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-semibold"
                 >
                   <option value="">Select Matter...</option>
                   {matters.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.matterNumber} — {m.title.slice(0, 24)}...
+                      {m.matterNumber} — {m.title}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Privilege Checkbox */}
             <div className="p-3 bg-amber-50 border border-amber-200 rounded">
               <label className="inline-flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isNewDocPrivileged}
                   onChange={(e) => setIsNewDocPrivileged(e.target.checked)}
-                  className="rounded border-[#D9D6CF] text-[#06244B]"
                 />
-                <div>
-                  <span className="font-bold text-[#06244B] block text-xs">Classify as Attorney-Client Privileged (Utah RPC 1.6)</span>
-                  <span className="text-[10px] text-amber-800">Restricts access to legal counsel. Excludes from external disclosures.</span>
-                </div>
+                <span className="font-bold text-[#06244B] text-xs">
+                  Classify as Attorney-Client Privileged (Utah RPC 1.6)
+                </span>
               </label>
             </div>
 
@@ -951,14 +1240,83 @@ export function DocumentsList() {
                 Cancel
               </Button>
               <Button size="sm" variant="primary" type="submit" disabled={isUploading}>
-                {isUploading ? 'Uploading to Vault...' : 'Upload &amp; Index (v1.0)'}
+                {isUploading ? 'Uploading & Indexing...' : 'Upload & Run OCR'}
               </Button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Automated Document Generation & Missing Information Check Modal */}
+      {/* Rename Display Title Modal (F-0700) */}
+      {renameDoc && (
+        <Modal
+          isOpen={!!renameDoc}
+          onClose={() => setRenameDoc(null)}
+          title="Rename Document Display Title"
+          subtitle={`Origin Code: ${renameDoc.documentCode} (Immutable provenance & SHA-256 checksums preserved)`}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleRenameSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="font-bold text-[#06244B] block mb-1">Display Title *</label>
+              <input
+                type="text"
+                required
+                value={renameTitle}
+                onChange={(e) => setRenameTitle(e.target.value)}
+                className="w-full p-2.5 border border-[#D9D6CF] rounded"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button type="button" variant="outline" size="sm" onClick={() => setRenameDoc(null)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" size="sm">
+                Save Display Title
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteDocTarget && (
+        <Modal
+          isOpen={!!deleteDocTarget}
+          onClose={() => !isDeleting && setDeleteDocTarget(null)}
+          title="Delete Repository Document"
+          subtitle={`Document Code: ${deleteDocTarget.documentCode || deleteDocTarget.id}`}
+          maxWidth="max-w-md"
+        >
+          <div className="space-y-4 text-xs text-[#202A35]">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-900">
+              Are you sure you want to delete <strong>{deleteDocTarget.title}</strong>? This removes the document record from the Matter Document Repository and logs an audit entry.
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#D9D6CF]">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteDocTarget(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleConfirmDeleteDocument}
+                disabled={isDeleting}
+                className="bg-rose-700 hover:bg-rose-800 text-white"
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <GenerateDraftModal
         isOpen={isGenerateModalOpen}
         onClose={() => setIsGenerateModalOpen(false)}
@@ -970,7 +1328,6 @@ export function DocumentsList() {
         matters={matters}
       />
 
-      {/* Document Draft Review, Approval & Transmission Modal */}
       <DraftReviewModal
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}

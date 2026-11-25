@@ -1,0 +1,159 @@
+{
+  "date": "2026-11-17",
+  "status": "Ten synthetic proposed cases; all Not executed",
+  "tests": [
+    {
+      "requirement_id": "F-0596",
+      "developer_story_extension": "As the attorney, I need a per-matter results manifest that preserves missing and failed rows rather than turning unavailable evidence into a negative finding.",
+      "id": "AT-0596",
+      "scenario_and_expected_result": "Select synthetic projects1,99,100 and attempt101 under a configurable100-project capability. Select all must freeze displayed stable IDs, not claim every matter was selected. Use duplicate display names, one denied project, one parse failure, one true negative and one pending result. Reconcile each selected identity to exactly one explicit status; collapsed no-finding rows remain discoverable and included appropriately in exports. Validate source version/locator per cell and selected-project counts across HTML/Markdown/CSV. A new column creates a traceable new result version; unsupported or unreadable evidence cannot become No. Prevent CSV formula injection in synthetic names.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57881780418715-Cross-Project-Intelligence"
+    },
+    {
+      "requirement_id": "F-0597",
+      "developer_story_extension": "As the attorney, I need reference material to inform a case while write permissions remain confined to the reviewed primary matter.",
+      "id": "AT-0597",
+      "scenario_and_expected_result": "Choose primaryA and up to five reference projects with distinct stable IDs and document versions. StarB before approval and ensure stale planned writes toA are invalidated; no reference project receives writes. Deny access to one reference mid-run and disclose the missing input without silently treating the playbook as fully reviewed. Reconcile displayed project, patient/client/party identities and citation source at each detail switch. A mismatched person name blocks approval until explained; a vendor example mismatch is a test trigger, not proof of a reproduced runtime bug. Preserve exact source labels and approved attorney wording in the combined draft.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57881780418715-Cross-Project-Intelligence"
+    },
+    {
+      "requirement_id": "F-0598",
+      "developer_story_extension": "As the attorney, I need reusable instructions with explicit ownership, revision and invocation provenance while my approval rules remain enforceable.",
+      "id": "AT-0598",
+      "scenario_and_expected_result": "Use a private skill for userA and a firm skill controlled by an admin. A member cannot readA’s private instructions or publish a firm revision. Test20000/20001-character instruction boundaries, Unicode counting policy and required name/description; unknown vendor counting semantics stay unresolved. Store the exact revision selected by explicit slash or automatic invocation and surface conflicting/similarly named candidates. Updating a skill during a run must not rewrite its instruction snapshot. Preserve I/me/my, exact quotes/proper plurals and every four-digit letter date; no exception without explicit Dusten approval in Codex. A skill can propose intake/time tasks but cannot mark intake complete with missing fields or daily review complete without individual calls/texts.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57805775446555-LOIS-Skills"
+    },
+    {
+      "requirement_id": "F-0599",
+      "developer_story_extension": "As intake staff, I need recipient/channel readiness and reply behavior explicit before a form, signature or appointment text can be sent.",
+      "id": "AT-0599",
+      "scenario_and_expected_result": "Build a synthetic matrix for unverified/verified sender, US/non-US server, valid+1/invalid/international recipient, email-only, phone-only and both. Recheck at execution, including opt-out and changed contact. Distinguish Grow notification enablement, Manage texting, initial Manage conversation and actual inbound reply routing; do not assume no-reply behavior proves replies cannot arrive elsewhere. Render fixed SMS template versus editable email and require per-signer destination preview. Preserve separate manual/automated origin and failed-carrier/temporary/blocked states. Never mark delivery, read, form completion or signature from send acceptance alone. No actual SMS/email is sent by this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/14164457325595-Text-Message-Notifications-and-Reminders-in-Clio-Grow"
+    },
+    {
+      "requirement_id": "F-0349",
+      "id": "AT-0349-R78-1",
+      "title": "Keep plugin catalog, immutable bundled skills and execution evidence distinct",
+      "developer_story_extension": "As the administrator, I need installed package identity and contained skill versions visible without treating install as a completed workflow.",
+      "scenario_and_expected_result": "As a non-admin inspect/search/filter the synthetic catalog and package details; reject install/uninstall via both UI and forged request. Admin installation records actor/version. Bundled skills remain read-only and distinct from authored personal/firm definitions. Explicit and automatic invocation preserve permissions and package provenance. Catalog cards and a loading message do not prove an expert package, discovery review or daily brief ran.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57805812846491-LOIS-Plugins",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0350",
+      "id": "AT-0350-R78-2",
+      "title": "Resolve required versus default package removal explicitly",
+      "developer_story_extension": "As the administrator, I need effective required/default/optional policy to match the server rather than ambiguous help text.",
+      "scenario_and_expected_result": "Use required, default-removable and optional synthetic packages. Required removal must be denied server-side even if a stale UI offers it. Default-installed does not mean required. Preserve old outputs and audit after uninstall; define existing-run behavior explicitly. Source sentence says required packages cannot be installed while screenshot locks Uninstall; retain discrepancy and verify exact tenant policy before claiming behavior.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57805812846491-LOIS-Plugins",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0282",
+      "id": "AT-0282-R78-3",
+      "title": "Manual phone logs do not prove provider capture or reviewed time",
+      "developer_story_extension": "As the attorney, I need manual call records and associated time independently reconciled with captured calls.",
+      "scenario_and_expected_result": "Create a contact-only manual log and a provider call with the same participants/time. Keep provenance and avoid double time; allow explicit matter assignment after review. Add billable/nonbillable time later and preserve attribution. Test selected-user update notifications and denied matter access. A contact-only log must not inherit presumed matter confidentiality. Before any future deletion, preview linked-time/bill implications; vendor permanent-log deletion wording does not resolve those semantics. No actual records are deleted here.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125244587675-Record-and-Manage-Phone-Logs",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0287",
+      "id": "AT-0287-R78-4",
+      "title": "Reconcile filtered phone-log export columns and permissions",
+      "developer_story_extension": "As staff, I need phone-log exports and printed records to match the authorized filtered population.",
+      "scenario_and_expected_result": "Use matter, contact, creator, time-entry presence and bill-ID fixtures. Export all columns versus visible columns with stable log IDs and preserve values/dates; deny hidden-field or denied-matter disclosure in both variants. Print one log and verify correct identity. Reconcile exported/printed totals and time links with individual daily review entries; filtered-out rows stay unreviewed rather than disappearing from the audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125244587675-Record-and-Manage-Phone-Logs",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0296",
+      "id": "AT-0296-R78-5",
+      "title": "Include automated intake reminders beyond visible Timeline",
+      "developer_story_extension": "As the attorney, I need every actual call/text event in daily review even when the intake Timeline omits automated reminders.",
+      "scenario_and_expected_result": "Create synthetic manual and automated texts with distinct provider IDs and a Timeline that displays only manual sends. Reconcile an independent provider/job event ledger; represent inaccessible automated-send evidence as a coverage gap, not zero activity. Show each individual call/text, mapping, time candidate and review state. Matching contact/time across Grow/Manage must not merge distinct messages or bill a duplicated imported event twice. Daily review cannot complete while source coverage or individual events remain unresolved.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/14164457325595-Text-Message-Notifications-and-Reminders-in-Clio-Grow",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0381",
+      "id": "AT-0381-R78-6",
+      "title": "Disable intake notifications independently from other messaging",
+      "developer_story_extension": "As the administrator, I need module preferences and queued messages to have separately defined effects.",
+      "scenario_and_expected_result": "Disable synthetic Grow notifications while Manage remains active. Re-evaluate queued Grow reminders and preserve cancellation versus already-sent evidence; do not claim Manage disabled or automatically revoke unrelated consent. Re-enable and test idempotency without replaying old reminders. Unknown vendor queue-cancellation behavior remains an explicit implementation decision to verify. Preserve original language and per-channel preferences.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/14164457325595-Text-Message-Notifications-and-Reminders-in-Clio-Grow",
+      "review_date": "2026-11-17"
+    }
+  ],
+  "flat_selection_boundaries": [
+    1,
+    99,
+    100,
+    101
+  ],
+  "reference_selection": {
+    "primary": 1,
+    "max_reference_projects": 5,
+    "actual_writes": 0
+  },
+  "sms_matrix": {
+    "regions": [
+      "US server",
+      "other server"
+    ],
+    "sender": [
+      "unverified",
+      "verified"
+    ],
+    "recipient": [
+      "valid+1",
+      "invalid",
+      "international",
+      "email only",
+      "phone only",
+      "both"
+    ],
+    "origin": [
+      "manual",
+      "automated"
+    ],
+    "evidence": [
+      "accepted",
+      "sent",
+      "delivered",
+      "failed",
+      "unknown"
+    ]
+  },
+  "limits": "No external messages, time/bill changes, case updates or actual software/hardware execution."
+}

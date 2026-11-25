@@ -4,84 +4,126 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 
+const formatDateInput = (value) => {
+  if (!value) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+};
+
+const EMPTY_FORM = {
+  matterId: '',
+  matterTitle: '',
+  incidentDate: '',
+  incidentTime: '',
+  incidentLocation: '',
+  accidentType: '',
+  description: '',
+  mechanismOfInjury: '',
+  policeAgency: '',
+  reportNumber: '',
+  investigatingOfficer: '',
+  citationIssued: '',
+  witnessName: '',
+  witnessContact: '',
+  witnessStatement: '',
+  liabilityAssessment: '',
+  plaintiffFaultPercentage: '',
+  adverseFaultPercentage: '',
+  comparativeFaultAnalysis: '',
+  investigationNotes: '',
+};
+
 export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], defaultCaseId = '' }) {
   const [matterError, setMatterError] = useState('');
-  const [formData, setFormData] = useState({
-    matterId: '',
-    matterTitle: '',
-    incidentDate: '',
-    incidentTime: '',
-    incidentLocation: '',
-    accidentType: 'Motor Vehicle Collision (Rear-End)',
-    description: '',
-    mechanismOfInjury: '',
-    policeAgency: 'Utah Highway Patrol',
-    reportNumber: '',
-    investigatingOfficer: '',
-    citationIssued: '',
-    witnessName: '',
-    witnessContact: '',
-    witnessStatement: '',
-    liabilityAssessment: 'Clear Liability (100% Adverse Fault)',
-    plaintiffFaultPercentage: 0,
-    adverseFaultPercentage: 100,
-    comparativeFaultAnalysis: 'Utah Code § 78B-5-818 comparative fault applies. Plaintiff bears 0% fault.',
-    investigationNotes: '',
-  });
+  const [faultError, setFaultError] = useState('');
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   useEffect(() => {
     setMatterError('');
+    setFaultError('');
     if (incident) {
+      const pFault =
+        incident.comparativeFault?.plaintiffPercentage ?? incident.plaintiffFaultPercentage;
+      const aFault =
+        incident.comparativeFault?.adversePercentage ?? incident.adverseFaultPercentage;
+
       setFormData({
         matterId: incident.matterId || '',
         matterTitle: incident.matterTitle || '',
-        incidentDate: incident.incidentDate || '',
+        incidentDate: formatDateInput(incident.incidentDate),
         incidentTime: incident.incidentTime || '',
         incidentLocation: incident.incidentLocation || '',
-        accidentType: incident.accidentType || 'Motor Vehicle Collision (Rear-End)',
+        accidentType: incident.accidentType || '',
         description: incident.description || '',
         mechanismOfInjury: incident.mechanismOfInjury || '',
-        policeAgency: incident.policeReportDetails?.agency || '',
-        reportNumber: incident.policeReportDetails?.reportNumber || '',
-        investigatingOfficer: incident.policeReportDetails?.investigatingOfficer || '',
+        policeAgency: incident.policeReportDetails?.agency ?? incident.policeAgency ?? '',
+        reportNumber: incident.policeReportDetails?.reportNumber ?? incident.reportNumber ?? '',
+        investigatingOfficer:
+          incident.policeReportDetails?.investigatingOfficer ?? incident.investigatingOfficer ?? '',
         citationIssued: incident.policeReportDetails?.citationIssued || '',
         witnessName: incident.witnesses?.[0]?.name || '',
         witnessContact: incident.witnesses?.[0]?.phone || '',
         witnessStatement: incident.witnesses?.[0]?.statement || '',
-        liabilityAssessment: incident.liabilityAssessment || 'Clear Liability (100% Adverse Fault)',
-        plaintiffFaultPercentage: incident.comparativeFault?.plaintiffPercentage ?? 0,
-        adverseFaultPercentage: incident.comparativeFault?.adversePercentage ?? 100,
+        liabilityAssessment: incident.liabilityAssessment || '',
+        plaintiffFaultPercentage: pFault !== null && pFault !== undefined ? String(pFault) : '',
+        adverseFaultPercentage: aFault !== null && aFault !== undefined ? String(aFault) : '',
         comparativeFaultAnalysis: incident.comparativeFault?.legalAnalysis || '',
-        investigationNotes: incident.investigationNotes || '',
+        investigationNotes: incident.investigationNotes ?? incident.notes ?? '',
       });
     } else {
       const isSingleMatter = Boolean(defaultCaseId && defaultCaseId !== 'ALL');
       const initialMatterId = isSingleMatter ? defaultCaseId : '';
-      const defaultMatter = isSingleMatter ? cases.find(c => c.id === initialMatterId) : null;
+      const defaultMatter = isSingleMatter ? cases.find((c) => c.id === initialMatterId) : null;
       setFormData({
+        ...EMPTY_FORM,
         matterId: initialMatterId,
-        matterTitle: defaultMatter?.matterTitle || '',
-        incidentDate: new Date().toISOString().split('T')[0],
-        incidentTime: '14:30 MT',
-        incidentLocation: '',
-        accidentType: 'Motor Vehicle Collision (Rear-End)',
-        description: '',
-        mechanismOfInjury: '',
-        policeAgency: 'Utah Highway Patrol',
-        reportNumber: '',
-        investigatingOfficer: '',
-        citationIssued: '',
-        witnessName: '',
-        witnessContact: '',
-        witnessStatement: '',
-        liabilityAssessment: 'Clear Liability (100% Adverse Fault)',
-        plaintiffFaultPercentage: 0,
-        adverseFaultPercentage: 100,
-        comparativeFaultAnalysis: 'Utah Code § 78B-5-818 comparative fault analysis confirmed.',
-        investigationNotes: '',
+        matterTitle: defaultMatter?.matterTitle || defaultMatter?.title || '',
       });
     }
   }, [incident, cases, defaultCaseId, isOpen]);
+
+  const handlePlaintiffFaultChange = (rawVal) => {
+    setFaultError('');
+    if (rawVal === '') {
+      setFormData((prev) => ({
+        ...prev,
+        plaintiffFaultPercentage: '',
+        adverseFaultPercentage: '',
+      }));
+      return;
+    }
+    const parsed = Number(rawVal);
+    if (Number.isNaN(parsed)) return;
+    const clamped = Math.min(100, Math.max(0, Math.round(parsed * 100) / 100));
+    const adverse = Math.round((100 - clamped) * 100) / 100;
+    setFormData((prev) => ({
+      ...prev,
+      plaintiffFaultPercentage: String(clamped),
+      adverseFaultPercentage: String(adverse),
+    }));
+  };
+
+  const handleAdverseFaultChange = (rawVal) => {
+    setFaultError('');
+    if (rawVal === '') {
+      setFormData((prev) => ({
+        ...prev,
+        plaintiffFaultPercentage: '',
+        adverseFaultPercentage: '',
+      }));
+      return;
+    }
+    const parsed = Number(rawVal);
+    if (Number.isNaN(parsed)) return;
+    const clamped = Math.min(100, Math.max(0, Math.round(parsed * 100) / 100));
+    const plaintiff = Math.round((100 - clamped) * 100) / 100;
+    setFormData((prev) => ({
+      ...prev,
+      adverseFaultPercentage: String(clamped),
+      plaintiffFaultPercentage: String(plaintiff),
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -91,12 +133,39 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
       return;
     }
 
-    const selectedMatter = cases.find(c => c.id === formData.matterId);
+    const hasPlaintiffFault = formData.plaintiffFaultPercentage !== '';
+    const hasAdverseFault = formData.adverseFaultPercentage !== '';
+    let plaintiffFaultNum = null;
+    let adverseFaultNum = null;
+
+    if (hasPlaintiffFault || hasAdverseFault) {
+      plaintiffFaultNum = hasPlaintiffFault ? Number(formData.plaintiffFaultPercentage) : 100 - Number(formData.adverseFaultPercentage);
+      adverseFaultNum = hasAdverseFault ? Number(formData.adverseFaultPercentage) : 100 - plaintiffFaultNum;
+
+      if (
+        Number.isNaN(plaintiffFaultNum) ||
+        Number.isNaN(adverseFaultNum) ||
+        plaintiffFaultNum < 0 ||
+        plaintiffFaultNum > 100 ||
+        adverseFaultNum < 0 ||
+        adverseFaultNum > 100
+      ) {
+        setFaultError('Fault percentages must be between 0% and 100%.');
+        return;
+      }
+
+      if (Math.abs(plaintiffFaultNum + adverseFaultNum - 100) > 0.01) {
+        setFaultError('Plaintiff and Adverse Party fault percentages must total 100%.');
+        return;
+      }
+    }
+
+    const selectedMatter = cases.find((c) => c.id === formData.matterId);
 
     const savedRecord = {
       id: incident?.id || `INC-${Date.now()}`,
       matterId: formData.matterId,
-      matterTitle: selectedMatter?.matterTitle || formData.matterTitle,
+      matterTitle: selectedMatter?.matterTitle || selectedMatter?.title || formData.matterTitle,
       incidentDate: formData.incidentDate,
       incidentTime: formData.incidentTime,
       incidentLocation: formData.incidentLocation,
@@ -119,14 +188,13 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
             },
           ]
         : incident?.witnesses || [],
-      sceneEvidence: incident?.sceneEvidence || [
-        { name: 'Police Accident Incident Report', type: 'Official Report', date: formData.incidentDate, verified: true },
-        { name: 'Scene & Vehicle Damage Photographs', type: 'Photographs', date: formData.incidentDate, verified: true },
-      ],
-      liabilityAssessment: formData.liabilityAssessment,
+      sceneEvidence: incident?.sceneEvidence || [],
+      liabilityAssessment: formData.liabilityAssessment || null,
+      plaintiffFaultPercentage: plaintiffFaultNum,
+      adverseFaultPercentage: adverseFaultNum,
       comparativeFault: {
-        plaintiffPercentage: Number(formData.plaintiffFaultPercentage),
-        adversePercentage: Number(formData.adverseFaultPercentage),
+        plaintiffPercentage: plaintiffFaultNum,
+        adversePercentage: adverseFaultNum,
         legalAnalysis: formData.comparativeFaultAnalysis,
       },
       investigationNotes: formData.investigationNotes,
@@ -136,6 +204,9 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
     onClose();
   };
 
+  const hasNumericFault = formData.plaintiffFaultPercentage !== '';
+  const numericPlaintiffFault = hasNumericFault ? Number(formData.plaintiffFaultPercentage) : null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -144,26 +215,28 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
       size="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[75vh] overflow-y-auto px-1">
-        {/* Matter Selector */}
+        {/* Matter & Accident Type */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Select
             label="Associated PI Matter *"
             value={formData.matterId}
             onChange={(e) => {
-              const selectedMatter = cases.find(c => c.id === e.target.value);
+              const selectedMatter = cases.find((c) => c.id === e.target.value);
               setFormData({
                 ...formData,
                 matterId: e.target.value,
-                matterTitle: selectedMatter?.matterTitle || formData.matterTitle,
+                matterTitle: selectedMatter?.matterTitle || selectedMatter?.title || formData.matterTitle,
               });
               if (matterError) setMatterError('');
             }}
-            placeholder={cases.length === 0 ? 'No active PI matters available' : '-- Select Associated PI Matter --'}
+            placeholder={
+              cases.length === 0 ? 'No active PI matters available' : '-- Select Associated PI Matter --'
+            }
             error={matterError}
             required
             options={cases.map((c) => ({
               value: c.id,
-              label: `${c.matterNumber} - ${c.clientName}`,
+              label: `${c.matterNumber} - ${c.clientName || c.client?.name || c.title}`,
             }))}
           />
 
@@ -171,6 +244,7 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
             label="Accident Type *"
             value={formData.accidentType}
             onChange={(e) => setFormData({ ...formData, accidentType: e.target.value })}
+            placeholder="-- Select Accident Type --"
             required
             options={[
               { value: 'Motor Vehicle Collision (Rear-End)', label: 'Motor Vehicle Collision (Rear-End)' },
@@ -228,15 +302,14 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
 
           <div>
             <label className="block text-xs font-semibold text-[#06244B] uppercase tracking-wider mb-1">
-              Mechanism of Injury *
+              Mechanism of Injury
             </label>
             <textarea
               rows={2}
               value={formData.mechanismOfInjury}
               onChange={(e) => setFormData({ ...formData, mechanismOfInjury: e.target.value })}
-              placeholder="e.g. Rapid deceleration whiplash force, steering wheel strike to sternum, knee contact with dashboard..."
+              placeholder="e.g. Rapid deceleration whiplash force, steering wheel strike to sternum..."
               className="w-full text-xs p-2.5 rounded border border-[#D9D6CF] focus:outline-none focus:ring-1 focus:ring-[#A4432B]"
-              required
             />
           </div>
         </div>
@@ -279,13 +352,13 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
           <Input
             label="Key Witness Name"
             value={formData.witnessName}
-            placeholder="e.g. Arthur Pendelton"
+            placeholder="Enter witness full name"
             onChange={(e) => setFormData({ ...formData, witnessName: e.target.value })}
           />
           <Input
             label="Witness Contact Phone / Email"
             value={formData.witnessContact}
-            placeholder="e.g. (801) 555-0182"
+            placeholder="Enter phone or email"
             onChange={(e) => setFormData({ ...formData, witnessContact: e.target.value })}
           />
         </div>
@@ -298,20 +371,39 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
             type="text"
             value={formData.witnessStatement}
             onChange={(e) => setFormData({ ...formData, witnessStatement: e.target.value })}
-            placeholder="Confirmed defendant vehicle was speeding and did not activate brakes..."
+            placeholder="Summarize witness observation..."
             className="w-full text-xs p-2 rounded border border-[#D9D6CF] focus:outline-none focus:ring-1 focus:ring-[#A4432B]"
           />
         </div>
 
         {/* Liability & Comparative Fault (Utah Code 78B-5-818) */}
         <div className="bg-slate-50 p-3.5 rounded border border-[#D9D6CF] space-y-3">
-          <h4 className="text-xs font-serif font-bold text-[#06244B] uppercase tracking-wider">
-            Utah Comparative Fault &amp; Liability Evaluation
-          </h4>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-xs font-serif font-bold text-[#06244B] uppercase tracking-wider">
+              Utah Comparative Fault &amp; Liability Evaluation
+            </h4>
+            {hasNumericFault ? (
+              numericPlaintiffFault >= 50 ? (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">
+                  Utah § 78B-5-818: Recovery Barred ({numericPlaintiffFault}% ≥ 50%)
+                </span>
+              ) : (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Utah § 78B-5-818: Recoverable ({numericPlaintiffFault}% &lt; 50%)
+                </span>
+              )
+            ) : (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
+                Fault % Not Yet Assessed
+              </span>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Select
               label="Overall Liability Assessment"
               value={formData.liabilityAssessment}
+              placeholder="-- Select Liability Assessment --"
               onChange={(e) => setFormData({ ...formData, liabilityAssessment: e.target.value })}
               options={[
                 { value: 'Clear Liability (100% Adverse Fault)', label: 'Clear Liability (100% Adverse Fault)' },
@@ -321,27 +413,30 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
               ]}
             />
             <Input
-              label="Plaintiff Fault % (0 - 49%)"
+              label="Plaintiff Fault % (0 - 100%)"
               type="number"
               min="0"
-              max="49"
+              max="100"
+              step="0.5"
+              placeholder="e.g. 0"
               value={formData.plaintiffFaultPercentage}
-              onChange={(e) => {
-                const p = Number(e.target.value);
-                setFormData({
-                  ...formData,
-                  plaintiffFaultPercentage: p,
-                  adverseFaultPercentage: Math.max(0, 100 - p),
-                });
-              }}
+              onChange={(e) => handlePlaintiffFaultChange(e.target.value)}
             />
             <Input
-              label="Adverse Party Fault %"
+              label="Adverse Party Fault % (0 - 100%)"
               type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              placeholder="e.g. 100"
               value={formData.adverseFaultPercentage}
-              disabled
+              onChange={(e) => handleAdverseFaultChange(e.target.value)}
             />
           </div>
+
+          {faultError && (
+            <p className="text-xs font-semibold text-rose-700">{faultError}</p>
+          )}
 
           <Input
             label="Comparative Fault Legal Analysis"
@@ -378,4 +473,3 @@ export function IncidentModal({ isOpen, onClose, onSave, incident, cases = [], d
     </Modal>
   );
 }
-

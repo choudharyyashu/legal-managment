@@ -1,11 +1,12 @@
 import crypto from 'crypto';
-import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
-import { CreateDocumentInput, UploadVersionInput } from './document.validation.js';
+import { CreateDocumentInput, UpdateDocumentInput, UploadVersionInput } from './document.validation.js';
 import { DocumentResponse, DocumentListQuery, DocumentVersionResponse } from './document.types.js';
+import { StorageService } from './storage/storage.service.js';
+import { OcrService, OcrExtractionResult } from './ocr/ocr.service.js';
 
 export class DocumentService {
   public static async generateDocumentCode(): Promise<string> {
@@ -20,6 +21,10 @@ export class DocumentService {
       if (!existing) return candidate;
     }
     return `DOC-${year}-${Date.now().toString().slice(-4)}`;
+  }
+
+  private static sanitizeFileName(fileName: string): string {
+    return path.basename(fileName || 'document.bin').replace(/[^a-zA-Z0-9._-]/g, '_');
   }
 
   private static formatVersion(version: any): DocumentVersionResponse {
@@ -75,10 +80,27 @@ export class DocumentService {
     if (query.category) where.category = query.category;
     if (query.isPrivileged !== undefined) where.isPrivileged = query.isPrivileged;
     if (query.search) {
-      where.OR = [
+      const orConditions: any[] = [
         { title: { contains: query.search } },
         { documentCode: { contains: query.search } },
+        { batesNumberStart: { contains: query.search } },
+        { batesNumberEnd: { contains: query.search } },
+        {
+          versions: {
+            some: {
+              OR: [
+                { fileName: { contains: query.search } },
+                { sha256Checksum: { contains: query.search } },
+                { revisionNotes: { contains: query.search } },
+              ],
+            },
+          },
+        },
       ];
+      if (query.ocrSearch !== false) {
+        orConditions.push({ ocrContent: { contains: query.search } });
+      }
+      where.OR = orConditions;
     }
 
     const [total, records] = await Promise.all([
@@ -91,7 +113,10 @@ export class DocumentService {
         include: {
           matter: { select: { id: true, matterNumber: true, title: true } },
           client: { select: { id: true, clientNumber: true, name: true } },
-          versions: { orderBy: { uploadedAt: 'desc' }, take: 1 },
+          versions: {
+            orderBy: { uploadedAt: 'desc' },
+            include: { uploadedByUser: { select: { id: true, name: true } } },
+          },
         },
       }),
     ]);
@@ -102,7 +127,7 @@ export class DocumentService {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit) || 1,
       },
     };
   }
@@ -151,6 +176,7 @@ export class DocumentService {
         privilegeType: input.privilegeType,
         batesNumberStart: input.batesNumberStart,
         batesNumberEnd: input.batesNumberEnd,
+        ocrContent: input.ocrContent || null,
         currentVersion: 'v1.0',
       },
       include: {
@@ -173,42 +199,106 @@ export class DocumentService {
     return this.formatResponse(created);
   }
 
+  /**
+   * Single-step document creation + v1.0 binary upload + automatic OCR & entity extraction.
+   */
+  static async createAndUploadDocument(
+    input: {
+      matterId: string;
+      clientId?: string;
+      title: string;
+      category: string;
+      isPrivileged?: boolean;
+      privilegeType?: string;
+      revisionNotes?: string;
+      fileName: string;
+      fileType: string;
+      fileBuffer?: Buffer;
+      fileContentBase64?: string;
+    },
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<{ document: DocumentResponse; version: DocumentVersionResponse; ocrExtraction: OcrExtractionResult }> {
+    const matter = await prisma.matter.findFirst({
+      where: { OR: [{ id: input.matterId }, { matterNumber: input.matterId }] },
+    });
+    if (!matter) throw AppError.badRequest('Referenced legal matter not found.', 'MATTER_NOT_FOUND');
+
+    const clientId = input.clientId || matter.clientId;
+    const doc = await this.createDocument(
+      {
+        matterId: matter.id,
+        clientId,
+        title: input.title,
+        category: (input.category as any) || 'Other',
+        isPrivileged: Boolean(input.isPrivileged),
+        privilegeType: input.privilegeType,
+      },
+      context
+    );
+
+    const uploadResult = await this.uploadVersion(
+      doc.id,
+      {
+        fileName: input.fileName,
+        fileType: input.fileType,
+        fileSizeBytes: input.fileBuffer?.length,
+        fileContentBase64: input.fileContentBase64,
+        revisionNotes: input.revisionNotes || 'Initial document upload & OCR indexing.',
+      },
+      context,
+      input.fileBuffer
+    );
+
+    const refreshed = await this.getDocumentByIdOrCode(doc.id);
+    return {
+      document: refreshed,
+      version: uploadResult,
+      ocrExtraction: uploadResult.ocrExtraction,
+    };
+  }
+
   static async uploadVersion(
     documentId: string,
     input: UploadVersionInput,
-    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
-  ): Promise<DocumentVersionResponse> {
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string },
+    rawFileBuffer?: Buffer
+  ): Promise<DocumentVersionResponse & { ocrExtraction: OcrExtractionResult }> {
     const doc = await this.getDocumentByIdOrCode(documentId);
 
-    // Determine version label
     const existingVersions = await prisma.documentVersion.count({ where: { documentId: doc.id } });
     const versionNumber = existingVersions + 1;
     const versionLabel = `v${versionNumber}.0`;
 
-    // Calculate sha256 checksum
-    const buffer = input.fileContentBase64
-      ? Buffer.from(input.fileContentBase64, 'base64')
-      : Buffer.from(`Simulated-Vault-File-${doc.documentCode}-${versionLabel}`);
-    
-    const sha256Checksum = crypto.createHash('sha256').update(buffer).digest('hex');
-    const s3StorageKey = `vault/${doc.matterId}/${doc.documentCode}/${versionLabel}_${input.fileName}`;
+    let buffer: Buffer;
+    if (rawFileBuffer && rawFileBuffer.length > 0) {
+      buffer = rawFileBuffer;
+    } else if (input.fileContentBase64) {
+      const cleanedBase64 = input.fileContentBase64.includes(',')
+        ? input.fileContentBase64.split(',')[1]
+        : input.fileContentBase64;
+      buffer = Buffer.from(cleanedBase64, 'base64');
+    } else {
+      buffer = Buffer.from(`Vault-File-${doc.documentCode}-${versionLabel}`);
+    }
 
-    // Write file to local vault directory for persistence
-    const vaultDir = path.resolve('vault', doc.matterId, doc.documentCode);
-    await fs.mkdir(vaultDir, { recursive: true }).catch(() => {});
-    await fs.writeFile(path.join(vaultDir, `${versionLabel}_${input.fileName}`), buffer).catch(() => {});
+    const safeFileName = this.sanitizeFileName(input.fileName);
+    const relativeKey = `vault/${doc.matterId}/${doc.documentCode}/${versionLabel}_${safeFileName}`;
+    const stored = await StorageService.writeFile(relativeKey, buffer);
 
-    const fileSizeBytes = BigInt(input.fileSizeBytes);
+    // Automatically run OCR & text extraction on uploaded content
+    const ocrExtraction = await OcrService.extract(buffer, safeFileName, input.fileType);
+
+    const fileSizeBytes = BigInt(input.fileSizeBytes ?? stored.fileSizeBytes);
 
     const version = await prisma.documentVersion.create({
       data: {
         documentId: doc.id,
         versionLabel,
-        fileName: input.fileName,
+        fileName: safeFileName,
         fileType: input.fileType,
         fileSizeBytes,
-        s3StorageKey,
-        sha256Checksum,
+        s3StorageKey: stored.storageKey,
+        sha256Checksum: stored.sha256Checksum,
         uploadedByUserId: context.userId,
         revisionNotes: input.revisionNotes,
       },
@@ -217,10 +307,12 @@ export class DocumentService {
       },
     });
 
-    // Update document's currentVersion
     await prisma.document.update({
       where: { id: doc.id },
-      data: { currentVersion: versionLabel },
+      data: {
+        currentVersion: versionLabel,
+        ...(ocrExtraction.text ? { ocrContent: ocrExtraction.text } : {}),
+      },
     });
 
     await createAuditLog({
@@ -229,39 +321,295 @@ export class DocumentService {
       action: 'DOCUMENT_VERSION_UPLOADED',
       resourceType: 'DOCUMENT',
       resourceId: doc.id,
-      details: { documentCode: doc.documentCode, versionLabel, fileName: input.fileName, sha256: sha256Checksum },
+      details: {
+        documentCode: doc.documentCode,
+        versionLabel,
+        fileName: safeFileName,
+        sha256: stored.sha256Checksum,
+        ocrMethod: ocrExtraction.method,
+        ocrWords: ocrExtraction.wordCount,
+      },
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
 
-    return this.formatVersion(version);
+    return {
+      ...this.formatVersion(version),
+      ocrExtraction,
+    };
   }
 
-  static async downloadDocument(documentId: string): Promise<{ version: DocumentVersionResponse; content: Buffer }> {
+  static async getVersions(documentId: string): Promise<DocumentVersionResponse[]> {
     const doc = await this.getDocumentByIdOrCode(documentId);
-
-    const latestVersion = await prisma.documentVersion.findFirst({
+    const versions = await prisma.documentVersion.findMany({
       where: { documentId: doc.id },
       orderBy: { uploadedAt: 'desc' },
       include: { uploadedByUser: { select: { id: true, name: true } } },
     });
+    return versions.map((v) => this.formatVersion(v));
+  }
 
-    if (!latestVersion) {
-      throw AppError.notFound('No file version has been uploaded for this document record.', 'VERSION_NOT_FOUND');
+  static async downloadDocument(
+    documentId: string,
+    versionIdOrLabel?: string
+  ): Promise<{ version: DocumentVersionResponse; content: Buffer }> {
+    const doc = await this.getDocumentByIdOrCode(documentId);
+
+    const targetVersion = versionIdOrLabel
+      ? await prisma.documentVersion.findFirst({
+          where: {
+            documentId: doc.id,
+            OR: [{ id: versionIdOrLabel }, { versionLabel: versionIdOrLabel }],
+          },
+          include: { uploadedByUser: { select: { id: true, name: true } } },
+        })
+      : await prisma.documentVersion.findFirst({
+          where: { documentId: doc.id },
+          orderBy: { uploadedAt: 'desc' },
+          include: { uploadedByUser: { select: { id: true, name: true } } },
+        });
+
+    if (!targetVersion) {
+      throw AppError.notFound('No matching file version has been uploaded for this document record.', 'VERSION_NOT_FOUND');
     }
 
-    const localPath = path.resolve('vault', doc.matterId, doc.documentCode, `${latestVersion.versionLabel}_${latestVersion.fileName}`);
+    const legacyRelative = `${doc.matterId}/${doc.documentCode}/${targetVersion.versionLabel}_${targetVersion.fileName}`;
     let content: Buffer;
     try {
-      content = await fs.readFile(localPath);
+      content = await StorageService.readFile(targetVersion.s3StorageKey, legacyRelative);
     } catch {
-      content = Buffer.from(`Simulated file payload for ${latestVersion.fileName}`);
+      content = Buffer.from(`File payload unavailable on disk for ${targetVersion.fileName}`);
     }
 
     return {
-      version: this.formatVersion(latestVersion),
+      version: this.formatVersion(targetVersion),
       content,
     };
+  }
+
+  /**
+   * Non-destructively restores a historical version by promoting its exact binary
+   * into a new immutable version (preserving full audit trail).
+   */
+  static async restoreVersion(
+    documentId: string,
+    versionIdOrLabel: string,
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<DocumentVersionResponse> {
+    const doc = await this.getDocumentByIdOrCode(documentId);
+    const targetVersion = await prisma.documentVersion.findFirst({
+      where: {
+        documentId: doc.id,
+        OR: [{ id: versionIdOrLabel }, { versionLabel: versionIdOrLabel }],
+      },
+    });
+
+    if (!targetVersion) {
+      throw AppError.notFound(`Version '${versionIdOrLabel}' not found for document '${doc.documentCode}'.`, 'VERSION_NOT_FOUND');
+    }
+
+    const legacyRelative = `${doc.matterId}/${doc.documentCode}/${targetVersion.versionLabel}_${targetVersion.fileName}`;
+    const buffer = await StorageService.readFile(targetVersion.s3StorageKey, legacyRelative);
+
+    const restored = await this.uploadVersion(
+      doc.id,
+      {
+        fileName: targetVersion.fileName,
+        fileType: targetVersion.fileType,
+        fileSizeBytes: buffer.length,
+        revisionNotes: `Restored from historical version ${targetVersion.versionLabel} (${targetVersion.fileName}).`,
+      },
+      context,
+      buffer
+    );
+
+    await createAuditLog({
+      userId: context.userId,
+      userRole: context.userRole,
+      action: 'DOCUMENT_VERSION_RESTORED',
+      resourceType: 'DOCUMENT',
+      resourceId: doc.id,
+      details: {
+        documentCode: doc.documentCode,
+        restoredFromVersion: targetVersion.versionLabel,
+        newVersionLabel: restored.versionLabel,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return restored;
+  }
+
+  static async runOcrExtraction(
+    documentId: string,
+    versionIdOrLabel: string | undefined,
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<{
+    documentId: string;
+    documentCode: string;
+    versionLabel: string;
+    ocrContent: string;
+    extraction: OcrExtractionResult;
+  }> {
+    const doc = await this.getDocumentByIdOrCode(documentId);
+    const { version, content } = await this.downloadDocument(doc.id, versionIdOrLabel);
+    const extraction = await OcrService.extract(content, version.fileName, version.fileType);
+
+    await prisma.document.update({
+      where: { id: doc.id },
+      data: { ocrContent: extraction.text || doc.ocrContent || '' },
+    });
+
+    await createAuditLog({
+      userId: context.userId,
+      userRole: context.userRole,
+      action: 'DOCUMENT_OCR_EXTRACTED',
+      resourceType: 'DOCUMENT',
+      resourceId: doc.id,
+      details: {
+        documentCode: doc.documentCode,
+        versionLabel: version.versionLabel,
+        method: extraction.method,
+        wordCount: extraction.wordCount,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return {
+      documentId: doc.id,
+      documentCode: doc.documentCode,
+      versionLabel: version.versionLabel,
+      ocrContent: extraction.text,
+      extraction,
+    };
+  }
+
+  static async getOcrDetails(documentId: string): Promise<{
+    documentId: string;
+    documentCode: string;
+    title: string;
+    ocrContent: string;
+    extractedFields: ReturnType<typeof OcrService.extractStructuredEntities>;
+  }> {
+    const doc = await this.getDocumentByIdOrCode(documentId);
+    const text = doc.ocrContent || '';
+    return {
+      documentId: doc.id,
+      documentCode: doc.documentCode,
+      title: doc.title,
+      ocrContent: text,
+      extractedFields: OcrService.extractStructuredEntities(text),
+    };
+  }
+
+  static async verifyDocumentIntegrity(documentId: string): Promise<{
+    documentId: string;
+    documentCode: string;
+    allVerified: boolean;
+    versions: Array<{
+      versionId: string;
+      versionLabel: string;
+      fileName: string;
+      exists: boolean;
+      verified: boolean;
+      expectedSha256: string;
+      actualSha256: string | null;
+      fileSizeBytes: number;
+    }>;
+  }> {
+    const doc = await this.getDocumentByIdOrCode(documentId);
+    const versions = doc.versions || [];
+
+    const checks = await Promise.all(
+      versions.map(async (v) => {
+        const legacyRelative = `${doc.matterId}/${doc.documentCode}/${v.versionLabel}_${v.fileName}`;
+        const check = await StorageService.verifyIntegrity(v.s3StorageKey, v.sha256Checksum, legacyRelative);
+        return {
+          versionId: v.id,
+          versionLabel: v.versionLabel,
+          fileName: v.fileName,
+          ...check,
+        };
+      })
+    );
+
+    return {
+      documentId: doc.id,
+      documentCode: doc.documentCode,
+      allVerified: checks.length > 0 && checks.every((c) => c.exists && c.verified),
+      versions: checks,
+    };
+  }
+
+  static async getStorageStats() {
+    const [diskStats, documentsCount, versionsCount, draftsCount, templatesCount] = await Promise.all([
+      StorageService.getStorageStats(),
+      prisma.document.count(),
+      prisma.documentVersion.count(),
+      prisma.documentDraft.count(),
+      prisma.documentTemplate.count(),
+    ]);
+
+    return {
+      ...diskStats,
+      databaseCounts: {
+        documentsCount,
+        versionsCount,
+        draftsCount,
+        templatesCount,
+      },
+    };
+  }
+
+  /**
+   * F-0700: Updates editable display metadata (title, privilege tag, Bates range)
+   * while preserving immutable documentCode, origin versions, and SHA-256 checksums.
+   */
+  static async updateDocumentMetadata(
+    idOrCode: string,
+    input: UpdateDocumentInput,
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<DocumentResponse> {
+    const existing = await this.getDocumentByIdOrCode(idOrCode);
+
+    const updated = await prisma.document.update({
+      where: { id: existing.id },
+      data: {
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.category !== undefined ? { category: input.category } : {}),
+        ...(input.isPrivileged !== undefined ? { isPrivileged: input.isPrivileged } : {}),
+        ...(input.privilegeType !== undefined ? { privilegeType: input.privilegeType } : {}),
+        ...(input.batesNumberStart !== undefined ? { batesNumberStart: input.batesNumberStart } : {}),
+        ...(input.batesNumberEnd !== undefined ? { batesNumberEnd: input.batesNumberEnd } : {}),
+      },
+      include: {
+        matter: { select: { id: true, matterNumber: true, title: true } },
+        client: { select: { id: true, clientNumber: true, name: true } },
+        versions: {
+          orderBy: { uploadedAt: 'desc' },
+          include: { uploadedByUser: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    await createAuditLog({
+      userId: context.userId,
+      userRole: context.userRole,
+      action: 'DOCUMENT_METADATA_UPDATED',
+      resourceType: 'DOCUMENT',
+      resourceId: existing.id,
+      details: {
+        documentCode: existing.documentCode,
+        previousTitle: existing.title,
+        changes: input,
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return this.formatResponse(updated);
   }
 
   static async deleteDocument(
@@ -284,4 +632,3 @@ export class DocumentService {
     });
   }
 }
-

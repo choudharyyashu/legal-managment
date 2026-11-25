@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design;not executed",
+  "tasks": [
+    {
+      "id": "T-1",
+      "workflow_instance": "W-1",
+      "created": "2026-11-15",
+      "state": "Completed",
+      "event_actor": "U-1",
+      "reported_completer": "C-1"
+    },
+    {
+      "id": "T-2",
+      "workflow_instance": "W-2",
+      "created": "2026-11-15",
+      "state": "Not Completed"
+    },
+    {
+      "id": "T-3",
+      "workflow_instance": null,
+      "created": "2026-11-15",
+      "state": "Not Completed"
+    }
+  ],
+  "portfolio_rows": 1001,
+  "tests": [
+    {
+      "id": "AT-0413",
+      "scenario_and_expected_result": "Create two workflow instances andone unrelated task on the same date. Reschedule only one instance;show old/new anchors andall affected tasks. Preserve completed task IDs,actual completer,timestamps,comments andattachments. Keep independent tasks unchanged. Apply a revision atomically or expose partial outcomes;retry cannot duplicate tasks. No tutorial date-filter deletion procedure is executed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0414",
+      "scenario_and_expected_result": "Complete T-1 as U-1 andthen correct displayed attribution to client C-1. Retain original event actor,time,reason andeditor;only one current user/contact attribution is allowed. Reopening andcompleting again creates a new event rather than overwriting history. Apply task-specific columns only where supported;other activities cannot inherit a misleading completer.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0415",
+      "scenario_and_expected_result": "Assign synthetic T-1 to client C-1 in M-1;the client cannot access M-2 tasks. Notification opt-in does not imply email delivery. When C-1 marks complete,notify the responsible worker once andretain actor/time. A missing required upload remains unresolved until ingestion/hash andmatter filing are verified. Preserve task messages with matter context andtest duplicate notification events.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0416",
+      "scenario_and_expected_result": "Create each documented recurrence pattern with a future start andend. Preview exact occurrences including month-end,leap-day andtimezone transitions. Editing one occurrence differs from changing future occurrences;completed history remains intact. A retry generates no duplicate occurrence. Require an explicit rule for invalid calendar dates andwhether the end is inclusive;do not infer it from the guide.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0417",
+      "scenario_and_expected_result": "Let T-1 become overdue andcomplete between two review runs. Preserve deadline versions andlate intervals even if no manual Late tag was applied. Change a deadline after completion andretain the original evidence. A1000-row page cannot establish full coverage when1001 tasks match. Reports identify sampled/tag-only history andmust not infer blame from incomplete data.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0418",
+      "scenario_and_expected_result": "Export a filtered portfolio spanning multiple pages,conditional tasks,completed tasks andmultiple assignees. Preview intended row IDs/count andwhether all orselected rows are included. Reconcile downloaded rows with the authorized snapshot;preserve due versus completion dates andnot-yet-active state. Never silently drop hidden pages orinterpret a missing due date as overdue.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0419",
+      "scenario_and_expected_result": "Preview selected time,flat-fee andexpense IDs andold/new dates. Include a locked/invoiced row andan unauthorized matter;reject orclearly separate those outcomes. Preserve raw activity timestamps,individual calls/texts andprior approval versions. Retry without duplicating entries orchanging billing increments. The user\u2019s unrelated billing remark is not adopted as a billing policy.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0420",
+      "scenario_and_expected_result": "Switch SMS/secure tabs,refresh andclear browser state. Verify the displayed channel andexplicit compose/send channel remain distinct. Changing accounts orusers cannot expose another matter\u2019s messages. Restoring a last-view preference does not authorize a send orprove message delivery.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0421",
+      "scenario_and_expected_result": "Create matters where all three roles differ,with duplicate display names andnull roles. Sort each column ascending/descending across pages;use stable tie-breaks andretain correct role IDs. Filtering/exporting the sorted result must preserve scope andauthorization. Do not rewrite billing ownership when merely sorting.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "extended_tests": [
+    {
+      "id": "F-0019",
+      "scenario": "Build a three-task chain with day/week/month/year offsets. Before completion,show inactive state rather than an overdue task. Complete the predecessor late;calculate from the actual trigger time. Test reopen,duplicate completion,cycle prevention andcross-matter references without silently replaying finished downstream work.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0021",
+      "scenario": "Expose manual transition versus automatic rule execution explicitly. A manual branch requires an operator andchosen next workflow;an automatic branch needs a configured predicate andexecution evidence. Reject ambiguous outcomes andduplicate branch activation. Preserve previous workflow history.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0041",
+      "scenario": "Create one task with staff/client assignees andfive reminders. Require subject/owner,show each recipient andchannel,andhandle unsupported sixth reminder explicitly. Reminders cannot imply successful notification. Completion,owner andbilling activity remain separate.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0032",
+      "scenario": "Give a workflow generation date distinct from due date;every notification labels the intended due date. Edit an all-day conditional task across timezone/DST boundaries andpreserve its date-only semantics without introducing a clock time.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0398",
+      "scenario": "Complete two selected tasks out of61 filtered matches;onlythose two change. Show cross-page selection scope,permission failures andper-row results. Completion events retain actual actor/time andcannot mark unrelated workflow tasks complete.",
+      "status": "Not executed"
+    },
+    {
+      "id": "F-0252",
+      "scenario": "Qualify the actual connector version,account,scopes andsupported direction before enabling. Test task creation,completion,reopen,revocation,offline retries andduplicates;do not assume reverse sync orcurrent UI support from this dated guide.",
+      "status": "Not executed"
+    }
+  ],
+  "preserved_requirements": "All prior practice areas,intake fixes,shared matter context,email filing/client copies,every individual call/text,insurer directory,auto claim forms andAI insurer calls remain included. Attorney letters use I/me/my andfour-digit years."
+}

@@ -32,13 +32,39 @@ import {
 import { Link } from 'react-router-dom';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../components/ui/Toast';
+import { bankruptcyService } from '../../../services/bankruptcyService';
 
-export function BankruptcyCaseDrawer({ isOpen, onClose, bankruptcyCase, onUpdateCase }) {
+export function BankruptcyCaseDrawer({
+  isOpen,
+  onClose,
+  bankruptcyCase,
+  onUpdateCase,
+  onRefreshCases,
+}) {
   const [activeTab, setActiveTab] = useState('debtor'); // 'debtor', 'schedules', 'means', 'sec521', 'plan', 'postFiling'
   const [currentCase, setCurrentCase] = useState(bankruptcyCase);
+  const [court341Date, setCourt341Date] = useState('');
+  const [courtTrusteeName, setCourtTrusteeName] = useState('');
+  const [courtJudgeName, setCourtJudgeName] = useState('');
+  const [courtConfirmationDate, setCourtConfirmationDate] = useState('');
+  const [savingMilestones, setSavingMilestones] = useState(false);
 
   useEffect(() => {
     setCurrentCase(bankruptcyCase);
+    setCourt341Date(bankruptcyCase?.meeting341Date || '');
+    setCourtTrusteeName(
+      bankruptcyCase?.trusteeName && bankruptcyCase.trusteeName !== 'Unassigned'
+        ? bankruptcyCase.trusteeName
+        : ''
+    );
+    setCourtJudgeName(
+      bankruptcyCase?.assignedJudge && bankruptcyCase.assignedJudge !== 'Unassigned'
+        ? bankruptcyCase.assignedJudge
+        : ''
+    );
+    setCourtConfirmationDate(
+      bankruptcyCase?.confirmationDate || bankruptcyCase?.dischargeDate || ''
+    );
     if (!isOpen) {
       setActiveTab('debtor');
     }
@@ -53,28 +79,109 @@ export function BankruptcyCaseDrawer({ isOpen, onClose, bankruptcyCase, onUpdate
 
   const districtAndFormDetails =
     currentCase.districtAndFormDetails || getDefaultDistrictAndFormDetails(currentCase.chapter);
+  const basePostFiling = currentCase.postFilingAdmin || getDefaultPostFilingAdmin(currentCase);
   const postFilingAdmin =
-    currentCase.postFilingAdmin || getDefaultPostFilingAdmin(currentCase);
+    basePostFiling.meetings341?.length === 0 && currentCase.meeting341Date
+      ? {
+          ...basePostFiling,
+          meetings341: [
+            {
+              id: `M341-DB-${currentCase.id}`,
+              meetingDateTime: currentCase.meeting341Date,
+              locationOrVirtual: `${districtAndFormDetails.courtDistrict} § 341 Calendar`,
+              trusteeName: currentCase.trusteeName || 'Unassigned',
+              status: 'Scheduled',
+              notes: 'Section 341 Meeting loaded from Bankruptcy Case record.',
+              preparationChecklist: [],
+            },
+          ],
+        }
+      : basePostFiling;
 
-  const handleUpdatePostFiling = (updatedPostFilingAdmin) => {
+  const handleUpdatePostFiling = async (updatedPostFilingAdmin) => {
+    const latestMeeting = updatedPostFilingAdmin?.meetings341?.[0];
+    let syncedDate = currentCase.meeting341Date;
+    let syncedTrustee = currentCase.trusteeName;
+
+    if (latestMeeting?.meetingDateTime) {
+      const parsed = new Date(latestMeeting.meetingDateTime);
+      if (!Number.isNaN(parsed.getTime())) {
+        syncedDate = parsed.toISOString().split('T')[0];
+        syncedTrustee = latestMeeting.trusteeName || syncedTrustee;
+        const matterId = currentCase.matterId || currentCase.id;
+        try {
+          await bankruptcyService.saveBankruptcyCase(matterId, {
+            meeting341Date: syncedDate,
+            trusteeName: syncedTrustee !== 'Unassigned' ? syncedTrustee : undefined,
+          });
+          if (onRefreshCases) await onRefreshCases();
+        } catch (err) {
+          addToast(err?.message || 'Could not sync 341 meeting date to database.', 'error');
+        }
+      }
+    }
+
     const updated = {
       ...currentCase,
+      meeting341Date: syncedDate,
+      meeting341Status: syncedDate ? 'Scheduled' : currentCase.meeting341Status,
+      trusteeName: syncedTrustee,
       postFilingAdmin: updatedPostFilingAdmin,
     };
     setCurrentCase(updated);
     if (onUpdateCase) onUpdateCase(updated);
   };
 
+  const handleSaveCourtMilestones = async (e) => {
+    e.preventDefault();
+    const matterId = currentCase.matterId || currentCase.id;
+    if (!matterId) return;
+    setSavingMilestones(true);
+    try {
+      await bankruptcyService.saveBankruptcyCase(matterId, {
+        meeting341Date: court341Date || undefined,
+        trusteeName: courtTrusteeName.trim() || undefined,
+        assignedJudge: courtJudgeName.trim() || undefined,
+        confirmationDate:
+          currentCase.chapter !== 'Chapter 7' && courtConfirmationDate
+            ? courtConfirmationDate
+            : undefined,
+        dischargeDate:
+          currentCase.chapter === 'Chapter 7' && courtConfirmationDate
+            ? courtConfirmationDate
+            : undefined,
+      });
+      const updated = {
+        ...currentCase,
+        meeting341Date: court341Date,
+        meeting341Status: court341Date ? 'Scheduled' : 'Not Scheduled',
+        trusteeName: courtTrusteeName.trim() || 'Unassigned',
+        assignedJudge: courtJudgeName.trim() || 'Unassigned',
+        confirmationDate: currentCase.chapter !== 'Chapter 7' ? courtConfirmationDate : '',
+        confirmationHearingDate: currentCase.chapter !== 'Chapter 7' ? courtConfirmationDate : '',
+        dischargeDate: currentCase.chapter === 'Chapter 7' ? courtConfirmationDate : '',
+      };
+      setCurrentCase(updated);
+      if (onUpdateCase) onUpdateCase(updated);
+      if (onRefreshCases) await onRefreshCases();
+      addToast('Court docket and Section 341 hearing dates saved.', 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to update court docket dates.', 'error');
+    } finally {
+      setSavingMilestones(false);
+    }
+  };
+
   const schedules = currentCase.schedules || { scheduleAB: [], scheduleD: [], scheduleEF: [], scheduleIJ: [] };
   const debtorProfile = currentCase.debtorProfile || {
-    ssnMasked: '***-**-4912',
-    phone: '(801) 555-0819',
-    email: 'debtor@slcmail.org',
-    address: '6840 South 1300 West, West Jordan, UT 84084',
-    county: 'Salt Lake County (Proper Venue)',
-    taxFilingStatus: 'Single',
-    employer: 'Commercial Freight Logistics',
-    yearsEmployed: 4.0,
+    ssnMasked: 'On file / Pending',
+    phone: 'Not on file',
+    email: 'Not on file',
+    address: `${districtAndFormDetails.courtDivision}, UT`,
+    county: `${districtAndFormDetails.courtDistrict}`,
+    taxFilingStatus: currentCase.jointDebtorName !== 'None (Individual)' ? 'Joint' : 'Individual',
+    employer: 'Not specified',
+    yearsEmployed: '—',
   };
 
   const prior = currentCase.priorFilings || {
@@ -146,8 +253,8 @@ export function BankruptcyCaseDrawer({ isOpen, onClose, bankruptcyCase, onUpdate
                   <Flame className="w-3 h-3" /> 14-Day Emergency Clock
                 </span>
               )}
-              <span className="text-xs text-amber-300 font-medium">
-                [DEMO SIMULATION]
+              <span className="text-xs bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 px-2 py-0.5 rounded font-medium">
+                COURT DOCKET
               </span>
             </div>
             <h2 className="text-base font-bold mt-1 text-white truncate max-w-2xl">
@@ -593,15 +700,83 @@ export function BankruptcyCaseDrawer({ isOpen, onClose, bankruptcyCase, onUpdate
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                   <div className="p-3 bg-slate-50 rounded border border-[#D9D6CF] space-y-1">
                     <span className="text-[10px] uppercase font-bold text-[#667085]">Section 341 Meeting of Creditors:</span>
-                    <div className="font-bold text-sm text-[#06244B]">{currentCase.meeting341Date}</div>
-                    <div className="text-[11px] text-[#667085]">{currentCase.meeting341Status}</div>
+                    <div className="font-bold text-sm text-[#06244B]">
+                      {currentCase.meeting341Date || 'Not Scheduled'}
+                    </div>
+                    <div className="text-[11px] text-[#667085]">
+                      {currentCase.meeting341Status || (currentCase.meeting341Date ? 'Scheduled' : 'Pending Court Notice')}
+                    </div>
                   </div>
                   <div className="p-3 bg-slate-50 rounded border border-[#D9D6CF] space-y-1">
                     <span className="text-[10px] uppercase font-bold text-[#667085]">Discharge / Confirmation Date:</span>
-                    <div className="font-bold text-sm text-[#06244B]">{currentCase.dischargeDate || currentCase.confirmationHearingDate || 'Pending'}</div>
-                    <div className="text-[11px] text-[#667085]">District of Utah Clerk of Court</div>
+                    <div className="font-bold text-sm text-[#06244B]">
+                      {currentCase.dischargeDate || currentCase.confirmationHearingDate || 'Pending'}
+                    </div>
+                    <div className="text-[11px] text-[#667085]">
+                      {districtAndFormDetails.courtDistrict} Clerk of Court
+                    </div>
                   </div>
                 </div>
+
+                {/* Schedule / Persist Real Court Hearing & Trustee Details */}
+                <form onSubmit={handleSaveCourtMilestones} className="pt-3 border-t border-[#D9D6CF] space-y-3">
+                  <div className="font-bold text-xs uppercase text-[#06244B]">
+                    Schedule / Update Section 341 Hearing &amp; Court Dates
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#667085] mb-1">
+                        Section 341 Hearing Date
+                      </label>
+                      <input
+                        type="date"
+                        value={court341Date}
+                        onChange={(e) => setCourt341Date(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9D6CF] rounded bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#667085] mb-1">
+                        {currentCase.chapter === 'Chapter 7' ? 'Discharge Target Date' : 'Plan Confirmation Date'}
+                      </label>
+                      <input
+                        type="date"
+                        value={courtConfirmationDate}
+                        onChange={(e) => setCourtConfirmationDate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9D6CF] rounded bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#667085] mb-1">
+                        Standing / Case Trustee
+                      </label>
+                      <input
+                        type="text"
+                        value={courtTrusteeName}
+                        onChange={(e) => setCourtTrusteeName(e.target.value)}
+                        placeholder="Enter assigned trustee name"
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9D6CF] rounded bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#667085] mb-1">
+                        Assigned Bankruptcy Judge
+                      </label>
+                      <input
+                        type="text"
+                        value={courtJudgeName}
+                        onChange={(e) => setCourtJudgeName(e.target.value)}
+                        placeholder="Enter assigned judge"
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#D9D6CF] rounded bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="primary" type="submit" disabled={savingMilestones}>
+                      {savingMilestones ? 'Saving Dates...' : 'Save Court Dates'}
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

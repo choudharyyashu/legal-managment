@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design fixtures only; no application test execution",
+  "requirements": [
+    "F-0329",
+    "F-0330",
+    "F-0331",
+    "F-0332",
+    "F-0333",
+    "F-0334",
+    "F-0335",
+    "F-0336",
+    "F-0337",
+    "F-0338",
+    "F-0339",
+    "F-0340",
+    "F-0341",
+    "F-0342",
+    "F-0343",
+    "F-0344",
+    "F-0345"
+  ],
+  "mail": {
+    "connection_utc": "2026-11-15T14:00:00Z",
+    "before": "2026-11-15T13:59:59Z",
+    "after": "2026-11-15T14:00:01Z",
+    "messages": [
+      "DIRECT-1",
+      "REFERRAL-1",
+      "UNCERTAIN-1",
+      "PORTAL-1"
+    ],
+    "contacts": [
+      "C-1"
+    ],
+    "matters": [
+      "M-A",
+      "M-B"
+    ]
+  },
+  "usage": {
+    "cycle_start": "2026-11-15",
+    "cycle_end": "2026-12-14",
+    "hiring_target": 2,
+    "already_assisted_pipeline": 3,
+    "unit_price": null,
+    "currency": null,
+    "free_hire_allowance": null,
+    "note": "Numbers are synthetic; unknown actual vendor commercial terms must be verified."
+  },
+  "tests": [
+    {
+      "id": "AT-0329",
+      "expected": "Use synthetic shared inbox A and personal inbox B. Preview filing exposure before consent. Activate filing for A but leave reply disabled; a new inquiry may file but produces no reply. Disconnect A and prove no future read/send action while retained records remain subject to matter permissions.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0330",
+      "expected": "Submit fixtures DIRECT-1, REFERRAL-1, UNCERTAIN-1 and PORTAL-1. Only policy-qualified direct inquiry enters automated conversation. Others remain visible for human review with reason and raw message. Replaying each delivery creates no duplicate lead or outgoing reply.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0331",
+      "expected": "Run the same synthetic inquiry before connection and after a draft configuration change. Show version, generated response and fit explanation; make zero provider sends or billable production lead events. Publishing the configuration is a distinct operation with an audit entry.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0332",
+      "expected": "Evaluate Gmail, Microsoft365-hosted Business, third-party Exchange and revoked-consent fixtures. Explain unsupported host or missing tenant approval. Connect two addresses for one user and one shared address for two users; preserve ownership and one provider-message identity across modules.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0333",
+      "expected": "Connect at November15,2026 14:00 UTC with messages before and after that instant. Record actual configured backfill boundary. Change Contacts to Everyone and back; show exact affected IDs before committing, no source-mail deletion and recoverable audit history for removed application copies. Do not infer unlimited historical backfill.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0334",
+      "expected": "A contact has matters M-A and M-B. Match exact subject naming M-A, leave ambiguous mail unresolved, then select M-B manually. New replies inherit that assignment with provenance. A later explicit conflicting matter name triggers review and does not silently move previously filed evidence.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0335",
+      "expected": "Rename fixture thread locally, export its original and verify original subject. Refile, choose no matter, then remove its application copy in a disposable environment. Provider messages remain unchanged. Disconnect stops future ingestion; records are not erased merely because authorization ended.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0336",
+      "expected": "Validate synthetic hosted, custom and WordPress fixtures without modifying a live site. Detect duplicate embed, wrong configured domain, unsupported builder and competing chatbot. Preview succeeds without publication; publish only with valid configuration. Record cache and stacking-order issues separately from missing lead ingestion.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0337",
+      "expected": "Start a synthetic chat without contact details, then create one lead. Emit one start event and one lead event per configured semantics, preserving attribution. Repeat with analytics blocked: lead still persists. Never place the analytics secret in exported logs or browser-visible public configuration.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0338",
+      "expected": "Accept synthetic appointment lead against existing C-1/M-1; retain appointment identity and raw inquiry with no duplicate. Accept an unscheduled lead through quick intake. Fit qualification does not mark conflicts cleared. Concurrent acceptance retries yield a single transition and attributable operator.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0339",
+      "expected": "For identical scheduled leads compare Ignore with Ignore-and-cancel. Only cancellation variant changes appointment and queues a cancellation notification. Record effect IDs and failures; retry sends once. Already-added must link truthful existing records and preserve the original event rather than serving as an arbitrary billing bypass.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0340",
+      "expected": "Move synthetic lead to spam then restore to review with prior history intact. Test permanent purge only on disposable fixtures: exact selection/count, retained lawful audit metadata and unavailable normal restoration must be explicit. A partial purge failure cannot report total success. No purge performed during audit.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0341",
+      "expected": "Load chat, phone and email fixtures. Keep original conversation, transcript or filed message links distinct from summaries. Override fit from poor to good with actor/reason/time; retain original assessment and configuration. Missing source evidence is flagged rather than replaced by generated text.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0342",
+      "expected": "Import third-party lead with no engagement and mark hired: no assisted charge. Engage a second lead and hire its matter: exactly one configured charge. Repeat status webhook and merge duplicate lead; no duplicate charge. Price and currency are configurable, not copied from an older comparison.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0343",
+      "expected": "Set target two, place three assisted matters in pipeline and hire two. New assistance pauses after allowed in-flight completion. Hire the third: show its configured charge and explain outstanding exposure. Next cycle resumes according to policy. A separately offered hard cap requires its own enforceable semantics and test.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0344",
+      "expected": "Use synthetic November15–December14,2026 cycle, configurable currency/threshold and five charge events. Midcycle invoice reduces unbilled balance, not event totals. Deactivate, cancel or change cycle; invoice accrued events once. Retry invoice webhooks, credits and failures without lost or duplicate balances.",
+      "status": "Not executed"
+    },
+    {
+      "id": "AT-0345",
+      "expected": "Configure synthetic offer with N free hires and explicit terms version, not a presumed current vendor allowance. Consume N then another hire; show ledger allocation. Compare actual target pause with forecast alert and month rollover. Activity history remains traceable through failed actions, duplicates and deactivation.",
+      "status": "Not executed"
+    }
+  ]
+}
