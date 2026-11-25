@@ -73,7 +73,8 @@ export function PIDashboard() {
         const summary = summaries.find((s) => s.id === m.id || s.matterNumber === m.matterNumber);
         const totalMeds = summary?.totalMedicalBills ?? 0;
         const totalLiens = summary?.totalLiens ?? 0;
-        const solDate = summary?.solDate || (m.statuteOfLimitations ? new Date(m.statuteOfLimitations).toISOString().split('T')[0] : 'Pending Review');
+        const solDate = summary?.solDate || (m.statuteOfLimitations ? new Date(m.statuteOfLimitations).toISOString().split('T')[0] : 'Pending Attorney Review');
+        const solApproved = Boolean(summary?.solApproved ?? m.statuteOfLimitations);
         const hasInsurance = summary ? summary.hasInsurance : (m.insurancePolicies && m.insurancePolicies.length > 0);
 
         return {
@@ -90,6 +91,7 @@ export function PIDashboard() {
           targetDemand: summary?.targetDemand || null,
           awaitingInsurance: !hasInsurance,
           statuteOfLimitations: solDate,
+          solApproved,
           leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
           isRealDbMatter: true,
           matterId: m.id,
@@ -202,11 +204,22 @@ export function PIDashboard() {
     {
       key: 'statuteOfLimitations',
       label: 'SoL Bar Date',
-      render: (val, c) => (
-        <span className="inline-block whitespace-nowrap text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-          {c?.statuteOfLimitations || val || 'N/A'}
-        </span>
-      ),
+      render: (val, c) => {
+        const isApproved = c?.solApproved;
+        const text = c?.statuteOfLimitations || val || 'Pending Attorney Review';
+        const isPending = text === 'Pending Attorney Review' || !isApproved;
+        return (
+          <span
+            className={`inline-block whitespace-nowrap text-xs font-semibold px-2 py-0.5 rounded border ${
+              isPending
+                ? 'text-amber-800 bg-amber-50 border-amber-200'
+                : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+            }`}
+          >
+            {isPending ? 'Pending Attorney Review' : `SoL: ${text}`}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',

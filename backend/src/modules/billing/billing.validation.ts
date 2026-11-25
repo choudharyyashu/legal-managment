@@ -26,7 +26,12 @@ export const recordPaymentSchema = z.object({
   invoiceId: z.string().uuid(),
   amount: z.number().positive(),
   paymentMethod: z.enum(['Check', 'Credit Card', 'ACH / Wire', 'Trust Transfer', 'Cash']),
-  destinationAccount: z.enum(['Operating Account (1000)', 'Trust Account (1010)']).default('Operating Account (1000)'),
+  destinationAccount: z.enum([
+    'Operating Account (1010)',
+    'Trust Account (1020)',
+    'Operating Account (1000)',
+    'Trust Account (1010)',
+  ]).default('Operating Account (1010)'),
   transactionReference: z.string().max(100).optional(),
   receivedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'receivedDate must be YYYY-MM-DD'),
 });

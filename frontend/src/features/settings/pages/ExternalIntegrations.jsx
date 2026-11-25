@@ -258,7 +258,11 @@ export function ExternalIntegrations() {
             if (serverItem) {
               return {
                 ...item,
-                status: serverItem.status === 'CONNECTED' ? 'Connected' : 'Ready to Configure',
+                status: serverItem.status === 'CONNECTED'
+                  ? 'Connected'
+                  : serverItem.status === 'CONFIGURED'
+                  ? 'Configured'
+                  : 'Credentials Required',
                 statusCode: serverItem.status,
                 statusLabel: serverItem.statusLabel,
                 tenant: serverItem.tenant,
@@ -278,6 +282,11 @@ export function ExternalIntegrations() {
   };
 
   useEffect(() => {
+    // F05: Purge legacy client-side localStorage credentials on mount
+    try {
+      localStorage.removeItem('hb_external_integrations_config_v2');
+      localStorage.removeItem('hb_external_integrations_config');
+    } catch (_) {}
     loadStatuses();
   }, []);
 
@@ -388,6 +397,7 @@ export function ExternalIntegrations() {
   };
 
   const connectedCount = integrations.filter(i => i.status === 'Connected').length;
+  const configuredCount = integrations.filter(i => i.status === 'Configured').length;
 
   return (
     <div className="space-y-6">
@@ -407,7 +417,7 @@ export function ExternalIntegrations() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#06244B] flex items-center gap-2">
               <span>Production Credential Vault &amp; Live Bridges</span>
               <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#287A55]/10 text-[#287A55]">
-                {connectedCount} of {integrations.length} Active
+                {connectedCount} Connected, {configuredCount} Configured of {integrations.length} Gateways
               </span>
             </h4>
             <p className="text-xs text-[#667085] mt-0.5">

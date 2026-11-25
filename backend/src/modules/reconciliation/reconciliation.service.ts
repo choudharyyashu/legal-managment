@@ -28,20 +28,31 @@ export class ReconciliationService {
     const subLedgers = await prisma.trustSubLedger.findMany({ select: { balance: true } });
     const clientSubledgersTotalBalance = subLedgers.reduce((sum, l) => sum + Number(l.balance), 0);
 
-    // 2. Calculate GL Trust Liability Balance from account 1010 entries (Pillar 2)
+    // 2. Calculate GL Trust Liability Balance from Pillar 2 control accounts (Account 2100 Client Trust Liability, or Account 1020 IOLTA Trust Bank)
+    //    We deliberately DO NOT query Operating Account 1010 to prevent commingling or operating expense contamination.
     //    We deliberately DO NOT fall back to clientSubledgersTotalBalance when GL entries are absent.
     //    An empty GL is a data-availability problem, not a balanced state.
     const glEntries = await prisma.generalLedgerEntry.findMany({
-      where: { accountNumber: 1010 },
-      select: { debit: true, credit: true },
+      where: { accountNumber: { in: [2100, 1020] } },
+      select: { accountNumber: true, debit: true, credit: true },
     });
-    const glDataAvailable = glEntries.length > 0;
-    // Net debit – credit (asset-side: debits increase the trust bank asset).
-    // When no entries exist, we return 0 but mark glDataAvailable = false so callers
-    // know this is a missing-data state, not a genuine zero balance.
-    const glTrustLiabilityBalance = glDataAvailable
-      ? Number(glEntries.reduce((sum, e) => sum + (Number(e.debit) - Number(e.credit)), 0).toFixed(2))
-      : 0;
+
+    const liabilityEntries = glEntries.filter((e) => e.accountNumber === 2100);
+    const assetEntries = glEntries.filter((e) => e.accountNumber === 1020);
+    const glDataAvailable = liabilityEntries.length > 0 || assetEntries.length > 0;
+
+    // Account 2100 is Client Trust Liability (credit-normal: credit increases, debit decreases).
+    // Account 1020 is IOLTA Trust Bank Asset (debit-normal: debit increases, credit decreases).
+    let glTrustLiabilityBalance = 0;
+    if (liabilityEntries.length > 0) {
+      glTrustLiabilityBalance = Number(
+        liabilityEntries.reduce((sum, e) => sum + (Number(e.credit) - Number(e.debit)), 0).toFixed(2)
+      );
+    } else if (assetEntries.length > 0) {
+      glTrustLiabilityBalance = Number(
+        assetEntries.reduce((sum, e) => sum + (Number(e.debit) - Number(e.credit)), 0).toFixed(2)
+      );
+    }
 
     // 3. Calculate adjusted bank balance (Pillar 1)
     const bankBalance = Number(query.bankStatementBalance || 0);

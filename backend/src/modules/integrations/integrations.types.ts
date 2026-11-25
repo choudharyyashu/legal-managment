@@ -17,7 +17,9 @@ export type IntegrationProviderId =
 
 export type IntegrationStatusCode =
   | 'NOT_CONFIGURED'
+  | 'CONFIGURED'
   | 'AWAITING_CREDENTIALS'
+  | 'BLOCKED'
   | 'CONNECTED'
   | 'ERROR'
   | 'TOKEN_EXPIRED';

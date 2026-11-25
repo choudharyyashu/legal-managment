@@ -35,16 +35,18 @@ export function OperatingAccount() {
       rawJournals.forEach((j) => {
         if (Array.isArray(j.entries)) {
           j.entries.forEach((e) => {
-            const accNum = e.accountNumber || e.account?.accountNumber || '';
+            const accNum = String(e.accountNumber || e.account?.accountNumber || '');
             const accName = e.accountName || e.account?.accountName || '';
             if (accNum === '1010' || accNum === '1000' || accName.toLowerCase().includes('operating')) {
-              const isCredit = e.entryType === 'DEBIT'; // In bank terminology: debit to asset account increases bank balance
-              const amt = Number(e.amount || 0);
+              const debitVal = Number(e.debit || (e.entryType === 'DEBIT' ? e.amount : 0) || 0);
+              const creditVal = Number(e.credit || (e.entryType === 'CREDIT' ? e.amount : 0) || 0);
+              const isDeposit = debitVal > 0;
+              const amt = isDeposit ? debitVal : creditVal;
               opTransactions.push({
                 id: `${j.journalNumber || j.id}-${e.id || Math.random().toString(36).slice(2, 6)}`,
                 date: j.transactionDate ? new Date(j.transactionDate).toISOString().split('T')[0] : '',
-                description: j.description || `${accName} Entry`,
-                type: isCredit ? 'Credit' : 'Debit',
+                description: j.memo || j.description || `${accName} Entry`,
+                type: isDeposit ? 'Credit' : 'Debit', // UI display: Credit = deposit into account, Debit = payout
                 amount: amt,
                 journalId: j.id,
               });
@@ -55,7 +57,7 @@ export function OperatingAccount() {
           opTransactions.push({
             id: j.id,
             date: j.date || (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
-            description: j.description || 'Operating Transaction',
+            description: j.memo || j.description || 'Operating Transaction',
             type: isDeposit ? 'Credit' : 'Debit',
             amount: Number(isDeposit ? j.debit : j.credit),
             journalId: j.id,
@@ -99,25 +101,22 @@ export function OperatingAccount() {
       const amt = Number(disbAmount);
       await ledgerService.createJournal({
         transactionDate: new Date().toISOString().split('T')[0],
-        description: disbDesc.trim(),
-        reference: `CHK-${Date.now().toString().slice(-4)}`,
+        memo: disbDesc.trim(),
         entries: [
           {
-            accountNumber: '5010', // Operating Expenses
-            entryType: 'DEBIT',
-            amount: amt,
-            description: disbDesc.trim(),
+            accountNumber: 5000, // Operating Expenses (Chart of Accounts #5000)
+            debit: amt,
+            credit: 0,
           },
           {
-            accountNumber: '1010', // Operating Checking Account
-            entryType: 'CREDIT',
-            amount: amt,
-            description: disbDesc.trim(),
+            accountNumber: 1010, // Operating Cash Account (Chart of Accounts #1010)
+            debit: 0,
+            credit: amt,
           },
         ],
       });
 
-      addToast(`Operating check disbursement of ${formatCurrency(amt)} posted to General Ledger.`, 'success');
+      addToast(`Operating check disbursement of ${formatCurrency(amt)} posted to General Ledger (Account #1010 / #5000).`, 'success');
       setIsDisbursementOpen(false);
       setDisbDesc('');
       setDisbAmount(450);
@@ -170,11 +169,11 @@ export function OperatingAccount() {
         <div className="flex items-center gap-2">
           <Landmark className="w-4 h-4 text-[#06244B] shrink-0" />
           <span>
-            <strong>General Ledger Account #1010 (Operating Checking):</strong> Operational cash receipts and firm expenditures posted directly to the firm double-entry ledger.
+            <strong>General Ledger Account #1010 (Operating Cash) | Account #5000 (Operating Expenses):</strong> Operational cash receipts and firm expenditures strictly segregated from fiduciary client trust funds (#1020 / #2100).
           </span>
         </div>
         <span className="bg-[#EAE7E0] text-[#06244B] font-bold px-2 py-0.5 rounded text-[10px]">
-          ACTIVE LEDGER
+          OPERATING LEDGER
         </span>
       </div>
 

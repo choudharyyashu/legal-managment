@@ -496,12 +496,12 @@ export function ThreeWayReconciliation() {
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-[#667085] space-y-1">
               {glTrustBalance !== null ? (
                 <div className="flex justify-between">
-                  <span>GL Account #1010 Net Balance:</span>
+                  <span>GL Account #2100 Net Balance:</span>
                   <span className="font-semibold text-[#06244B]">{formatCurrency(glTrustBalance)}</span>
                 </div>
               ) : (
                 <div className="text-amber-700 font-semibold">
-                  GL entries for account #1010 not available. Reconciliation is incomplete.
+                  GL entries for account #2100 not available. Reconciliation is incomplete.
                 </div>
               )}
             </div>
@@ -576,7 +576,7 @@ export function ThreeWayReconciliation() {
             </div>
             <p className="text-xs text-[#667085] mt-0.5">
               {totalVariance === null
-                ? 'GL entries for account #1010 are missing. A three-way reconciliation cannot be certified without independent GL data. Post journal entries to account #1010 to complete this reconciliation.'
+                ? 'GL entries for account #2100 are missing. A three-way reconciliation cannot be certified without independent GL data. Post journal entries to account #2100 to complete this reconciliation.'
                 : `Pillar 1 (Bank: ${formatCurrency(adjustedBankBalance)}) | Pillar 2 (GL: ${formatCurrency(glTrustBalance ?? 0)}) | Pillar 3 (Client Sub-Ledgers: ${formatCurrency(totalClientLedgersBalance)}). ${isReconciled ? 'All balances verified.' : 'Review variance before certifying.'}`}
             </p>
           </div>
