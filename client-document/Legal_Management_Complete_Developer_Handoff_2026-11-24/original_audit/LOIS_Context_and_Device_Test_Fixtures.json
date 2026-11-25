@@ -1,0 +1,131 @@
+{
+  "date": "2026-11-17",
+  "status": "Ten original proposed cases; all Not executed",
+  "tests": [
+    {
+      "requirement_id": "F-0592",
+      "developer_story_extension": "As the attorney, I need guided device diagnosis that preserves unsynced notes and distinguishes a connected pen from received matter evidence.",
+      "id": "AT-0592",
+      "scenario_and_expected_result": "Use a synthetic device adapter with low battery, timed discovery, persistent green light, another-app pairing and internet loss. Show the appropriate next check; persistent green stops the flow and produces a support handoff with limited diagnostic data. Do not repeatedly forget/re-pair or erase local notes as a default repair. A connected state never marks a note ingested. On reconnect/restart replay the same stroke batch twice: retain one attributable note with device/matter/owner identity and a separate server acknowledgement. Refuse cross-user device takeover without an explicit transfer path; unknown firmware/device behavior remains unverified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/57680189897755-LOIS-for-Notes-Troubleshooting"
+    },
+    {
+      "requirement_id": "F-0593",
+      "developer_story_extension": "As the attorney, I need to inspect a rewritten prompt before submitting it and retain the exact original for audit.",
+      "id": "AT-0593",
+      "scenario_and_expected_result": "Enhance a synthetic composer containing my clients, November14,2026 and a quoted instruction. Show original/rewrite and preserve I/me/my, exact quotation and four-digit years. Immediate Undo restores the original byte content. Test edit, send and new-message boundaries against the documented undo window; archive the original even when one-click Undo is unavailable. A stale enhancement response cannot overwrite a later edit or changed matter scope. Enhancement alone never submits a prompt, invents a requested action or grants permission for a case change.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146145951515-Chat-with-LOIS"
+    },
+    {
+      "requirement_id": "F-0594",
+      "developer_story_extension": "As the attorney, I need visible mode and matter scope so a default change or new chat cannot silently broaden access or pretend it retained my instructions.",
+      "id": "AT-0594",
+      "scenario_and_expected_result": "Set default Project Chat with no project: show the effective Work fallback before submission. Select matterA and verify the effective mode/capabilities; an explicit override is distinct from the stored default. After starting a chat switch mode: create a separate chat, label that context was not transferred, and preserve the old history. In the proposed application any optional context-copy is an explicit reviewed operation and must recheck matter permissions. Deny advanced-tool requests in a restricted mode without silently running them. Maintain shared canonical matter data while isolating conversational context; neither implies unrestricted cross-matter access.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/56640941715355-LOIS-Modes-Project-Chat-and-Work"
+    },
+    {
+      "requirement_id": "F-0595",
+      "developer_story_extension": "As the attorney, I need counts and totals tied to a reproducible matter population with drill-down evidence.",
+      "id": "AT-0595",
+      "scenario_and_expected_result": "Create synthetic activePI matters at both date boundaries, one archived record, one denied matter and three billing rows on a single matter. Compare count of cases, count of billing rows, per-case sums and full record list. Publish the selected date field, timezone, status/type values, missing-value treatment, population IDs and access-filter version. Joining billing rows must not multiply case counts. A request about cases not going well must expose an unresolved predicate rather than invent a success metric. Recompute after permission/schema changes; unknown or truncated results cannot be labeled exhaustive. SQL shown in vendor guidance is not evidence of executed query correctness.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146156093211-How-to-Chat-with-LOIS-Best-Practices"
+    },
+    {
+      "requirement_id": "F-0562",
+      "id": "AT-0562-R77-1",
+      "title": "Reconcile effects that completed before a stop",
+      "developer_story_extension": "As the attorney, I need each completed effect identified even after the run reports stopped.",
+      "scenario_and_expected_result": "Queue three synthetic note creations. Stop after the first commit, then simulate a delayed second acknowledgement. Reconcile every action against stable server IDs and show committed, not-started and uncertain states separately. Retry only the reviewed remainder with idempotency keys; do not erase the first note or imply rollback. An Open link is independently permission-checked and must identify the actual object.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146145951515-Chat-with-LOIS",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0248",
+      "id": "AT-0248-R77-2",
+      "title": "Keep action receipts separate from document evidence",
+      "developer_story_extension": "As the reviewer, I need a document citation to identify source content and an action receipt to identify an actual change.",
+      "scenario_and_expected_result": "Use two similarly named source files and a note-creation action. Document citation must resolve to exact version/locator and supporting text; action citation must resolve to committed target ID and actor/job. Delete or revoke the target and preserve a truthful inaccessible/stale state. A model-generated Done card cannot substitute for server verification.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146145951515-Chat-with-LOIS",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0131",
+      "id": "AT-0131-R77-3",
+      "title": "Separate accepted attachments, usable text and authorized filing",
+      "developer_story_extension": "As staff, I need a per-file processing ledger before uploaded material enters a matter or supports an answer.",
+      "scenario_and_expected_result": "Use synthetic allowed/unsupported extensions, spoofed MIME, password-protected and image-only files, corrupt bytes and individual-size boundaries. Use sparse fixtures for large limits, not actual client files. Track accepted, parsed, text-extracted, analyzed and filed independently. Permission changes invalidate proposed folder/matter destinations. A5GB advertised ceiling does not promise processing speed or usable image interpretation; do not silently omit failed files.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146145951515-Chat-with-LOIS",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0346",
+      "id": "AT-0346-R77-4",
+      "title": "Reconcile scheduled-prompt labels with real future jobs",
+      "developer_story_extension": "As the user, I need next execution and failure status, not merely a human-readable daily label.",
+      "scenario_and_expected_result": "Test the documented ten-own-prompts boundary and per-user ownership; tenant quota/plan limits remain configurable until verified. A synthetic daily8AM prompt with no next-run record must show unscheduled/error, not active. Validate timezone and daylight-saving transitions and record actual job IDs/results. This audit neither creates nor changes any real scheduled task.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146160501403-LOIS-Build",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0245",
+      "id": "AT-0245-R77-5",
+      "title": "Separate admin enablement, personal connection and firm skill access",
+      "developer_story_extension": "As the administrator, I need firm installation and individual authentication represented as different entitlement states.",
+      "scenario_and_expected_result": "Create synthetic admin/member roles. Admin enables a connector but a member without personal authentication cannot use it. Revoke the account role or provider session after configuration: recheck at execution. An installed firm plugin exposes permitted skill invocation without granting account-admin workflow editing. Deny forged admin requests server-side; preserve skill version, provider identity and limited audit evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146160501403-LOIS-Build",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0404",
+      "id": "AT-0404-R77-6",
+      "title": "Preserve document identity across editor output destinations",
+      "developer_story_extension": "As the attorney, I need copy, PDF, DOCX download and matter attachment to have separate outcome evidence.",
+      "scenario_and_expected_result": "Create a synthetic draft with protected attorney wording. Compare clipboard text, printed/PDF output, DOCX bytes and the target matter attachment after approval; hash and version each artifact separately. A successful download cannot mark a matter attachment or client copy sent. Require correct matter access and a verified saved object before recording filing complete; preserve failed-save draft content.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.filevine.com/hc/en-us/articles/51146145951515-Chat-with-LOIS",
+      "review_date": "2026-11-17"
+    }
+  ],
+  "synthetic_oracles": {
+    "population": [
+      "activePI_A",
+      "activePI_B"
+    ],
+    "billing_rows_per_matter": {
+      "activePI_A": 3,
+      "activePI_B": 0
+    },
+    "expected_case_count": 2,
+    "expected_billing_row_count": 3
+  },
+  "limits": "Fixture consistency only; no vendor/user app, hardware, payment, external message or actual scheduler operation."
+}

@@ -1,0 +1,95 @@
+{
+  "date": "2026-11-15",
+  "kind": "Original synthetic acceptance fixtures; not executed",
+  "application_build": null,
+  "environment": null,
+  "scenarios": [
+    {
+      "requirement": "F-0422",
+      "test_id": "AT-0422",
+      "scenario_and_expected_result": "Configure Draft→Review→Approved→Cancelled with explicit lifecycle mappings. Attempt cancellation before submission and a transition by an unauthorized role; both must fail without changing state. Approve a valid record and verify lifecycle status, approval state, list display and audit event independently. A rejected record must follow its declared return path rather than silently becoming approved.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0423",
+      "test_id": "AT-0423",
+      "scenario_and_expected_result": "After approval, attempt to change protected amount, client and signature fields through the form, API and bulk import; deny each. Permit an authorized user to edit an explicitly allowed internal reference; record old/new value, actor, time and reason. Do not change the approved signed output. If an allowed edit affects a derived document, flag it for review and generate a separately identified revision rather than overwriting the approved artifact.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0424",
+      "test_id": "AT-0424",
+      "scenario_and_expected_result": "Create an approved parent with two submitted dependents. Attempt parent cancellation:show both blockers and make no partial cancellation. Cancel only one dependent and retry:retain the remaining blocker. After authorized cancellation of both, create an amendment with a new revision identity and link to the preserved prior approved snapshot. Reapprove it without moving old payments, signatures or filing receipts to the new version silently. Concurrent amendment attempts must not create two active successors.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0425",
+      "test_id": "AT-0425",
+      "scenario_and_expected_result": "Create and edit a record before tracking is enabled; enable tracking and edit two fields afterward. Display the coverage start and pre-tracking gap. Later entries must retain actor, time, old/new values and stable record identity, subject to field access. Do not invent earlier events, claim a complete audit, or treat a field log as a restorable original-document backup. Revoked users must not retain access through version-history endpoints.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0426",
+      "test_id": "AT-0426",
+      "scenario_and_expected_result": "Enter a required approval state with two eligible users:show the current queue item and separate email delivery statuses. Approve once, then replay the email link and try a stale link from an earlier revision; neither may approve again. Revoke the recipient role before clicking:deny access. Enter an optional state:show its configured no-queue behavior rather than claiming a missing action is completed work. Attachments and queue rows must obey matter access and recipient scope.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0427",
+      "test_id": "AT-0427",
+      "scenario_and_expected_result": "In a version-qualified test build, run three synchronous tasks and fail the second:the transition and transactional writes must roll back. If an external webhook already succeeded, record that side effect and compensating action; do not pretend a database rollback unsent it. In asynchronous mode, complete the transition, fail one job and retain its failed status while the approved state remains. Retry with an idempotency key:one external action and one linked result must exist. A missing task capability must block configuration, not silently skip work.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0428",
+      "test_id": "AT-0428",
+      "scenario_and_expected_result": "Give staff read/write access to ordinary fields but no protected finance fields, no export, print, email, share, submit, cancel or amend. Attempt each action through visible controls, direct API, report endpoints and bulk tools:enforce the same policy and return no protected value in payloads or history. Grant only export and verify that export does not grant print, email or approval. Combine two roles and verify the documented effective policy without accidental privilege escalation.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0429",
+      "test_id": "AT-0429",
+      "scenario_and_expected_result": "Use a record created by staff A, assigned to attorney B and linked to restricted office C. Test A, B and an unassigned user under explicit policies; creator-only access must not be interpreted as assigned-owner access. Change the office link and reevaluate permissions without leaving cached search/report/export access. Test missing links and multiple restricted links; show the configured deny/allow policy and its reason. Reassignment must not rewrite the historical creator.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0430",
+      "test_id": "AT-0430",
+      "scenario_and_expected_result": "Create guest, website-only and staff accounts. Verify guest/public pages, registered-user resources and staff screens have distinct access, including direct URLs. Test configured password-strength rejection and consecutive-failure lockout at threshold-1, threshold and threshold+1, then the documented recovery path. Enable an approved OAuth provider and verify account linking does not merge unrelated matching display names. Inspect the deployed password-hash configuration and prove reset tokens expire and cannot be replayed; do not claim the documentation alone proves secure storage.",
+      "status": "Not executed"
+    }
+  ],
+  "boundary_inputs": {
+    "approval_amounts": [
+      99999,
+      100000,
+      100001
+    ],
+    "proposed_firm_policy": "amount >= 100000; requires explicit adoption beforeproduction; not inferred from conflicting guide",
+    "expected_rule_results": [
+      false,
+      true,
+      true
+    ]
+  },
+  "identities": {
+    "creator": "synthetic-staff-A",
+    "assigned_attorney": "synthetic-attorney-B",
+    "restricted_office": "synthetic-office-C",
+    "role_audiences": [
+      "guest",
+      "website-user",
+      "staff-user"
+    ]
+  },
+  "side_effect_fixture": {
+    "tasks": [
+      "create_transactional_note",
+      "fail_second_task",
+      "external_webhook"
+    ],
+    "async_expected": "State may be approved whilejobfailed; notall work complete",
+    "idempotency_key": "synthetic-approval-revision-002-webhook"
+  },
+  "real_actions_performed": false
+}

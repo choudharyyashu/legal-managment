@@ -1,0 +1,298 @@
+{
+  "archive": "Legal_Software_Audit_Checkpoint.zip",
+  "downloaded": "2026-11-24",
+  "checkpoint_updated": "2026-11-24T19:45:12.054082+00:00",
+  "counts": {
+    "features": 737,
+    "tests": 3488,
+    "document_automations": 300,
+    "exceptions": 273
+  },
+  "files": [
+    {
+      "path": "original_audit/Feature_Register.json",
+      "sha256": "33cd02b261404fdc812ad70e5125b65266f61af7852787d8350c367e36d32740",
+      "bytes": 12762023
+    },
+    {
+      "path": "original_audit/Document_Automation_Catalog.json",
+      "sha256": "1837c846574e1b41365d7d6e8a6c2ee00c7a978c11fc3b39919fa618364963ec",
+      "bytes": 822149
+    },
+    {
+      "path": "original_audit/Audit_Exceptions.json",
+      "sha256": "580038ab5774b5c598933cee134aa56c1bb53620585131a4e6d225f9cc908426",
+      "bytes": 317105
+    },
+    {
+      "path": "original_audit/Legal_Software_Audit_Checkpoint.json",
+      "sha256": "3eee9a55396b4ba2267fa4e07b2dfff4562b8666e1a8c9d35ca777e395fe3edb",
+      "bytes": 3753546
+    },
+    {
+      "path": "original_audit/Developer_Feature_Audit_Directions.txt",
+      "sha256": "b8df2dd843958431ce3f05abd2f8a408a9825d6e2d1c04d1bb48b8f4f644123a",
+      "bytes": 8577
+    },
+    {
+      "path": "original_audit/Developer_Feature_Audit_Directions.docx",
+      "sha256": "a04cac6eae56cbcefb8cad8b4f37e68a0e05314e9d69305c5c26bd76e927e65f",
+      "bytes": 41523
+    },
+    {
+      "path": "original_audit/Claims_Automation_Implementation_Spec.docx",
+      "sha256": "9de1ed4279a9366393e2e8417b3b2e591b2b0cbff0a9bec89f31e34352c90f68",
+      "bytes": 39692
+    },
+    {
+      "path": "original_audit/visual_references/manifest.json",
+      "sha256": "65f82e883ec86a6bd73ff40b855e244569ab577ba81fc68a2924b06052c806a8",
+      "bytes": 2670016
+    },
+    {
+      "path": "original_audit/CASEpeer_Template_Field_Reference.json",
+      "sha256": "e927bd6cc968c0ae6052613f67d523d9509ba2cdb783928850a3dac8e5e65342",
+      "bytes": 54906
+    },
+    {
+      "path": "original_audit/Implementation_Evidence_Gap_Map.html",
+      "sha256": "ea732d3e91fd8f4908a0844e37c3687fe7eff29afd5e0d1827c59016351675ad",
+      "bytes": 2874337
+    },
+    {
+      "path": "original_audit/Accounting_Test_Fixtures.json",
+      "sha256": "19ba4faf386346fc985d1b97331019793112a1251c6e6a788e17fac4bada5fa2",
+      "bytes": 9807
+    },
+    {
+      "path": "original_audit/Activity_Time_Review_Test_Fixtures.json",
+      "sha256": "f76c90612c2d206e7e705a44cc206842269c9bb86530344fcd342fb58b397648",
+      "bytes": 6808
+    },
+    {
+      "path": "original_audit/Agent_Configuration_Test_Fixtures.json",
+      "sha256": "517aa8225bc27033bd163da286bbc47445ca9856e4cc0a55f045a01fe8f92257",
+      "bytes": 1403
+    },
+    {
+      "path": "original_audit/Approval_and_Permission_Test_Fixtures.json",
+      "sha256": "4e3b4b7fe982d0d43c4f4eee60cc2dc419ff909701030b7c99304c0f9c8c9f1a",
+      "bytes": 6751
+    },
+    {
+      "path": "original_audit/Bankruptcy_Amendment_Test_Fixtures.json",
+      "sha256": "d31c43f5d436cf6d6b5fbca06c32d0748fda0548e3ac8866dab9fc9f70ec74e1",
+      "bytes": 77704
+    },
+    {
+      "path": "original_audit/CASEpeer_Intake_Test_Fixtures.json",
+      "sha256": "cb2e1cca8a71b2f4e8ac043843d6cbc547fcff90a99415f59fc59687a3f21572",
+      "bytes": 10980
+    },
+    {
+      "path": "original_audit/Citator_Annotation_Test_Fixtures.json",
+      "sha256": "e0a05974c6e632b555790b7b649da655068c93f5cf8a896c3e3abac999593156",
+      "bytes": 5906
+    },
+    {
+      "path": "original_audit/Clio_Draft_Acceptance_Fixtures.json",
+      "sha256": "79deaed68f4f7f531f9c7faa28778b4a559d8ad85d83c444fafe26630d307be4",
+      "bytes": 16049
+    },
+    {
+      "path": "original_audit/Clio_Messaging_and_Reminder_Fixtures.json",
+      "sha256": "b695662f46a1e20b172a3c1c880bcc19e8b6382079700f5da2c8c9766a19c2ef",
+      "bytes": 11860
+    },
+    {
+      "path": "original_audit/Clio_Work_Acceptance_Fixtures.json",
+      "sha256": "d71f0798ca752df5cf71b8cd3ba121fb4ee434f492bfb3f7e648a57fe83361ee",
+      "bytes": 27342
+    },
+    {
+      "path": "original_audit/CoCounsel_Regional_Release_Test_Fixtures_R84.json",
+      "sha256": "4a7ef669f384700a343e53399519ab4ddf31fbae025cfed78e959592d911d7d4",
+      "bytes": 31719
+    },
+    {
+      "path": "original_audit/Contact_Routing_and_Export_Test_Fixtures.json",
+      "sha256": "b55d0ec97ea6b0164244acec917702a15c480265b842f0c15d9018e5c43f283d",
+      "bytes": 15541
+    },
+    {
+      "path": "original_audit/Cross_Matter_and_Intake_Communications_Fixtures.json",
+      "sha256": "e8209ef67de20262d79e31e462181902356aab824058d1dec7f4164d3eea5968",
+      "bytes": 11959
+    },
+    {
+      "path": "original_audit/Docket_Alert_Test_Fixtures.json",
+      "sha256": "be656e332109a31b42fa20a8243053fae0384c25993c61b8e9f53f3749b02090",
+      "bytes": 9336
+    },
+    {
+      "path": "original_audit/Email_Web_Intake_Usage_Test_Fixtures.json",
+      "sha256": "efaca50f1a0dae6bba06d054d897f996179e4cbbf2b607450822c4b7fbf7af06",
+      "bytes": 7738
+    },
+    {
+      "path": "original_audit/Email_and_Connector_Test_Fixtures.json",
+      "sha256": "2b142ff3cae17187c63c18b5d01a49021b5cce033557c6ee87df9fde5e25fa2f",
+      "bytes": 10903
+    },
+    {
+      "path": "original_audit/Filevine_Document_Continuity_Fixtures.json",
+      "sha256": "fc48685cca03ffb7cf7e970b3ad557a71cb072d521b66b0dce1b37336c41781a",
+      "bytes": 17665
+    },
+    {
+      "path": "original_audit/Filevine_Operations_Test_Fixtures.json",
+      "sha256": "c310cfa083d82f51679e612b6fd371012810968c4a4a58f2912098a386ff5399",
+      "bytes": 8752
+    },
+    {
+      "path": "original_audit/Filevine_Portal_Acceptance_Fixtures.json",
+      "sha256": "4470f30a9b0bee3dc887dbe30dade716d1f6fd73d12c8b4b39b41af48807ff98",
+      "bytes": 124199
+    },
+    {
+      "path": "original_audit/Immigration_Filing_Test_Fixtures.json",
+      "sha256": "94cdbcdd691e2fb388d9dd8a9d6e480a92904054ee62b5c3444bf9ba975e4bab",
+      "bytes": 6318
+    },
+    {
+      "path": "original_audit/InTrial_Agent_and_Case_Test_Fixtures.json",
+      "sha256": "26ae5cb902994a69e397f615124796524fcaf6bfa7af2e8205b2cc1203e16d4e",
+      "bytes": 71987
+    },
+    {
+      "path": "original_audit/LOIS_Context_and_Device_Test_Fixtures.json",
+      "sha256": "997667a929480a8af3b8a29dd8381907a64377df5b8e838567a7164ef73b062c",
+      "bytes": 10736
+    },
+    {
+      "path": "original_audit/Lawmatics_Automation_Test_Fixtures.json",
+      "sha256": "9bdd75197217241b455ba23da4ea01961c0a2a3a2c4610384c0c6fb5b08166fa",
+      "bytes": 13358
+    },
+    {
+      "path": "original_audit/Mailing_Recipient_Acceptance_Fixtures.json",
+      "sha256": "0625341e58fa78a48690d4d3c373c16db232dae961f61844f503c75cd4425bcf",
+      "bytes": 9543
+    },
+    {
+      "path": "original_audit/Matter_Copy_and_Document_Test_Fixtures.json",
+      "sha256": "2790af2a1979d882942199c999e84bbf618179fa800f7f423c6a241fe9592a26",
+      "bytes": 6519
+    },
+    {
+      "path": "original_audit/Medical_Evidence_Test_Fixtures.json",
+      "sha256": "91126d7d6e5952721daa77076414b10cc73a4316667118b5ddffa3e77d4488ce",
+      "bytes": 9027
+    },
+    {
+      "path": "original_audit/MyCase_Portal_Workflow_Test_Fixtures.json",
+      "sha256": "40d49ed9d43fbdabeb9819535d9d27630be7ba69b672808c499dc1c2c58dc668",
+      "bytes": 9259
+    },
+    {
+      "path": "original_audit/MyCase_Video_Acceptance_Fixtures.json",
+      "sha256": "8cb475348a0d18a1dfc0cd55b8858894b3c4d02653e73b7a547add01376b1f2b",
+      "bytes": 4079
+    },
+    {
+      "path": "original_audit/Native_Editing_Recovery_Fixtures.json",
+      "sha256": "ef222312d124c993260493caaef9736fc9dc5b12d6be0750c3c665912c45185d",
+      "bytes": 7619
+    },
+    {
+      "path": "original_audit/PDF_Editing_and_Release_Fixtures.json",
+      "sha256": "67080da7d87229a0e0742fa462b42c910cd5c3e76dbf723021fdfefcc0417944",
+      "bytes": 14371
+    },
+    {
+      "path": "original_audit/Phones_and_Daily_Capture_Test_Fixtures.json",
+      "sha256": "bced6e1f04cf29aef37b6c1d4b95bb8fe4cf7c3346333aa4e40fdb780d4c266a",
+      "bytes": 2651
+    },
+    {
+      "path": "original_audit/Portfolio_AI_and_Spend_Test_Fixtures.json",
+      "sha256": "d0c0a9ba615dfd055858f3e673ba961c1157d433c56d6a8d16abbf42e5d845ca",
+      "bytes": 15420
+    },
+    {
+      "path": "original_audit/Research_Lookup_Test_Fixtures.json",
+      "sha256": "c9f9bc10d9138380d35dbcec4836a658cc8ea2ddb3e91beb568e61a3d641a37e",
+      "bytes": 4146
+    },
+    {
+      "path": "original_audit/Research_Result_Reading_Test_Fixtures.json",
+      "sha256": "f9c419787bd66591ab93a3dd5e3aebcfbd4e4fe127c5d1640c75a677ed7045fb",
+      "bytes": 1730
+    },
+    {
+      "path": "original_audit/Research_Scope_History_Test_Fixtures.json",
+      "sha256": "6b46a2e097eb31b49ec19ccd5ce13c45f68e4ecdf4feb83b58a47c4fd3697e53",
+      "bytes": 2095
+    },
+    {
+      "path": "original_audit/Settlement_Test_Fixtures.json",
+      "sha256": "7aa4d21b6e398158e66f6858dbe421d076dfeccf0e917b7da98a646951bbd53b",
+      "bytes": 1019
+    },
+    {
+      "path": "original_audit/Smokeball_AutoTime_AI_Test_Fixtures.json",
+      "sha256": "cbcb58e0ec62e6990a4e8a968c508502c78f41243277bf1bb181a780f4ff7627",
+      "bytes": 28138
+    },
+    {
+      "path": "original_audit/Smokeball_Prompt_Workflow_Fixtures_R82.json",
+      "sha256": "886c45089c27a8aedddbfc54c5d7ac775f48a081b21e5937cb661773a6006c77",
+      "bytes": 13633
+    },
+    {
+      "path": "original_audit/Smokeball_Tasks_Manual_Activity_and_Cost_Fixtures_R81.json",
+      "sha256": "dc67eeeaa67f2967ccde6480229da5ea37dad15517c60f9dbe21030d9d6a003a",
+      "bytes": 16499
+    },
+    {
+      "path": "original_audit/State_Entry_and_Approval_Test_Fixtures.json",
+      "sha256": "633848a46b4f5d748fbbb3d6e5ee92504d4da241484182cf1604b224e9d0c7fe",
+      "bytes": 3649
+    },
+    {
+      "path": "original_audit/Task_Workflow_Test_Fixtures.json",
+      "sha256": "8bfaf1b78304fa4151d29b30569da35e64b50be52bb5fde9b0ccb3290ee9ecb2",
+      "bytes": 7706
+    },
+    {
+      "path": "original_audit/Voice_Intake_Outcome_Test_Fixtures.json",
+      "sha256": "c74106cf83a9b1a9e8fad75cf6996c2aba3e85cfe7c1a7920d5ff09dbc87c358",
+      "bytes": 1511
+    },
+    {
+      "path": "original_audit/Westlaw_Integration_Quota_and_Context_Fixtures_R83.json",
+      "sha256": "165c7226caf9730451910eb802d1e9999e7f58f6940af1982a4deef184b82571",
+      "bytes": 16122
+    },
+    {
+      "path": "original_audit/source_documents/current_instructions_R144/Developer_Instructions_Open_Source_and_Automation.docx",
+      "sha256": "82b2333706c993c9b9f08b849f148c20847c863fcff814b3f45d071d757c5c28",
+      "bytes": 43815
+    },
+    {
+      "path": "original_audit/source_documents/current_instructions_R144/Immediate_Intake_Workflow_Corrections.docx",
+      "sha256": "f0275d7a2ba0c8820bbef35824d764355f3d47b0aba4913afa145fcf5221aa44",
+      "bytes": 39516
+    },
+    {
+      "path": "original_audit/source_documents/current_instructions_R144/Next_Development_Instructions_and_300_Document_Automations.docx",
+      "sha256": "eccd3af741d83f73caf1578be5be3983892a0fefe257d661632b7c67ad31cfd8",
+      "bytes": 75028
+    },
+    {
+      "path": "original_audit/source_documents/current_instructions_R144/PI_AI_Claims_Requirements.txt",
+      "sha256": "5cd7329ab227f7a0976cad57c22912af850bd8981475d9fb4f453346fcd4f00a",
+      "bytes": 4962
+    }
+  ]
+}

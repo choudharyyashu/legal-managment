@@ -1,0 +1,123 @@
+{
+  "date": "2026-11-17",
+  "status": "Synthetic proposed cases; no application tests executed",
+  "bill_oracle": {
+    "original_cents": 1000000,
+    "adjustment_cents": 200000,
+    "adjusted_cents": 800000,
+    "insurance_paid_cents": 300000,
+    "medpay_pip_cents": 100000,
+    "client_paid_cents": 50000,
+    "owed_cents": 350000,
+    "paid_plus_owed_cents": 800000
+  },
+  "lien_states": [
+    "neither",
+    "signed only",
+    "filed only",
+    "both"
+  ],
+  "request_states": [
+    "unrequested",
+    "requested",
+    "partial",
+    "received flag only",
+    "verified received",
+    "cancelled"
+  ],
+  "tests": [
+    {
+      "requirement_id": "F-0584",
+      "id": "AT-0584",
+      "scenario_and_expected_result": "For M-A/P-A create records R-A and billing B-A. Receive one item of a multi-item records request, cancel billing, and leave another provider unrequested. Report queries for requested/partial/received/cancelled/unrequested must produce declared expected IDs and authorized counts. Inspect date-field/timezone semantics and provider/case/owner filters. A received flag without a verified file/hash stays evidence-unverified; add follow-up notes/tasks without changing request status accidentally. Resolve the article-versus-Received-screenshot scope before adopting defaults.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0585",
+      "id": "AT-0585",
+      "scenario_and_expected_result": "Seed P-A with distinct physical, records and billing addresses and payee IDs. Records-cost request uses records routing; absent records routing displays physical fallback for confirmation. Same-name P-B cannot redirect funds. Save amount/memo/invoice/priority and reconcile one shared request ID across Costs Management and case Costs. Retry after timeout creates no duplicate. Approved, paid and received remain false until their own evidence exists. Block stale payee changes after approval and require a reviewed correction.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0586",
+      "id": "AT-0586",
+      "scenario_and_expected_result": "Use four synthetic lien records: neither flag, signed only, filed only and both. Require source agreement/receipt IDs and dates for evidence-backed states; unsupported flags remain assertions. Changing amount does not imply signing or filing. Test signer, filing jurisdiction, effective form/rule version and unknown-validity state under an approved legal model. An omitted statement line cannot hide an unresolved lien before distribution. No vendor state-law summary establishes Utah validity or a duty to distribute.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0587",
+      "id": "AT-0587",
+      "scenario_and_expected_result": "Use synthetic DICOM series/report for rendering, and an animation request with operative report or recommendation, client description and requested date. Preview exact payload/recipient and current quote before authorization. An initial consultation request is not an accepted order. Track required-input completion, acknowledgement and product-specific production clocks separately. Reconcile MP4, stills, affirmation and interactive viewer as separate expected outputs when contracted; one secure link cannot mark all received. Preserve original hashes and derivative/model versions, require qualified review and record missing/failed outputs. A rendering cannot be labeled original imaging, clinically accurate, admissible or proven to increase settlement solely from vendor marketing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0006",
+      "id": "AT-0006-R75-1",
+      "title": "Reconcile medical-bill amount taxonomy without legal presumptions",
+      "developer_story_extension": "As the reviewer, I need original charges, adjustments and payer contributions to reconcile without collapsing negotiated lien payoff into outstanding bill amounts.",
+      "scenario_and_expected_result": "Use original10000.00, write-off2000.00, adjusted8000.00, insurer3000.00, MedPay/PIP1000.00, client500.00 and owed3500.00; expected paid-plus-owed8000.00 under this explicit fixture model. Test penny rounding, missing values versus zero, overpayments, duplicate bills and reversed payments. Keep legal damages basis, negotiated payoff and accounting balance distinct; the source regional label does not define recoverable Utah damages.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://supportcenter.casepeer.com/en/articles/9343818-how-are-the-billing-amounts-on-the-medical-treatment-tab-typically-used",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0396",
+      "id": "AT-0396-R75-2",
+      "title": "Rendering eligibility is not records-request authorization",
+      "developer_story_extension": "As staff, I need the Multus candidate rule explained independently from records-provider restrictions and permission to send client data.",
+      "scenario_and_expected_result": "Test activation off/on and each listed specialty, positive MRI status, injection and surgery stage individually. Show which stored field/version caused eligibility; do not infer unlisted TBI status from a visible field. Change the field or role after loading: revalidate server-side. Eligibility alone cannot send, order, diagnose or override a restricted provider.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://supportcenter.casepeer.com/en/articles/9343538-what-case-criteria-displays-the-multus-medical-button",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0397",
+      "id": "AT-0397-R75-3",
+      "title": "Preserve records-route fallback and payee snapshot",
+      "developer_story_extension": "As staff, I need a source-labeled routing preview that preserves the payee/address used for each approved fee request.",
+      "scenario_and_expected_result": "Use separate provider, records entity and lien holder identities. Show exact fallback reason if records routing is absent; billing route and settlement lien payee remain distinct. Update shared contact after saving a draft and after approving a payment request: require explicit revalidation and retain prior snapshots instead of silently rewriting issued evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://supportcenter.casepeer.com/en/articles/9343815-cost-request-for-medical-records",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0477",
+      "id": "AT-0477-R75-4",
+      "title": "Medical animation source manifest differs from DICOM storage or clinical review",
+      "developer_story_extension": "As the reviewer, I need originals, illustrative derivatives and review attestations separated with exact source versions.",
+      "scenario_and_expected_result": "Associate a synthetic MRI report and DICOM series, plus operative recommendation, with an animation version. Detect missing source series and wrong-client images before dispatch. A returned MP4 and interactive viewer have separate hashes/access tests; a radiologist affirmation is separately stored and cannot substitute for every output or approved clinical/legal review. Unsupported viewers remain honestly unavailable.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.multusmedical.com/animations",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0200",
+      "id": "AT-0200-R75-5",
+      "title": "Separate listing prices, quotes and product-specific production clocks",
+      "developer_story_extension": "As the administrator, I need dated catalog pricing and service timing retained as unapproved claims until a current quote and service agreement are reviewed.",
+      "scenario_and_expected_result": "Store the Clio directory1200USD rendering/3500USD animation,20percent30day discount, deferred-payment and3week claims as a dated source snapshot. Store the Multus48hour-after-inputs rendering claim and CASEpeer same-business-day follow-up separately. Test different service types/start conditions and missing inputs; never promise one universal deadline or automatically incur a charge. Current quote, currency, discount eligibility and contract govern any eventual approved order.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.clio.com/app-directory/multus-medical/",
+      "review_date": "2026-11-17"
+    }
+  ],
+  "evidence_limit": "Arithmetic oracle is test design, not an application pass or current legal damages rule. Current templates/editions/field mappings unresolved."
+}

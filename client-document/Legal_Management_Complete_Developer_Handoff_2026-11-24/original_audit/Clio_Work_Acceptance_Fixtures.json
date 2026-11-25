@@ -1,0 +1,296 @@
+{
+  "date": "2026-11-16",
+  "status": "Original proposed application tests; none executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0535",
+      "workflow": {
+        "input": "Two synthetic matters, two firm users, a conversation fact, a drafting preference and a corrected source document",
+        "initial_state": "Original synthetic fixture, no implementation environment",
+        "user_action": "Review proposed memory scope, retain approved context and reopen a later conversation",
+        "output": "Attributable scoped memory with current source/version, author, promotion and correction history",
+        "exceptions_and_dependencies": "Source observations motivate proposed controls; source/commit/build and current vendor/legal entitlements remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0535",
+        "scenario_and_expected_result": "Create matter A with a confidential settlement amount and matter B with a different client. Store an attorney drafting preference separately. Close/reopen conversations: A's amount is available only in authorized A context, while the user's approved preference applies in B without importing A's facts. End-of-session promotion records source conversation and scope; extracted factual suggestions remain distinguishable from confirmed decisions. Correct A's source amount and revoke a user's access: later answers must not repeat the superseded amount as current or leak revoked content through memory, search, export or generated drafts. Conflicting memory must be surfaced for review, not silently resolved by recency alone. Preserve I/me/my and four-digit letter dates; unknown years remain flagged rather than guessed or omitted. Proposed controls and failure cases are requirements, not verified Clio behavior.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0536",
+      "workflow": {
+        "input": "Approved synthetic matter facts, structured metrics, branding and audience selection",
+        "initial_state": "Original synthetic fixture, no implementation environment",
+        "user_action": "Generate, inspect and export a dashboard from an explicit source snapshot",
+        "output": "Versioned HTML artifact with source manifest, visible calculations and an audience review record",
+        "exceptions_and_dependencies": "Source observations motivate proposed controls; source/commit/build and current vendor/legal entitlements remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0536",
+        "scenario_and_expected_result": "Generate a dashboard from three synthetic events and a known expense table. Open the downloaded single HTML file offline: required content, labels and interactions remain usable and metrics reconcile with the source rows. Include hostile script-like source text and an inaccessible matter: escape untrusted content, exclude unauthorized data, and disclose any required external resource rather than calling it self-contained. Refresh a source fact: create a new artifact/version and show the old snapshot's date. Download, preview and local save cannot be reported as email transmission, client receipt or court filing. Require review of branding, party identity, intended audience and confidential content before any authorized sharing. This tests the requested program, not a generated mockup as implementation evidence.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0537",
+      "workflow": {
+        "input": "Synthetic buyer-side acquisition matter, three employment agreements and one supplier contract",
+        "initial_state": "Original synthetic fixture, no implementation environment",
+        "user_action": "Select client/role, analyze risks and request an amendment checklist for one named employee",
+        "output": "Ranked findings with tier definitions, clause/page links, proposed language and rationale",
+        "exceptions_and_dependencies": "Source observations motivate proposed controls; source/commit/build and current vendor/legal entitlements remain unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0537",
+        "scenario_and_expected_result": "Plant a change-of-control severance clause, inconsistent non-compete terms, an exclusive supplier obligation and automatic renewal in versioned synthetic contracts. Analyze for the buyer, then for the seller: label perspective and supporting clauses, explain each risk tier and do not silently reuse the first perspective. Request changes only for employee B: exclude A/C proposed amendments while retaining their cited comparison context. Display original clause, proposed change and rationale; a redline-style checklist is not a verified Word tracked-change file or an executed amendment. Unknown or conflicting governing law requires explicit selection and current authority review. A legal citation or model assertion alone cannot certify enforceability. Test inaccessible files, an amended supplier contract and a missing clause without inventing obligations.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0144",
+      "id": "AT-0144-CW53-01",
+      "title": "Permissions at analysis and export",
+      "scenario_and_expected_result": "Give synthetic user U access to matter A but not B. Pull documents through an approved DMS connection and attempt analysis, citations, previews, saved chats and exports involving B: enforce access at every surface, including cached results. Revoke A access mid-session and retest. Record processing provider and actual subscription controls; narrated ISO/SOC/GDPR/HIPAA claims are not audit reports, a BAA or permission tests.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "03:14–03:55",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0131",
+      "id": "AT-0131-CW53-02",
+      "title": "Workflow-specific video capability",
+      "scenario_and_expected_result": "Keep separately selectable workflows for research, argument, jurisdiction comparison, complaint/pleading review, contracts, tabular review, regulatory/international analysis and recordings. Validate allowed file formats, size, duration and unsupported media before processing a synthetic upload; do not implement a literal any-video-format promise from narration. Recording analysis requires source timestamps and explicit audio/transcript/visual coverage, with a visible processing failure rather than a successful empty result.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "04:15–05:00",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0119",
+      "id": "AT-0119-CW53-03",
+      "title": "Inferred jurisdiction remains reviewable",
+      "scenario_and_expected_result": "Upload a synthetic New York federal order into a Utah matter. Show the document-inferred court separately from the matter jurisdiction and ask which research scope to use. Persist an explicit federal-inclusion choice and selected libraries; changing the jurisdiction invalidates incompatible cached authority results. Do not choose jurisdiction from the procedural label alone. Direct library browsing and AI research remain distinct access routes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "05:31–06:19; 18:59–19:21",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0011",
+      "id": "AT-0011-CW53-04",
+      "title": "Add evidence without silently changing prior output",
+      "scenario_and_expected_result": "Begin with one synthetic document, then add two matter files and one authorized DMS file. Keep an explicit document/version manifest for each response, the client perspective and a separate excluded-file list. Reopening an old answer preserves its original snapshot; a refreshed answer identifies the new evidence. Matter selection cannot mean unrestricted inclusion of all firm documents.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "05:08–06:34; 07:56; 11:00–11:42; 16:13–16:38",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0007",
+      "id": "AT-0007-CW53-05",
+      "title": "Chronology table export reconciliation",
+      "scenario_and_expected_result": "Extract five synthetic dates, including an ambiguous date and conflicting date across documents. Keep chronological ordering, uncertainty, source page/quote and matter/version IDs. Export Excel/CSV table and a Word conversation separately: row counts, date values and citations match the selected scope; unselected or inaccessible sources are excluded. A table view change must not silently alter the export scope or claim a saved matter document.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "06:43–07:56",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0003",
+      "id": "AT-0003-CW53-06",
+      "title": "Preserve malformed citation beside proposed match",
+      "scenario_and_expected_result": "Supply a document with one valid citation, one malformed citation and one unresolved authority. Preserve the literal original reference, list the proposed matching authority separately, flag confidence/ambiguity and open the full source for review. A correction cannot replace the source text without an attributable reviewer decision. A treatment badge does not resolve proposition-specific applicability or complete citator coverage.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "08:14–10:06",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0002",
+      "id": "AT-0002-CW53-07",
+      "title": "Version-bound passage verification",
+      "scenario_and_expected_result": "Generate findings from a synthetic PDF-v1 and link to the exact page/passage. Replace it with v2, delete it and revoke access in separate cases: show stale/unavailable provenance instead of opening a different passage silently. An unanswered requested fact remains unresolved; neither a library citation nor a document link proves every generated assertion is supported.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "06:49–07:23; 13:03; 16:47–16:56; 21:26–21:52",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0476",
+      "id": "AT-0476-CW53-08",
+      "title": "Persistent work history is a user-visible audit log",
+      "scenario_and_expected_result": "Close and reopen a synthetic matter conversation on another authorized session. Restore submitted prompts, tool/source status, results and editable draft references with timestamps and evidence versions. Show interrupted/failed steps and subsequent retries. The visible Show process history must be an execution/audit summary; do not claim it exposes private model reasoning or guarantees reproducibility of a nondeterministic answer.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "08:19–09:10; 22:37–22:58",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0450",
+      "id": "AT-0450-CW53-09",
+      "title": "Source-bounded personal injury response drafting",
+      "scenario_and_expected_result": "Use a synthetic complaint, incoming demand, intake statement, police report and medical record in a PI matter. Generate a draft response tied to each requested item, approved jurisdiction/procedure and source passages. Leave absent facts explicitly unanswered and preserve contradictory client/source information for review. Do not treat a New York demonstration as a Utah form or current legal-rule verification. A populated draft is neither approved client advice nor filed/served output.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "18:37–21:52",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0451",
+      "id": "AT-0451-CW53-10",
+      "title": "Whole-draft, selected-text and historical revisions",
+      "scenario_and_expected_result": "Create a two-section draft with an attorney edit in section B. Request a selected-text revision in A: preserve B byte-for-byte except documented formatting normalization. Separately request a whole-draft revision, navigate previous/next versions, close/reopen the panel, and verify each version's title/content and selection bounds. Keep source citations and unresolved warnings attached to each revision. Preserve I/me/my and four-digit letter dates in every generated or shortened attorney letter; never infer an exception from vendor sample language. Verify title/body edits and bold, italic, strikethrough, bullet and numbered-list formatting across saved versions; Open in Editor is a distinct transition and cannot silently replace the wrong draft.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/49678596987803-Legal-Pad-in-Clio-Work",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete current article body read; basic formatting, whole/selection revision, versions, export and folder behavior. Full editor is a distinct linked guide, still pending individual review. Two poster/title graphics inspected and excluded from feature evidence."
+    },
+    {
+      "feature_id": "F-0404",
+      "id": "AT-0404-CW53-11",
+      "title": "Download, copy and matter save require different evidence",
+      "scenario_and_expected_result": "From the same reviewed draft version test DOCX download, PDF download, clipboard copy, and Save to Manage separately. Verify downloaded bytes/content and destination matter/folder/file ID after save. At a root destination, apply the documented Vincent Generated Content folder policy without duplicating that folder; saving to another permitted folder follows an explicit selection. Test duplicate filename, concurrent save, revoked permission and network failure. A menu choice or success toast in a staged tutorial cannot pass the persistence test; none of these actions establishes send, receipt or filing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/49678596987803-Legal-Pad-in-Clio-Work",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete current article body read; basic formatting, whole/selection revision, versions, export and folder behavior. Full editor is a distinct linked guide, still pending individual review. Two poster/title graphics inspected and excluded from feature evidence."
+    },
+    {
+      "feature_id": "F-0020",
+      "id": "AT-0020-CW53-12",
+      "title": "Connected Manage actions have explicit scope",
+      "scenario_and_expected_result": "In an authorized test tenant, distinguish standalone Work from a connected Manage account. Propose a task/internal message from a synthetic matter and show responsible user, matter, text and due date before execution under the applicable authorization policy. Verify the actual Manage record ID and permissions; failed actions stay failed. A visible Draft link or Create menu does not establish a paid Draft entitlement, sent message or synchronized record.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "23:12–24:34",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0384",
+      "id": "AT-0384-CW53-13",
+      "title": "Research activity does not establish billable time",
+      "scenario_and_expected_result": "Run synthetic research and create a task without a timer or verified work-duration event. Include them only as review candidates, not automatically earned or billed time. Preserve separate scheduled, inferred and confirmed durations and individual calls/texts in daily review. Require authorized matter mapping and human approval before posting a billable entry; existing email filing/client-copy requirements remain in force.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "23:34–24:10",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0180",
+      "id": "AT-0180-CW53-14",
+      "title": "Dated demo price versus current entitlements",
+      "scenario_and_expected_result": "Store the May 26, 2026 presenter price of 199 USD per user/month with that source date, separately from the current quote-based public page. Do not treat the dated quote, a library size claim, a Draft navigation link or a linked Manage account as proof that every module, corpus, court or add-on is licensed. Test an unavailable paid capability: retain its requirement and data, show the exact missing entitlement and avoid silently narrowing the inventory. Trial duration, library coverage, support, renewal and cancellation terms require versioned contract/plan evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=gyRPL17lxws",
+      "timestamp": "24:40–25:29",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available English transcript: 191 segments, 00:10–26:14, all read individually in four consecutive ranges. Player duration 26:27 versus indexed 26:28. Player buffered at 00:00 and after seeking to 10:37; zero product frames reviewed. Independent host, vendor presenter; not independent runtime verification."
+    },
+    {
+      "feature_id": "F-0314",
+      "id": "AT-0314-CW53-15",
+      "title": "Pilot-scoped contextual guidance",
+      "scenario_and_expected_result": "Represent the Apex-pilot suggestions as a separately entitled experience. For an existing synthetic firm, choose the most recent active matter only if authorized; for a new firm ask for the intended outcome without inventing a matter. A repeated output request can offer a reusable skill, and drafting can introduce a Word add-in, but neither suggestion activates a skill, installs software or grants access. Test disabled pilot entitlement and stale matter permissions.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/48791655710235-Understand-Clio-Work",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete current article body read; workflows, drafting assets, pilot guidance, memory and library sections. Visible web header November 5, 2026; prior index update timestamp November 9 retained separately. Embedded Vimeo not reviewed."
+    },
+    {
+      "feature_id": "F-0320",
+      "id": "AT-0320-CW53-16",
+      "title": "Disclose general web research separately",
+      "scenario_and_expected_result": "Produce one synthetic answer grounded in the legal library and another with an approved general web source. Label each assertion's source type and scope; no web result is relabeled as verified primary authority or included in a legal-library coverage count. Verify that changing source permissions removes inaccessible passages from subsequent answers and exports without erasing prior audit history.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/48791655710235-Understand-Clio-Work",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete current article body read; workflows, drafting assets, pilot guidance, memory and library sections. Visible web header November 5, 2026; prior index update timestamp November 9 retained separately. Embedded Vimeo not reviewed."
+    },
+    {
+      "feature_id": "F-0247",
+      "id": "AT-0247-CW53-17",
+      "title": "Matter, party, jurisdiction and year conflicts remain blocking review issues",
+      "scenario_and_expected_result": "Recreate the staged tutorial's synthetic conflict: selected Henderson matter, an order naming a different plaintiff, a source conference date in 2025, an unspecified-year March 15 prompt and a New York selector beside a California suggestion. Preserve every conflicting value and require verified party/jurisdiction/date resolution before labeling the letter client-ready or authorizing transmission. Saving an internal unresolved draft may be allowed only with an explicit draft warning; it cannot clear the issue. Do not omit the year to avoid a conflict: flag YEAR UNCONFIRMED and preserve the source's known four-digit year with attribution. Correct user-authored voice to I/me/my without altering exact quoted source language.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://capture.navattic.com/cmqkzk9tp000a0bkwbv04ech8",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "All 9 guided states visually inspected and captured. Vendor-staged DOM walkthrough, advanced through tutorial Next controls; not a production tenant, complete video or application acceptance test."
+    },
+    {
+      "feature_id": "F-0446",
+      "id": "AT-0446-CW53-18",
+      "title": "Package and cancellation terms remain versioned",
+      "scenario_and_expected_result": "Model standalone Work and Manage-linked packages as separate entitlement configurations. Keep documents, conversations and export permissions explicit through a simulated subscription change; no destructive deletion is implied by cancellation. A cancellation request and the current term's end are different dates. Preserve source date, region and quote terms; the current pricing text cannot substitute for a signed contract or prove every advertised add-on is enabled.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.clio.com/work/pricing/",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete rendered public pricing page text read through final footer via web retrieval; direct raw HTML request returned HTTP403. No current fixed dollar quote retrieved. Vendor security, library, Docket and support claims retained as claims, not independent verification."
+    }
+  ]
+}

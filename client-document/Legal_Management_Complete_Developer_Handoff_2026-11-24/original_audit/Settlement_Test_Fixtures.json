@@ -1,0 +1,35 @@
+{
+  "purpose": "Synthetic arithmetic and workflow inputs for future application tests; not legal allocation advice",
+  "application_executed": false,
+  "cases": [
+    {
+      "id": "SET-01",
+      "gross": "100000.00",
+      "fee": "30000.00",
+      "costs": "5000.00",
+      "finalized_lien": "10000.00",
+      "pending_lien": "15000.00",
+      "expected_provisional_net_before_pending": "55000.00",
+      "expected_unresolved_warning": true,
+      "if_explicitly_reserved_pending": "40000.00"
+    },
+    {
+      "id": "SET-02",
+      "agreed_settlement": "100000.00",
+      "received": "25000.00",
+      "expected_receipt_state": "Partial; availability not established by receipt alone"
+    },
+    {
+      "id": "SET-03",
+      "check_state": "Issued then voided",
+      "expected_cleared": false
+    },
+    {
+      "id": "SET-04",
+      "attorney_approved_valuation": "100000.00",
+      "ai_recommendation": "140000.00",
+      "expected_approved_forecast": "100000.00",
+      "expected_review_task": true
+    }
+  ]
+}

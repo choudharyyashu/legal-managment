@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-17",
+  "tests": [
+    {
+      "requirement_id": "F-0200",
+      "id": "AT-0200-R83-1",
+      "title": "Resolve subscription and activation gates separately",
+      "developer_story_extension": "As the administrator, I need owner activation, license eligibility and each user’s connected identity to remain distinct.",
+      "scenario_and_expected_result": "Use a synthetic matrix of Archie absent/present, Edge/Precision/Advantage/CoCounsel, owner/staff and licensed/unlicensed users. Only the declared current supported capability enables a research request. Owner activation cannot impersonate all users or silently accept terms. Preview the exact authorization audience/scopes before an independently approved connection; an Active badge alone cannot prove a qualifying license or universal data access. No extra host charge does not mean the underlying research subscriptions are free.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363686700183-Setting-up-Westlaw-Deep-Research",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Resolve subscription and activation gates separately",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0246",
+      "id": "AT-0246-R83-2",
+      "title": "Resume an existing research job after session expiry",
+      "developer_story_extension": "As the attorney, I need reauthentication to recover the original report without submitting or charging the same research again.",
+      "scenario_and_expected_result": "Start a synthetic job with a stable provider ID, expire its24-hour session while running, then reconnect the same approved identity. Resume polling/result retrieval for that ID; do not create another job. Test a different user signing in, revoked license and a completed job whose acknowledgement was lost. Protect against cross-user history leakage. A long-job preflight must distinguish an expiring token from a failed job. Record pending/running/completed/unavailable separately;3/15-minute estimates are not guaranteed deadlines.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363941967255-Westlaw-Deep-Research-troubleshooting-and-FAQ",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Resume an existing research job after session expiry",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0248",
+      "id": "AT-0248-R83-3",
+      "title": "Preserve provider text and label later host synthesis",
+      "developer_story_extension": "As the attorney, I need immutable provider outputs with a separately attributed comparison, so source disagreement and partial arrival remain visible.",
+      "scenario_and_expected_result": "Submit one synthetic question to two enabled adapters. Return LawY first, Westlaw later, with conflicting citations/answers and one timeout variant. Preserve each raw payload, provider, request ID and hash; label host synthesis/version and which outputs existed when written. A later report creates a new synthesis revision, not a silent rewrite of the earlier provider answer. With one provider, do not invent a second tab or agreement. Never label marketing promises of accuracy/corpus coverage as verified authority.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363618474391-Using-Westlaw-Deep-Research-in-Archie-for-Legal-Research",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Preserve provider text and label later host synthesis",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0121",
+      "id": "AT-0121-R83-4",
+      "title": "Pin research jurisdictions and external billing identifiers",
+      "developer_story_extension": "As the attorney, I need research options reviewed against the matter without conflating a provider Client ID with a local client number.",
+      "scenario_and_expected_result": "Select zero, one, three and four synthetic jurisdictions under an explicit capability: require configured minimum, allow at most three for this provider and reject a fourth before submission. Preserve state-only versus state-plus-federal labels exactly; Utah matter context must not silently inherit a California example. Keep external Client ID optional and separate from local matter/client IDs. Changing provider/depth/jurisdiction after approval invalidates the request preview. Skip cancels that question’s research and cannot be presented as generated output.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363618474391-Using-Westlaw-Deep-Research-in-Archie-for-Legal-Research",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Pin research jurisdictions and external billing identifiers",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0535",
+      "id": "AT-0535-R83-5",
+      "title": "Review saved research context before cross-matter reuse",
+      "developer_story_extension": "As the attorney, I need each report destination and context promotion permissioned independently.",
+      "scenario_and_expected_result": "Save one synthetic provider report to local download, memo, matter document and knowledge source with separate acknowledgements/hashes. A failed destination cannot be reported successful because another saved. MatterA research containing confidential facts cannot enterB merely because knowledge-source reuse is supported. Require a reviewed audience, source/version link and appropriate legal-content license; permission revocation/correction invalidates stale derived context. A download/copy/link is not proof of server persistence or complete ingestion. Preserve the immutable report while later client-letter drafts use I/me/my and four-digit years.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363858483735-Saving-Westlaw-Deep-Research-reports-and-usage-limits",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Review saved research context before cross-matter reuse",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0003",
+      "id": "AT-0003-R83-6",
+      "title": "Separate citation previews from authority verification",
+      "developer_story_extension": "As the attorney, I need report citations and treatment indicators linked to the exact full source before relying on a generated proposition.",
+      "scenario_and_expected_result": "Use synthetic valid, stale, negative-treatment and hallucinated citations. Preview flags, AI summaries and supporting passages remain provider assertions until linked source identity, edition, jurisdiction and date are checked. Denied citation access is an unresolved verification gap, not a clean result. Embedded report-only mode must not imply native Verify/Enhance/research-step tools ran. Preserve the cited passage and reviewer decision; a KeyCite flag alone cannot determine applicability to the matter.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363618474391-Using-Westlaw-Deep-Research-in-Archie-for-Legal-Research",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Separate citation previews from authority verification",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0245",
+      "id": "AT-0245-R83-7",
+      "title": "Distinguish document connector and embedded research routes",
+      "developer_story_extension": "As the attorney, I need separate capability records for bulk document import, knowledge search and embedded legal research.",
+      "scenario_and_expected_result": "Connect only synthetic adapters. Import two versions of a matter file into a document-analysis route, then separately submit a research query. Reconcile source file IDs/hashes, versions, access and external destination; a successful research subscription cannot prove document sync or native feature parity. Version rollout by product/region/client type and announced versus observed availability. Treat October13,2026 upcoming language separately from November operational documentation. No marketing claim that files stay current replaces retrieval/version evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://legal.thomsonreuters.com/blog/thomson-reuters-smokeball-legal-ai-practice-management/",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic licenses, identities, provider jobs, source reports and matter permissions",
+        "initial_state": "Proposed fixture; no user application/test accounts accessible",
+        "user_action": "Distinguish document connector and embedded research routes",
+        "output": "Attributable review result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Archie add-on plus qualifying Westlaw Advantage or CoCounsel Legal subscription; owner activation/terms and user-specific authorization required. Westlaw Edge/Precision excluded by current setup guide. Exact paid contract, corpus, permissions, day boundary, native-vs-embedded feature availability and deployment require verification. No sign-in, terms acceptance, report generation, legal-source verification or external action executed."
+      }
+    },
+    {
+      "requirement_id": "F-0604",
+      "developer_story_extension": "As the attorney, I need per-person report limits reconciled across all provider entry points so retries, cancellations and separate hosts cannot hide quota consumption.",
+      "id": "AT-0604",
+      "scenario_and_expected_result": "Seed two running jobs and48consumed reports, including direct-provider usage. Admit the third concurrent job, deny/defer a fourth under an explicit policy, and test49/50/51daily boundaries. Stopping an accepted job releases the running slot but retains consumed count when required. Retry a lost acknowledgement using the same request key: never create or charge a second report silently. Distinguish cancellation before provider acceptance from a started-and-stopped report; unknown failure charging remains unresolved. At the daily boundary reconcile the provider’s authoritative reset/timezone instead of assuming America/Denver or host-local midnight. Stale counters across two hosts cannot over-admit work; explain limit and retry eligibility without moving to another identity. All synthetic, not executed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/44363858483735-Saving-Westlaw-Deep-Research-reports-and-usage-limits"
+    }
+  ],
+  "status": "Eight original proposed synthetic cases; all Not executed",
+  "quota_boundaries": {
+    "concurrent": [
+      2,
+      3,
+      4
+    ],
+    "daily": [
+      48,
+      49,
+      50,
+      51
+    ],
+    "reset_timezone": "Unresolved; provider evidence required"
+  },
+  "jurisdiction_selection_counts": [
+    0,
+    1,
+    3,
+    4
+  ],
+  "limits": "No terms accepted, user signed in, client query sent, external report generated or legal authority verified."
+}

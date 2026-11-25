@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-15",
+  "kind": "Original synthetic acceptance scenarios;not executed",
+  "new_test": {
+    "id": "AT-0449",
+    "scenario_and_expected_result": "Create a synthetic portal user with a timezone different from the firm. Show timed events in both zones with the zone label; preserve one event identity and canonical timestamp. Change the user preference across a daylight-saving boundary: verify the declared display policy without moving date-only filing deadlines or all-day events. Retain old/new preference and actor/time. Unknown zones or ambiguous local input must require explicit resolution. Notification text and portal views must agree. No real account, terms acceptance or credential change is performed in this test fixture.",
+    "status": "Not executed",
+    "build": null,
+    "environment": null
+  },
+  "extensions": [
+    {
+      "id": "AT-0019-MYCASE-RETAINER",
+      "scenario_and_expected_result": "Use separate incident, retainer, filing and trial dates. Apply the saved intake workflow explicitly against retainer date and verify the intended tasks/events. Do not substitute incident date from shared context. Replay Apply and test a second workflow instance:prevent unintended duplicates while preserving deliberate separate runs.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0027-MYCASE-INTAKE-CHANNEL",
+      "scenario_and_expected_result": "Choose Save & Fill Out Now versus Save & Send. Record channel, form revision, target client/lead identity and submission actor. In-office completion must not claim email delivery. Emailed submission must map to the selected identity without creating duplicates orsilently overwriting conflicting reviewed values. Store raw responses and field-level changes; submitted, ingested, reviewed and filed remain distinct.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0440-MYCASE-ACTIVATION",
+      "scenario_and_expected_result": "Model invitation, activation, case linkage and item grants as distinct states. Record policy version and user-action evidence where appropriate; do not claim that seeing a checked acknowledgment proves informed consent. Missing activation requirements block activation. Never enable all case items implicitly or perform real account/credential/terms actions in the fixture.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0448-MYCASE-RECIPIENT-SUBSET",
+      "scenario_and_expected_result": "Select two recipients from four options with duplicate display names. Persist unique IDs and selected subset; verify only authorized recipients receive the message/notification. Do not treat a Saved draft label as Sent. Subject/body/case routing and daily time capture remain traceable without cross-case leakage.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0068-MYCASE-TRAINING",
+      "scenario_and_expected_result": "Offer onboarding help in the recipient-selected supported language. Verify English/Spanish course availability, version and content coverage separately; do not infer translated application UI orfull course quality from a catalog mention. Preserve the chosen language across invitation/help links, and show an explicit fallback when a course ortranslation is missing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "timezone_fixture": {
+    "firm": "America/Denver",
+    "client": "America/New_York",
+    "date_only_deadline": "2026-11-16",
+    "event_identity": "synthetic-event-1",
+    "original_instant": "2026-11-16T17:00:00Z"
+  },
+  "intake_fixture": {
+    "client": "synthetic-client-1",
+    "lead": "synthetic-lead-1",
+    "channels": [
+      "in-office",
+      "email"
+    ],
+    "anchor_dates": {
+      "incident": "2026-09-01",
+      "retained": "2026-09-29"
+    }
+  },
+  "real_actions_performed": false,
+  "build": null,
+  "environment": null
+}

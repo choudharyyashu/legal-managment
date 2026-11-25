@@ -1,0 +1,128 @@
+{
+  "date": "2026-11-16",
+  "status": "Original synthetic fixtures; application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0493",
+      "workflow": {
+        "input": "Selected contacts or case-role pairs and versioned template",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Choose a list route and preview merge context",
+        "output": "Unambiguous recipient/context manifest with missing-field exceptions",
+        "exceptions_and_dependencies": "Static/source-text evidence only; current permissions, suppression, field mapping, rendering, storage and external delivery require tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0493",
+        "scenario_and_expected_result": "Create synthetic contact C1 linked to two cases with different claim numbers and C2 linked to none. A contact-only letter can use contact fields but must not arbitrarily choose either case for a case merge field. A case-bound item carries case ID plus role/recipient ID. Unsupported channels on the selected route are blocked or explicitly moved to a reviewed compatible route. Preview addresses, roles and field provenance. Preserve I/me/my and every four-digit letter year; missing required data stays unresolved.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0494",
+      "workflow": {
+        "input": "Case filters, recipient-role policy and contact identities",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Expand recipients and review duplicates",
+        "output": "Per-recipient/per-matter work items with explicit exclusion reasons",
+        "exceptions_and_dependencies": "Static/source-text evidence only; current permissions, suppression, field mapping, rendering, storage and external delivery require tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0494",
+        "scenario_and_expected_result": "Use C1 in M1 and M2, two plaintiffs in M1 and C1 as both primary plaintiff/contact. A generic holiday list produces one contact entry; two case-specific letters retain two distinct matter contexts. Explain duplicates and chosen recipient-role policy. Recheck explicit open/closed and case-type filters before generation. Changing case scope invalidates an old preview until refreshed. Repeated dispatch requests cannot duplicate the same approved output, while distinct matter outputs remain separately traceable.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0495",
+      "workflow": {
+        "input": "Contact eligibility fields, selected filters and channel consent records",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Preview exclusions and execute a controlled synthetic job",
+        "output": "Per-recipient policy decisions with delivery/export results",
+        "exceptions_and_dependencies": "Static/source-text evidence only; current permissions, suppression, field mapping, rendering, storage and external delivery require tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0495",
+        "scenario_and_expected_result": "Build a synthetic list with active/inactive contacts, individuals/organizations, a prevented-mailing contact and a later SMS opt-out. Show the selected filter policy and why each row is included or excluded. Recheck permissions and channel-specific consent at send/export time. A mailing exclusion and a carrier STOP event are distinct evidence, not interchangeable states. A visible checkbox is not proof the vendor prevents bypass through another route. Denied recipients remain in the audit manifest with no confidential-content leakage.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0496",
+      "workflow": {
+        "input": "Approved recipient manifest, templates and destination/document-type policy",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Generate and verify per-item filing",
+        "output": "Individual outputs plus durable contact/case filing receipts",
+        "exceptions_and_dependencies": "Static/source-text evidence only; current permissions, suppression, field mapping, rendering, storage and external delivery require tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0496",
+        "scenario_and_expected_result": "Generate two synthetic letters for C1/M1 and C1/M2 plus a contact-only notice. Case letters file to the correct matter with independent hashes/IDs; the contact notice files to the contact card only under the selected policy and document type. No arbitrary matter filing for a multi-case contact. Inject rendering success plus one filing failure: show partial outcome and retry only the missing destination. A combined Word document or successful generation never proves external send, delivery or client receipt.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0408",
+      "title": "Folder references versus copies",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1933049907",
+      "scenario_and_expected_result": "Add D1 to two case-specific folders; remove one membership without deleting source bytes. A source deletion identifies all affected references and follows firm authorization/retention policy. Display/grouping changes do not copy or relocate files. Tip97 was separately read and describes the same reference semantics; retain both source IDs.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0410",
+      "title": "Ordered filename preview and download destination",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1933836396",
+      "scenario_and_expected_result": "Preview ordered case/category/date/counter/from/to/original-name/custom-text tokens for two synthetic files. Handle collisions, missing values and invalid path characters explicitly. Saved defaults do not change source metadata. Reconcile all selected hashes after download; moving a downloaded copy to removable media is a separate user action, not a verified platform export.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0104",
+      "title": "Missing merge values per recipient",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1935540251",
+      "scenario_and_expected_result": "One recipient lacks an address and the template includes an unsupported case field in contact-only mode. Show exceptions per output; cancel produces no final released artifact. If drafts with blanks are permitted, label them incomplete and block external release under firm policy. Do not infer vendor hard blocking where the guide permits proceeding.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0464",
+      "title": "Case-based text dependencies",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1935540251",
+      "scenario_and_expected_result": "Require verified provider setup and current number consent before controlled SMS dispatch. Generate Text opening, template merge and queued status do not prove send readiness or delivery. Each recipient has an independent send/skip/failure record; retry does not duplicate successful recipients.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0385",
+      "title": "Individual communications from bulk jobs",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1935540251",
+      "scenario_and_expected_result": "Retain every recipient/matter email and text separately in the daily ledger with source job ID, timestamp, direction, participants and filing/delivery state. A bulk operation cannot collapse client copies or erase individual messages. All calls remain independently required.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0400",
+      "title": "Excel-to-Word labels are separate steps",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/1935540251",
+      "scenario_and_expected_result": "Export a synthetic selected contact list with explicit columns and scope, then validate Word label stock/template and first-page preview separately. A spreadsheet download does not prove correct labels or printing. Check Unicode, long addresses, missing fields and duplicate households under declared policy; avoid unnecessary private columns.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0456",
+      "title": "Closed-case scope wording conflict",
+      "source_url": "https://smartadvocate.atlassian.net/wiki/spaces/KB/pages/2640609281",
+      "scenario_and_expected_result": "The label instructions mention choosing All to include closed cases but then describe the result as open cases. Use synthetic open/closed cases to verify the effective filter and result IDs; do not adopt the prose as proof of actual scope. Recount after filters change before using recipients.",
+      "status": "Not executed"
+    }
+  ]
+}

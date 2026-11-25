@@ -1,0 +1,144 @@
+{
+  "date": "2026-11-17",
+  "status": "Ten original synthetic proposed cases, all Not executed",
+  "tests": [
+    {
+      "requirement_id": "F-0600",
+      "developer_story_extension": "As the attorney, I need a received media item linked to its actual message and authorized matter destinations without silently spreading it across unrelated cases.",
+      "id": "AT-0600",
+      "scenario_and_expected_result": "Use a synthetic contact with zero, one and three matters; deny access to one matter. Receive a text with two attachments and retry the same provider event. Preserve one source message, distinct attachment hashes/IDs, quarantine/scan status and each approved destination copy. Do not treat conversation filing as attachment ingestion or replicate confidential files solely because the contact has multiple matters. Require an explicit reviewed destination policy and revalidate permissions at receipt/reprocess. Test unsupported carrier/media, corrupt bytes, duplicate file names and later reassignment; visible source metadata survives failed filing. Missing or restricted destinations remain unresolved in daily review.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage"
+    },
+    {
+      "requirement_id": "F-0601",
+      "developer_story_extension": "As billing staff, I need reminders driven by a versioned client balance and recipient policy, with clear handling of partial payments and payment-plan types.",
+      "id": "AT-0601",
+      "scenario_and_expected_result": "Use one synthetic client with two matters and three approved unpaid bills of different issue dates; include an unsent approved bill, draft bill, paid bill and written-off item. Freeze an explicit eligible set and oldest-date anchor. Partial payment of one bill must not reset the client cadence; full settlement and write-off rules must be explicit rather than inferred from contradictory bill/client wording. Test active Operating versus Trust deposit plans and configured pause policy without moving funds. Preview combined versus separate recipients for cross-matter disclosure, authorized reply-to user and secure-link access. A queued reminder is revalidated after payment, permission or plan changes; successful send does not prove receipt or payment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9285345945243-Send-and-Automate-Bill-Reminders"
+    },
+    {
+      "requirement_id": "F-0602",
+      "developer_story_extension": "As intake staff, I need appointment-specific reminder schedules that preserve the defaults effective when each booking was made.",
+      "id": "AT-0602",
+      "scenario_and_expected_result": "Configure zero through five synthetic reminders and reject a sixth under the configured capability. Create one manual appointment and one Scheduler appointment, then change defaults: existing jobs retain their snapshot unless deliberately revised. Edit time, timezone, contact address and reminder cadence with stale-job/race tests; cancel superseded jobs without duplicate sends. Distinguish scheduled/accepted/sent/failed/confirmed-attendance states. Manual Scheduler email requires an identified contact and valid address. Rendering an inserted date/time does not prove correct timezone or delivery; test a Denver daylight-saving transition and phone-only/email-only cases. No real scheduler is changed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9192970741403-Appointment-Reminders"
+    },
+    {
+      "requirement_id": "F-0599",
+      "id": "AT-0599-R79-1",
+      "title": "Resolve sender capability and message-size limits before submission",
+      "developer_story_extension": "As staff, I need current sender readiness verified instead of selecting whichever conflicting setup sentence appears more permissive.",
+      "scenario_and_expected_result": "Use registered/unregistered senders, local/toll-free identifiers and independent Grow/Manage/Phones capabilities. Test outgoing2048/2049 and incoming8192/8193 character boundaries with an explicit Unicode counting rule; do not infer segmentation or delivery guarantees. Incoming from a non-contact and a call to a texting number need truthful unsupported/unknown handling. Retry temporary failures idempotently; preserve carrier-rejected/blocked/unknown results. A confirmation email or valid contact number alone cannot authorize sending before server readiness is verified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0287",
+      "id": "AT-0287-R79-2",
+      "title": "Export complete text evidence without implying external filing",
+      "developer_story_extension": "As the attorney, I need a permissioned conversation export that reconciles individual messages and their associated time.",
+      "scenario_and_expected_result": "Export a synthetic thread with inbound/outbound events, failed sends, attachments, edits/reassignments and time records. Reconcile stable message IDs, chronology/timezone, direction and attachment disposition against the selected scope. Missing media must be listed; a PDF alone cannot certify complete source history or court admissibility. Exporting does not send to a client or file with a court. Daily review retains each distinct call/text and unresolved mapping.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0465",
+      "id": "AT-0465-R79-3",
+      "title": "Keep due-date reminders and expired signature links distinct",
+      "developer_story_extension": "As intake staff, I need signature reminders scoped to an exact document version, signer and valid link lifecycle.",
+      "scenario_and_expected_result": "Create a synthetic pending two-signer document with no due date: future auto-reminder is unavailable under this source capability. Add a due date, schedule, then edit/cancel/sign before execution; revalidate each recipient and version. Immediate resend of an expired link creates an attributable replacement path without pretending the old token remains valid. A reminder cannot mark signature complete, resend already-signed content or notify another signer by stale index. Source screenshot proves only the menu, not delivery.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/55317324866587-Resend-Documents-and-Send-Reminders-in-Clio-Grow",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0285",
+      "id": "AT-0285-R79-4",
+      "title": "Keep following and unread state separate from delivery or review",
+      "developer_story_extension": "As the attorney, I need notification attention state independent from actual message capture and time review.",
+      "scenario_and_expected_result": "Synthetic userA starts/replies and follows, userB follows manually, then each unfollows. Reconcile user-scoped notification preference, conversation unread flag and actual message delivery independently. Mark unread cannot create another message or undo a completed review; reading a thread cannot mark every individual event billed/reviewed. Push/badge disable cannot erase inbound records or suppress unresolved work.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0556",
+      "id": "AT-0556-R79-5",
+      "title": "Gate payment-link delivery independently from payment settlement",
+      "developer_story_extension": "As billing staff, I need text-based bill/trust-request links subject to both messaging and Payments entitlement, with settlement separately verified.",
+      "scenario_and_expected_result": "Use a synthetic bill and trust request with mismatched client/matter recipients. Deny unsupported entitlement or opted-out destination; preview exact link/object and recipient access. Test expired/replayed links and duplicate send attempts. Link accepted, delivered, viewed, authorized, posted and settled are independent states. A request for trust funds cannot become an operating payment, client deduction or completed transfer automatically. No real payment or message is performed here.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0294",
+      "id": "AT-0294-R79-6",
+      "title": "Bind attendance replies to the current event revision",
+      "developer_story_extension": "As intake staff, I need RSVP evidence tied to the actual invitation, contact and event version.",
+      "scenario_and_expected_result": "Send only through a synthetic adapter and correlate a confirmation reply with exact event/recipient IDs. Reschedule then receive a delayed old reply: retain it as stale rather than confirming the replacement event. Test canceled events, ambiguous reply, duplicate delivery and changed phone ownership. A sent calendar reminder cannot prove attendance or completion of underlying legal work.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9125220988827-Text-Messaging-in-Clio-Manage",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0380",
+      "id": "AT-0380-R79-7",
+      "title": "Protect recipient disclosure in combined balance notices",
+      "developer_story_extension": "As the attorney, I need each billing recipient’s visibility reviewed before combining client-wide balances into one notification.",
+      "scenario_and_expected_result": "For a synthetic client with mattersA/B and different authorized bill recipients, preview separate versus combined emails and the total/secure links each can access. Reject cross-matter disclosure not authorized by the reviewed client policy. Recheck reply-to user billing permissions and stale recipient changes at execution. Turning on all-client defaults is a separate reviewed configuration decision, not implied by previewing one bill.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.clio.com/hc/en-us/articles/9285345945243-Send-and-Automate-Bill-Reminders",
+      "review_date": "2026-11-17"
+    }
+  ],
+  "message_length_boundaries": {
+    "outgoing": [
+      2048,
+      2049
+    ],
+    "incoming": [
+      8192,
+      8193
+    ],
+    "vendor_Unicode_semantics": "Unresolved; proposed tests require explicit counting policy"
+  },
+  "reminder_boundaries": [
+    0,
+    1,
+    5,
+    6
+  ],
+  "capability_ambiguities": [
+    "Manage local/toll-free and registration/immediate-send wording",
+    "Manage US/Canada versus Grow US-server coverage",
+    "Incoming attachment folder wording for one versus multiple matters",
+    "Bill/client disable scope versus client-wide anchor and balance behavior"
+  ],
+  "limits": "No external message, signature, bill, payment, trust transfer or real scheduler configuration executed."
+}

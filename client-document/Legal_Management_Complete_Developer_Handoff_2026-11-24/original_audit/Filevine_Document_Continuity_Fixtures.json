@@ -1,0 +1,203 @@
+{
+  "date": "2026-11-16",
+  "status": "Original synthetic acceptance fixtures; application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0497",
+      "workflow": {
+        "input": "Tenant/org/matter IDs, approved S3 destination and permission policy",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Register, verify, backfill, reconcile and manage outbound sync",
+        "output": "Per-item mirror manifest, registration audit and actionable failure state",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0497",
+        "scenario_and_expected_result": "Seed two organizations, three matters and nested folders with distinct file hashes. Deny setup to a user lacking either administrator role or advanced-tool access. Preview tenant scope before approved registration; generating a setup link or verifying the bucket does not mark backfill complete. Interrupt at file 2, revoke destination permission, resume and reconcile every expected document ID/hash/path. A failed item keeps completion false. An edit made only in the destination must not be imported by a one-way route. Removal requires a separate confirmation and audit event; disclose the actual destination-retention policy instead of assuming removal deletes or preserves all objects. No sync success counts as a consistent application restore.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0498",
+      "workflow": {
+        "input": "Approved field map with matter/contact/collection identity and direction",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Generate then edit connected source and document values",
+        "output": "Traceable field updates or explicit conflicts, never ambiguous cross-matter writes",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0498",
+        "scenario_and_expected_result": "Use synthetic once-only name, pull-only insurer, push-only phone and bidirectional address fields. After generation change values independently on each side. Only configured directions propagate; initial-only data remains the generation snapshot. A push cannot update a different matter or the wrong contact/collection row. For simultaneous two-way changes, expose a conflict with both source versions and apply an approved rule. Revoke write permission mid-update and keep the denied value unresolved with a retry record. Finalized content cannot silently change through a background field update. Exact vendor conflict/finalization rules remain unverified; these are proposed application safeguards.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0499",
+      "workflow": {
+        "input": "Template/widget configuration, generated document ID, role and lifecycle policy",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Generate, list, attach, move and finalize",
+        "output": "Stable document identity and permission-correct frozen artifact",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0499",
+        "scenario_and_expected_result": "Create four synthetic generated documents to test newest-first listings and expansion beyond the first three. Same names remain separate IDs; numbering does not establish idempotency. Verify title search, widget/Docs references and attachment links resolve the same document. Move within a matter and to another matter only under approved permissions and explicit field-binding policy; do not keep confidential links to an unauthorized source matter. Test owner/editor actions in each configured state, then freeze a filed document and reject direct or connected-field edits. A copy request must follow the supported document-type policy rather than silently clone live bindings. Status labels are configurable; the screenshot label Setup must not be hardcoded as equivalent to Drafted.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0500",
+      "workflow": {
+        "input": "Template-specific metadata CSV and approved project/collection IDs",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Validate, confirm, run and reconcile each output",
+        "output": "Per-row/per-format artifact and filing ledger with errors",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0500",
+        "scenario_and_expected_result": "Prepare rows A/M1/C1 and B/M2/C2 plus one invalid cross-matter collection ID and one duplicate request. Reject invalid identity binding before any output is released. Freeze team/template version and selected formats in a reviewed job manifest. Render valid rows; inject a DOCX filing failure while PDF succeeds. Show per-row/per-format success and error evidence, verify destination IDs/hashes and retry only the missing output. Timestamped folders must be unambiguous under timezone/collision conditions. A summary email or link does not prove every output was generated, filed, viewed or sent to a client. Re-running the approved job must not create untracked duplicate correspondence.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0501",
+      "workflow": {
+        "input": "Document/version IDs, editor identity, lease and permissions",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Open, inspect ownership, override if authorized and save/recover",
+        "output": "Audited lock lifecycle plus preserved conflicting versions",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0501",
+        "scenario_and_expected_result": "Users A and B open the same synthetic file through different editing routes. Show the holder and start time; permit authorized read/download while denying conflicting edits. Verify normal close and the documented 24-hour expiry separately. Deny override to non-admins; log a permitted override and warn about the active session. Let A save a stale version after B saved: retain both versions and require an explicit conflict decision rather than silently losing B. Reopen the older version and verify its hash and content. Offline save, client crash, clock differences and expired-session callbacks cannot erase another user’s accepted change. Vendor last-save-wins behavior is a documented risk, while preservation/conflict handling here is a proposed safeguard.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0502",
+      "workflow": {
+        "input": "Approved sibling selection and export manifest",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Request ZIP, navigate, observe job status and verify archive",
+        "output": "Verified archive or explicit incomplete/cancelled job",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0502",
+        "scenario_and_expected_result": "Select sibling files/folders with nested children and duplicate filenames in different folders. Validate documented 5 GB aggregate and 2 GB individual-file caps, including exact-boundary cases once decimal versus binary units and compressed versus input-size basis are confirmed. Navigate to another project and retain distinct job IDs/progress. Test dismissal and the 30-minute status lifetime independently from archive deletion. Close the browser or leave Filevine and record the documented cancellation boundary; never report success from a spinner or request alone. Download, extract and reconcile paths/counts/hashes with the approved manifest. Test denied documents, mid-job permission change and a failed item. Do not mix files from simultaneous project jobs.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0503",
+      "workflow": {
+        "input": "Two competing versions, connector mapping and approved policy version",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Detect conflict, apply policy or obtain review, then verify result",
+        "output": "Recoverable versions and an auditable conflict decision",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0503",
+        "scenario_and_expected_result": "Change a synthetic document independently on both sides before either event is processed. Test newest-wins, source-authoritative, destination-authoritative and hold-for-review as distinct configured rules. Retain both input hashes, timestamps, policy version and chosen outcome. Test equal timestamps and clock skew. If version-both is contracted, test collision-safe alternate naming and recovery of both byte streams; otherwise keep the option unavailable with a recorded limitation. Hold-for-review must not silently resolve on retry. Changing policy requires a preview of affected unresolved conflicts. A vendor statement about no silent overwrite does not prove retention or conflict correctness.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0504",
+      "workflow": {
+        "input": "Source events, state table, connector identities and content hashes",
+        "initial_state": "Proposed synthetic application fixture; no live firm data used",
+        "user_action": "Detect, compare, transfer, verify and reconcile gaps",
+        "output": "Per-file verified outcomes, loop-free retries and unresolved-error queue",
+        "exceptions_and_dependencies": "Permission, version, partial failure, identity and current license limits require execution; described safeguards are proposed unless expressly attributed to source."
+      },
+      "acceptance_test": {
+        "id": "AT-0504",
+        "scenario_and_expected_result": "With synthetic matter folders on both sides, create/edit/rename a file, replay its webhook twice and deliver events out of order. A write echoed by the destination cannot bounce forever; provenance cannot suppress a genuine independent edit. Drop an event and recover through a configured fallback/reconciliation pass. Inject rate limiting, credential revocation, byte corruption and a timeout after destination acceptance. Mark success only after destination identity/hash reconciliation; retry cannot duplicate files. Show backlog, last successful verification and unresolved failures separately. Benchmark latency/throughput under a declared dataset and environment before adopting any marketed target; isolate tenant queues. Apply reviewed file-type exclusions and keep their reasons in the manifest.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0173",
+      "title": "Mirror versus recoverable application set",
+      "scenario_and_expected_result": "Restore a synthetic matter using only mirrored documents: fail application-recovery approval if metadata, relationships, templates, credentials or consistent database state are absent. Repeat using a complete consistent recovery set and independently verify it. Structural checks, file/data checks and application restore remain separate outcomes.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/55241469078427",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0400",
+      "title": "Archive content and nested paths",
+      "scenario_and_expected_result": "Compare export-manifest paths/counts/hashes after extraction, including nested folders and duplicate names in different paths. A completed progress badge is not evidence of byte equality or total inclusion. Resolve size-unit and compressed/input-size boundaries before exact limit claims.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/4404167318029",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0404",
+      "title": "Editor routing and format conversion",
+      "scenario_and_expected_result": "Route Office files to supported Office editing, native file types only to installed compatible default applications, and browser edits to PDF output under a chosen copy/version policy. Test missing per-device utility, unsupported OS/Office and missing handler. Verify actual saved bytes in the correct matter; editor launch or local save is not remote persistence.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360058398771",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0103",
+      "title": "Collection-driven tables, legal captions and document layout",
+      "scenario_and_expected_result": "Render zero/one/three collection rows using approved field IDs, conditional clauses, party captions, line numbering, margins and section/page-break formatting. Inspect final PDF/DOCX pagination and text. Changing a field must not apply an unrelated template or alter attorney I/me/my voice or four-digit date years. Source mentions are not proof of exact approved template support.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/9237902021403",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0385",
+      "title": "Document activity classifications and time review",
+      "scenario_and_expected_result": "Record synthetic creation, viewing, comments and edits as distinct actor/time events and test each activity filter. Filtering the display cannot delete source events. Viewing does not prove reading, legal approval or billable duration; retain every individual call/text and reconcile overlapping work before time proposals.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/9237902021403",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0468",
+      "title": "Live document versus downloaded snapshot and batch pushback",
+      "scenario_and_expected_result": "Export one living document as PDF and DOCX, then change a connected field. Preserve the exported byte snapshot; never imply exported files keep live bindings. The guide says manual single-document downloads are not automatically added to Docs, while optional batch pushback is separate. Test both routes, exact matter destinations and failures independently.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/9237902021403",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0410",
+      "title": "Truncated path identity and recoverable original names",
+      "scenario_and_expected_result": "Use long Unicode paths and names that become identical after truncation. Preserve original full path/name and source IDs in a reversible map, resolve collisions deterministically and verify bytes after round-trip. Treat the vendor 250-character path statement as unverified for exact counting rules; test characters/bytes and normalization on the actual contracted route.",
+      "source_url": "https://matterorbit.com/product.html",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0428",
+      "title": "Connector permission and security-claim verification",
+      "scenario_and_expected_result": "Authorize a synthetic connector with least required scopes, revoke consent and verify stopped writes and visible errors. Separate tenants, secrets and queue state. Record the contracted provider, security-report scope/date and BAA availability; a company-level certification claim or hosted-cloud certification does not by itself verify this application or agreement. Resolve conflicting current/cached BAA tiers before relying on entitlement.",
+      "source_url": "https://matterorbit.com/support.html",
+      "status": "Not executed"
+    }
+  ]
+}

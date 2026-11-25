@@ -1,0 +1,74 @@
+Complete software feature audit
+
+Developer direction and verification requirements
+November 14, 2026
+
+Nalini,
+
+I want a complete inventory of the features available across the programs identified for my software. Review the documentation and every identified video individually, including independent training, consultant demonstrations, law firm walkthroughs, comparisons, reviews, sales videos, support videos, and release demonstrations. A list of search results is the starting queue, not the completed review.
+
+Correct the earlier scope
+
+Commercial and open-source products are both in scope. My instruction to identify every available feature supersedes the earlier open-source-first preference in Developer_Instructions_Open_Source_and_Automation.docx. Open source is an optional implementation choice. Do not exclude a feature because its reference product is commercial, paid, an add-on, or sold separately.
+
+Preserve the existing connected-workflow requirements, intake corrections, 300-document catalog, Exchange and Gmail filing workflow, existing-phone call and text capture, and AI insurance-claim requirements. This audit expands those requirements; it does not replace them with a generic practice-management checklist.
+
+Programs to cover
+
+Filevine; Clio, including its separate modules; Casemaker and Fastcase; vLex and Vincent; InTrial Manage; Best Case; Docketwise; MyCase; Smokeball; SmartAdvocate; Litify; PracticePanther; CosmoLex; CASEpeer; Lawmatics; and NextChapter. Include legacy features where relevant and distinguish current, retired, renamed, preview, beta, and announced behavior.
+
+Also evaluate the capabilities and integration roles of Frappe, ERPNext, docassemble, python-docx-template, Paperless-ngx, and Restic. These are engineering references, not restrictions on the product feature inventory. Add newly discovered relevant products to the source register with an explanation.
+
+One traceable inventory
+
+Give every source, feature, requirement, implementation issue, and acceptance test a stable identifier. Deduplicate features across products without losing their supporting sources or distinct behavior. Include every distinct feature in the inventory. Mark overlap, implementation dependencies, and unresolved interpretation; do not silently remove features.
+
+
+
+Review every source
+
+For each video, record its URL and ID, title, publisher, verified publication date, duration, product version, transcript coverage, visual coverage, feature timestamps, limitations, and review date. Read the complete transcript and review the visual demonstration. Keep transcript completion separate from full video completion.
+
+Record duplicates against their originals, outdated behavior against current documentation, and inaccessible or unrelated sources with reasons. Continue discovery through playlists, channel archives, training libraries and independent publishers. A missing transcript does not establish that a video has no relevant features.
+
+For documentation, record the URL, title, module, revision date, access status, review coverage, features and limitations. Distinguish discovered, fetched, read, partial, blocked and complete. A public help-center index does not establish complete coverage of private courses, add-on documentation or archived editions.
+
+Provide visual feature references
+
+Every feature package must show the actual product screen or a short demonstration clip, with the source link and timestamp. Explain the starting state, user action, resulting screen or output, and how the workflow connects to the matter. Link the visual reference to its requirement and acceptance test. A thumbnail or unlabeled mockup is not demonstration evidence.
+
+Specify what each feature must do
+
+Each feature record must identify the user outcome, trigger, inputs, shared records, required fields, conditions, processing steps, generated outputs, assignments, review route, permitted execution, downstream updates, exception behavior and completion evidence. Include permissions, mobile behavior, integrations, plan or license dependencies, and ongoing maintenance where applicable.
+
+Map the feature to the exact earlier requirement or document catalog ID when applicable. Separate an already requested feature from an expanded requirement and a newly discovered capability. Separate vendor claims from behavior demonstrated in a video and from behavior independently tested in my program.
+
+Complete the work inside the matter
+
+The expected behavior is connected execution. An incoming record should be classified, matched to the correct matter, saved, used to update approved fields, and connected to tasks and follow-up. Generated work should land in the correct matter with its source, version, reviewer, status and next step. Reuse existing data without retyping. Preserve my selected matter across screens.
+
+Automatically retain insurer claim forms and verified contact details for reuse, populate the correct forms from case data, and connect AI insurer calls, claim confirmation, adjuster details and follow-up. Preserve the existing approval rules for sending, signing, filing, substantive decisions and financial execution. Approved routine automation rules should execute without repetitive permission prompts.
+
+
+
+Implementation and acceptance evidence
+
+Return an implementation matrix with a row for every feature: source IDs, existing requirement IDs, current behavior, missing behavior, repository location, issue ID, owner, dependencies, implementation status, test IDs, exact build or commit, environment, result, evidence location, and remaining defects. Use Unknown when behavior has not been inspected. A screen, menu entry or developer statement is not proof that the feature works.
+
+For every implemented feature, test the intended outcome and the failures that could invalidate it. Include missing data, conflicting data, similar client names, multiple matters for one client, permission denial, changed source facts, rejected approval, outdated forms, interrupted jobs and safe retries. Verify saved records and downstream effects, not only visual badges. Test cross-matter and cross-user isolation.
+
+Prove connected journeys in controlled test data: PI intake through signed engagement, insurer setup, records, demand and settlement; litigation opening through service, discovery, production and hearing preparation; approved time and expenses through billing and reconciliation; and specialist practice packages using maintained forms and validated calculations. Verify Mac and iPhone use and the previously specified capacity of at least 50 combined attorneys and staff.
+
+For external integrations, demonstrate the actual supported connection and distinguish a mock from a live test. Record request identifiers, returned confirmations, errors, duplicate prevention and recovery. Do not claim legal research coverage, citation treatment, court filing, bank movement or official form support that has not been established for the actual service, jurisdiction and version.
+
+Required developer access
+
+Provide the source repository and active branch, setup instructions, test environment URL, configured test accounts and roles, database migration process, integration configuration inventory, and existing automated tests. Use secure credential handoff. This access is needed to inspect, implement, run and verify changes. Do not substitute screenshots for source or runtime access.
+
+Current checkpoint
+
+The initial index contains 880 public Filevine and Clio articles and 319 YouTube listings from 122 publishers. Eight article texts have received detailed review. One complete video transcript has been read; no complete video has yet received full visual review. Discovery is incomplete across the overall program scope. The initial source list includes entries still awaiting relevance screening.
+
+The first transcript review identified natural-language filtering, reusable shared views, document summaries, intake-form creation from existing files or a written request, and a workflow-builder prototype. The recording distinguishes the prototype from released behavior; current availability must be checked before treating it as current product functionality.
+
+Research, source-to-feature mapping, implementation and runtime acceptance testing remain open. Update the running index and next developer directions as evidence is added. Report measured progress and exact blockers. Do not mark the audit or program complete until the inventory is reconciled and the required implementation evidence exists.

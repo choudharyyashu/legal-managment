@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic proposed inputs; tests not executed",
+  "scenarios": [
+    {
+      "id": "VOICE-01",
+      "events": [
+        "call_answered",
+        "urgent_rule_match",
+        "transfer_requested",
+        "transfer_failed",
+        "call_ended"
+      ],
+      "expected": {
+        "call": "ended",
+        "handoff": "failed",
+        "followup": "open",
+        "daily_call_row": "preserved"
+      }
+    },
+    {
+      "id": "VOICE-02",
+      "events": [
+        "qualified",
+        "booking_requested",
+        "provider_accepted",
+        "response_timeout",
+        "retry"
+      ],
+      "expected": "Reconcile provider booking ID; exactly one booking; no duplicate lead"
+    },
+    {
+      "id": "VOICE-03",
+      "events": [
+        "voice_capture_complete",
+        "lead_docket_accepted",
+        "filevine_rejected"
+      ],
+      "expected": "Lead Docket delivered; Filevine failed; retry queue remains open"
+    },
+    {
+      "id": "VOICE-04",
+      "calls": 10,
+      "total_seconds": 1200,
+      "ai_handled": 8,
+      "ai_resolved_without_transfer": 4,
+      "expected": "Proposed containment50percent using stated denominator; vendor formula still unverified"
+    },
+    {
+      "id": "VOICE-05",
+      "events": [
+        "inbound_agent",
+        "inbound_voip",
+        "duplicate_inbound",
+        "outbound_outside_adapter"
+      ],
+      "expected": "Two unique inbound rows and explicit outbound coverage gap; daily review incomplete"
+    }
+  ]
+}

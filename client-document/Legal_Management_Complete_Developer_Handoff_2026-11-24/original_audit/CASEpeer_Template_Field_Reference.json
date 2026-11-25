@@ -1,0 +1,1146 @@
+{
+  "review_date": "2026-11-15",
+  "source_article": "https://supportcenter.casepeer.com/en/articles/12773369-sample-8am-casepeer-templates",
+  "status": "Seven complete DOCX text extractions individually read;no rendering or legal/template approval;ZIP not reviewed",
+  "raw_token_string_count": 55,
+  "files": [
+    {
+      "title": "Welcome Letter to Client.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817654654/c357753108ed74534e1d27c74d2f/Welcome+Letter+to+Client.docx?expires=1794778200&signature=58ac592b1168522259a2695a185a3fe0127d58c404c31b735c8cce51bb5ed3eb&req=dSgmEc97mYdaXfMW1HO4zepmoXSzip7zHYi2CXsVmoNO6t7lS%2BCH1tJ9iEaD%0AcdRBhGSYX9I%3D%0A",
+      "sha256": "dde65b504e31c61345b9d3b13c06d8971147bb3bb36a8350a06a39c54bacbbb3",
+      "tokens": [
+        "{{ client_address_p1 }}",
+        "{{ client_address_p2 }}",
+        "{{ client_email }}",
+        "{{ client_first }}",
+        "{{ client_last }}",
+        "{{ doi.style2 }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ today.style2 }}"
+      ],
+      "id": "CASEpeer-template-01",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-010"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ client_address_p1 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_address_p2 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_email }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-010",
+          "source_title": "Welcome Letter to Client.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817654654/c357753108ed74534e1d27c74d2f/Welcome+Letter+to+Client.docx?expires=1794778200&signature=58ac592b1168522259a2695a185a3fe0127d58c404c31b735c8cce51bb5ed3eb&req=dSgmEc97mYdaXfMW1HO4zepmoXSzip7zHYi2CXsVmoNO6t7lS%2BCH1tJ9iEaD%0AcdRBhGSYX9I%3D%0A",
+          "source_sha256": "dde65b504e31c61345b9d3b13c06d8971147bb3bb36a8350a06a39c54bacbbb3",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Team": [
+              "lead_attorney_first",
+              "lead_attorney_middle_initial",
+              "lead_attorney_last"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Only a lead-attorney name is parameterized;complete team/contact-method,questionnaire and initial-task mappings absent."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "LOR to Client Adjuster.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817654777/d3353680481f65dd42e40fbd617c/LOR+to+Client+Adjuster.docx?expires=1794778200&signature=276d55140ff8b24f65ec17eba56effe310dab15c5cd2c25885a52558a772ca2d&req=dSgmEc97mYZYXvMW1HO4za%2FXqqr%2Bb3IaClw6fbWBnZHX8KdC74pcFTwR%2FLjj%0A8gAR2a%2Fzg0o%3D%0A",
+      "sha256": "78625bc065bf24374b60471eb8ec79c395f95d52152bdc811549c88a9592ba21",
+      "tokens": [
+        "{{ client_first }}",
+        "{{ client_last }}",
+        "{{ doi.style1 }}",
+        "{{ doi.style2 }}",
+        "{{ insurance_adjuster_address_p1 }}",
+        "{{ insurance_adjuster_address_p2 }}",
+        "{{ insurance_adjuster_email }}",
+        "{{ insurance_adjuster_fax }}",
+        "{{ insurance_adjuster_last }}",
+        "{{ insurance_claim_number }}",
+        "{{ insurance_company }}",
+        "{{ insurance_insured }}",
+        "{{ insurance_policy_number }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_initials.upper }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ mrms_insurance_adjuster }}",
+        "{{ today.style2 }}",
+        "{{ user_initials }}"
+      ],
+      "id": "CASEpeer-template-02",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-097"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ client_first }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style1 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_adjuster_address_p1 }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_adjuster_address_p2 }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_adjuster_email }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_adjuster_fax }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_adjuster_last }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_claim_number }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_company }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_insured }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ insurance_policy_number }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_initials.upper }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ mrms_insurance_adjuster }}",
+          "candidate_role": "Client insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ user_initials }}",
+          "candidate_role": "User generating the document",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-097",
+          "source_title": "LOR to Client Adjuster.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817654777/d3353680481f65dd42e40fbd617c/LOR+to+Client+Adjuster.docx?expires=1794778200&signature=276d55140ff8b24f65ec17eba56effe310dab15c5cd2c25885a52558a772ca2d&req=dSgmEc97mYZYXvMW1HO4za%2FXqqr%2Bb3IaClw6fbWBnZHX8KdC74pcFTwR%2FLjj%0A8gAR2a%2Fzg0o%3D%0A",
+          "source_sha256": "78625bc065bf24374b60471eb8ec79c395f95d52152bdc811549c88a9592ba21",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Client": [
+              "client_first",
+              "client_last"
+            ],
+            "incident": [
+              "doi.style1",
+              "doi.style2"
+            ],
+            "policy": [
+              "insurance_policy_number"
+            ],
+            "carrier": [
+              "insurance_company"
+            ],
+            "first party claim": [
+              "insurance_claim_number"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Validate selected client insurance/adjuster context and route;exact application IDs and approved language pending."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "LOR to Defendant Adjuster.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655132/dc9f4e1c5229fbbaa61f74b17958/LOR+to+Defendant+Adjuster.docx?expires=1794778200&signature=399bae7dff8b152c2349a691f8ff4124babb112abc2e1fe3f3e1d702a5d07b5f&req=dSgmEc97mIBcW%2FMW1HO4zafFa8s6n7zUhRuVzgNfZTeeVGfyzAgxvQWHTbC4%0AOgqXgzmwIKQ%3D%0A",
+      "sha256": "e3aba0377e949e73e748985da8209f8343c3bd20cabb08c7574523fd94e13d51",
+      "tokens": [
+        "{{ adjuster_address_p1 }}",
+        "{{ adjuster_address_p2 }}",
+        "{{ adjuster_email }}",
+        "{{ adjuster_fax }}",
+        "{{ adjuster_last }}",
+        "{{ client_first }}",
+        "{{ client_last }}",
+        "{{ def_insurance_company }}",
+        "{{ defendant_claim_no }}",
+        "{{ defendant_insured }}",
+        "{{ defendant_policy_no }}",
+        "{{ doi.style1 }}",
+        "{{ doi.style2 }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_initials.upper }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ mrms_adjuster }}",
+        "{{ today.style2 }}",
+        "{{ user_initials }}"
+      ],
+      "id": "CASEpeer-template-03",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-096"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ adjuster_address_p1 }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ adjuster_address_p2 }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ adjuster_email }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ adjuster_fax }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ adjuster_last }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ def_insurance_company }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ defendant_claim_no }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ defendant_insured }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ defendant_policy_no }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style1 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_initials.upper }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ mrms_adjuster }}",
+          "candidate_role": "Defendant insurer/adjuster context",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ user_initials }}",
+          "candidate_role": "User generating the document",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-096",
+          "source_title": "LOR to Defendant Adjuster.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655132/dc9f4e1c5229fbbaa61f74b17958/LOR+to+Defendant+Adjuster.docx?expires=1794778200&signature=399bae7dff8b152c2349a691f8ff4124babb112abc2e1fe3f3e1d702a5d07b5f&req=dSgmEc97mIBcW%2FMW1HO4zafFa8s6n7zUhRuVzgNfZTeeVGfyzAgxvQWHTbC4%0AOgqXgzmwIKQ%3D%0A",
+          "source_sha256": "e3aba0377e949e73e748985da8209f8343c3bd20cabb08c7574523fd94e13d51",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Client": [
+              "client_first",
+              "client_last"
+            ],
+            "accident": [
+              "doi.style1",
+              "doi.style2"
+            ],
+            "insured": [
+              "defendant_insured"
+            ],
+            "insurer": [
+              "def_insurance_company"
+            ],
+            "adjuster": [
+              "mrms_adjuster",
+              "adjuster_last",
+              "adjuster_address_p1",
+              "adjuster_address_p2",
+              "adjuster_email",
+              "adjuster_fax"
+            ],
+            "claim number": [
+              "defendant_claim_no"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Recipient-role/insurer binding,approved language and exact application IDs still require verification."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "Billing_Records Request.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655229/6b9a379dfb99d382ea10dba9bbd6/Billing_Records+Request.docx?expires=1794778200&signature=a313e6424c72d6a9bb797bd889a6447e31681c92e623a1d20bc5474ec9347fd9&req=dSgmEc97mINdUPMW1HO4zfZXbAx3f4dP1i0vDK4J0P2wgz1qDQvcXQRwVehH%0A1%2BidivQzt5Q%3D%0A",
+      "sha256": "f2434e904bac31cc53c8dc6f89172bb461b594d0713dfa84eac6c91e7b1ab50a",
+      "tokens": [
+        "{{ MrMs }}",
+        "{{ accident_type }}",
+        "{{ client_dob.style1 }}",
+        "{{ client_first}}",
+        "{{ client_last }}",
+        "{{ client_last}}",
+        "{{ doi.style1 }}",
+        "{{ doi.style2 }}",
+        "{{ heshe }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_initials .upper}}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ provider }}",
+        "{{ provider_office_address_p1 }}",
+        "{{ provider_office_address_p2 }}",
+        "{{ provider_office_email }}",
+        "{{ provider_office_fax }}",
+        "{{ ssn_four }}",
+        "{{ today.style2 }}",
+        "{{ user_initials }}"
+      ],
+      "id": "CASEpeer-template-04",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-098",
+        "CAT-113"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ MrMs }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ accident_type }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_dob.style1 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first}}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last}}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style1 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ heshe }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_initials .upper}}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider }}",
+          "candidate_role": "Binding unresolved;confirm against context schema",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_office_address_p1 }}",
+          "candidate_role": "Selected provider office contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_office_address_p2 }}",
+          "candidate_role": "Selected provider office contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_office_email }}",
+          "candidate_role": "Selected provider office contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_office_fax }}",
+          "candidate_role": "Selected provider office contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ ssn_four }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ user_initials }}",
+          "candidate_role": "User generating the document",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-098",
+          "source_title": "Billing_Records Request.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655229/6b9a379dfb99d382ea10dba9bbd6/Billing_Records+Request.docx?expires=1794778200&signature=a313e6424c72d6a9bb797bd889a6447e31681c92e623a1d20bc5474ec9347fd9&req=dSgmEc97mINdUPMW1HO4zfZXbAx3f4dP1i0vDK4J0P2wgz1qDQvcXQRwVehH%0A1%2BidivQzt5Q%3D%0A",
+          "source_sha256": "f2434e904bac31cc53c8dc6f89172bb461b594d0713dfa84eac6c91e7b1ab50a",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Client": [
+              "client_first",
+              "client_last",
+              "client_dob.style1"
+            ],
+            "incident": [
+              "doi.style1",
+              "doi.style2"
+            ],
+            "provider": [
+              "provider"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Treatment dates are not the incident date;requested preservation and exact treatment-period mapping absent."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        },
+        {
+          "catalog_id": "CAT-113",
+          "source_title": "Billing_Records Request.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655229/6b9a379dfb99d382ea10dba9bbd6/Billing_Records+Request.docx?expires=1794778200&signature=a313e6424c72d6a9bb797bd889a6447e31681c92e623a1d20bc5474ec9347fd9&req=dSgmEc97mINdUPMW1HO4zfZXbAx3f4dP1i0vDK4J0P2wgz1qDQvcXQRwVehH%0A1%2BidivQzt5Q%3D%0A",
+          "source_sha256": "f2434e904bac31cc53c8dc6f89172bb461b594d0713dfa84eac6c91e7b1ab50a",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Client": [
+              "client_first",
+              "client_last",
+              "client_dob.style1"
+            ],
+            "provider": [
+              "provider"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Service dates,requested components and return-delivery instructions are not fully mapped. Office-email/fax tokens are recipient routes,not proof of return-delivery configuration."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "Payment to Provider.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655309/bd991c83d657e408c0c6e972fa97/Payment+to+Provider.docx?expires=1794778200&signature=524b6d929ff23c2aee245f0daf50269bf6c9f85daedb9db2617c5ec98179055b&req=dSgmEc97mIJfUPMW1HO4zUjWMLHVO5ldn2CPEgmeMo9%2FfGvf7KYUiNiMmMtC%0AguFlRNus0NM%3D%0A",
+      "sha256": "a029ba5d476acf6de1870867a19ec30b9f7ddfad844e7c5f0dfc17e8c840dba6",
+      "tokens": [
+        "{{ MrMs }}",
+        "{{ client_dob.style1 }}",
+        "{{ client_first}}",
+        "{{ client_last }}",
+        "{{ doi.style1 }}",
+        "{{ doi.style2 }}",
+        "{{ hisher }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_initials.upper }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ provider }}",
+        "{{ provider_bill_address_p1 }}",
+        "{{ provider_bill_address_p2 }}",
+        "{{ provider_bill_email }}",
+        "{{ provider_bill_fax }}",
+        "{{ ssn_four }}",
+        "{{ today.style2 }}",
+        "{{ user_initials }}"
+      ],
+      "id": "CASEpeer-template-05",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-146"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ MrMs }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_dob.style1 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first}}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style1 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ hisher }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_initials.upper }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider }}",
+          "candidate_role": "Binding unresolved;confirm against context schema",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_bill_address_p1 }}",
+          "candidate_role": "Selected provider billing contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_bill_address_p2 }}",
+          "candidate_role": "Selected provider billing contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_bill_email }}",
+          "candidate_role": "Selected provider billing contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ provider_bill_fax }}",
+          "candidate_role": "Selected provider billing contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ ssn_four }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ user_initials }}",
+          "candidate_role": "User generating the document",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": "Literal payment-amount blank requires an approved binding",
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-146",
+          "source_title": "Payment to Provider.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655309/bd991c83d657e408c0c6e972fa97/Payment+to+Provider.docx?expires=1794778200&signature=524b6d929ff23c2aee245f0daf50269bf6c9f85daedb9db2617c5ec98179055b&req=dSgmEc97mIJfUPMW1HO4zUjWMLHVO5ldn2CPEgmeMo9%2FfGvf7KYUiNiMmMtC%0AguFlRNus0NM%3D%0A",
+          "source_sha256": "a029ba5d476acf6de1870867a19ec30b9f7ddfad844e7c5f0dfc17e8c840dba6",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Payee": [
+              "provider"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Provider label is only a payee candidate;separate lien-holder identity must be resolved. Amount is a manual blank. Claim identifier,payment reference and release/receipt-request mapping absent."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "Closing Letter to Client.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655403/0a9229af5fcab80f91f787bf18ff/Closing+Letter+to+Client.docx?expires=1794778200&signature=8e346586d209e6cd4fa4b62bd01a2173a28f70ddf3f5e4620429cf97e14f0d38&req=dSgmEc97mIVfWvMW1HO4zQXXeH9%2F8F152l8mgqzDsnTvq4X9V11fCXS0Zygc%0A2NmTOPc1mpE%3D%0A",
+      "sha256": "8c6131fb72032077e79016515e9f94fa5e9983a3664d77875b452f9bd2c975fd",
+      "tokens": [
+        "{{ client_address_p1 }}",
+        "{{ client_address_p2 }}",
+        "{{ client_email }}",
+        "{{ client_first }}",
+        "{{ client_last }}",
+        "{{ doi.style2 }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ today.style2 }}"
+      ],
+      "id": "CASEpeer-template-06",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-019",
+        "CAT-150"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ client_address_p1 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_address_p2 }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_email }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style2 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-019",
+          "source_title": "Closing Letter to Client.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655403/0a9229af5fcab80f91f787bf18ff/Closing+Letter+to+Client.docx?expires=1794778200&signature=8e346586d209e6cd4fa4b62bd01a2173a28f70ddf3f5e4620429cf97e14f0d38&req=dSgmEc97mIVfWvMW1HO4zQXXeH9%2F8F152l8mgqzDsnTvq4X9V11fCXS0Zygc%0A2NmTOPc1mpE%3D%0A",
+          "source_sha256": "8c6131fb72032077e79016515e9f94fa5e9983a3664d77875b452f9bd2c975fd",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {},
+          "unresolved_fields_and_limits": [
+            "Outcome is asserted in prose rather than bound to actual case outcome;remaining duties,originals and retention instructions are not mapped."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        },
+        {
+          "catalog_id": "CAT-150",
+          "source_title": "Closing Letter to Client.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655403/0a9229af5fcab80f91f787bf18ff/Closing+Letter+to+Client.docx?expires=1794778200&signature=8e346586d209e6cd4fa4b62bd01a2173a28f70ddf3f5e4620429cf97e14f0d38&req=dSgmEc97mIVfWvMW1HO4zQXXeH9%2F8F152l8mgqzDsnTvq4X9V11fCXS0Zygc%0A2NmTOPc1mpE%3D%0A",
+          "source_sha256": "8c6131fb72032077e79016515e9f94fa5e9983a3664d77875b452f9bd2c975fd",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {},
+          "unresolved_fields_and_limits": [
+            "Payments,remaining obligations,records and final accounting are not parameterized;outcome prose cannot prove actual recovery."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    },
+    {
+      "title": "Incident Report Request.docx",
+      "url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655515/f68e86a5a0c6efd62e5203664567/Incident+Report+Request.docx?expires=1794778200&signature=4139122ad398c94cc3a5a033c9343169982da90f15fab328650c44e1f40978c4&req=dSgmEc97mIReXPMW1HO4zTOiQe%2B8BZHY7tSacGLpHSu2LjXpZAir22Fk44FE%0AS8AOsEFKQr0%3D%0A",
+      "sha256": "b484a8360bc86a5505e5d227c212738bc3af84a94fb74cd63db9b04161b163b7",
+      "tokens": [
+        "{{ client_first }}",
+        "{{ client_first}}",
+        "{{ client_last }}",
+        "{{ doi.style1 }}",
+        "{{ incident_location }}",
+        "{{ lead_attorney_first }}",
+        "{{ lead_attorney_initials.upper }}",
+        "{{ lead_attorney_last }}",
+        "{{ lead_attorney_middle_initial }}",
+        "{{ police_contact }}",
+        "{{ police_contact_address_p1 }}",
+        "{{ police_contact_address_p2 }}",
+        "{{ today.style2 }}",
+        "{{ user_initials }}"
+      ],
+      "id": "CASEpeer-template-07",
+      "text_coverage": "Complete available paragraphs,headers and footers extracted and read",
+      "visual_coverage": "Not reviewed",
+      "approval": "Not approved",
+      "catalog_candidates": [
+        "CAT-105"
+      ],
+      "catalog_mapping_limit": "Document-purpose candidates only;the vendor sample lacks some catalog-required fields and instructions. Exact approved mappings remain pending.",
+      "field_bindings": [
+        {
+          "raw_token": "{{ client_first }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_first}}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ client_last }}",
+          "candidate_role": "Selected client identity/demographics;approved usage required",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ doi.style1 }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ incident_location }}",
+          "candidate_role": "Selected matter incident",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_first }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_initials.upper }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_last }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ lead_attorney_middle_initial }}",
+          "candidate_role": "Assigned lead attorney",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ police_contact }}",
+          "candidate_role": "Selected police agency contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ police_contact_address_p1 }}",
+          "candidate_role": "Selected police agency contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ police_contact_address_p2 }}",
+          "candidate_role": "Selected police agency contact",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ today.style2 }}",
+          "candidate_role": "Generation date using approved timezone",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        },
+        {
+          "raw_token": "{{ user_initials }}",
+          "candidate_role": "User generating the document",
+          "application_field_id": null,
+          "binding_status": "Proposed semantic role only;approved field ID/runtime resolution pending"
+        }
+      ],
+      "manual_gap": null,
+      "catalog_field_mapping_candidates": [
+        {
+          "catalog_id": "CAT-105",
+          "source_title": "Incident Report Request.docx",
+          "source_url": "https://8am-d630cf630316.intercom-attachments-2.com/i/o/q07v75s8/1817655515/f68e86a5a0c6efd62e5203664567/Incident+Report+Request.docx?expires=1794778200&signature=4139122ad398c94cc3a5a033c9343169982da90f15fab328650c44e1f40978c4&req=dSgmEc97mIReXPMW1HO4zTOiQe%2B8BZHY7tSacGLpHSu2LjXpZAir22Fk44FE%0AS8AOsEFKQr0%3D%0A",
+          "source_sha256": "b484a8360bc86a5505e5d227c212738bc3af84a94fb74cd63db9b04161b163b7",
+          "review_date": "2026-11-15",
+          "field_token_candidates": {
+            "Incident": [
+              "doi.style1",
+              "incident_location"
+            ],
+            "agency": [
+              "police_contact",
+              "police_contact_address_p1",
+              "police_contact_address_p2"
+            ],
+            "client": [
+              "client_first",
+              "client_last"
+            ]
+          },
+          "unresolved_fields_and_limits": [
+            "Report-number and authorization fields/attachment binding absent."
+          ],
+          "status": "Actual vendor sample tokens read;proposed catalog alignment only;not an approved template or working application mapping"
+        }
+      ]
+    }
+  ]
+}
