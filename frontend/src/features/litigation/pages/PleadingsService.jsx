@@ -268,7 +268,7 @@ export function PleadingsService() {
               <span className="font-bold text-[#06244B]">Answer &amp; Counterclaim</span>
               <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded">Filed</span>
             </div>
-            <p className="text-[11px] text-[#667085]">Interstate Freightlines filed Answer Dec 22, 2025</p>
+            <p className="text-[11px] text-[#667085]">Defendant Answer &amp; Counterclaim filed (sample docket entry)</p>
             <span className="text-[10px] font-mono text-slate-500 block">Reply to Counterclaim Served</span>
           </div>
         </div>

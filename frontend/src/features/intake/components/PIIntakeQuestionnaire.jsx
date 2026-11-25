@@ -217,7 +217,7 @@ export function PIIntakeQuestionnaire({ piData, onChange }) {
               label="Assigned Adjuster Name"
               value={piData.adjusterName || ''}
               onChange={(e) => update('adjusterName', e.target.value)}
-              placeholder="e.g. Sarah Jenkins"
+              placeholder="e.g. Assigned Attorney"
             />
           </div>
 

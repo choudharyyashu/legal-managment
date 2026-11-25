@@ -314,13 +314,13 @@ export function LienRegister() {
         />
       </div>
 
-      {/* Utah Common Fund & Made-Whole Legal Precedent Notice */}
+      {/* Reference: Utah Common Fund & Made-Whole Principles */}
       <div className="bg-[#F5F0E5]/60 p-4 rounded border border-[#D9D6CF] space-y-2 text-xs text-slate-800">
         <h4 className="font-serif font-bold text-xs text-[#06244B] uppercase tracking-wider flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Utah Common Fund Doctrine &amp; Statutory Fee Apportionment
+          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Common Fund &amp; Fee Apportionment Reference
         </h4>
         <p className="text-[11px] leading-relaxed text-[#667085]">
-          Under Utah law and established equitable principles, a subrogated insurer or statutory lienholder who recovers through an attorney's efforts must bear a proportionate share of the attorney fees and costs expended in generating the fund. This allows our firm to negotiate reductions of 33.33% to 50% on medical liens.
+          Under equitable common-fund principles, lien apportionment or fee reductions depend on the specific subrogation plan, governing statute, and facts of the matter. Verify actual lien reduction terms with supervising counsel before finalizing settlement disbursements.
         </p>
       </div>
 

@@ -276,7 +276,7 @@ export function SettlementCalculator() {
           </div>
           <div>
             <span className="block text-[10px] uppercase font-bold text-[#667085]">Lead Counsel</span>
-            <span className="font-semibold text-[#06244B] whitespace-nowrap">{selectedMatter?.responsibleAttorneyName || 'Thomas Bludworth, Esq.'}</span>
+            <span className="font-semibold text-[#06244B] whitespace-nowrap">{selectedMatter?.responsibleAttorneyName || 'Assigned Counsel'}</span>
           </div>
         </div>
       </div>

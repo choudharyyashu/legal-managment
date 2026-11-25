@@ -94,7 +94,7 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="e.g. Wasatch Mountain Logistics LLC"
+            placeholder="e.g. Acme Legal Holdings LLC"
             error={errors.name}
           />
         </div>
@@ -131,7 +131,7 @@ export function ClientForm({ initialData = null, onSuccess, onCancel }) {
             label="Primary Contact Person"
             value={formData.primaryContact}
             onChange={(e) => setFormData({ ...formData, primaryContact: e.target.value })}
-            placeholder="e.g. Robert H. Henderson (CEO)"
+            placeholder="e.g. Jane Doe (Authorized Officer)"
           />
         </div>
 

@@ -132,7 +132,7 @@ export function VendorAssignmentModal({ isOpen, onClose, onSave, assignment, cas
           <Input
             label="Assigned By (Attorney / Staff)"
             value={formData.assignedBy}
-            placeholder="e.g. Thomas Bludworth, Esq."
+            placeholder="e.g. Assigned Counsel"
             onChange={(e) => setFormData({ ...formData, assignedBy: e.target.value })}
           />
         </div>

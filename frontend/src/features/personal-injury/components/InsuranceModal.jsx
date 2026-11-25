@@ -158,7 +158,7 @@ export function InsuranceModal({ isOpen, onClose, onSave, policy, cases = [], de
           <Input
             label="Named Insured Entity / Driver"
             value={formData.insuredName}
-            placeholder="e.g. Interstate Freightlines Inc."
+            placeholder="e.g. Commercial Carrier / Insured Entity"
             onChange={(e) => setFormData({ ...formData, insuredName: e.target.value })}
           />
 

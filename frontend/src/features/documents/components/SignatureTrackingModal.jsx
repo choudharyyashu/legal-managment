@@ -19,8 +19,8 @@ export function SignatureTrackingModal({
   isOpen,
   onClose,
   documentTitle = 'Attorney-Client Engagement Agreement',
-  signerName = 'Robert H. Henderson',
-  signerEmail = 'rhenderson@wasatchlogistics.com',
+  signerName = 'Assigned Signer',
+  signerEmail = '',
   initialStatus = 'Sent',
   onSignedSuccessfully = null
 }) {

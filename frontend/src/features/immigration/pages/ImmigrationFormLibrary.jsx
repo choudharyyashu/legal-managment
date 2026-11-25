@@ -31,32 +31,31 @@ export function ImmigrationFormLibrary() {
   };
 
   const handleExecuteDiagnostic = () => {
-    // Simulated diagnostic check
-    const isSuccess = diagnosticForm.code !== 'I-485'; // simulate deficiency on I-485 for demo
+    const isSuccess = diagnosticForm.code !== 'I-485';
     if (isSuccess) {
       setDiagnosticResult({
         status: 'Pass',
-        message: 'Pre-filing package verification successful! Form edition is current, mandatory fields are satisfied, and statutory fee voucher matches USCIS schedules.',
+        message: 'Checklist review complete for draft preparation. Confirm current USCIS form edition dates and filing fees directly on uscis.gov before filing.',
         details: [
-          'Current USCIS Edition Date verified ✓',
-          'Client G-28 Legal Representation Signature verified ✓',
-          'Statutory Filing Fee check voucher ($' + diagnosticForm.filingFee + ') confirmed ✓',
-          'Primary civil identity documentation attached ✓'
+          'Edition Date field listed (confirm current edition at uscis.gov)',
+          'Client Form G-28 attorney representation signature item',
+          'Reference Filing Fee ($' + diagnosticForm.filingFee + ') — verify against current USCIS G-1055 schedule',
+          'Primary civil identity documentation item'
         ]
       });
-      addToast('Diagnostic check passed! Package ready for attorney review.', 'success');
+      addToast('Draft checklist review completed. Verify current USCIS fees before filing.', 'info');
     } else {
       setDiagnosticResult({
         status: 'Deficiency',
-        message: 'Pre-filing deficiencies detected. Package cannot be filed until resolved.',
+        message: 'Pre-filing checklist items missing. Resolve before attorney sign-off.',
         details: [
-          'Current USCIS Edition Date verified ✓',
-          'MISSING: Sealed Form I-693 Report of Medical Examination ⚠️',
-          'MISSING: Form I-864 joint sponsor 2024 IRS tax return transcript ⚠️',
-          'Statutory Filing Fee ($1,440) check voucher verified ✓'
+          'Edition Date field listed (confirm current edition at uscis.gov)',
+          'MISSING: Sealed Form I-693 Report of Medical Examination',
+          'MISSING: Form I-864 joint sponsor tax return transcript',
+          'Reference Filing Fee ($1,440) — verify against current USCIS G-1055 schedule'
         ]
       });
-      addToast('Deficiencies detected. Review checklist items.', 'warning');
+      addToast('Missing checklist items noted. Review before filing.', 'warning');
     }
   };
 
@@ -97,7 +96,7 @@ export function ImmigrationFormLibrary() {
     },
     {
       key: 'filingFee',
-      label: 'Statutory Fee',
+      label: 'Reference Fee',
       sortable: true,
       render: (val, row) => (
         <div>
@@ -231,28 +230,28 @@ export function ImmigrationFormLibrary() {
       <Modal
         isOpen={isDiagnosticOpen}
         onClose={() => setIsDiagnosticOpen(false)}
-        title={`Pre-Filing Diagnostic Engine: Form ${diagnosticForm?.code}`}
-        subtitle="Automated completeness and statutory validation checker"
+        title={`Pre-Filing Checklist Preview: Form ${diagnosticForm?.code}`}
+        subtitle="Draft completeness review (verify current form editions & G-1055 fees at uscis.gov)"
         maxWidth="max-w-lg"
       >
         {diagnosticForm && (
           <div className="space-y-4 text-xs text-[#202A35]">
             <div className="p-3 bg-slate-50 border border-[#D9D6CF] rounded space-y-1">
               <div className="font-bold text-[#06244B]">{diagnosticForm.title}</div>
-              <div className="text-[11px] text-[#667085]">Statutory Fee: ${diagnosticForm.filingFee} | Authority: {diagnosticForm.agency}</div>
+              <div className="text-[11px] text-[#667085]">Reference Filing Fee: ${diagnosticForm.filingFee} | Agency: {diagnosticForm.agency}</div>
             </div>
 
             {!diagnosticResult ? (
               <div className="text-center py-6 space-y-3">
                 <ShieldAlert className="w-10 h-10 text-[#A4432B] mx-auto animate-pulse" />
                 <p className="text-sm font-semibold text-[#06244B]">
-                  Ready to run pre-filing diagnostic engine on this petition package.
+                  Ready to run draft checklist review on this petition form.
                 </p>
                 <p className="text-xs text-[#667085] max-w-sm mx-auto">
-                  Engine verifies edition dates, required civil documents, attorney G-28 authorization, and fee check accuracy.
+                  Reviews common civil document, Form G-28, and reference fee items for attorney verification.
                 </p>
                 <Button variant="primary" size="sm" onClick={handleExecuteDiagnostic}>
-                  Execute Diagnostic Validation
+                  Run Checklist Review
                 </Button>
               </div>
             ) : (
@@ -271,7 +270,7 @@ export function ImmigrationFormLibrary() {
                   )}
                   <div>
                     <span className="font-bold block text-sm">
-                      {diagnosticResult.status === 'Pass' ? 'PACKAGE CLEARED' : 'DEFICIENCIES DETECTED'}
+                      {diagnosticResult.status === 'Pass' ? 'CHECKLIST REVIEWED (DRAFT)' : 'CHECKLIST ITEMS MISSING'}
                     </span>
                     <span className="text-xs">{diagnosticResult.message}</span>
                   </div>

@@ -14,9 +14,9 @@ export function LienModal({ isOpen, onClose, onSave, lien, cases = [], defaultCa
     reductionRequested: 2833.33,
     negotiatedAmount: 5666.67,
     finalPayoffAmount: 5666.67,
-    confirmationStatus: 'Written Payoff Confirmed',
-    supportingDocuments: 'Formal Payoff Agreement & Ledger',
-    notes: 'Agreed 33.33% statutory fee procurement reduction under Utah Made-Whole Rule.',
+    confirmationStatus: 'Pending Confirmation',
+    supportingDocuments: '',
+    notes: '',
   });
 
   useEffect(() => {

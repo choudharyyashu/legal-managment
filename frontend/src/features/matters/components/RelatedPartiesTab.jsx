@@ -352,7 +352,7 @@ export function RelatedPartiesTab({ matterId, clientId }) {
                 </label>
                 <Input
                   required
-                  placeholder="e.g. Interstate Freightlines Inc."
+                  placeholder="e.g. Opposing Party / Entity Name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />

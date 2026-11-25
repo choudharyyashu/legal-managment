@@ -17,8 +17,8 @@ import { useToast } from '../../../components/ui/Toast';
 export function DocumentRequestModal({
   isOpen,
   onClose,
-  matterTitle = 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-  clientName = 'Wasatch Mountain Logistics LLC'
+  matterTitle = 'Selected Matter',
+  clientName = 'Client'
 }) {
   const { addToast } = useToast();
 
