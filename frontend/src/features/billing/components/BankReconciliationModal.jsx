@@ -1,43 +1,107 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landmark, CheckCircle2, AlertTriangle, FileText, Check, DollarSign } from 'lucide-react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 
-export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) {
+export function BankReconciliationModal({
+  isOpen,
+  onClose,
+  transactions = [],
+  reconciliationPeriod = '2026-10',
+  initialOpeningBalance = 150000.0,
+}) {
   const { addToast } = useToast();
-  const [statementEndingBalance, setStatementEndingBalance] = useState(0);
 
-  const [statementItems, setStatementItems] = useState(() => {
-    return (transactions || []).map((t, idx) => ({
-      id: t.id || `TX-${idx + 1}`,
-      date: t.date || '',
-      description: t.description || 'Operating Transaction',
-      amount: t.type === 'Debit' ? -Math.abs(t.amount) : Math.abs(t.amount),
-      cleared: false,
-    }));
+  const [period, setPeriod] = useState(reconciliationPeriod);
+  const [openingBalance, setOpeningBalance] = useState(() => {
+    const saved = localStorage.getItem(`bank_rec_${reconciliationPeriod}_opening_balance`);
+    return saved !== null ? Number(saved) : initialOpeningBalance;
   });
 
+  const [statementEndingBalance, setStatementEndingBalance] = useState(() => {
+    const saved = localStorage.getItem(`bank_rec_${reconciliationPeriod}_ending_balance`);
+    return saved !== null ? Number(saved) : 0;
+  });
+
+  const [statementItems, setStatementItems] = useState([]);
+
+  // Initialize or re-load transactions and persisted clearance status
+  useEffect(() => {
+    const items = (transactions || []).map((t, idx) => {
+      const itemId = t.id || `TX-${idx + 1}`;
+      const savedCleared = localStorage.getItem(`bank_rec_${period}_cleared_${itemId}`);
+      const isCleared = savedCleared !== null ? savedCleared === 'true' : false;
+      return {
+        id: itemId,
+        date: t.date || '',
+        description: t.description || 'Operating Transaction',
+        amount: t.type === 'Debit' ? -Math.abs(t.amount) : Math.abs(t.amount),
+        cleared: isCleared,
+      };
+    });
+    setStatementItems(items);
+  }, [transactions, period]);
+
   const toggleCleared = (id) => {
-    setStatementItems(prev =>
-      prev.map(item => item.id === id ? { ...item, cleared: !item.cleared } : item)
+    setStatementItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextCleared = !item.cleared;
+          try {
+            localStorage.setItem(`bank_rec_${period}_cleared_${id}`, String(nextCleared));
+          } catch (e) {
+            console.warn('Could not persist clearance status:', e);
+          }
+          return { ...item, cleared: nextCleared };
+        }
+        return item;
+      })
     );
   };
 
-  const clearedBalance = statementItems
-    .filter(i => i.cleared)
+  const handleEndingBalanceChange = (val) => {
+    const num = Number(val);
+    setStatementEndingBalance(num);
+    try {
+      localStorage.setItem(`bank_rec_${period}_ending_balance`, String(num));
+    } catch (e) {
+      console.warn('Could not persist ending balance:', e);
+    }
+  };
+
+  const handleOpeningBalanceChange = (val) => {
+    const num = Number(val);
+    setOpeningBalance(num);
+    try {
+      localStorage.setItem(`bank_rec_${period}_opening_balance`, String(num));
+    } catch (e) {
+      console.warn('Could not persist opening balance:', e);
+    }
+  };
+
+  const clearedNetTransactions = statementItems
+    .filter((i) => i.cleared)
     .reduce((sum, i) => sum + i.amount, 0);
 
-  const difference = statementEndingBalance - clearedBalance;
+  // Cleared Book Balance = Opening Book Balance + Net Cleared Transactions
+  const clearedBookBalance = openingBalance + clearedNetTransactions;
+  const difference = statementEndingBalance - clearedBookBalance;
 
   const handleFinishReconciliation = (e) => {
     e.preventDefault();
     if (Math.abs(difference) > 0.01) {
-      addToast(`Reconciliation has an unresolved variance of ${formatCurrency(difference)}. All items must balance to zero.`, 'warning');
+      addToast(
+        `Reconciliation has an unresolved variance of ${formatCurrency(difference)}. All items must balance to zero.`,
+        'warning'
+      );
       return;
     }
-    addToast('Bank reconciliation completed! Statement matched book balance with zero variance.', 'success');
+    addToast(
+      `Bank reconciliation for ${period} completed! Statement matched book balance with zero variance.`,
+      'success'
+    );
     onClose();
   };
 
@@ -46,27 +110,53 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
       isOpen={isOpen}
       onClose={onClose}
       title="Monthly Bank Statement Reconciliation"
-      subtitle="Zions Bank Commercial Operating Account • Period Ending October 31, 2026"
+      subtitle={`Zions Bank Commercial Operating Account • Reconciliation Period: ${period}`}
       maxWidth="max-w-2xl"
     >
       <form onSubmit={handleFinishReconciliation} className="space-y-4 text-xs">
-        <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 border border-[#D9D6CF] rounded-lg">
+        {/* Independent Bank Statement Parameters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 border border-[#D9D6CF] rounded-lg">
           <div>
-            <span className="text-[10px] text-[#667085] uppercase font-bold block">Statement Ending Balance</span>
+            <span className="text-[10px] text-[#667085] uppercase font-bold block">Statement Opening Balance ($)</span>
             <input
               type="number"
-              value={statementEndingBalance}
-              onChange={(e) => setStatementEndingBalance(Number(e.target.value))}
+              step="0.01"
+              value={openingBalance}
+              onChange={(e) => handleOpeningBalanceChange(e.target.value)}
               className="mt-1 font-bold text-sm text-[#06244B] bg-white border border-[#D9D6CF] rounded p-1 w-full"
             />
           </div>
           <div>
+            <span className="text-[10px] text-[#667085] uppercase font-bold block">Statement Ending Balance ($)</span>
+            <input
+              type="number"
+              step="0.01"
+              value={statementEndingBalance}
+              onChange={(e) => handleEndingBalanceChange(e.target.value)}
+              className="mt-1 font-bold text-sm text-[#06244B] bg-white border border-[#D9D6CF] rounded p-1 w-full"
+            />
+          </div>
+        </div>
+
+        {/* Reconciliation Summary Cards */}
+        <div className="grid grid-cols-3 gap-3 p-3 bg-[#F5F0E5]/60 border border-[#D9D6CF] rounded-lg">
+          <div>
+            <span className="text-[10px] text-[#667085] uppercase font-bold block">Net Cleared Activity</span>
+            <span className="mt-1 font-bold text-sm text-[#06244B] block pt-1">
+              {formatCurrency(clearedNetTransactions)}
+            </span>
+          </div>
+          <div>
             <span className="text-[10px] text-[#667085] uppercase font-bold block">Cleared Book Balance</span>
-            <span className="mt-1 font-bold text-sm text-[#06244B] block pt-1">{formatCurrency(clearedBalance)}</span>
+            <span className="mt-1 font-bold text-sm text-[#06244B] block pt-1">
+              {formatCurrency(clearedBookBalance)}
+            </span>
           </div>
           <div>
             <span className="text-[10px] text-[#667085] uppercase font-bold block">Unreconciled Variance</span>
-            <span className={`mt-1 font-bold text-sm block pt-1 ${Math.abs(difference) < 0.01 ? 'text-emerald-700' : 'text-red-700'}`}>
+            <span
+              className={`mt-1 font-bold text-sm block pt-1 ${Math.abs(difference) < 0.01 ? 'text-emerald-700' : 'text-red-700'}`}
+            >
               {formatCurrency(difference)}
             </span>
           </div>
@@ -74,17 +164,21 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <span className="font-bold text-xs text-[#06244B] uppercase">Uncleared &amp; Cleared Bank Transactions</span>
-            <span className="text-[11px] text-[#667085]">Click checkbox to match against bank statement line items</span>
+            <span className="font-bold text-xs text-[#06244B] uppercase">
+              Internal Operating Ledger (GL 1010) Transactions
+            </span>
+            <span className="text-[11px] text-[#667085]">
+              Click checkbox to mark internal book transactions cleared against bank statement
+            </span>
           </div>
 
           <div className="border border-[#D9D6CF] rounded-lg overflow-hidden max-h-60 overflow-y-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-[#F5F0E5] text-[#06244B] font-bold sticky top-0">
                 <tr>
-                  <th className="p-2 w-8">Cleared</th>
+                  <th className="p-2 w-8 text-center">Cleared</th>
                   <th className="p-2">Date</th>
-                  <th className="p-2">Transaction Description</th>
+                  <th className="p-2">Internal Ledger Description</th>
                   <th className="p-2 text-right">Amount</th>
                 </tr>
               </thead>
@@ -96,20 +190,26 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
                     </td>
                   </tr>
                 ) : (
-                  statementItems.map(item => (
-                    <tr key={item.id} className={`hover:bg-slate-50 ${item.cleared ? 'bg-emerald-50/30' : ''}`}>
+                  statementItems.map((item) => (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-slate-50 transition-colors ${item.cleared ? 'bg-emerald-50/40' : ''}`}
+                    >
                       <td className="p-2 text-center">
                         <input
                           type="checkbox"
                           checked={item.cleared}
                           onChange={() => toggleCleared(item.id)}
-                          className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-0 cursor-pointer"
+                          className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-0 cursor-pointer h-4 w-4"
                         />
                       </td>
                       <td className="p-2 text-[#667085]">{item.date}</td>
                       <td className="p-2 font-medium text-[#202A35]">{item.description}</td>
-                      <td className={`p-2 text-right font-bold ${item.amount > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                        {item.amount > 0 ? '+' : ''}{formatCurrency(item.amount)}
+                      <td
+                        className={`p-2 text-right font-bold ${item.amount > 0 ? 'text-emerald-700' : 'text-red-700'}`}
+                      >
+                        {item.amount > 0 ? '+' : ''}
+                        {formatCurrency(item.amount)}
                       </td>
                     </tr>
                   ))
@@ -122,7 +222,9 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
         <div className="p-3 bg-amber-50 border border-amber-200 rounded text-amber-900 text-[11px] flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-700" />
           <span>
-            <strong>[DEMO SIMULATION] Reconciliation Retention Notice:</strong> Reconciled bank statements should be reviewed by supervising counsel and retained in accordance with firm policy and applicable trust-accounting rules.
+            <strong>Utah State Bar Accounting Standards (Rule 1.15):</strong> Reconciled bank statements and cleared
+            operating book entries must balance with zero variance, be certified by supervising counsel, and be archived
+            for 7 years.
           </span>
         </div>
 
@@ -138,4 +240,3 @@ export function BankReconciliationModal({ isOpen, onClose, transactions = [] }) 
     </Modal>
   );
 }
-

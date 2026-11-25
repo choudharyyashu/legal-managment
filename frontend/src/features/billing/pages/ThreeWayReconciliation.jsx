@@ -18,7 +18,8 @@ import {
   FileSpreadsheet,
   Building,
   User,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { reconciliationService } from '../../../services/reconciliationService';
 import { PageHeader } from '../../../components/shared/PageHeader';
@@ -37,26 +38,34 @@ export function ThreeWayReconciliation() {
   const [isReconciling, setIsReconciling] = useState(false);
 
   // Pillar 1: Bank Account Figures
-  // Pillar 1: Bank Account Figures (fetched from backend when available)
   const [bankStatementBalance, setBankStatementBalance] = useState(null);
   const [depositsInTransit, setDepositsInTransit] = useState(null);
   const [outstandingChecks, setOutstandingChecks] = useState(null);
-  const adjustedBankBalance =
-    bankStatementBalance !== null && depositsInTransit !== null && outstandingChecks !== null
-? bankStatementBalance + depositsInTransit - outstandingChecks
-: null;
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [statusError, setStatusError] = useState(null);
 
-  // Pillar 2: General Ledger Trust Balance (Account #1010/2100)
+  // Uncleared items for Tab 2 (loaded from real backend trust transactions)
+  const [unclearedItems, setUnclearedItems] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
+
+  // Pillar 2: General Ledger Trust Balance (Account #2100)
   const [glTrustBalance, setGlTrustBalance] = useState(null);
   const [glDataAvailable, setGlDataAvailable] = useState(false);
 
-  // Pillar 3: Client Sub‑Ledgers – loaded from trust service
+  // Pillar 3: Client Sub-Ledgers – loaded from trust service
   const [clientLedgers, setClientLedgers] = useState([]);
+  const [loadingLedgers, setLoadingLedgers] = useState(false);
+  const [ledgersError, setLedgersError] = useState(null);
+
+  // Audit History
   const [auditHistory, setAuditHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
 
   const fetchHistory = () => {
     setLoadingHistory(true);
+    setHistoryError(null);
     reconciliationService
       .getHistory()
       .then((records) => {
@@ -66,6 +75,7 @@ export function ThreeWayReconciliation() {
       })
       .catch((err) => {
         console.warn('Could not load reconciliation history from API:', err?.message);
+        setHistoryError(err?.message || 'Failed to load reconciliation history from database.');
         setAuditHistory([]);
       })
       .finally(() => {
@@ -73,9 +83,9 @@ export function ThreeWayReconciliation() {
       });
   };
 
-  // Load data on component mount and period change
-  useEffect(() => {
-    // Load client ledgers
+  const loadClientLedgers = () => {
+    setLoadingLedgers(true);
+    setLedgersError(null);
     trustService
       .getLedgers({ limit: 100 })
       .then((res) => {
@@ -83,25 +93,36 @@ export function ThreeWayReconciliation() {
       })
       .catch((err) => {
         console.warn('Could not load client ledgers:', err?.message);
+        setLedgersError(err?.message || 'Failed to load client trust ledgers from database.');
         setClientLedgers([]);
+      })
+      .finally(() => {
+        setLoadingLedgers(false);
       });
+  };
 
-    // Load actual uncleared trust transactions
+  const loadUnclearedTransactions = (month = selectedMonth) => {
+    setLoadingTransactions(true);
+    setTransactionsError(null);
     trustService
-      .getTransactions({ limit: 50 })
+      .getTransactions({ limit: 100, month })
       .then((res) => {
-        const raw = Array.isArray(res) ? res : (res?.transactions || []);
+        const raw = Array.isArray(res) ? res : (res?.transactions || res?.data || []);
         if (raw.length > 0) {
           setUnclearedItems(
-            raw.map((t) => ({
-              id: t.id,
-              date: t.createdAt ? t.createdAt.split('T')[0] : '',
-              type: t.transactionType === 'DEPOSIT' ? 'Deposit in Transit' : 'Outstanding Draft',
-              description: t.purpose || t.sourceReference || 'Trust Transaction',
-              matterNumber: t.matterNumber || t.matter?.matterNumber || 'Matter Trust',
-              amount: t.transactionType === 'DEPOSIT' ? Number(t.amount) : -Number(t.amount),
-              cleared: false,
-            }))
+            raw.map((t) => {
+              const savedCleared = localStorage.getItem(`reconciliation_cleared_${month}_${t.id}`);
+              const isCleared = savedCleared !== null ? savedCleared === 'true' : false;
+              return {
+                id: t.id,
+                date: t.createdAt ? t.createdAt.split('T')[0] : '',
+                type: t.transactionType === 'DEPOSIT' ? 'Deposit in Transit' : 'Outstanding Draft',
+                description: t.purpose || t.sourceReference || 'Trust Transaction',
+                matterNumber: t.matterNumber || t.matter?.matterNumber || 'Matter Trust',
+                amount: t.transactionType === 'DEPOSIT' ? Number(t.amount) : -Number(t.amount),
+                cleared: isCleared,
+              };
+            })
           );
         } else {
           setUnclearedItems([]);
@@ -109,12 +130,19 @@ export function ThreeWayReconciliation() {
       })
       .catch((err) => {
         console.warn('Could not load trust transactions:', err?.message);
+        setTransactionsError(err?.message || 'Failed to load trust transactions from database.');
         setUnclearedItems([]);
+      })
+      .finally(() => {
+        setLoadingTransactions(false);
       });
+  };
 
-    // Query live reconciliation status from backend service
+  const loadLiveStatus = (month = selectedMonth) => {
+    setLoadingStatus(true);
+    setStatusError(null);
     reconciliationService
-      .getLiveStatus({ reconciliationMonth: selectedMonth })
+      .getLiveStatus({ reconciliationMonth: month })
       .then((data) => {
         if (data) {
           if (data.bankStatementBalance !== undefined && data.bankStatementBalance !== null) {
@@ -137,17 +165,42 @@ export function ThreeWayReconciliation() {
       })
       .catch((err) => {
         console.warn('Could not load live reconciliation status:', err?.message);
+        setStatusError(err?.message || 'Failed to query live reconciliation status.');
         setGlTrustBalance(null);
         setGlDataAvailable(false);
+      })
+      .finally(() => {
+        setLoadingStatus(false);
       });
+  };
 
+  // Load data on component mount and period change
+  useEffect(() => {
+    loadClientLedgers();
+    loadUnclearedTransactions(selectedMonth);
+    loadLiveStatus(selectedMonth);
     fetchHistory();
   }, [selectedMonth]);
 
+  // Dynamic clearance updates
+  const computedUnclearedDeposits = unclearedItems
+    .filter((i) => i.amount > 0 && !i.cleared)
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  const computedUnclearedChecks = unclearedItems
+    .filter((i) => i.amount < 0 && !i.cleared)
+    .reduce((sum, i) => sum + Math.abs(i.amount), 0);
+
+  const effectiveDepositsInTransit = depositsInTransit !== null ? depositsInTransit : computedUnclearedDeposits;
+  const effectiveOutstandingChecks = outstandingChecks !== null ? outstandingChecks : computedUnclearedChecks;
+
+  const adjustedBankBalance =
+    bankStatementBalance !== null
+      ? bankStatementBalance + (effectiveDepositsInTransit || 0) - (effectiveOutstandingChecks || 0)
+      : null;
 
   const totalClientLedgersBalance = clientLedgers.reduce((sum, item) => sum + item.balance, 0);
 
-  // Variance Calculation
   // Safe variance calculations – handle missing data gracefully
   const variance1 = adjustedBankBalance !== null && glTrustBalance !== null
     ? Math.abs(adjustedBankBalance - glTrustBalance)
@@ -158,17 +211,14 @@ export function ThreeWayReconciliation() {
   const totalVariance = (variance1 !== null && variance2 !== null) ? variance1 + variance2 : null;
   const isReconciled = totalVariance === 0 && variance1 !== null && variance2 !== null;
 
-  // Uncleared items for Tab 2 (loaded from real backend trust transactions)
-  const [unclearedItems, setUnclearedItems] = useState([]);
-
   const handleRunReconcile = async () => {
     setIsReconciling(true);
     try {
       const result = await reconciliationService.submit({
         reconciliationMonth: selectedMonth,
         bankStatementBalance: bankStatementBalance ?? 0,
-        depositsInTransit: depositsInTransit ?? 0,
-        outstandingChecks: outstandingChecks ?? 0,
+        depositsInTransit: effectiveDepositsInTransit ?? 0,
+        outstandingChecks: effectiveOutstandingChecks ?? 0,
       });
       // Report actual reconciliation outcome — never claim "balanced" unless API confirms it
       if (result?.isBalanced) {
@@ -196,10 +246,21 @@ export function ThreeWayReconciliation() {
   };
 
   const handleToggleClear = (id) => {
-    setUnclearedItems(prev =>
-      prev.map(item => (item.id === id ? { ...item, cleared: !item.cleared } : item))
+    setUnclearedItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextCleared = !item.cleared;
+          try {
+            localStorage.setItem(`reconciliation_cleared_${selectedMonth}_${id}`, String(nextCleared));
+          } catch (e) {
+            console.warn('Could not persist clearance to localStorage', e);
+          }
+          return { ...item, cleared: nextCleared };
+        }
+        return item;
+      })
     );
-    addToast('Transaction clearance state updated.', 'info');
+    addToast('Transaction clearance state updated and persisted.', 'info');
   };
 
   // Direct Formal 3-Way Reconciliation Compliance File Generator (Utah RPC 1.15)
@@ -220,8 +281,8 @@ export function ThreeWayReconciliation() {
       `"PILLAR 1: BANK STATEMENT RECONCILIATION (ADJUSTED CASH BALANCE)"`,
       `"Line Item Description","Accounting Ledger Source","Amount ($)"`,
       `"Bank Statement Ending Balance","Chase Bank IOLTA #4402 (Period Ending Statement)","${bankStatementBalance !== null ? bankStatementBalance.toFixed(2) : 'N/A'}"`,
-      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","${depositsInTransit !== null ? '+' + depositsInTransit.toFixed(2) : 'N/A'}"`,
-      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","${outstandingChecks !== null ? '-' + outstandingChecks.toFixed(2) : 'N/A'}"`,
+      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","${effectiveDepositsInTransit !== null ? '+' + Number(effectiveDepositsInTransit).toFixed(2) : 'N/A'}"`,
+      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","${effectiveOutstandingChecks !== null ? '-' + Number(effectiveOutstandingChecks).toFixed(2) : 'N/A'}"`,
       `"ADJUSTED BANK BALANCE (PILLAR 1 TOTAL)","Net Available Liquid Fiduciary Cash","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
@@ -496,11 +557,11 @@ export function ThreeWayReconciliation() {
               </div>
               <div className="flex justify-between">
                 <span>(+) Deposits in Transit:</span>
-                <span className="font-semibold text-emerald-700">+{formatCurrency(depositsInTransit)}</span>
+                <span className="font-semibold text-emerald-700">+{formatCurrency(effectiveDepositsInTransit)}</span>
               </div>
               <div className="flex justify-between">
                 <span>(-) Outstanding Checks:</span>
-                <span className="font-semibold text-rose-700">-{formatCurrency(outstandingChecks)}</span>
+                <span className="font-semibold text-rose-700">-{formatCurrency(effectiveOutstandingChecks)}</span>
               </div>
             </div>
           </div>
@@ -702,22 +763,54 @@ export function ThreeWayReconciliation() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9D6CF]/60">
-                  {clientLedgers.map((cl) => (
-                    <tr key={cl.id} className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#06244B]">{cl.id}</td>
-                      <td className="py-2.5 px-3 font-medium text-[#202A35]">{cl.clientName}</td>
-                      <td className="py-2.5 px-3 text-[#667085]">{cl.matterNumber}</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">
-                        {formatCurrency(cl.balance)}
+                  {loadingLedgers ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-[#667085]">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                          <span>Loading client trust sub-ledgers from database...</span>
+                        </div>
                       </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Fully Segregated
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-[#667085]">{cl.lastAudit}</td>
                     </tr>
-                  ))}
+                  ) : ledgersError ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs">
+                        <div className="max-w-md mx-auto p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 space-y-2">
+                          <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                            <AlertCircle className="w-4 h-4 text-red-600" />
+                            <span>Database Query Error</span>
+                          </div>
+                          <p className="text-xs text-red-700">{ledgersError}</p>
+                          <Button size="sm" variant="outline" onClick={loadClientLedgers} className="mt-2">
+                            Retry Loading Ledgers
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : clientLedgers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-[#667085]">
+                        No client trust sub-ledgers found in database for Utah RPC 1.15 audit.
+                      </td>
+                    </tr>
+                  ) : (
+                    clientLedgers.map((cl) => (
+                      <tr key={cl.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-mono font-bold text-[#06244B]">{cl.id}</td>
+                        <td className="py-2.5 px-3 font-medium text-[#202A35]">{cl.clientName}</td>
+                        <td className="py-2.5 px-3 text-[#667085]">{cl.matterNumber}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">
+                          {formatCurrency(cl.balance)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Fully Segregated
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right text-[#667085]">{cl.lastAudit}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -730,13 +823,29 @@ export function ThreeWayReconciliation() {
             <p className="text-xs text-[#667085]">
               Verify and match in-transit deposits and outstanding checks to reconcile against Chase IOLTA statement ending balances:
             </p>
-            {unclearedItems.length === 0 ? (
+            {loadingTransactions ? (
+              <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg flex items-center justify-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                <span>Loading period trust transactions from database...</span>
+              </div>
+            ) : transactionsError ? (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span>Transaction Query Error</span>
+                </div>
+                <p className="text-xs text-red-700">{transactionsError}</p>
+                <Button size="sm" variant="outline" onClick={() => loadUnclearedTransactions(selectedMonth)} className="mt-2">
+                  Retry Loading Transactions
+                </Button>
+              </div>
+            ) : unclearedItems.length === 0 ? (
               <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
-                No uncleared in-transit deposits or outstanding checks recorded in database.
+                No in-transit deposits or outstanding checks recorded in database for {selectedMonth}.
               </div>
             ) : (
               <div className="space-y-2">
-                {unclearedItems.map(item => (
+                {unclearedItems.map((item) => (
                   <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <input
@@ -771,11 +880,25 @@ export function ThreeWayReconciliation() {
         {activeTab === 'history' && (
           <div className="p-4 space-y-3">
             <div className="space-y-2">
-              {auditHistory.length === 0 ? (
+              {loadingHistory ? (
+                <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                  <span>Loading historical reconciliation records from database...</span>
+                </div>
+              ) : historyError ? (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                    <span>Reconciliation History Query Error</span>
+                  </div>
+                  <p className="text-xs text-red-700">{historyError}</p>
+                  <Button size="sm" variant="outline" onClick={fetchHistory} className="mt-2">
+                    Retry Loading History
+                  </Button>
+                </div>
+              ) : auditHistory.length === 0 ? (
                 <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
-                  {loadingHistory
-                    ? 'Loading historical reconciliation records from database...'
-                    : 'No historical monthly reconciliation records found in database. Complete and submit a reconciliation to record an audited period under Utah RPC 1.15.'}
+                  No historical monthly reconciliation records found in database. Complete and submit a reconciliation to record an audited period under Utah RPC 1.15.
                 </div>
               ) : (
                 auditHistory.map((h, i) => (
