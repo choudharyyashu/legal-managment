@@ -232,12 +232,12 @@ export function ImmigrationPartiesDirectory() {
       </div>
 
       {/* Tabs Row */}
-      <div className="flex items-center gap-2 border-b border-[#D9D6CF] pb-2">
+      <div className="flex items-center gap-2 border-b border-[#D9D6CF] pb-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
         {['All', 'Petitioners', 'Beneficiaries', 'Joint Sponsors'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 rounded-t text-xs font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-t text-xs font-semibold transition-colors shrink-0 ${
               activeTab === tab
                 ? 'bg-[#06244B] text-white'
                 : 'text-[#667085] hover:text-[#06244B] bg-slate-100'
@@ -248,7 +248,7 @@ export function ImmigrationPartiesDirectory() {
         ))}
       </div>
 
-      <div className="max-w-md">
+      <div className="w-full max-w-md">
         <SearchBar
           value={searchQuery}
           onChange={setSearchQuery}
@@ -273,7 +273,7 @@ export function ImmigrationPartiesDirectory() {
       >
         {selectedParty && (
           <div className="space-y-4 text-xs text-[#202A35]">
-            <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] grid grid-cols-2 gap-3">
+            <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <span className="text-[#667085] block text-[10px] uppercase font-bold">Alien Registration #:</span>
                 <span className="font-mono text-sm font-bold text-[#06244B]">{selectedParty.alienNumber || 'None / USC'}</span>
@@ -289,7 +289,7 @@ export function ImmigrationPartiesDirectory() {
                 <span className="font-bold text-[#06244B] uppercase text-[10px] block">
                   Last U.S. Arrival &amp; Form I-94 Information
                 </span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div><strong>I-94 Number:</strong> {selectedParty.i94Number || 'N/A'}</div>
                   <div><strong>Class of Admission:</strong> {selectedParty.classOfAdmission || 'N/A'}</div>
                   <div><strong>Port of Entry:</strong> {selectedParty.placeOfLastEntry || 'N/A'}</div>
@@ -306,7 +306,7 @@ export function ImmigrationPartiesDirectory() {
                   <Calculator className="w-3.5 h-3.5" />
                   Form I-864 Poverty Guideline Assessment (125% HHS Line)
                 </span>
-                <div className="grid grid-cols-2 gap-2 text-xs text-emerald-950">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-emerald-950">
                   <div><strong>Household Size:</strong> {selectedParty.householdSize} persons</div>
                   <div><strong>Sponsor Current Income:</strong> ${selectedParty.currentAnnualIncome?.toLocaleString()}</div>
                   <div><strong>125% Poverty Threshold:</strong> ${selectedParty.minimumRequiredIncome125Pct?.toLocaleString()}</div>

@@ -61,7 +61,7 @@ export function USCISReceiptTracker() {
 
       {/* Search Bar Container */}
       <div className="bg-white p-5 rounded-lg border border-[#D9D6CF] shadow-sm max-w-2xl">
-        <form onSubmit={handleLookup} className="flex gap-3 items-end">
+        <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-3 sm:items-end">
           <div className="flex-1">
             <Input
               label="USCIS 13-Character Receipt Number"

@@ -180,28 +180,28 @@ export function ProbateWorkspace() {
       </div>
 
       {/* Sub-Tab Navigation */}
-      <div className="flex flex-wrap items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085]">
+      <div className="flex items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085] overflow-x-auto whitespace-nowrap scrollbar-thin">
         <button
           onClick={() => setActiveTab('inventory')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'inventory' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'inventory' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Asset Inventory & Appraisals ({activeCase.inventory.length})
         </button>
         <button
           onClick={() => setActiveTab('claims')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'claims' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'claims' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Creditor Claims & Bar Date ({activeCase.creditorClaims.length})
         </button>
         <button
           onClick={() => setActiveTab('beneficiaries')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'beneficiaries' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'beneficiaries' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Beneficiary Distribution Schedule ({activeCase.beneficiaries.length})
         </button>
         <button
           onClick={() => setActiveTab('accounting')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'accounting' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'accounting' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Fiduciary Account Ledger
         </button>
@@ -210,22 +210,22 @@ export function ProbateWorkspace() {
       {/* Tab 1: Asset Inventory */}
       {activeTab === 'inventory' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">Probate & Non-Probate Asset Schedule</h2>
               <p className="text-xs text-[#667085]">Categorize probate property subject to court administration vs non-probate TOD/POD assets.</p>
             </div>
             <button
               onClick={() => setShowAddAssetModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shadow-sm shrink-0"
             >
               <Plus className="w-4 h-4 text-[#A4432B]" />
               Add Inventory Asset
             </button>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs text-[#344054]">
+          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs text-[#344054]">
               <thead className="bg-[#F8F9FC] text-[#475467] font-semibold border-b border-[#EAECF0] uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Category</th>
@@ -268,22 +268,22 @@ export function ProbateWorkspace() {
       {/* Tab 2: Creditor Claims */}
       {activeTab === 'claims' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">Utah Creditor Claims Register (Utah Code § 75-3-805)</h2>
               <p className="text-xs text-[#667085]">Claims barred unless presented within 90 days from notice to creditors publication.</p>
             </div>
             <button
               onClick={() => addToast('New creditor claim logged', 'info')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shrink-0"
             >
               <Plus className="w-4 h-4 text-[#A4432B]" />
               Log Creditor Claim
             </button>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs text-[#344054]">
+          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs text-[#344054]">
               <thead className="bg-[#F8F9FC] text-[#475467] font-semibold border-b border-[#EAECF0] uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Claimant</th>

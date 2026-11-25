@@ -126,22 +126,22 @@ export function AppealsWorkspace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085]">
+      <div className="flex items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085] overflow-x-auto whitespace-nowrap scrollbar-thin">
         <button
           onClick={() => setActiveTab('briefing')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'briefing' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'briefing' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Appellate Briefing Schedule & Word Counts ({activeCase.briefingSchedule.length})
         </button>
         <button
           onClick={() => setActiveTab('record')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'record' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'record' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Record on Appeal & Transcripts
         </button>
         <button
           onClick={() => setActiveTab('mandate')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'mandate' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'mandate' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Remittitur & Remand Directives
         </button>
@@ -150,22 +150,22 @@ export function AppealsWorkspace() {
       {/* Tab 1: Briefing Schedule */}
       {activeTab === 'briefing' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">Utah R. App. P. 24 Briefing Ledger</h2>
               <p className="text-xs text-[#667085]">Mandatory word count limits: 14,000 words for Principal Briefs; 7,000 words for Reply Briefs.</p>
             </div>
             <button
               onClick={() => addToast('Brief word count certificate verified against Word Document', 'success')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shrink-0"
             >
               <FileCheck className="w-4 h-4 text-[#A4432B]" />
               Verify Word Count Limits
             </button>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs text-[#344054]">
+          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs text-[#344054]">
               <thead className="bg-[#F8F9FC] text-[#475467] font-semibold border-b border-[#EAECF0] uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Brief Phase</th>

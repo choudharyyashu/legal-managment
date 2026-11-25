@@ -112,7 +112,7 @@ export function CreditorMatrixGenerator() {
           {matrixText}
         </div>
 
-        <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs text-[#202A35] flex items-center justify-between">
+        <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs text-[#202A35] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-emerald-600" />
             <span>

@@ -215,7 +215,7 @@ export function GeneralLedgerView() {
       />
 
       {/* Balance Summary Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Total Journal Debits</span>
           <span className="text-2xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalDebits)}</span>
@@ -264,7 +264,7 @@ export function GeneralLedgerView() {
       {/* Journal Table */}
       <div className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
+          <table className="w-full min-w-[720px] text-xs text-left">
             <thead className="bg-[#F5F0E5] text-[#06244B] font-bold">
               <tr>
                 <th className="p-3">Journal Entry # &amp; Date</th>

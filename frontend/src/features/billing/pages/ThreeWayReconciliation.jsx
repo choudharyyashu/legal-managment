@@ -441,7 +441,7 @@ export function ThreeWayReconciliation() {
       />
 
       {/* 3 Pillars Comparison Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Pillar 1: Bank Balance */}
         <div className="bg-white p-5 rounded-lg border border-[#D9D6CF] shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between pb-3 border-b border-[#D9D6CF]">
@@ -615,10 +615,10 @@ export function ThreeWayReconciliation() {
 
       {/* Detailed Tabs View */}
       <div className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm overflow-hidden">
-        <div className="flex border-b border-[#D9D6CF] bg-[#FAF8F5] px-4 pt-3 gap-4">
+        <div className="flex border-b border-[#D9D6CF] bg-[#FAF8F5] px-4 pt-3 gap-4 overflow-x-auto whitespace-nowrap scrollbar-thin">
           <button
             onClick={() => setActiveTab('ledgers')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'ledgers'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -629,7 +629,7 @@ export function ThreeWayReconciliation() {
           </button>
           <button
             onClick={() => setActiveTab('transactions')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'transactions'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -640,7 +640,7 @@ export function ThreeWayReconciliation() {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'history'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -654,7 +654,7 @@ export function ThreeWayReconciliation() {
         {/* Tab 1 Content: Client Ledgers */}
         {activeTab === 'ledgers' && (
           <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between text-xs text-[#667085] pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#667085] pb-2">
               <span>Client-level segregated trust liabilities (no cross-collateralization or commingling):</span>
               <span className="font-bold text-[#06244B]">Sub-Ledger Total: {formatCurrency(totalClientLedgersBalance)}</span>
             </div>
@@ -702,7 +702,7 @@ export function ThreeWayReconciliation() {
             </p>
             <div className="space-y-2">
               {unclearedItems.map(item => (
-                <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex items-center justify-between">
+                <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"

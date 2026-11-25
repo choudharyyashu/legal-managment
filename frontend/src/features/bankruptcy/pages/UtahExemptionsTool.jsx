@@ -33,7 +33,7 @@ export function UtahExemptionsTool() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-amber-900">
         <div className="flex items-center gap-2">
           <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
           <span>
@@ -148,7 +148,7 @@ export function UtahExemptionsTool() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
               <div className="p-3 bg-slate-50 rounded border border-[#D9D6CF]">
                 <span className="text-[10px] text-[#667085] uppercase font-bold block">Asset FMV:</span>
                 <span className="text-base font-bold text-[#06244B] mt-1 block">${result.fairMarketValue.toLocaleString()}</span>

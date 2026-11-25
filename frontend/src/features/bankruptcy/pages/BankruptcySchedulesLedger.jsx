@@ -96,52 +96,50 @@ export function BankruptcySchedulesLedger() {
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
-          title="Bankruptcy Schedules Ledger (A/B through J)"
-          subtitle={`Case: ${caseData.caseNumber} — ${caseData.debtorName} (${caseData.chapter})`}
-          breadcrumbs={[
-            { label: 'Clients & Matters', to: '/matters' },
-            { label: 'Bankruptcy', to: '/bankruptcy/cases' },
-            { label: 'Schedules Ledger' }
-          ]}
-        />
-
-        {/* Case Switcher & Actions */}
-        <div className="flex items-center gap-3">
-          <Button
-            size="sm"
-            variant="outline"
-            icon={FileEdit}
-            onClick={() => setIsAmendModalOpen(true)}
-            className="text-xs"
-          >
-            Amend Schedules (F.R.B.P. 1009)
-          </Button>
-
-          <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-[#D9D6CF] shadow-sm">
-            <span className="text-xs font-semibold text-[#06244B] ml-2">Select Debtor:</span>
-            <select
-              value={selectedCaseId}
-              onChange={(e) => setSelectedCaseId(e.target.value)}
-              className="text-xs p-1.5 rounded border border-[#D9D6CF] text-[#06244B] bg-slate-50 font-medium"
+      <PageHeader
+        title="Bankruptcy Schedules Ledger (A/B through J)"
+        subtitle={`Case: ${caseData?.caseNumber || caseData?.matterNumber || 'N/A'} — ${caseData?.debtorName || caseData?.title || 'Matter'} (${caseData?.chapter || 'Bankruptcy'})`}
+        breadcrumbs={[
+          { label: 'Clients & Matters', to: '/matters' },
+          { label: 'Bankruptcy', to: '/bankruptcy/cases' },
+          { label: 'Schedules Ledger' }
+        ]}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={FileEdit}
+              onClick={() => setIsAmendModalOpen(true)}
+              className="text-xs"
             >
-              {bankruptcyMatters.length === 0 ? (
-                <option value="">No bankruptcy matters</option>
-              ) : (
-                bankruptcyMatters.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {c.matterNumber} - {c.title}
-                  </option>
-                ))
-              )}
-            </select>
+              Amend Schedules (F.R.B.P. 1009)
+            </Button>
+
+            <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-[#D9D6CF] shadow-sm flex-1 sm:flex-initial">
+              <span className="text-xs font-semibold text-[#06244B] ml-2 shrink-0">Select Debtor:</span>
+              <select
+                value={selectedCaseId}
+                onChange={(e) => setSelectedCaseId(e.target.value)}
+                className="text-xs p-1.5 rounded border border-[#D9D6CF] text-[#06244B] bg-slate-50 font-medium w-full sm:w-auto min-w-0"
+              >
+                {bankruptcyMatters.length === 0 ? (
+                  <option value="">No bankruptcy matters</option>
+                ) : (
+                  bankruptcyMatters.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.matterNumber} - {c.title}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Aggregate Financial Metrics Header */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Total Schedule A/B Assets</span>
           <span className="text-xl font-bold text-[#06244B] mt-1 block">
@@ -177,7 +175,7 @@ export function BankruptcySchedulesLedger() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#D9D6CF] pb-2">
+      <div className="flex items-center gap-2 border-b border-[#D9D6CF] pb-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
         {[
           { id: 'AB', label: 'Schedule A/B: Real & Personal Property' },
           { id: 'D', label: 'Schedule D: Secured Creditors' },
@@ -203,7 +201,7 @@ export function BankruptcySchedulesLedger() {
         <div className="bg-white rounded-lg border border-[#D9D6CF] p-4 space-y-3">
           <h4 className="font-bold text-sm text-[#06244B]">Schedule A/B: Real Property &amp; Personal Assets Inventory</h4>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[560px]">
               <thead className="bg-[#F5F0E5] text-[#06244B] font-bold">
                 <tr>
                   <th className="p-2.5">Category</th>
@@ -233,7 +231,7 @@ export function BankruptcySchedulesLedger() {
         <div className="bg-white rounded-lg border border-[#D9D6CF] p-4 space-y-3">
           <h4 className="font-bold text-sm text-[#06244B]">Schedule D: Creditors Having Claims Secured by Property</h4>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[560px]">
               <thead className="bg-[#F5F0E5] text-[#06244B] font-bold">
                 <tr>
                   <th className="p-2.5">Secured Creditor</th>
@@ -278,7 +276,7 @@ export function BankruptcySchedulesLedger() {
             </Button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+            <table className="w-full text-xs text-left min-w-[560px]">
               <thead className="bg-[#F5F0E5] text-[#06244B] font-bold">
                 <tr>
                   <th className="p-2.5">Claim Priority</th>
@@ -378,8 +376,8 @@ export function BankruptcySchedulesLedger() {
       <AmendedSchedulesModal
         isOpen={isAmendModalOpen}
         onClose={() => setIsAmendModalOpen(false)}
-        caseNumber={caseData.caseNumber}
-        debtorName={caseData.debtorName}
+        caseNumber={caseData?.caseNumber || caseData?.matterNumber || ''}
+        debtorName={caseData?.debtorName || caseData?.title || ''}
       />
     </div>
   );

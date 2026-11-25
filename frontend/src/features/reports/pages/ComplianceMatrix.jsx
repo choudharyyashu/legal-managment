@@ -245,7 +245,7 @@ export function ComplianceMatrix() {
       />
 
       {/* Executive Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#06244B] text-white p-4 rounded-xl shadow-sm border border-[#0B356D] space-y-1">
           <span className="text-[10px] uppercase font-bold tracking-wider text-amber-300 block">
             Requirement Modules Mapped
@@ -328,7 +328,7 @@ export function ComplianceMatrix() {
 
       {/* Master 8-Column Compliance Table */}
       <div className="border border-[#D9D6CF] rounded-xl overflow-hidden bg-white shadow-sm">
-        <div className="p-4 bg-[#F5F0E5] border-b border-[#D9D6CF] flex items-center justify-between">
+        <div className="p-4 bg-[#F5F0E5] border-b border-[#D9D6CF] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-[#A4432B]" />
             <h3 className="font-serif font-bold text-sm text-[#06244B]">
@@ -341,7 +341,7 @@ export function ComplianceMatrix() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left divide-y divide-[#D9D6CF]">
+          <table className="w-full min-w-[950px] text-xs text-left divide-y divide-[#D9D6CF]">
             <thead className="bg-[#06244B] text-white font-bold text-[11px]">
               <tr>
                 <th className="p-3 w-16">Req #</th>

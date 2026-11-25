@@ -66,7 +66,7 @@ export function Chapter13PlanCalculator() {
               <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
                 Applicable Commitment Period
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setPlanMonths(36)}
