@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Building, DollarSign, Search, CheckCircle2, FileText, ArrowRight, Split, Landmark, CreditCard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Building, DollarSign, Search, CheckCircle2, FileText, ArrowRight, Split, Landmark, CreditCard, RefreshCw } from 'lucide-react';
 import { useTime } from '../../../context/TimeContext';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -9,50 +9,54 @@ import { Button } from '../../../components/ui/Button';
 import { formatDate } from '../../../utils/formatDate';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { PaymentAllocationModal } from '../components/PaymentAllocationModal';
+import { billingService } from '../../../services/billingService';
 
 export function PaymentRecords() {
   const { invoices } = useTime();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAllocationOpen, setIsAllocationOpen] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Extract payment records from invoices
-  const paymentHistory = [
-    {
-      id: 'PAY-8801',
-      date: '2026-10-28',
-      clientName: 'Commercial Litigation Account',
-      invoiceNumber: 'HB-2026-1088',
-      amount: 15390.00,
-      method: 'FedWire / ACH',
-      referenceNumber: 'WF-TXN-994812',
-      status: 'Paid',
-    },
-    {
-      id: 'PAY-8802',
-      date: '2026-10-22',
-      clientName: 'Real Estate Escrow Account',
-      invoiceNumber: 'HB-2026-1092',
-      amount: 10000.00,
-      method: 'Trust Retainer Drawdown',
-      referenceNumber: 'TRST-DRW-0441',
-      status: 'Paid',
-    },
-    {
-      id: 'PAY-8803',
-      date: '2026-09-30',
-      clientName: 'Corporate Advisory Account',
-      invoiceNumber: 'HB-2026-1070',
-      amount: 22500.00,
-      method: 'FedWire / ACH',
-      referenceNumber: 'WF-TXN-988310',
-      status: 'Paid',
+  // Load authoritative payment records from backend API
+  const loadPayments = async () => {
+    setLoading(true);
+    try {
+      const res = await billingService.getPayments();
+      const raw = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : (res?.payments || []);
+
+      const mapped = raw.map((p) => ({
+        id: p.id,
+        date: p.receivedDate || (p.createdAt ? p.createdAt.split('T')[0] : ''),
+        clientName: p.clientName || 'General Client Remittance',
+        invoiceNumber: p.invoiceNumber || '—',
+        amount: Number(p.amount || 0),
+        method: p.paymentMethod || 'ACH / Electronic',
+        referenceNumber: p.paymentReference || p.transactionReference || 'PAY-REF',
+        status: 'Paid',
+      }));
+
+      setPayments(mapped);
+    } catch (err) {
+      console.warn('Could not load payments from API:', err?.message);
+      setPayments([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredPayments = paymentHistory.filter(p =>
-    p.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    loadPayments();
+  }, []);
+
+  const filteredPayments = payments.filter(p =>
+    (p.clientName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.invoiceNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.referenceNumber || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalCollected = filteredPayments.reduce((sum, p) => sum + p.amount, 0);

@@ -49,42 +49,57 @@ export function PIDashboard() {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    matterService.getMatters({ practiceAreaId: 'pa-pi' })
-      .then((res) => {
-        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted) {
-          const mapped = realMatters.map((m) => ({
-            id: m.id,
-            matterNumber: m.matterNumber,
-            clientName: m.client?.name || m.clientName || m.title,
-            accidentType: m.description || 'Personal Injury Action',
-            dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
-            status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
-            policyLimit: 'Verified Limits',
-            totalMeds: Number(m.budget) || 0,
-            totalLiens: 0,
-            leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
-            isRealDbMatter: true,
-            matterId: m.id,
-          }));
-          setCases(mapped);
-        }
-      })
-      .catch((err) => {
+
+    Promise.all([
+      matterService.getMatters({ practiceAreaId: 'pa-pi' }).catch((err) => {
         console.warn('Could not load PI matters from API:', err?.message);
-        if (isMounted) setCases([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
+        return { matters: [] };
+      }),
+      piService.getDashboardMetrics().catch((err) => {
+        console.warn('Could not load PI metrics:', err?.message);
+        return null;
+      }),
+    ]).then(([res, metricsData]) => {
+      if (!isMounted) return;
+
+      if (metricsData) {
+        setMetrics(metricsData);
+      }
+
+      const realMatters = Array.isArray(res) ? res : (res?.matters || []);
+      const summaries = metricsData?.caseSummaries || [];
+
+      const mapped = realMatters.map((m) => {
+        const summary = summaries.find((s) => s.id === m.id || s.matterNumber === m.matterNumber);
+        const totalMeds = summary?.totalMedicalBills ?? 0;
+        const totalLiens = summary?.totalLiens ?? 0;
+        const solDate = summary?.solDate || (m.statuteOfLimitations ? new Date(m.statuteOfLimitations).toISOString().split('T')[0] : 'Pending Review');
+        const hasInsurance = summary ? summary.hasInsurance : (m.insurancePolicies && m.insurancePolicies.length > 0);
+
+        return {
+          id: m.id,
+          matterNumber: m.matterNumber,
+          clientName: m.client?.name || m.clientName || m.title,
+          accidentType: m.description || 'Personal Injury Action',
+          dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
+          status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
+          policyLimit: hasInsurance ? 'Verified Limits' : 'Pending Insurance',
+          totalMeds,
+          medicalBillsTotal: totalMeds,
+          totalLiens,
+          targetDemand: summary?.targetDemand || null,
+          awaitingInsurance: !hasInsurance,
+          statuteOfLimitations: solDate,
+          leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
+          isRealDbMatter: true,
+          matterId: m.id,
+        };
       });
 
-    piService.getDashboardMetrics()
-      .then((data) => {
-        if (isMounted && data) setMetrics(data);
-      })
-      .catch((err) => {
-        console.warn('Could not load PI metrics:', err?.message);
-      });
+      setCases(mapped);
+    }).finally(() => {
+      if (isMounted) setLoading(false);
+    });
 
     return () => { isMounted = false; };
   }, []);
@@ -93,7 +108,7 @@ export function PIDashboard() {
   const totalCases = metrics?.totalCases !== undefined ? metrics.totalCases : cases.length;
   const activeCases = metrics?.activeCasesCount !== undefined ? metrics.activeCasesCount : cases.filter(c => c.status !== 'Closed').length;
   const pendingRecords = metrics?.pendingRecordsCount !== undefined ? metrics.pendingRecordsCount : cases.filter(c => c.awaitingRecords).length;
-  const pendingInsurance = cases.filter(c => c.awaitingInsurance).length;
+  const pendingInsurance = metrics?.pendingInsuranceCount !== undefined ? metrics.pendingInsuranceCount : cases.filter(c => c.awaitingInsurance).length;
   const demandsInProgress = metrics?.demandsInProgressCount !== undefined ? metrics.demandsInProgressCount : cases.filter(c => c.status === 'Demand In Progress').length;
   const readyForSettlement = metrics?.readyForSettlementCount !== undefined ? metrics.readyForSettlementCount : cases.filter(c => c.status === 'Ready for Settlement').length;
 

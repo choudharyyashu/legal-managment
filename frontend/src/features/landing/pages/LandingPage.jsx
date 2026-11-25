@@ -65,11 +65,11 @@ export function LandingPage() {
     },
     {
       number: '04',
-      title: '4. Billing & CosmoLex Bridge',
-      description: 'Comprehensive financial tracking supporting hourly, flat-fee, and contingency billing models with automated export of approved hours directly into CosmoLex.',
+      title: '4. Billing & Accounting Ledger',
+      description: 'Comprehensive financial tracking supporting hourly, flat-fee, and contingency billing models with native General Ledger and trust accounting.',
       icon: CreditCard,
-      badge: 'Official Accounting Sync',
-      highlights: ['Billable Hours & Expenses', 'Formal Client Invoices', 'CosmoLex Batch Transfer', 'Operating Account Overview'],
+      badge: 'Integrated Ledger',
+      highlights: ['Billable Hours & Expenses', 'Formal Client Invoices', 'General Ledger & Trust', 'Operating Account Overview'],
     },
     {
       number: '05',
@@ -104,7 +104,7 @@ export function LandingPage() {
       title: 'Billing Staff',
       person: 'Billing Director',
       subtitle: 'Billing & Accounting Director',
-      scope: 'Invoice preparation, disbursements, fee accounting, and batch export to CosmoLex ledger.',
+      scope: 'Invoice preparation, disbursements, fee accounting, and double-entry ledger management.',
     },
     {
       title: 'Practice Supervisor',
@@ -552,13 +552,13 @@ export function LandingPage() {
             <div className="space-y-3 max-w-2xl text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#A4432B]/20 text-[#A4432B] text-xs font-bold uppercase tracking-wider">
                 <Database className="w-3.5 h-3.5" />
-                <span>CosmoLex Accounting Bridge</span>
+                <span>Integrated Legal Accounting &amp; Ledger</span>
               </div>
               <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#F5F0E5]">
-                CosmoLex Remains the Firm's Official Accounting System
+                Independent Double-Entry General Ledger &amp; Accounting Architecture
               </h2>
               <p className="text-xs sm:text-sm text-[#B8C0C4] leading-relaxed">
-                All approved billable hours and disbursements pass through audit approval before synchronization into CosmoLex general and client trust ledgers, keeping legal timekeeping and firm accounting perfectly aligned.
+                Comprehensive native trust accounting, Utah RPC 1.15 three-way reconciliation, and General Ledger tracking with optional synchronization bridges for legacy accounting systems.
               </p>
             </div>
 
