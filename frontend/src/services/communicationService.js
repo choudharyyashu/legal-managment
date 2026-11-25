@@ -2,7 +2,7 @@ import { apiClient } from './apiClient';
 
 export const communicationService = {
   async getCommunications(params = {}) {
-    const res = await apiClient.get('/communications', { params });
+    const res = await apiClient.get('/communications', params);
     return res?.data;
   },
 

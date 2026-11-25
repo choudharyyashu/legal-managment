@@ -24,6 +24,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { useMatters } from '../../context/MatterContext';
+import { matchesPracticeArea } from '../../data/practiceAreas';
 
 export function PersistentMatterBar() {
   const location = useLocation();
@@ -63,15 +64,15 @@ export function PersistentMatterBar() {
     );
   });
 
-  const isPI = activeMatter?.practiceAreaName?.toLowerCase().includes('personal injury') ||
-    activeMatter?.practiceAreaName?.toLowerCase().includes('wrongful death') ||
-    activeMatter?.practiceAreaId === 'pa-pi';
+  const isPI = matchesPracticeArea(activeMatter?.practiceAreaId, 'pa-pi') ||
+    activeMatter?.practiceAreaName?.toLowerCase().includes('personal injury') ||
+    activeMatter?.practiceAreaName?.toLowerCase().includes('wrongful death');
 
-  const isBankruptcy = activeMatter?.practiceAreaName?.toLowerCase().includes('bankruptcy') ||
-    activeMatter?.practiceAreaId === 'pa-bankruptcy';
+  const isBankruptcy = matchesPracticeArea(activeMatter?.practiceAreaId, 'pa-bk') ||
+    activeMatter?.practiceAreaName?.toLowerCase().includes('bankruptcy');
 
-  const isImmigration = activeMatter?.practiceAreaName?.toLowerCase().includes('immigration') ||
-    activeMatter?.practiceAreaId === 'pa-immigration';
+  const isImmigration = matchesPracticeArea(activeMatter?.practiceAreaId, 'pa-imm') ||
+    activeMatter?.practiceAreaName?.toLowerCase().includes('immigration');
 
   // Navigation items scoped to the active matter context
   const contextualNavItems = activeMatter ? [

@@ -1,4 +1,10 @@
-export type ConflictStatus = 'Not Started' | 'In Review' | 'Cleared' | 'Conflict Identified' | 'Waiver Obtained';
+export type ConflictStatus =
+  | 'Not Started'
+  | 'In Review'
+  | 'Cleared'
+  | 'Review Completed'
+  | 'Conflict Identified'
+  | 'Waiver Obtained';
 
 export interface IntakeResponse {
   id: string;
@@ -20,7 +26,11 @@ export interface IntakeResponse {
   conflictNotes?: string | null;
   convertedToClient: boolean;
   convertedClientId?: string | null;
+  convertedClientNumber?: string | null;
+  convertedClientName?: string | null;
   convertedMatterId?: string | null;
+  convertedMatterNumber?: string | null;
+  convertedMatterTitle?: string | null;
   createdAt: string;
   updatedAt: string;
 }

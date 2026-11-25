@@ -1,6 +1,11 @@
 import { apiClient } from './apiClient';
 
 export const userService = {
+  async getDirectory() {
+    const res = await apiClient.get('/users/directory');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
   async getUsers(params = {}) {
     const res = await apiClient.get('/users', params);
     const users = Array.isArray(res?.data) ? res.data : (res?.data?.users || []);

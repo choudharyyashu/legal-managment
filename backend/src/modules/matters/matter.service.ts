@@ -10,6 +10,8 @@ import {
 } from './matter.validation.js';
 import { MatterResponse, MatterStaffResponse } from './matter.types.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { normalizePracticeAreaId } from '../../utils/practiceAreaCanonical.js';
+import { isMissingTableError } from '../related-parties/related-party.service.js';
 
 export class MatterService {
   /**
@@ -230,7 +232,7 @@ export class MatterService {
     const where: any = {};
 
     if (clientId) where.clientId = clientId;
-    if (practiceAreaId) where.practiceAreaId = practiceAreaId;
+    if (practiceAreaId) where.practiceAreaId = normalizePracticeAreaId(practiceAreaId) || practiceAreaId;
     if (responsibleAttorneyId) where.responsibleAttorneyId = responsibleAttorneyId;
     if (status) where.status = status;
     if (billingType) where.billingType = billingType;
@@ -396,9 +398,10 @@ export class MatterService {
       );
     }
 
-    // 2. Verify Practice Area
+    // 2. Verify Practice Area (normalizing legacy aliases)
+    const canonicalPracticeAreaId = normalizePracticeAreaId(input.practiceAreaId) || input.practiceAreaId;
     const practiceArea = await prisma.practiceArea.findUnique({
-      where: { id: input.practiceAreaId },
+      where: { id: canonicalPracticeAreaId },
       select: { id: true, name: true, code: true, brandColor: true },
     });
 
@@ -558,9 +561,13 @@ export class MatterService {
   ): Promise<MatterResponse> {
     const existing = await this.getMatterByIdOrNumber(idOrNumber, updaterUser);
 
+    const normalizedUpdatePracticeAreaId = input.practiceAreaId
+      ? normalizePracticeAreaId(input.practiceAreaId) || input.practiceAreaId
+      : undefined;
+
     // Verify practiceArea if changing
-    if (input.practiceAreaId && input.practiceAreaId !== existing.practiceAreaId) {
-      const pa = await prisma.practiceArea.findUnique({ where: { id: input.practiceAreaId } });
+    if (normalizedUpdatePracticeAreaId && normalizedUpdatePracticeAreaId !== existing.practiceAreaId) {
+      const pa = await prisma.practiceArea.findUnique({ where: { id: normalizedUpdatePracticeAreaId } });
       if (!pa) throw AppError.badRequest('Invalid practice area ID.', 'INVALID_PRACTICE_AREA');
     }
 
@@ -632,7 +639,7 @@ export class MatterService {
       where: { id: existing.id },
       data: {
         ...(input.title !== undefined ? { title: input.title.trim() } : {}),
-        ...(input.practiceAreaId !== undefined ? { practiceAreaId: input.practiceAreaId } : {}),
+        ...(normalizedUpdatePracticeAreaId !== undefined ? { practiceAreaId: normalizedUpdatePracticeAreaId } : {}),
         ...(input.responsibleAttorneyId !== undefined ? { responsibleAttorneyId: input.responsibleAttorneyId } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.billingType !== undefined ? { billingType: input.billingType } : {}),
@@ -865,9 +872,22 @@ export class MatterService {
    */
   static async getOverviewPanels(matterIdOrNumber: string, currentUser: AuthenticatedUser) {
     const matter = await this.getMatterByIdOrNumber(matterIdOrNumber, currentUser);
-    const record: any = await (prisma as any).matterOverviewPanels.findUnique({
-      where: { matterId: matter.id },
-    });
+    const delegate = (prisma as any).matterOverviewPanels;
+    if (!delegate?.findUnique) {
+      return null;
+    }
+
+    let record: any = null;
+    try {
+      record = await delegate.findUnique({
+        where: { matterId: matter.id },
+      });
+    } catch (err) {
+      if (isMissingTableError(err, 'matter_overview_panels')) {
+        return null;
+      }
+      throw err;
+    }
 
     if (!record || !record.panelsData) {
       return null;
@@ -891,12 +911,31 @@ export class MatterService {
   ) {
     const matter = await this.getMatterByIdOrNumber(matterIdOrNumber, currentUser);
     const serialized = typeof panelsData === 'string' ? panelsData : JSON.stringify(panelsData);
+    const delegate = (prisma as any).matterOverviewPanels;
+    if (!delegate?.upsert) {
+      throw new AppError(
+        "Database table 'matter_overview_panels' requires approved migration before overview panels can be saved.",
+        503,
+        'MIGRATION_PENDING'
+      );
+    }
 
-    await (prisma as any).matterOverviewPanels.upsert({
-      where: { matterId: matter.id },
-      update: { panelsData: serialized },
-      create: { matterId: matter.id, panelsData: serialized },
-    });
+    try {
+      await delegate.upsert({
+        where: { matterId: matter.id },
+        update: { panelsData: serialized },
+        create: { matterId: matter.id, panelsData: serialized },
+      });
+    } catch (err) {
+      if (isMissingTableError(err, 'matter_overview_panels')) {
+        throw new AppError(
+          "Database table 'matter_overview_panels' does not exist in live database yet. Please apply the approved migration SQL.",
+          503,
+          'MIGRATION_PENDING'
+        );
+      }
+      throw err;
+    }
 
     await createAuditLog({
       userId: currentUser.id,

@@ -3,6 +3,18 @@ import { UserService } from './user.service.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
 
 export class UserController {
+  static async getDirectory(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await UserService.getDirectory();
+      res.status(200).json({
+        success: true,
+        data: users,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await UserService.getUsers(req.query as any);

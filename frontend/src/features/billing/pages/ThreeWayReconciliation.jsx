@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { trustService } from '../../../services/trustService';
 import {
   ShieldCheck,
   Landmark,
@@ -36,75 +37,74 @@ export function ThreeWayReconciliation() {
   const [isReconciling, setIsReconciling] = useState(false);
 
   // Pillar 1: Bank Account Figures
-  const bankStatementBalance = 74278.0;
-  const depositsInTransit = 1440.0;
-  const outstandingChecks = 1440.0;
-  const adjustedBankBalance = bankStatementBalance + depositsInTransit - outstandingChecks;
+  // Pillar 1: Bank Account Figures (fetched from backend when available)
+  const [bankStatementBalance, setBankStatementBalance] = useState(null);
+  const [depositsInTransit, setDepositsInTransit] = useState(null);
+  const [outstandingChecks, setOutstandingChecks] = useState(null);
+  const adjustedBankBalance =
+    bankStatementBalance !== null && depositsInTransit !== null && outstandingChecks !== null
+? bankStatementBalance + depositsInTransit - outstandingChecks
+: null;
 
-  // Pillar 2: General Ledger Trust Balance (Account #2100)
-  const glTrustBalance = 74278.0;
+  // Pillar 2: General Ledger Trust Balance (Account #2100) – fetched when endpoint exists
+  const [glTrustBalance, setGlTrustBalance] = useState<number | null>(null);
+  // Determine if GL data was successfully retrieved
+  const glDataAvailable = glTrustBalance !== null;
 
-  // Pillar 3: Client Sub-Ledgers
-  const [clientLedgers, setClientLedgers] = useState([
-    {
-      id: 'TR-1001',
-      clientId: 'CLI-1001',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      balance: 25000.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1002',
-      clientId: 'CLI-1002',
-      clientName: 'Dr. Evelyn Martinez',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      balance: 12500.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1003',
-      clientId: 'CLI-1008',
-      clientName: 'Elena Rostova',
-      matterNumber: '26-IMM-0012',
-      matterTitle: 'Elena Rostova: Marriage-Based Adjustment of Status (I-130 / I-485)',
-      balance: 1440.0,
-      verified: true,
-      lastAudit: '2026-11-11',
-    },
-    {
-      id: 'TR-1004',
-      clientId: 'CLI-1009',
-      clientName: 'Rachel Lynn Walker',
-      matterNumber: '26-25410-JTM',
-      matterTitle: 'Rachel Lynn Walker: Chapter 7 Consumer Debt Liquidation',
-      balance: 338.0,
-      verified: true,
-      lastAudit: '2026-11-12',
-    },
-    {
-      id: 'TR-1005',
-      clientId: 'CLI-1003',
-      clientName: 'Apex Horizon Real Estate Group',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      balance: 35000.0,
-      verified: true,
-      lastAudit: '2026-11-09',
-    },
-  ]);
+  // Pillar 3: Client Sub‑Ledgers – loaded from trust service
+  const [clientLedgers, setClientLedgers] = useState([]);
+
+  // Load data on component mount
+  useEffect(() => {
+    // Load client ledgers
+    trustService
+      .getLedgers({ limit: 100 })
+      .then((res) => {
+        if (Array.isArray(res?.ledgers)) setClientLedgers(res.ledgers);
+      })
+      .catch((err) => {
+        console.warn('Could not load client ledgers:', err?.message);
+        setClientLedgers([]);
+      });
+
+    // Attempt to load bank statement data – placeholder endpoint (may not exist)
+    // If the endpoint is missing, we simply leave the values null and show an empty state.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    fetch('/api/bank/statement')
+      .then((r) => r.json())
+      .then((data) => {
+        setBankStatementBalance(data?.balance ?? null);
+        setDepositsInTransit(data?.depositsInTransit ?? null);
+        setOutstandingChecks(data?.outstandingChecks ?? null);
+      })
+      .catch(() => {
+        // No bank statement endpoint – keep null
+        setBankStatementBalance(null);
+        setDepositsInTransit(null);
+        setOutstandingChecks(null);
+      });
+
+    // Attempt to load GL trust balance – placeholder endpoint
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    fetch('/api/trust/gl-balance')
+      .then((r) => r.json())
+      .then((data) => setGlTrustBalance(data?.balance ?? null))
+      .catch(() => setGlTrustBalance(null));
+  }, []);
+
 
   const totalClientLedgersBalance = clientLedgers.reduce((sum, item) => sum + item.balance, 0);
 
   // Variance Calculation
-  const variance1 = Math.abs(adjustedBankBalance - glTrustBalance);
-  const variance2 = Math.abs(glTrustBalance - totalClientLedgersBalance);
-  const totalVariance = variance1 + variance2;
-  const isReconciled = totalVariance === 0;
+  // Safe variance calculations – handle missing data gracefully
+  const variance1 = adjustedBankBalance !== null && glTrustBalance !== null
+    ? Math.abs(adjustedBankBalance - glTrustBalance)
+    : null;
+  const variance2 = glTrustBalance !== null
+    ? Math.abs(glTrustBalance - totalClientLedgersBalance)
+    : null;
+  const totalVariance = (variance1 !== null && variance2 !== null) ? variance1 + variance2 : null;
+  const isReconciled = totalVariance === 0 && variance1 !== null && variance2 !== null;
 
   // Uncleared items for Tab 2
   const [unclearedItems, setUnclearedItems] = useState([
@@ -131,20 +131,30 @@ export function ThreeWayReconciliation() {
   const handleRunReconcile = async () => {
     setIsReconciling(true);
     try {
-      await reconciliationService.submit({
+      const result = await reconciliationService.submit({
         reconciliationMonth: selectedMonth,
-        bankStatementBalance,
-        depositsInTransit,
-        outstandingChecks,
+        bankStatementBalance: bankStatementBalance ?? 0,
+        depositsInTransit: depositsInTransit ?? 0,
+        outstandingChecks: outstandingChecks ?? 0,
       });
-      addToast(
-        `Three-Way Reconciliation verified via API: Adjusted Bank = General Ledger = Client Ledgers ($${adjustedBankBalance.toLocaleString()}). Complies with Utah Rule 1.15.`,
-        'success'
-      );
+      // Report actual reconciliation outcome — never claim "balanced" unless API confirms it
+      if (result?.isBalanced) {
+        addToast(
+          `Three-Way Reconciliation confirmed balanced for ${selectedMonth}. All three pillars match (Utah RPC 1.15).`,
+          'success'
+        );
+      } else if (result) {
+        addToast(
+          `Reconciliation submitted for ${selectedMonth}. Status: ${result.isBalanced === false ? 'Variance detected — review required.' : 'Incomplete — GL data may be missing.'}`,
+          'warning'
+        );
+      } else {
+        addToast(`Reconciliation submitted for ${selectedMonth}. Check audit history for results.`, 'info');
+      }
     } catch (err) {
       addToast(
-        `Three-Way Reconciliation verified (Local audit: $${adjustedBankBalance.toLocaleString()}).`,
-        'info'
+        `Could not submit reconciliation to server. Verify your inputs and try again.`,
+        'error'
       );
     } finally {
       setIsReconciling(false);
@@ -182,7 +192,7 @@ export function ThreeWayReconciliation() {
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 2: GENERAL LEDGER FIDUCIARY LIABILITY (CONTROL ACCOUNT)"`,
-      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glTrustBalance.toFixed(2)}"`,
+      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 3: ITEMIZATION OF INDIVIDUAL CLIENT TRUST SUB-LEDGERS"`,
@@ -195,15 +205,12 @@ export function ThreeWayReconciliation() {
       `"=========================================================================================="`,
       `"MANDATORY THREE-WAY AUDIT VARIANCE SUMMARY"`,
       `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance.toFixed(2)}"`,
-      `"Pillar 2: General Ledger Account #2100 Balance","${glTrustBalance.toFixed(2)}"`,
+      `"Pillar 2: General Ledger Account #2100 Balance","${glDataAvailable ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `"Pillar 3: Sum of Individual Client Sub-Ledgers","${totalClientLedgersBalance.toFixed(2)}"`,
       `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance.toFixed(2)}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : 'ATTENTION: VARIANCE DETECTED'}"`,
       `""`,
-      `"OFFICIAL CERTIFICATION UNDER PENALTY OF UNSWORN DECLARATION:"`,
-      `"I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing"`,
-      `"monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability,"`,
-      `"and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15."`,
-      `"Certifying Managing Partner: Eleanor Heugly, Esq. | Utah State Bar License #UT-8819 | Firm: Heugly & Bludworth, LLC"`
+      `"RECONCILIATION WORKSHEET NOTE (UTAH RPC 1.15 REFERENCE):","${glDataAvailable ? (isReconciled ? 'Computed trust figures show $0.00 variance in current system worksheet; subject to supervising attorney and bank statement verification.' : 'Reconciliation worksheet shows a computed variance of $' + totalVariance.toFixed(2) + '; review required.') : 'General Ledger data is unavailable; three-way reconciliation worksheet is incomplete.'}"`,
+      `"Reviewed By (Supervising Attorney / CPA): Pending Sign-off"`
     ];
 
     const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -279,14 +286,14 @@ export function ThreeWayReconciliation() {
           </div>
 
           <div class="box-summary">
-            <h3>THREE-WAY RECONCILIATION WORKSHEET SUMMARY</h3>
+            <h3>{!glDataAvailable ? 'RECONCILIATION WORKSHEET: GL DATA UNAVAILABLE' : isReconciled ? 'THREE-WAY RECONCILIATION WORKSHEET (0 VARIANCE IN FIGURES)' : 'THREE-WAY RECONCILIATION WORKSHEET (VARIANCE DETECTED)'}</h3>
             <div class="pillars-summary">
               <div>Pillar 1 (Adjusted Bank): $${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div>= Pillar 2 (General Ledger #2100): $${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              <div>= Pillar 2 (General Ledger #2100): ${glDataAvailable && glTrustBalance !== null ? `$${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</div>
               <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             </div>
             <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Calculated Variance: $${Math.abs(adjustedBankBalance - glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })} — Subject to manual bank statement and partner sign-off.
+              Calculated Variance: ${glDataAvailable && glTrustBalance !== null ? `$${Math.abs(adjustedBankBalance - glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'} — Subject to manual bank statement and partner sign-off.
             </div>
           </div>
 
@@ -483,18 +490,16 @@ export function ThreeWayReconciliation() {
               Trust Liability Book Balance
             </span>
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-[#667085] space-y-1">
-              <div className="flex justify-between">
-                <span>Opening Balance:</span>
-                <span className="font-semibold text-[#06244B]">$68,500.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>(+) Receipts / Retainers YTD:</span>
-                <span className="font-semibold text-emerald-700">+$24,278.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>(-) Earned Disbursals YTD:</span>
-                <span className="font-semibold text-rose-700">-$18,500.00</span>
-              </div>
+              {glTrustBalance !== null ? (
+                <div className="flex justify-between">
+                  <span>GL Account #1010 Net Balance:</span>
+                  <span className="font-semibold text-[#06244B]">{formatCurrency(glTrustBalance)}</span>
+                </div>
+              ) : (
+                <div className="text-amber-700 font-semibold">
+                  GL entries for account #1010 not available. Reconciliation is incomplete.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -536,35 +541,57 @@ export function ThreeWayReconciliation() {
 
       {/* Variance & Utah Rule 1.15 Audit Status Card */}
       <div className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-        isReconciled ? 'bg-emerald-50/80 border-emerald-300' : 'bg-rose-50 border-rose-300'
+        totalVariance === null
+          ? 'bg-amber-50 border-amber-300'
+          : isReconciled ? 'bg-emerald-50/80 border-emerald-300' : 'bg-rose-50 border-rose-300'
       }`}>
         <div className="flex items-start gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-            isReconciled ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+            totalVariance === null
+              ? 'bg-amber-500 text-white'
+              : isReconciled ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
           }`}>
-            <CheckCircle2 className="w-6 h-6" />
+            {totalVariance === null ? <AlertTriangle className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-sm text-[#06244B]">
-                {isReconciled ? 'Three-Way Reconciliation: Zero Discrepancy' : 'Reconciliation Discrepancy Detected'}
+                {totalVariance === null
+                  ? 'Reconciliation Incomplete — General Ledger Data Unavailable'
+                  : isReconciled
+                    ? 'Three-Way Reconciliation: Zero Discrepancy'
+                    : 'Reconciliation Discrepancy Detected'}
               </h4>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                isReconciled ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
-              }`}>
-                Variance: {formatCurrency(totalVariance)}
-              </span>
+              {totalVariance !== null && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                  isReconciled ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
+                }`}>
+                  Variance: {formatCurrency(totalVariance)}
+                </span>
+              )}
             </div>
             <p className="text-xs text-[#667085] mt-0.5">
-              Pillar 1 (Bank: {formatCurrency(adjustedBankBalance)}) = Pillar 2 (GL: {formatCurrency(glTrustBalance)}) = Pillar 3 (Client Sub-Ledgers: {formatCurrency(totalClientLedgersBalance)}). All balances verified by Managing Partner.
+              {totalVariance === null
+                ? 'GL entries for account #1010 are missing. A three-way reconciliation cannot be certified without independent GL data. Post journal entries to account #1010 to complete this reconciliation.'
+                : `Pillar 1 (Bank: ${formatCurrency(adjustedBankBalance)}) | Pillar 2 (GL: ${formatCurrency(glTrustBalance ?? 0)}) | Pillar 3 (Client Sub-Ledgers: ${formatCurrency(totalClientLedgersBalance)}). ${isReconciled ? 'All balances verified.' : 'Review variance before certifying.'}`}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded border border-emerald-300">
-            Utah RPC 1.15 Validated ✓
-          </span>
+          {isReconciled ? (
+            <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded border border-emerald-300">
+              Utah RPC 1.15 Validated ✓
+            </span>
+          ) : totalVariance === null ? (
+            <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-3 py-1.5 rounded border border-amber-300">
+              Incomplete — GL Required
+            </span>
+          ) : (
+            <span className="text-xs font-semibold text-rose-800 bg-rose-100 px-3 py-1.5 rounded border border-rose-300">
+              Variance Detected — Not Certified
+            </span>
+          )}
         </div>
       </div>
 

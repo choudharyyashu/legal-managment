@@ -39,6 +39,7 @@ import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
 import { calendarService } from '../../../services/calendarService';
 import { reportService } from '../../../services/reportService';
 import { documentService } from '../../../services/documentService';
+import { communicationService } from '../../../services/communicationService';
 import { formatDate } from '../../../utils/formatDate';
 import { EndToEndDemoWizard } from '../../intake/components/EndToEndDemoWizard';
 
@@ -52,23 +53,10 @@ export function Dashboard() {
   const { timeEntries, approveTimeEntry, rejectTimeEntry } = useTime();
   const { addToast } = useToast();
 
-  const [dashboardMetrics, setDashboardMetrics] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_dashboard_metrics');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [recentDocumentsCount, setRecentDocumentsCount] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_recent_docs_count');
-      return raw ? Number(raw) : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [recentDocumentsCount, setRecentDocumentsCount] = useState(0);
 
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -83,14 +71,20 @@ export function Dashboard() {
       .then((data) => {
         if (isMounted && data) {
           setDashboardMetrics(data);
-          try {
-            localStorage.setItem('hb_cached_dashboard_metrics', JSON.stringify(data));
-          } catch {}
         }
       })
       .catch((err) => {
         console.warn('Could not fetch aggregated report metrics:', err?.message);
       });
+
+    communicationService.getCommunications({ limit: 4 })
+      .then((data) => {
+        if (isMounted) {
+          const rows = Array.isArray(data) ? data : (data?.communications || []);
+          setRecentMessages(rows.slice(0, 4));
+        }
+      })
+      .catch(() => {});
 
     calendarService.getEvents({ limit: 4 })
       .then((events) => {
@@ -164,7 +158,7 @@ export function Dashboard() {
         title: `Intake: ${i.conflictStatus || 'In Review'}`,
         description: `Client ${intakeClientLabel} - Practice Area: ${i.practiceAreaName || 'General'}`,
         date: i.createdAt || 'Recently',
-        color: i.conflictStatus === 'Cleared' ? 'bg-[#287A55]' : 'bg-[#A4432B]',
+        color: ['Cleared', 'Review Completed', 'Waiver Obtained'].includes(i.conflictStatus) ? 'bg-[#287A55]' : 'bg-[#A4432B]',
       });
     });
     return activities;
@@ -572,9 +566,24 @@ export function Dashboard() {
               </button>
             </div>
 
-            <div className="p-4 text-center text-xs text-[#667085]">
-              No unread client communications.
-            </div>
+            {recentMessages.length === 0 ? (
+              <div className="p-4 text-center text-xs text-[#667085]">
+                No logged client communications yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#D9D6CF]/50 text-xs">
+                {recentMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    onClick={() => navigate('/communications')}
+                    className="py-2.5 cursor-pointer hover:bg-[#FAF8F5] rounded px-1"
+                  >
+                    <p className="font-semibold text-[#06244B] truncate">{msg.subject}</p>
+                    <p className="text-[11px] text-[#667085] truncate">{msg.sender} &bull; {msg.type}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Recent Activity Log */}

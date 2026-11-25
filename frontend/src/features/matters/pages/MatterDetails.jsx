@@ -54,199 +54,27 @@ import { formatDate } from '../../../utils/formatDate';
 import { documentService } from '../../../services/documentService';
 import { matterService } from '../../../services/matterService';
 import { calendarService } from '../../../services/calendarService';
+import { communicationService } from '../../../services/communicationService';
 import { StageProgressBar } from '../components/StageProgressBar';
 import { RelatedPartiesTab } from '../components/RelatedPartiesTab';
 import { RelativeDeadlineCalculator } from '../../calendar/components/RelativeDeadlineCalculator';
 import { DocumentRequestModal } from '../components/DocumentRequestModal';
 
-const buildInitialNextActions = (matter) => {
-  if (!matter) return [];
-  const leadAttorney = matter.responsibleAttorneyName || 'Assigned Counsel';
-  const staffMember = matter.assignedStaffNames?.[0] || 'Assigned Staff';
-  const clientName = matter.clientName || 'Client';
-
-  return [
-    {
-      id: `${matter.id}-na-1`,
-      title: `Serve Supplemental Initial Disclosures (${matter.matterNumber})`,
-      description: `Compile updated damages ledger, custodian list, and exhibits for ${clientName} under Utah R. Civ. P. 26.`,
-      assignedUser: leadAttorney,
-      priority: 'High',
-      dueDate: '2026-11-18',
-      status: 'In Progress',
-    },
-    {
-      id: `${matter.id}-na-2`,
-      title: 'Confirm Witness Availability for Deposition Schedule',
-      description: 'Coordinate date windows with opposing counsel and court reporter before Rule 16 discovery cutoff.',
-      assignedUser: staffMember,
-      priority: 'Urgent',
-      dueDate: '2026-11-15',
-      status: 'Pending',
-    },
-    {
-      id: `${matter.id}-na-3`,
-      title: 'Verify Conflict Screening & Engagement Retainer Ledger',
-      description: 'Audit trust balance coverage ahead of scheduled pre-trial conference and expert retention.',
-      assignedUser: staffMember,
-      priority: 'Medium',
-      dueDate: '2026-11-10',
-      status: 'Completed',
-    },
-  ];
-};
-
-const buildInitialMissingInfo = (matter) => {
-  if (!matter) return [];
-  const clientName = matter.clientName || 'Client';
-  return [
-    {
-      id: `${matter.id}-mi-1`,
-      fieldOrDocument: 'Executed Custodian Preservation Acknowledgment',
-      reasonRequired: 'Required to establish litigation-hold chain of custody before ESI production.',
-      requestedFrom: `${clientName} (General Counsel)`,
-      requestDate: '2026-11-01',
-      status: 'Missing',
-      followUpDate: '2026-11-16',
-    },
-    {
-      id: `${matter.id}-mi-2`,
-      fieldOrDocument: '2024–2025 Audited Financial & Tax Schedules',
-      reasonRequired: 'Needed by forensic damages expert to verify lost-profits baseline calculations.',
-      requestedFrom: `${clientName} (CPA / Accounting)`,
-      requestDate: '2026-10-26',
-      status: 'Follow-up Sent',
-      followUpDate: '2026-11-14',
-    },
-    {
-      id: `${matter.id}-mi-3`,
-      fieldOrDocument: 'Certified Policy Declarations & Endorsements',
-      reasonRequired: 'Confirm applicable liability and excess umbrella coverage limits.',
-      requestedFrom: 'Opposing Insurance Carrier / Broker',
-      requestDate: '2026-10-18',
-      status: 'Received',
-      followUpDate: '2026-10-29',
-    },
-  ];
-};
-
-const buildInitialUnresolvedRequests = (matter) => {
-  if (!matter) return [];
-  return [
-    {
-      id: `${matter.id}-ur-1`,
-      title: 'Third-Party Subpoena Compliance Return (Records Custodian)',
-      category: 'Third-Party Evidence',
-      requestedFrom: 'Intermountain Telemetry Corp.',
-      requestDate: '2026-10-15',
-      dueDate: '2026-11-05',
-      status: 'Overdue',
-      followUpNote: 'First deficiency reminder sent Nov 6; escalate to subpoena meet-and-confer.',
-    },
-    {
-      id: `${matter.id}-ur-2`,
-      title: 'Stipulated Protective Order Signature Page',
-      category: 'Opposing Counsel Coordination',
-      requestedFrom: 'Opposing Counsel (R. Sterling, Esq.)',
-      requestDate: '2026-11-03',
-      dueDate: '2026-11-19',
-      status: 'Pending',
-      followUpNote: 'Awaiting redline sign-off prior to e-filing.',
-    },
-    {
-      id: `${matter.id}-ur-3`,
-      title: 'Certified Court Hearing Audio & Minute Entry',
-      category: 'Court Clerk Request',
-      requestedFrom: matter.courtName || 'District Court Clerk',
-      requestDate: '2026-10-20',
-      dueDate: '2026-11-02',
-      status: 'Received',
-      followUpNote: 'Transcript audio received; awaiting final verification.',
-    },
-    {
-      id: `${matter.id}-ur-4`,
-      title: 'Signed Engagement Fee Addendum & Retainer Top-Up',
-      category: 'Client Administration',
-      requestedFrom: matter.clientName || 'Client',
-      requestDate: '2026-10-10',
-      dueDate: '2026-10-22',
-      status: 'Resolved',
-      followUpNote: 'Executed addendum archived and retainer posted.',
-    },
-  ];
-};
-
-const buildInitialApprovals = (matter) => {
-  if (!matter) return [];
-  const attorney = matter.responsibleAttorneyName || 'Assigned Counsel';
-  const staff = matter.assignedStaffNames?.[0] || 'Assigned Staff';
-  return [
-    {
-      id: `${matter.id}-ap-1`,
-      itemName: `Draft First Amended Pleading & Exhibit Index (${matter.matterNumber})`,
-      itemType: 'Court Pleading Draft',
-      submittedBy: staff,
-      submissionDate: '2026-11-10',
-      assignedAttorney: attorney,
-      status: 'Awaiting Review',
-      summary: 'Updated factual allegations and attached Exhibits A–D for attorney review before filing.',
-      reviewNotes: '',
-    },
-    {
-      id: `${matter.id}-ap-2`,
-      itemName: 'Written Discovery Objections & Privilege Log Draft',
-      itemType: 'Discovery Response',
-      submittedBy: attorney,
-      submissionDate: '2026-11-09',
-      assignedAttorney: attorney,
-      status: 'In Review',
-      summary: 'Contains 14 privilege log entries under Utah RPC 1.6 and Rule 26(b)(5) requiring lead counsel clearance.',
-      reviewNotes: 'Confirm Bates range BATES-0412 to BATES-0438 redaction scope.',
-    },
-    {
-      id: `${matter.id}-ap-3`,
-      itemName: 'Pre-Filing Settlement Demand & Damages Schedule',
-      itemType: 'Demand / Settlement Letter',
-      submittedBy: staff,
-      submissionDate: '2026-11-06',
-      assignedAttorney: attorney,
-      status: 'Changes Requested',
-      summary: 'Draft demand package including economic loss tables and statutory fee breakdown.',
-      reviewNotes: 'Update pre-judgment interest calculation through November 15 before final approval.',
-    },
-  ];
-};
-
 const buildRelatedCases = (matter, allMatters = []) => {
-  if (!matter || !Array.isArray(allMatters)) return [];
-  const candidates = allMatters.filter((m) => m.id !== matter.id);
-  const relationshipConfigs = [
-    { type: 'Related Case', note: 'Shared client & overlapping evidentiary witnesses; separate billing and deadlines.' },
-    { type: 'Consolidated Case', note: 'Coordinated discovery schedule only; independent trust ledger and permissions.' },
-    { type: 'Lead Case', note: 'Primary docket anchor for procedural stipulations; separate case number.' },
-    { type: 'Associated Proceeding', note: 'Parallel administrative/ancillary proceeding linked for conflict tracking.' },
-  ];
-
-  // Prioritize same-client matters first, then same court/practice area
-  const sortedCandidates = [...candidates].sort((a, b) => {
-    const aSameClient = a.clientId === matter.clientId ? 1 : 0;
-    const bSameClient = b.clientId === matter.clientId ? 1 : 0;
-    if (aSameClient !== bSameClient) return bSameClient - aSameClient;
-    const aSameCourt = a.courtName === matter.courtName ? 1 : 0;
-    const bSameCourt = b.courtName === matter.courtName ? 1 : 0;
-    return bSameCourt - aSameCourt;
-  });
-
-  return sortedCandidates.slice(0, 4).map((rel, idx) => ({
-    id: `${matter.id}-rel-${rel.id}`,
-    relatedMatterId: rel.id,
-    matterName: rel.title,
-    caseNumber: rel.matterNumber,
-    relationshipType: relationshipConfigs[idx % relationshipConfigs.length].type,
-    court: rel.courtName || 'N/A',
-    currentStatus: rel.status,
-    isolationNote: relationshipConfigs[idx % relationshipConfigs.length].note,
-  }));
+  if (!matter || !Array.isArray(allMatters) || !matter.clientId) return [];
+  // Strictly isolated to same-client matters only (never show other clients' matters)
+  return allMatters
+    .filter((m) => m.id !== matter.id && m.clientId === matter.clientId)
+    .map((rel) => ({
+      id: `${matter.id}-rel-${rel.id}`,
+      relatedMatterId: rel.id,
+      matterName: rel.title,
+      caseNumber: rel.matterNumber,
+      relationshipType: 'Same Client Matter',
+      court: rel.courtName || 'N/A',
+      currentStatus: rel.status,
+      isolationNote: 'Shared client entity only; separate billing, deadlines, and matter scope.',
+    }));
 };
 
 export function MatterDetails() {
@@ -273,36 +101,44 @@ export function MatterDetails() {
   const [newTaskPriority, setNewTaskPriority] = useState('High');
 
   const [fetchedMatter, setFetchedMatter] = useState(null);
+  const [loadingMatter, setLoadingMatter] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
+    setFetchedMatter(null);
     if (matterId && !matters.some(m => m.id === matterId || m.matterNumber === matterId)) {
-      import('../../../services/matterService').then(({ matterService }) => {
-        matterService.getMatterById(matterId).then(res => {
+      setLoadingMatter(true);
+      matterService.getMatterById(matterId)
+        .then(res => {
           if (isMounted && res) setFetchedMatter(res);
-        }).catch(() => {});
-      });
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (isMounted) setLoadingMatter(false);
+        });
     }
     return () => { isMounted = false; };
   }, [matterId, matters]);
 
-  const matter = matters.find(m => m.id === matterId || m.matterNumber === matterId) || fetchedMatter || matters[0];
+  const matter = matters.find(m => m.id === matterId || m.matterNumber === matterId) || fetchedMatter;
 
-  // Matter-scoped command panels state (reset cleanly when switching matters via Related Cases)
-  const [nextActions, setNextActions] = useState(() => buildInitialNextActions(matter));
-  const [missingInfoItems, setMissingInfoItems] = useState(() => buildInitialMissingInfo(matter));
-  const [unresolvedRequests, setUnresolvedRequests] = useState(() => buildInitialUnresolvedRequests(matter));
-  const [approvalItems, setApprovalItems] = useState(() => buildInitialApprovals(matter));
+  // Matter-scoped command panels state (empty by default until persisted DB items exist)
+  const [nextActions, setNextActions] = useState([]);
+  const [missingInfoItems, setMissingInfoItems] = useState([]);
+  const [unresolvedRequests, setUnresolvedRequests] = useState([]);
+  const [approvalItems, setApprovalItems] = useState([]);
   const [matterStage, setMatterStage] = useState(() => matter?.stage || 'Intake & Conflicts');
+
+  const todayIso = new Date().toISOString().split('T')[0];
 
   // Panel filters & modal states
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const [newActionForm, setNewActionForm] = useState({
     title: '',
     description: '',
-    assignedUser: 'Marcus Vance',
+    assignedUser: '',
     priority: 'High',
-    dueDate: '2026-11-22',
+    dueDate: todayIso,
   });
   const [missingFilter, setMissingFilter] = useState('All');
   const [requestFilter, setRequestFilter] = useState('All');
@@ -315,6 +151,7 @@ export function MatterDetails() {
   const [isLitigationConfirmOpen, setIsLitigationConfirmOpen] = useState(false);
   const [isLitigationWorkspaceOpen, setIsLitigationWorkspaceOpen] = useState(false);
   const [matterDocuments, setMatterDocuments] = useState([]);
+  const [matterComms, setMatterComms] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -326,6 +163,18 @@ export function MatterDetails() {
         .catch(() => {
           if (isMounted) setMatterDocuments([]);
         });
+
+      communicationService.getCommunications({ matterId: matter.id })
+        .then((data) => {
+          const rows = Array.isArray(data) ? data : (data?.communications || []);
+          if (isMounted) setMatterComms(rows);
+        })
+        .catch(() => {
+          if (isMounted) setMatterComms([]);
+        });
+    } else {
+      setMatterDocuments([]);
+      setMatterComms([]);
     }
     return () => { isMounted = false; };
   }, [matter?.id]);
@@ -337,46 +186,26 @@ export function MatterDetails() {
         .then((savedPanels) => {
           if (!isMounted) return;
           if (savedPanels) {
-            if (Array.isArray(savedPanels.nextActions)) {
-              setNextActions(savedPanels.nextActions);
-            } else {
-              setNextActions(buildInitialNextActions(matter));
-            }
-
-            if (Array.isArray(savedPanels.missingInfoItems)) {
-              setMissingInfoItems(savedPanels.missingInfoItems);
-            } else {
-              setMissingInfoItems(buildInitialMissingInfo(matter));
-            }
-
-            if (Array.isArray(savedPanels.unresolvedRequests)) {
-              setUnresolvedRequests(savedPanels.unresolvedRequests);
-            } else {
-              setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
-            }
-
-            if (Array.isArray(savedPanels.approvalItems)) {
-              setApprovalItems(savedPanels.approvalItems);
-            } else {
-              setApprovalItems(buildInitialApprovals(matter));
-            }
-
+            setNextActions(Array.isArray(savedPanels.nextActions) ? savedPanels.nextActions : []);
+            setMissingInfoItems(Array.isArray(savedPanels.missingInfoItems) ? savedPanels.missingInfoItems : []);
+            setUnresolvedRequests(Array.isArray(savedPanels.unresolvedRequests) ? savedPanels.unresolvedRequests : []);
+            setApprovalItems(Array.isArray(savedPanels.approvalItems) ? savedPanels.approvalItems : []);
             if (savedPanels.currentStage) {
               setMatterStage(savedPanels.currentStage);
             }
           } else {
-            setNextActions(buildInitialNextActions(matter));
-            setMissingInfoItems(buildInitialMissingInfo(matter));
-            setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
-            setApprovalItems(buildInitialApprovals(matter));
+            setNextActions([]);
+            setMissingInfoItems([]);
+            setUnresolvedRequests([]);
+            setApprovalItems([]);
           }
         })
         .catch(() => {
           if (isMounted) {
-            setNextActions(buildInitialNextActions(matter));
-            setMissingInfoItems(buildInitialMissingInfo(matter));
-            setUnresolvedRequests(buildInitialUnresolvedRequests(matter));
-            setApprovalItems(buildInitialApprovals(matter));
+            setNextActions([]);
+            setMissingInfoItems([]);
+            setUnresolvedRequests([]);
+            setApprovalItems([]);
           }
         });
 
@@ -405,6 +234,14 @@ export function MatterDetails() {
   }, [searchParams, isLitigationActive]);
 
   const relatedCases = useMemo(() => buildRelatedCases(matter, matters), [matter, matters]);
+
+  if (!matter && loadingMatter) {
+    return (
+      <div className="p-8 text-center bg-white rounded border border-[#D9D6CF] text-xs text-[#667085]">
+        Loading isolated matter dossier...
+      </div>
+    );
+  }
 
   if (!matter) {
     return (
@@ -473,7 +310,7 @@ export function MatterDetails() {
 
   // --- Handlers for Matter Command Panels & Litigation Switch ---
   const persistPanels = async (updatedData = {}) => {
-    if (!matter?.id) return;
+    if (!matter?.id) return false;
     try {
       const payload = {
         nextActions: updatedData.nextActions !== undefined ? updatedData.nextActions : nextActions,
@@ -483,72 +320,87 @@ export function MatterDetails() {
         currentStage: updatedData.currentStage !== undefined ? updatedData.currentStage : (matterStage || matter?.stage || 'Intake & Conflicts'),
       };
       await matterService.saveOverviewPanels(matter.id, payload);
+      return true;
     } catch (err) {
-      console.error('Failed to persist overview panels to database:', err);
+      addToast(err?.message || 'Failed to persist overview panel update to database.', 'error');
+      return false;
     }
   };
 
-  const handleConfirmLitigationToggle = () => {
+  const handleConfirmLitigationToggle = async () => {
     if (!canToggleLitigation) {
       addToast('Insufficient role permission to modify Litigation / Contested status.', 'error');
       return;
     }
     const nextState = !isLitigationActive;
-    updateMatter(matter.id, {
-      isLitigationContested: nextState,
-      litigationUpdatedBy: currentUser?.name || 'Authorized Counsel',
-      litigationUpdatedAt: new Date().toISOString(),
-    });
-    if (!nextState) {
-      setIsLitigationWorkspaceOpen(false);
-      if (searchParams.get('workspace') === 'litigation') {
-        setSearchParams({});
+    try {
+      await updateMatter(matter.id, {
+        isLitigationContested: nextState,
+      });
+      if (!nextState) {
+        setIsLitigationWorkspaceOpen(false);
+        if (searchParams.get('workspace') === 'litigation') {
+          setSearchParams({});
+        }
       }
+      addToast(
+        nextState
+          ? `Contested Litigation status activated for ${matter.matterNumber}. Practice area (${matter.practiceAreaName}) preserved.`
+          : `Contested Litigation status deactivated for ${matter.matterNumber}. All existing matter records preserved.`,
+        nextState ? 'success' : 'info'
+      );
+    } catch (err) {
+      addToast(err?.message || 'Failed to update Litigation / Contested status.', 'error');
     }
-    addToast(
-      nextState
-        ? `Contested Litigation status activated for ${matter.matterNumber}. Practice area (${matter.practiceAreaName}) preserved.`
-        : `Contested Litigation status deactivated for ${matter.matterNumber}. All existing matter records preserved.`,
-      nextState ? 'success' : 'info'
-    );
   };
 
-  const handleNextActionStatusChange = (actionId, nextStatus) => {
+  const handleNextActionStatusChange = async (actionId, nextStatus) => {
+    const prev = nextActions;
     const updated = nextActions.map((act) =>
       act.id === actionId ? { ...act, status: nextStatus } : act
     );
     setNextActions(updated);
-    persistPanels({ nextActions: updated });
-    addToast(`Next action status updated to "${nextStatus}".`, nextStatus === 'Completed' ? 'success' : 'info');
+    const saved = await persistPanels({ nextActions: updated });
+    if (saved) {
+      addToast(`Next action status updated to "${nextStatus}".`, nextStatus === 'Completed' ? 'success' : 'info');
+    } else {
+      setNextActions(prev);
+    }
   };
 
-  const handleAddNextAction = (e) => {
+  const handleAddNextAction = async (e) => {
     e.preventDefault();
     if (!newActionForm.title.trim()) return;
+    const prev = nextActions;
     const item = {
       id: `${matter.id}-na-${Date.now()}`,
       title: newActionForm.title.trim(),
       description: newActionForm.description.trim() || 'Follow-up matter action item.',
-      assignedUser: newActionForm.assignedUser.trim() || matter.responsibleAttorneyName,
+      assignedUser: newActionForm.assignedUser.trim() || matter.responsibleAttorneyName || currentUser?.name || '',
       priority: newActionForm.priority,
-      dueDate: newActionForm.dueDate,
+      dueDate: newActionForm.dueDate || new Date().toISOString().split('T')[0],
       status: 'Pending',
     };
     const updated = [item, ...nextActions];
     setNextActions(updated);
-    persistPanels({ nextActions: updated });
-    setNewActionForm({
-      title: '',
-      description: '',
-      assignedUser: 'Marcus Vance',
-      priority: 'High',
-      dueDate: '2026-11-22',
-    });
-    setIsAddActionOpen(false);
-    addToast(`Added next action: "${item.title}".`, 'success');
+    const saved = await persistPanels({ nextActions: updated });
+    if (saved) {
+      setNewActionForm({
+        title: '',
+        description: '',
+        assignedUser: '',
+        priority: 'High',
+        dueDate: new Date().toISOString().split('T')[0],
+      });
+      setIsAddActionOpen(false);
+      addToast(`Added next action: "${item.title}".`, 'success');
+    } else {
+      setNextActions(prev);
+    }
   };
 
-  const handleMissingInfoAction = (itemId, actionType) => {
+  const handleMissingInfoAction = async (itemId, actionType) => {
+    const prev = missingInfoItems;
     const today = new Date().toISOString().split('T')[0];
     const updated = missingInfoItems.map((item) => {
       if (item.id !== itemId) return item;
@@ -562,33 +414,43 @@ export function MatterDetails() {
       return { ...item, status: 'Missing' };
     });
     setMissingInfoItems(updated);
-    persistPanels({ missingInfoItems: updated });
-    addToast(
-      actionType === 'received'
-        ? 'Missing item marked as Received.'
-        : actionType === 'follow_up'
-        ? 'Follow-up reminder logged and follow-up date extended.'
-        : 'Item re-flagged as Missing.',
-      actionType === 'received' ? 'success' : 'info'
-    );
+    const saved = await persistPanels({ missingInfoItems: updated });
+    if (saved) {
+      addToast(
+        actionType === 'received'
+          ? 'Missing item marked as Received.'
+          : actionType === 'follow_up'
+          ? 'Follow-up reminder logged and follow-up date extended.'
+          : 'Item re-flagged as Missing.',
+        actionType === 'received' ? 'success' : 'info'
+      );
+    } else {
+      setMissingInfoItems(prev);
+    }
   };
 
-  const handleRequestStatusAction = (reqId, nextStatus, note) => {
+  const handleRequestStatusAction = async (reqId, nextStatus, note) => {
+    const prev = unresolvedRequests;
     const updated = unresolvedRequests.map((r) =>
       r.id === reqId
         ? { ...r, status: nextStatus, followUpNote: note || r.followUpNote }
         : r
     );
     setUnresolvedRequests(updated);
-    persistPanels({ unresolvedRequests: updated });
-    addToast(`Request status updated to "${nextStatus}".`, nextStatus === 'Resolved' ? 'success' : 'info');
+    const saved = await persistPanels({ unresolvedRequests: updated });
+    if (saved) {
+      addToast(`Request status updated to "${nextStatus}".`, nextStatus === 'Resolved' ? 'success' : 'info');
+    } else {
+      setUnresolvedRequests(prev);
+    }
   };
 
-  const handleApproveItem = (item) => {
+  const handleApproveItem = async (item) => {
     if (!canApproveItems) {
       addToast('Attorney or Supervisor authorization is required to approve items.', 'error');
       return;
     }
+    const prev = approvalItems;
     const today = new Date().toISOString().split('T')[0];
     const updated = approvalItems.map((ap) =>
       ap.id === item.id
@@ -600,13 +462,17 @@ export function MatterDetails() {
         : ap
     );
     setApprovalItems(updated);
-    persistPanels({ approvalItems: updated });
-    addToast(`"${item.itemName}" formally approved.`, 'success');
-    setReviewingApproval(null);
-    setApprovalNoteInput('');
+    const saved = await persistPanels({ approvalItems: updated });
+    if (saved) {
+      addToast(`"${item.itemName}" formally approved.`, 'success');
+      setReviewingApproval(null);
+      setApprovalNoteInput('');
+    } else {
+      setApprovalItems(prev);
+    }
   };
 
-  const handleRequestChanges = (item) => {
+  const handleRequestChanges = async (item) => {
     if (!canApproveItems) {
       addToast('Attorney or Supervisor authorization is required to request changes.', 'error');
       return;
@@ -616,16 +482,21 @@ export function MatterDetails() {
       addToast('Please enter revision instructions before requesting changes.', 'warning');
       return;
     }
+    const prev = approvalItems;
     const updated = approvalItems.map((ap) =>
       ap.id === item.id
         ? { ...ap, status: 'Changes Requested', reviewNotes: note }
         : ap
     );
     setApprovalItems(updated);
-    persistPanels({ approvalItems: updated });
-    addToast(`Revision requested on "${item.itemName}".`, 'warning');
-    setReviewingApproval(null);
-    setApprovalNoteInput('');
+    const saved = await persistPanels({ approvalItems: updated });
+    if (saved) {
+      addToast(`Revision requested on "${item.itemName}".`, 'warning');
+      setReviewingApproval(null);
+      setApprovalNoteInput('');
+    } else {
+      setApprovalItems(prev);
+    }
   };
 
   // Filtered collections for Missing Information & Unresolved Requests
@@ -757,7 +628,7 @@ export function MatterDetails() {
                 <Gavel className="w-3 h-3 mr-1 flex-shrink-0" />
                 {isLitigationActive ? 'Litigation / Contested Active' : 'Non-Contested / Standard'}
               </Badge>
-              {(matter.isEthicalWallEnabled || matter.id === 'MAT-001') && (
+              {matter.isEthicalWallEnabled && (
                 <span className="text-xs font-bold text-red-800 bg-red-100 border border-red-300 px-2 py-0.5 rounded inline-flex items-center gap-1 whitespace-nowrap">
                   <Lock className="w-3 h-3 text-red-700 flex-shrink-0" />
                   Ethical Wall Active (Utah RPC 1.10)
@@ -1037,17 +908,26 @@ export function MatterDetails() {
                     </div>
                   </div>
 
-                  {matter.assignedStaffNames?.map((staffName, idx) => (
-                    <div key={idx} className="flex items-center gap-2.5 p-2 rounded hover:bg-[#F5F0E5]/40">
-                      <div className="w-8 h-8 rounded-full bg-[#B8C0C4] text-[#06244B] flex items-center justify-center font-bold text-xs">
-                        MV
+                  {matter.assignedStaffNames?.map((staffName, idx) => {
+                    const initials = (staffName || 'ST')
+                      .split(/\s+/)
+                      .map((p) => p[0])
+                      .filter(Boolean)
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase();
+                    return (
+                      <div key={idx} className="flex items-center gap-2.5 p-2 rounded hover:bg-[#F5F0E5]/40">
+                        <div className="w-8 h-8 rounded-full bg-[#B8C0C4] text-[#06244B] flex items-center justify-center font-bold text-xs">
+                          {initials}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#202A35]">{staffName}</p>
+                          <p className="text-[10px] text-[#667085]">Assigned Matter Staff</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-[#202A35]">{staffName}</p>
-                        <p className="text-[10px] text-[#667085]">Litigation Paralegal</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1699,36 +1579,44 @@ export function MatterDetails() {
 
       {activeTab === 'comms' && (
         <div className="bg-white p-6 rounded border border-[#D9D6CF] shadow-subtle space-y-4">
-          <h3 className="font-serif text-base font-bold text-[#06244B] border-b border-[#D9D6CF]/60 pb-2">
-            Matter Correspondence &amp; Notices
-          </h3>
-          <div className="divide-y divide-[#D9D6CF]/40 text-xs">
-            <div className="py-3">
-              <div className="flex justify-between items-center font-semibold text-[#06244B]">
-                <span>Notice of Appearance &amp; Certificate of Service</span>
-                <span className="text-[#667085]">2025-01-24</span>
-              </div>
-              <p className="text-[#667085] mt-1">Transmitted via Utah Court XChange e-filing system to opposing counsel.</p>
-            </div>
-            <div className="py-3">
-              <div className="flex justify-between items-center font-semibold text-[#06244B]">
-                <span>Discovery Meet &amp; Confer Email Protocol</span>
-                <span className="text-[#667085]">2025-02-10</span>
-              </div>
-              <p className="text-[#667085] mt-1">Email exchange regarding electronic format of telemetry database logs.</p>
-            </div>
+          <div className="flex items-center justify-between border-b border-[#D9D6CF]/60 pb-2">
+            <h3 className="font-serif text-base font-bold text-[#06244B]">
+              Matter Correspondence &amp; Notices ({matterComms.length})
+            </h3>
+            <Button size="sm" variant="outline" onClick={() => navigate(`/communications?matterId=${matter.id}`)}>
+              Log Communication
+            </Button>
           </div>
+          {matterComms.length === 0 ? (
+            <div className="py-6 text-center text-xs text-[#667085]">
+              No emails, calls, or correspondence have been logged for this matter yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-[#D9D6CF]/40 text-xs">
+              {matterComms.map((comm) => (
+                <div key={comm.id} className="py-3">
+                  <div className="flex justify-between items-center font-semibold text-[#06244B]">
+                    <span>{comm.subject}</span>
+                    <span className="text-[#667085]">{formatDate(comm.date, { short: true })}</span>
+                  </div>
+                  <p className="text-[#667085] mt-1">{comm.summary}</p>
+                  <p className="text-[11px] text-[#667085] mt-1">
+                    {comm.type} • From {comm.sender} to {comm.recipient}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === 'notes' && (
         <div className="bg-white p-6 rounded border border-[#D9D6CF] shadow-subtle space-y-4">
           <h3 className="font-serif text-base font-bold text-[#06244B] border-b border-[#D9D6CF]/60 pb-2">
-            Attorney Work Product &amp; Strategic Case Notes
+            Attorney Work Product &amp; Matter Synopsis
           </h3>
-          <div className="p-4 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] text-xs leading-relaxed text-[#202A35]">
-            <p className="font-semibold text-[#06244B] mb-1">Defense Settlement Exposure Assessment:</p>
-            Review of pretrial disclosures indicates opposing party may be seeking early mediation prior to expert discovery cutoff. Settlement authority threshold requested from client CEO at $120,000 baseline.
+          <div className="p-4 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] text-xs leading-relaxed text-[#202A35] whitespace-pre-line">
+            {matter.description || 'No internal matter synopsis or attorney work-product notes saved yet.'}
           </div>
           <p className="text-[11px] text-[#A4432B] font-semibold">
             Privileged &amp; Confidential Attorney Work Product • Do not disclose to non-firm personnel.

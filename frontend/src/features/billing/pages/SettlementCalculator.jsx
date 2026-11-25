@@ -21,6 +21,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
 import { formatCurrency } from '../../../utils/formatCurrency';
+import { calculateSettlement } from '../../../utils/settlementCalculations';
 import { trustService } from '../../../services/trustService';
 import { SettlementStatementModal } from '../components/SettlementStatementModal';
 
@@ -33,7 +34,9 @@ export function SettlementCalculator() {
 
   // Settlement Inputs
   const [grossSettlement, setGrossSettlement] = useState(0);
-  const [contingencyPct, setContingencyPct] = useState(33.33);
+  const [feeSelection, setFeeSelection] = useState('33.33'); // '33.33', 'exact_one_third', '40', '25', '50'
+  const feeRateOption = feeSelection === 'exact_one_third' ? 'exact' : 'standard';
+  const contingencyPct = feeSelection === 'exact_one_third' ? 33.33 : Number(feeSelection);
 
   // Dynamic Case Costs
   const [costs, setCosts] = useState([]);
@@ -48,12 +51,21 @@ export function SettlementCalculator() {
 
   const [isStatementModalOpen, setIsStatementModalOpen] = useState(false);
 
-  // Math
-  const attorneyFee = grossSettlement * (contingencyPct / 100);
-  const totalCosts = costs.reduce((sum, c) => sum + Number(c.amount || 0), 0);
-  const totalLiens = liens.reduce((sum, l) => sum + Number(l.negotiatedAmount || 0), 0);
+  // Math (integer-cent precision, distinguishing 33.33% from exact 1/3)
+  const {
+    contingencyFeeAmount: attorneyFee,
+    totalCaseExpenses: totalCosts,
+    totalMedicalLiens: totalLiens,
+    netClientProceeds: netClientPayout,
+    feeRateDisplay,
+  } = calculateSettlement({
+    grossRecovery: grossSettlement,
+    feeRate: contingencyPct,
+    feeRateOption,
+    caseExpenses: costs,
+    medicalLiens: liens,
+  });
   const totalDeductions = attorneyFee + totalCosts + totalLiens;
-  const netClientPayout = Math.max(0, grossSettlement - totalDeductions);
 
   // Handlers for adding/removing items
   const handleAddCost = (e) => {
@@ -122,7 +134,7 @@ export function SettlementCalculator() {
         `""`,
         `"Item Category","Description / Payee","Amount ($)","Percentage / Calculation Basis"`,
         `"Gross Settlement Recovery","Policy Limits / Defense Award Settlement","${grossSettlement.toFixed(2)}","100.00%"`,
-        `"Attorney Contingency Fee","Heugly & Bludworth PLLC (Operating Transfer)","-${attorneyFee.toFixed(2)}","${contingencyPct}% Contingency"`,
+        `"Attorney Contingency Fee","Heugly & Bludworth PLLC (Operating Transfer)","-${attorneyFee.toFixed(2)}","${feeRateDisplay} Contingency"`,
         `"Itemized Case Costs","Litigation Expenses & Expert Reports Reimbursed to Firm","-${totalCosts.toFixed(2)}","Itemized Hard Costs"`,
         ...costs.map(c => `"  - Cost Item","${c.description.replace(/"/g, '""')}","-${c.amount.toFixed(2)}","Reimbursement"`),
         `"Resolved Healthcare Liens","Subrogation / Medical Provider Liens Withheld","-${totalLiens.toFixed(2)}","Negotiated Balance"`,
@@ -237,7 +249,7 @@ export function SettlementCalculator() {
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
-          <span className="text-xs text-[#667085] uppercase font-bold block">2. Attorney Fee ({contingencyPct}%)</span>
+          <span className="text-xs text-[#667085] uppercase font-bold block">2. Attorney Fee ({feeRateDisplay})</span>
           <span className="text-2xl font-bold font-serif text-[#A4432B] mt-1 block">
             {formatCurrency(attorneyFee)}
           </span>
@@ -290,14 +302,15 @@ export function SettlementCalculator() {
                 </label>
                 <div className="flex gap-2">
                   <select
-                    value={contingencyPct}
-                    onChange={(e) => setContingencyPct(Number(e.target.value))}
+                    value={feeSelection}
+                    onChange={(e) => setFeeSelection(e.target.value)}
                     className="w-full text-xs font-semibold p-2.5 rounded border border-[#D9D6CF] focus:outline-none focus:border-[#06244B] bg-slate-50"
                   >
-                    <option value={33.33}>33.33% (Standard Pre-Trial Settlement)</option>
-                    <option value={40}>40.00% (Post-Complaint / Trial Setting)</option>
-                    <option value={25}>25.00% (Minor Settlement / Early Compromise)</option>
-                    <option value={50}>50.00% (Appellate Review)</option>
+                    <option value="33.33">33.33% (Standard Pre-Trial Settlement)</option>
+                    <option value="exact_one_third">1/3 Exact (One-Third Pre-Trial)</option>
+                    <option value="40">40.00% (Post-Complaint / Trial Setting)</option>
+                    <option value="25">25.00% (Minor Settlement / Early Compromise)</option>
+                    <option value="50">50.00% (Appellate Review)</option>
                   </select>
                 </div>
               </div>

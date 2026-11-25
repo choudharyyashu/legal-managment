@@ -33,6 +33,7 @@ import { criminalRouter } from './modules/criminal/criminal.routes.js';
 import { appealsRouter } from './modules/appeals/appeals.routes.js';
 import { evictionsRouter } from './modules/evictions/evictions.routes.js';
 import { backupRouter } from './modules/backup/backup.routes.js';
+import { relatedPartyRouter } from './modules/related-parties/related-party.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -191,6 +192,7 @@ app.use('/api/v1/criminal', criminalRouter);
 app.use('/api/v1/appeals', appealsRouter);
 app.use('/api/v1/evictions', evictionsRouter);
 app.use('/api/v1/backups', backupRouter);
+app.use('/api/v1/related-parties', relatedPartyRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

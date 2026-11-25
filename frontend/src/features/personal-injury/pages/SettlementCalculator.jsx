@@ -20,29 +20,29 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { formatCurrency } from '../../../utils/formatCurrency';
+import { calculateSettlement } from '../../../utils/settlementCalculations';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 import { piService } from '../../../services/piService';
 
 export function SettlementCalculator() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    const filtered = (matters || []).filter(
+    return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
-    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [activeCaseId, setActiveCaseId] = useState(() => activeMatter?.id || cases[0]?.id || 'ALL');
 
-  const [grossRecovery, setGrossRecovery] = useState(() => Number(activeMatter?.budget) || 100000);
-  const [feeRate, setFeeRate] = useState(() => Number(activeMatter?.contingencyPercentage) || 33.3333);
+  const [grossRecovery, setGrossRecovery] = useState(() => Number(activeMatter?.budget) || 0);
+  const [feeRate, setFeeRate] = useState(() => Number(activeMatter?.contingencyPercentage) || 33.33);
+  const [feeRateOption, setFeeRateOption] = useState('standard'); // 'standard' or 'exact'
   const [caseExpenses, setCaseExpenses] = useState([]);
   const [medicalLiens, setMedicalLiens] = useState([]);
   const [otherDeductions, setOtherDeductions] = useState([]);
@@ -59,7 +59,10 @@ export function SettlementCalculator() {
     if (activeMatter?.id && activeMatter.id !== activeCaseId) {
       setActiveCaseId(activeMatter.id);
       if (activeMatter.budget) setGrossRecovery(Number(activeMatter.budget));
-      if (activeMatter.contingencyPercentage) setFeeRate(Number(activeMatter.contingencyPercentage));
+      if (activeMatter.contingencyPercentage) {
+        setFeeRate(Number(activeMatter.contingencyPercentage));
+        setFeeRateOption('standard');
+      }
     }
   }, [activeMatter]);
 
@@ -70,27 +73,76 @@ export function SettlementCalculator() {
     }
   };
 
-  // Sync when case changes
+  // Sync when case changes & reload latest saved settlement calculation if present
   useEffect(() => {
+    let cancelled = false;
     const selected = cases.find(c => c.id === activeCaseId);
     if (selected) {
-      if (selected.budget) setGrossRecovery(Number(selected.budget));
-      if (selected.contingencyPercentage) setFeeRate(Number(selected.contingencyPercentage));
+      setGrossRecovery(Number(selected.budget) || 0);
+      setFeeRate(Number(selected.contingencyPercentage) || 33.33);
+      setFeeRateOption('standard');
     }
-  }, [activeCaseId, cases]);
 
-  // Dynamic Calculations:
-  const numericGross = Number(grossRecovery) || 0;
-  const contingencyFeeAmount = Math.round(((numericGross * Number(feeRate)) / 100) * 100) / 100;
-  const totalCaseExpenses = caseExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-  const totalMedicalLiens = medicalLiens.reduce((sum, l) => sum + Number(l.amount || 0), 0);
-  const totalOtherDeductions = otherDeductions.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+    if (!activeCaseId || activeCaseId === 'ALL') {
+      return () => { cancelled = true; };
+    }
 
-  // Formula: Net Client Proceeds = Gross Recovery - Contingency Fee - Case Expenses - Medical Liens - Other Deductions
-  const netClientProceeds = Math.max(
-    0,
-    numericGross - contingencyFeeAmount - totalCaseExpenses - totalMedicalLiens - totalOtherDeductions
-  );
+    piService.getSettlements(activeCaseId)
+      .then((settlements) => {
+        if (cancelled) return;
+        const latestVersion = Array.isArray(settlements) ? settlements[0]?.versions?.[0] : null;
+        if (!latestVersion) return;
+
+        const savedGross = Number(latestVersion.grossSettlementAmount ?? 0);
+        const savedPct = Number(latestVersion.contingencyFeePercentage ?? 33.33);
+        const savedFee = Number(latestVersion.calculatedAttorneyFee ?? 0);
+        const exactThirdFee = Math.round((Math.round(savedGross * 100)) / 3) / 100;
+        const pctFee = Math.round(Math.round(savedGross * 100) * savedPct / 100) / 100;
+        const isExact =
+          Boolean(latestVersion.notes?.includes('1/3 (Exact)')) ||
+          (savedGross > 0 &&
+            Math.abs(savedPct - 33.33) < 0.005 &&
+            Math.abs(savedFee - exactThirdFee) < 0.005 &&
+            Math.abs(savedFee - pctFee) >= 0.01);
+
+        setGrossRecovery(savedGross);
+        setFeeRate(savedPct);
+        setFeeRateOption(isExact ? 'exact' : 'standard');
+
+        const savedCosts = Number(latestVersion.totalLitigationCosts ?? 0);
+        const savedLiens = Number(latestVersion.totalMedicalLiens ?? 0);
+        const savedOther = Number(latestVersion.otherDeductions ?? 0) + Number(latestVersion.totalClientAdvances ?? 0);
+
+        setCaseExpenses(savedCosts > 0 ? [{ description: 'Saved Litigation Costs', amount: savedCosts }] : []);
+        setMedicalLiens(savedLiens > 0 ? [{ holder: 'Saved Medical Liens', amount: savedLiens }] : []);
+        setOtherDeductions(savedOther > 0 ? [{ description: 'Saved Other Deductions', amount: savedOther }] : []);
+      })
+      .catch(() => {
+        // Keep matter defaults if settlements could not be fetched
+      });
+
+    return () => { cancelled = true; };
+  }, [activeCaseId, cases.length]);
+
+  // Dynamic Calculations (exact cent-level precision, distinguishing 33.33% from exact 1/3):
+  const {
+    numericGross,
+    contingencyFeeAmount,
+    totalCaseExpenses,
+    totalMedicalLiens,
+    totalOtherDeductions,
+    netClientProceeds,
+    feeRateDisplay,
+    feePercentageForStorage,
+    feeBasis,
+  } = calculateSettlement({
+    grossRecovery,
+    feeRate,
+    feeRateOption,
+    caseExpenses,
+    medicalLiens,
+    otherDeductions,
+  });
 
   const clientSharePercentage = numericGross > 0 ? (netClientProceeds / numericGross) * 100 : 0;
   const attorneySharePercentage = numericGross > 0 ? (contingencyFeeAmount / numericGross) * 100 : 0;
@@ -124,6 +176,10 @@ export function SettlementCalculator() {
     setOtherDeductions(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleRemoveLien = (index) => {
+    setMedicalLiens(prev => prev.filter((_, i) => i !== index));
+  };
+
   const activeCase = cases.find(c => c.id === activeCaseId) || cases[0];
 
   const fullSettlementObject = {
@@ -131,7 +187,8 @@ export function SettlementCalculator() {
     clientName: activeCase?.clientName || 'Client',
     attorneyName: activeCase?.responsibleAttorneyName || 'Managing Attorney',
     grossRecovery: numericGross,
-    contingencyFeePercentage: Number(feeRate),
+    contingencyFeePercentage: feePercentageForStorage,
+    feeRateLabel: feeRateDisplay,
     contingencyFeeAmount,
     caseExpenses,
     totalCaseExpenses,
@@ -149,12 +206,14 @@ export function SettlementCalculator() {
         await piService.createSettlement(activeCaseId, {
           settlementTitle: `Settlement Disbursement - ${activeCase?.title || activeCase?.clientName || 'Matter'}`,
           grossSettlementAmount: numericGross,
-          contingencyFeePercentage: Number(feeRate),
+          contingencyFeePercentage: feePercentageForStorage,
+          feeBasis,
           calculatedAttorneyFee: contingencyFeeAmount,
           totalLitigationCosts: totalCaseExpenses,
           totalMedicalLiens,
           otherDeductions: totalOtherDeductions,
           netClientRecovery: netClientProceeds,
+          notes: feeRateOption === 'exact' ? 'Fee Basis: 1/3 (Exact)' : `Fee Basis: ${feeRateDisplay}`,
         });
         addToast('Settlement disbursement calculation saved to database.', 'success');
       } else {
@@ -211,7 +270,7 @@ export function SettlementCalculator() {
           </div>
 
           <div className="bg-[#041833] p-4 rounded border border-[#0B356D] space-y-1 text-xs">
-            <span className="text-[#B8C0C4] block font-medium">Contingency Attorney Fee ({Number(feeRate).toFixed(2)}%):</span>
+            <span className="text-[#B8C0C4] block font-medium">Contingency Attorney Fee ({feeRateDisplay}):</span>
             <span className="text-lg font-serif font-bold text-amber-300 block">
               {formatCurrency(contingencyFeeAmount)}
             </span>
@@ -290,14 +349,14 @@ export function SettlementCalculator() {
 
             <div>
               <label className="block text-xs font-semibold text-[#06244B] uppercase tracking-wider mb-1">
-                Contingency Fee Rate (%)
+                Contingency Fee Rate ({feeRateDisplay})
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setFeeRate(33.3333)}
+                  onClick={() => { setFeeRate(33.33); setFeeRateOption('standard'); }}
                   className={`py-1.5 px-2 text-xs font-bold rounded border ${
-                    Math.abs(Number(feeRate) - 33.3333) < 0.1
+                    feeRateOption === 'standard' && Math.abs(Number(feeRate) - 33.33) < 0.005
                       ? 'bg-[#06244B] text-white border-[#06244B]'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
@@ -306,9 +365,20 @@ export function SettlementCalculator() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFeeRate(40.0)}
+                  onClick={() => { setFeeRate(33.33); setFeeRateOption('exact'); }}
                   className={`py-1.5 px-2 text-xs font-bold rounded border ${
-                    Number(feeRate) === 40.0
+                    feeRateOption === 'exact'
+                      ? 'bg-[#06244B] text-white border-[#06244B]'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  1/3 (Exact)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFeeRate(40.0); setFeeRateOption('standard'); }}
+                  className={`py-1.5 px-2 text-xs font-bold rounded border ${
+                    feeRateOption === 'standard' && Number(feeRate) === 40.0
                       ? 'bg-[#06244B] text-white border-[#06244B]'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
@@ -317,9 +387,9 @@ export function SettlementCalculator() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFeeRate(25.0)}
+                  onClick={() => { setFeeRate(25.0); setFeeRateOption('standard'); }}
                   className={`py-1.5 px-2 text-xs font-bold rounded border ${
-                    Number(feeRate) === 25.0
+                    feeRateOption === 'standard' && Number(feeRate) === 25.0
                       ? 'bg-[#06244B] text-white border-[#06244B]'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
@@ -442,7 +512,17 @@ export function SettlementCalculator() {
             {medicalLiens.map((lien, idx) => (
               <div key={idx} className="flex items-center justify-between p-2 bg-amber-50/60 rounded border border-amber-200 text-xs">
                 <span className="text-slate-800 font-medium truncate max-w-[180px]">{lien.holder}</span>
-                <span className="font-bold text-[#B42318]">{formatCurrency(lien.amount)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#B42318]">{formatCurrency(lien.amount)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveLien(idx)}
+                    className="text-red-500 hover:text-red-700"
+                    title="Remove Lien"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ))}
 

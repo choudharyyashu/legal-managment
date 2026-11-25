@@ -1145,17 +1145,28 @@ export class PersonalInjuryService {
 
   static async createSettlement(matterId: string, input: any, currentUser: AuthenticatedUser) {
     const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
-    const gross = new Prisma.Decimal(input.grossSettlementAmount || input.grossSettlement || 0);
-    const feePct = new Prisma.Decimal(input.contingencyFeePercentage || input.attorneyFeePercent || 33.33);
-    const feeAmount = new Prisma.Decimal(input.calculatedAttorneyFee || input.attorneyFee || (Number(gross) * Number(feePct) / 100));
-    const costs = new Prisma.Decimal(input.totalLitigationCosts || input.costs || 0);
-    const liens = new Prisma.Decimal(input.totalMedicalLiens || input.liens || 0);
-    const advances = new Prisma.Decimal(input.totalClientAdvances || 0);
-    const deductions = new Prisma.Decimal(input.otherDeductions || 0);
+    const gross = new Prisma.Decimal(input.grossSettlementAmount ?? input.grossSettlement ?? 0);
+    const feeBasis = input.feeBasis === 'EXACT_ONE_THIRD' || input.feeRateOption === 'exact'
+      ? 'EXACT_ONE_THIRD'
+      : 'PERCENTAGE';
+    const feePct = new Prisma.Decimal(input.contingencyFeePercentage ?? input.attorneyFeePercent ?? 33.33);
+    const computedFee = feeBasis === 'EXACT_ONE_THIRD'
+      ? gross.div(3).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
+      : gross.mul(feePct).div(100).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const feeAmount = new Prisma.Decimal(
+      input.calculatedAttorneyFee ?? input.attorneyFee ?? computedFee
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const costs = new Prisma.Decimal(input.totalLitigationCosts ?? input.costs ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const liens = new Prisma.Decimal(input.totalMedicalLiens ?? input.liens ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const advances = new Prisma.Decimal(input.totalClientAdvances ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const deductions = new Prisma.Decimal(input.otherDeductions ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const computedNet = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      gross.minus(feeAmount).minus(costs).minus(liens).minus(advances).minus(deductions)
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
     const net = new Prisma.Decimal(
-      input.netClientRecovery ||
-      (Number(gross) - Number(feeAmount) - Number(costs) - Number(liens) - Number(advances) - Number(deductions))
-    );
+      input.netClientRecovery ?? computedNet
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 
     const settlement = await prisma.pISettlementDisbursement.create({
       data: {

@@ -38,6 +38,27 @@ export class UserService {
   }
 
   /**
+   * Returns active staff directory (safe public firm fields only) for dropdowns like Responsible Attorney / Assigned Staff
+   */
+  static async getDirectory() {
+    const users = await prisma.user.findMany({
+      where: { status: 'Active' },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        userCode: true,
+        name: true,
+        role: true,
+        title: true,
+        initials: true,
+        department: true,
+        status: true,
+      },
+    });
+    return users;
+  }
+
+  /**
    * Retrieves paginated list of users with filtering and search
    */
   static async getUsers(query: UserQueryInput): Promise<{

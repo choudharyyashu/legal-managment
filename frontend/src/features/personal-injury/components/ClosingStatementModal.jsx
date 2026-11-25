@@ -11,7 +11,8 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
     matterTitle,
     clientName,
     grossRecovery = 0,
-    contingencyFeePercentage = 33.3333,
+    contingencyFeePercentage = 33.33,
+    feeRateLabel,
     contingencyFeeAmount = 0,
     caseExpenses = [],
     totalCaseExpenses = 0,
@@ -82,7 +83,7 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
             {/* 2. Attorney Contingency Fee */}
             <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-1">
               <div className="flex justify-between items-center font-bold text-[#06244B]">
-                <span>II. ATTORNEY CONTINGENCY FEE ({contingencyFeePercentage.toFixed(2)}%)</span>
+                <span>II. ATTORNEY CONTINGENCY FEE ({feeRateLabel || `${Number(contingencyFeePercentage).toFixed(2)}%`})</span>
                 <span className="text-[#B42318]">-{formatCurrency(contingencyFeeAmount)}</span>
               </div>
               <p className="text-[11px] text-slate-500 italic">

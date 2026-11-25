@@ -22,6 +22,7 @@ import { piService } from '../../../services/piService';
 import { documentService } from '../../../services/documentService';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 
 const formatDateOnly = (value) => {
   if (!value) return '';
@@ -82,15 +83,13 @@ const normalizeIncidentFromApi = (apiData, fallbackMatter = null) => {
 export function IncidentLiability() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
-
   const cases = useMemo(() => {
     return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
   }, [matters]);
 
