@@ -263,6 +263,10 @@ export class BillingService {
 
     if (!invoice) throw AppError.notFound('Referenced invoice not found.', 'INVOICE_NOT_FOUND');
 
+    if (input.clientId && invoice.clientId !== input.clientId) {
+      throw AppError.badRequest('Referenced invoice does not belong to the specified client.', 'INVOICE_CLIENT_MISMATCH');
+    }
+
     if (Number(invoice.balanceDue) <= 0) {
       throw AppError.badRequest('This invoice is already fully paid.', 'INVOICE_ALREADY_PAID');
     }

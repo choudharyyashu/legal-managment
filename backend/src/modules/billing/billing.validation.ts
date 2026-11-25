@@ -24,6 +24,7 @@ export const updateInvoiceStatusSchema = z.object({
 
 export const recordPaymentSchema = z.object({
   invoiceId: z.string().uuid(),
+  clientId: z.string().uuid().optional(),
   amount: z.number().positive(),
   paymentMethod: z.enum(['Check', 'Credit Card', 'ACH / Wire', 'Trust Transfer', 'Cash']),
   destinationAccount: z.enum([

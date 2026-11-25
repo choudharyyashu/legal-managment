@@ -68,10 +68,12 @@ export class TrustController {
 
   static async getTransactions(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const transactions = await TrustService.getTransactions();
+      const result = await TrustService.getTransactions(req.query as any);
       res.status(200).json({
         success: true,
-        data: transactions,
+        data: result.transactions,
+        transactions: result.transactions,
+        pagination: result.pagination,
       });
     } catch (err) {
       next(err);
