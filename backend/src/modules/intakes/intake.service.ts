@@ -13,6 +13,8 @@ import { ClientService } from '../clients/client.service.js';
 import { MatterService } from '../matters/matter.service.js';
 import { RelatedPartyService, stripPiMetadataBlock } from '../related-parties/related-party.service.js';
 import { normalizePracticeAreaId } from '../../utils/practiceAreaCanonical.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
+import { DOCUMENT_EVENT } from '../documents/events/event.types.js';
 
 export class IntakeService {
   private static async generateIntakeNumber(): Promise<string> {
@@ -152,6 +154,25 @@ export class IntakeService {
     // Run automated initial conflict search (flags matches vs Review Pending without auto-clearing)
     await this.runConflictCheck(created.id, context);
 
+    // Emit INTAKE_PROSPECT_SAVED event for CAT-002 auto-drafting
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.INTAKE_PROSPECT_SAVED,
+      {
+        intakeId: created.id,
+        prospectiveClient: input.prospectiveClient,
+        practiceAreaId: canonicalPracticeAreaId,
+        email: input.email,
+        phone: input.phone,
+        contactPerson: input.contactPerson,
+        matterSummary: input.matterSummary,
+      },
+      {
+        user: { id: context.userId, role: context.userRole, name: 'Intake Staff' } as any,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
+
     await createAuditLog({
       userId: context.userId,
       userRole: context.userRole,
@@ -290,6 +311,25 @@ export class IntakeService {
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
+
+    // Emit INTAKE_CONFLICT_SEARCH_COMPLETED event for CAT-003 auto-drafting
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.INTAKE_CONFLICT_SEARCH_COMPLETED,
+      {
+        intakeId: intake.id,
+        prospectiveClient: intake.prospectiveClient,
+        queriedTerms: scan.queriedTerms,
+        conflictStatus: newStatus,
+        hasConflicts: scan.hasConflicts,
+        matches,
+        searchedByUserId: context.userId,
+      },
+      {
+        user: { id: context.userId, role: context.userRole, name: 'Compliance Reviewer' } as any,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
 
     return {
       hasConflicts: scan.hasConflicts,
@@ -552,6 +592,27 @@ export class IntakeService {
       },
     });
 
+    // Emit MATTER_CREATED_FROM_INTAKE event for CAT-010 auto-drafting
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.MATTER_CREATED_FROM_INTAKE,
+      {
+        intakeId: intake.id,
+        intakeNumber: intake.intakeNumber,
+        matterId: matter.id,
+        matterNumber: matter.matterNumber,
+        matterTitle: matter.title,
+        clientId: clientId as string,
+        clientName: intake.prospectiveClient,
+        practiceAreaId: resolvedPracticeAreaId,
+        responsibleAttorneyId: input.responsibleAttorneyId,
+      },
+      {
+        user: { id: context.userId, role: context.userRole, name: context.userName || 'Responsible Attorney' } as any,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
+
     // Persist adverse parties / insurers into related_parties table when migrated (non-blocking)
     await RelatedPartyService.seedFromIntakeConversion({
       intake,
@@ -608,5 +669,81 @@ export class IntakeService {
     }
 
     return { matter, intake: this.formatResponse(updatedIntake) };
+  }
+
+  static async bookConsultation(
+    intakeId: string,
+    data: {
+      consultationDate: string;
+      consultationTime?: string;
+      location?: string;
+      attorneyId?: string;
+      preparationInstructions?: string;
+      notes?: string;
+    },
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ) {
+    const intake = await this.getIntakeByIdOrNumber(intakeId);
+
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.INTAKE_CONSULTATION_BOOKED,
+      {
+        intakeId: intake.id,
+        matterId: intake.convertedMatterId || undefined,
+        clientId: intake.convertedClientId || undefined,
+        prospectiveClient: intake.prospectiveClient,
+        consultationDate: data.consultationDate,
+        consultationTime: data.consultationTime,
+        location: data.location,
+        attorneyId: data.attorneyId,
+        preparationInstructions: data.preparationInstructions,
+        notes: data.notes,
+      },
+      {
+        user: { id: context.userId, role: context.userRole, name: 'Intake Staff' } as any,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
+
+    return { success: true, intakeId: intake.id, consultationDate: data.consultationDate };
+  }
+
+  static async rescheduleConsultation(
+    intakeId: string,
+    data: {
+      consultationDate: string;
+      consultationTime?: string;
+      location?: string;
+      attorneyId?: string;
+      rescheduleReason?: string;
+      notes?: string;
+    },
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ) {
+    const intake = await this.getIntakeByIdOrNumber(intakeId);
+
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.INTAKE_CONSULTATION_RESCHEDULED,
+      {
+        intakeId: intake.id,
+        matterId: intake.convertedMatterId || undefined,
+        clientId: intake.convertedClientId || undefined,
+        prospectiveClient: intake.prospectiveClient,
+        consultationDate: data.consultationDate,
+        consultationTime: data.consultationTime,
+        location: data.location,
+        attorneyId: data.attorneyId,
+        rescheduleReason: data.rescheduleReason,
+        notes: data.notes,
+      },
+      {
+        user: { id: context.userId, role: context.userRole, name: 'Intake Staff' } as any,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      }
+    );
+
+    return { success: true, intakeId: intake.id, rescheduledDate: data.consultationDate };
   }
 }

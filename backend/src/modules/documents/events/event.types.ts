@@ -9,6 +9,13 @@ export const DOCUMENT_EVENT = {
   PI_PROVIDER_ADDED: 'pi.provider.added',
   PI_MISSING_RECORDS: 'pi.missing.records',
   PI_DEMAND_READY: 'pi.demand.ready',
+  // Phase 3.A Approved Events
+  INTAKE_CONSULTATION_BOOKED: 'intake.consultation.booked',
+  INTAKE_CONSULTATION_RESCHEDULED: 'intake.consultation.rescheduled',
+  INTAKE_PROSPECT_SAVED: 'intake.prospect.saved',
+  INTAKE_CONFLICT_SEARCH_COMPLETED: 'intake.conflict_search.completed',
+  MATTER_CREATED_FROM_INTAKE: 'matter.created_from_intake',
+  EVICTION_CLOSURE_REVIEWED: 'evictions.closure.reviewed',
 } as const;
 
 export type DocumentEventType = typeof DOCUMENT_EVENT[keyof typeof DOCUMENT_EVENT];
@@ -73,6 +80,90 @@ export interface DemandReadyPayload {
   recipientCarrier?: string;
   claimNumber?: string;
   deadlineDate?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface ConsultationBookedPayload {
+  intakeId: string;
+  matterId?: string;
+  clientId?: string;
+  prospectiveClient?: string;
+  consultationDate: string;
+  consultationTime?: string;
+  location?: string;
+  attorneyId?: string;
+  attorneyName?: string;
+  preparationInstructions?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface ConsultationRescheduledPayload extends ConsultationBookedPayload {
+  previousConsultationDate?: string;
+  rescheduleReason?: string;
+  previousDraftId?: string;
+  previousDraftCode?: string;
+}
+
+export interface ProspectSavedPayload {
+  intakeId: string;
+  matterId?: string;
+  clientId?: string;
+  prospectiveClient: string;
+  practiceAreaId?: string;
+  email?: string;
+  phone?: string;
+  contactPerson?: string;
+  adverseParties?: string;
+  matterSummary?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface ConflictSearchCompletedPayload {
+  intakeId: string;
+  matterId?: string;
+  clientId?: string;
+  prospectiveClient?: string;
+  queriedTerms: string[];
+  conflictStatus: string;
+  hasConflicts: boolean;
+  matches: Array<{
+    id?: string;
+    entityType?: string;
+    displayName?: string;
+    queriedTerm?: string;
+    status?: string;
+  }>;
+  searchedByUserId?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface MatterCreatedFromIntakePayload {
+  intakeId: string;
+  intakeNumber: string;
+  matterId: string;
+  matterNumber: string;
+  matterTitle: string;
+  clientId: string;
+  clientName: string;
+  practiceAreaId?: string;
+  responsibleAttorneyId?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface EvictionClosureReviewedPayload {
+  matterId: string;
+  evictionCaseId?: string;
+  tenantName?: string;
+  landlordName?: string;
+  propertyAddress?: string;
+  judgmentAmount: number;
+  totalCollected: number;
+  outstandingBalance: number;
+  closureReviewNotes?: string;
   customOverrides?: Record<string, any>;
 }
 
