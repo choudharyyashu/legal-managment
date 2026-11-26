@@ -19,7 +19,9 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+const backendDir = path.resolve(__dirname, '../../');
+process.chdir(backendDir);
+dotenv.config({ path: path.resolve(backendDir, '.env') });
 
 // Enforce Sandbox Database Isolation URL BEFORE any module imports database
 const ISOLATED_TEST_DB_URL = 'mysql://root:tavrdBoFlfWXWrCwIndZVPKrmUdwnSXj@zephyr.proxy.rlwy.net:18623/legalpro_isolated_test';

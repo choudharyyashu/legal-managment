@@ -30,11 +30,19 @@ export interface StorageStats {
  */
 export class StorageService {
   static getStorageRoot(): string {
-    return path.resolve(process.cwd(), 'storage');
+    const direct = path.resolve(process.cwd(), 'storage');
+    if (fsSync.existsSync(direct)) return direct;
+    const inBackend = path.resolve(process.cwd(), 'backend', 'storage');
+    if (fsSync.existsSync(inBackend)) return inBackend;
+    return direct;
   }
 
   static getLegacyVaultRoot(): string {
-    return path.resolve(process.cwd(), 'vault');
+    const direct = path.resolve(process.cwd(), 'vault');
+    if (fsSync.existsSync(direct)) return direct;
+    const inBackend = path.resolve(process.cwd(), 'backend', 'vault');
+    if (fsSync.existsSync(inBackend)) return inBackend;
+    return direct;
   }
 
   /**
