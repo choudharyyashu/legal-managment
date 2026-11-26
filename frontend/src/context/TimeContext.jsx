@@ -264,6 +264,19 @@ export function TimeProvider({ children }) {
       const created = await billingService.createInvoice(payload);
       const normalized = normalizeInvoice(created);
       setInvoices((prev) => [normalized, ...prev]);
+
+      // Immediately mark invoiced time entries and expenses as 'Billed' in local state
+      if (Array.isArray(payload.lineItems)) {
+        const billedTimeIds = new Set(payload.lineItems.map(li => li.timeEntryId).filter(Boolean));
+        const billedExpIds = new Set(payload.lineItems.map(li => li.expenseId).filter(Boolean));
+        if (billedTimeIds.size > 0) {
+          setTimeEntries(prev => prev.map(t => billedTimeIds.has(t.id) ? { ...t, status: 'Billed' } : t));
+        }
+        if (billedExpIds.size > 0) {
+          setExpenses(prev => prev.map(e => billedExpIds.has(e.id) ? { ...e, status: 'Billed' } : e));
+        }
+      }
+
       return normalized;
     } catch (err) {
       throw err;

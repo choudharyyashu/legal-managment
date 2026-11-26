@@ -1,19 +1,20 @@
 import { prisma } from '../../config/database.js';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { CreateJournalInput, CreateAccountInput } from './ledger.validation.js';
 import { ChartOfAccountResponse, GeneralLedgerJournalResponse } from './ledger.types.js';
 
 export class LedgerService {
-  private static async generateJournalNumber(): Promise<string> {
+  private static async generateJournalNumber(client: any = prisma): Promise<string> {
     const year = new Date().getFullYear().toString().slice(-2);
     let attempts = 0;
     while (attempts < 10) {
       attempts++;
-      const count = await prisma.generalLedgerJournal.count();
+      const count = await client.generalLedgerJournal.count();
       const sequence = String(count + attempts).padStart(5, '0');
       const candidate = `GLJ-${year}-${sequence}`;
-      const existing = await prisma.generalLedgerJournal.findUnique({ where: { journalNumber: candidate } });
+      const existing = await client.generalLedgerJournal.findUnique({ where: { journalNumber: candidate } });
       if (!existing) return candidate;
     }
     return `GLJ-${year}-${Date.now().toString().slice(-5)}`;
@@ -143,21 +144,37 @@ export class LedgerService {
     return this.formatResponse(journal);
   }
 
-  static async createJournal(
+  /**
+   * Internal transactional helper for posting balanced General Ledger journals.
+   * Can be executed within existing external Prisma transactions.
+   */
+  static async executePostJournal(
     input: CreateJournalInput,
-    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
-  ): Promise<GeneralLedgerJournalResponse> {
-    // Validate accounts exist
+    context: { userId: string; userRole?: string; ipAddress?: string; userAgent?: string },
+    tx: any = prisma
+  ): Promise<any> {
+    // 1. Validate all referenced accounts exist in Chart of Accounts
     for (const entry of input.entries) {
-      const account = await prisma.chartOfAccount.findUnique({ where: { accountNumber: entry.accountNumber } });
+      const account = await tx.chartOfAccount.findUnique({ where: { accountNumber: entry.accountNumber } });
       if (!account) {
-        throw AppError.badRequest(`Chart of account ${entry.accountNumber} does not exist.`, 'INVALID_ACCOUNT');
+        throw AppError.badRequest(`Chart of account #${entry.accountNumber} does not exist.`, 'INVALID_ACCOUNT');
       }
     }
 
-    const journalNumber = await this.generateJournalNumber();
+    // 2. Validate strict double-entry balance (Debit == Credit within $0.001)
+    const totalDebit = input.entries.reduce((sum, e) => sum + (e.debit || 0), 0);
+    const totalCredit = input.entries.reduce((sum, e) => sum + (e.credit || 0), 0);
+    if (Math.abs(totalDebit - totalCredit) >= 0.001) {
+      throw AppError.badRequest(
+        `Unbalanced journal entry: Total debits ($${totalDebit.toFixed(2)}) must strictly equal total credits ($${totalCredit.toFixed(2)}).`,
+        'UNBALANCED_JOURNAL_ENTRY'
+      );
+    }
 
-    const created = await prisma.generalLedgerJournal.create({
+    // 3. Generate journal number and insert journal record with lines
+    const journalNumber = await this.generateJournalNumber(tx);
+
+    const created = await tx.generalLedgerJournal.create({
       data: {
         journalNumber,
         transactionDate: new Date(input.transactionDate),
@@ -183,13 +200,22 @@ export class LedgerService {
       },
     });
 
+    return created;
+  }
+
+  static async createJournal(
+    input: CreateJournalInput,
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<GeneralLedgerJournalResponse> {
+    const created = await this.executePostJournal(input, context, prisma);
+
     await createAuditLog({
       userId: context.userId,
       userRole: context.userRole,
       action: 'GENERAL_LEDGER_JOURNAL_POSTED',
       resourceType: 'ACCOUNTING',
       resourceId: created.id,
-      details: { journalNumber, memo: input.memo, entriesCount: input.entries.length },
+      details: { journalNumber: created.journalNumber, memo: input.memo, entriesCount: input.entries.length },
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });

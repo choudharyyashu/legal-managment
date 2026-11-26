@@ -2,6 +2,7 @@ import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
+import { LedgerService } from '../ledger/ledger.service.js';
 import { CreateTrustDepositInput, CreateTrustDisbursementInput } from './trust.validation.js';
 import {
   TrustSubLedgerResponse,
@@ -181,6 +182,36 @@ export class TrustService {
       },
     });
 
+    // Post balanced General Ledger journal entry for trust deposit (Requirement 2):
+    // Debit 1020 - IOLTA Trust Bank (Asset increases)
+    // Credit 2100 - Client Trust Liability (Liability increases)
+    const txDate = new Date().toISOString().split('T')[0];
+    const matterNumber = ledgerRecord.matter?.matterNumber || 'Matter';
+    const memo = `Trust Deposit - Matter ${matterNumber} (${input.sourceReference || input.purpose || 'Client Retainer'})`;
+
+    await LedgerService.executePostJournal(
+      {
+        transactionDate: txDate,
+        memo,
+        entries: [
+          {
+            accountNumber: 1020, // IOLTA Trust Bank
+            debit: depositAmount.toNumber(),
+            credit: 0.0,
+            matterId: input.matterId,
+          },
+          {
+            accountNumber: 2100, // Client Trust Liability
+            debit: 0.0,
+            credit: depositAmount.toNumber(),
+            matterId: input.matterId,
+          },
+        ],
+      },
+      { userId: context.userId },
+      tx
+    );
+
     return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
   }
 
@@ -242,6 +273,36 @@ export class TrustService {
         matter: { select: { id: true, matterNumber: true, title: true } },
       },
     });
+
+    // Post balanced General Ledger journal entry for external trust disbursement (Requirement 3):
+    // Debit 2100 - Client Trust Liability (Liability decreases)
+    // Credit 1020 - IOLTA Trust Bank (Asset decreases)
+    const txDate = new Date().toISOString().split('T')[0];
+    const matterNumber = ledgerRecord.matter?.matterNumber || 'Matter';
+    const memo = `Trust Disbursement - Matter ${matterNumber} (${input.purpose || input.sourceReference || 'Disbursement'})`;
+
+    await LedgerService.executePostJournal(
+      {
+        transactionDate: txDate,
+        memo,
+        entries: [
+          {
+            accountNumber: 2100, // Client Trust Liability
+            debit: disburseAmount.toNumber(),
+            credit: 0.0,
+            matterId: input.matterId,
+          },
+          {
+            accountNumber: 1020, // IOLTA Trust Bank
+            debit: 0.0,
+            credit: disburseAmount.toNumber(),
+            matterId: input.matterId,
+          },
+        ],
+      },
+      { userId: context.userId },
+      tx
+    );
 
     return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
   }

@@ -32,8 +32,15 @@ export class ReconciliationService {
     //    We deliberately DO NOT query Operating Account 1010 to prevent commingling or operating expense contamination.
     //    We deliberately DO NOT fall back to clientSubledgersTotalBalance when GL entries are absent.
     //    An empty GL is a data-availability problem, not a balanced state.
+    const glWhere: any = { accountNumber: { in: [2100, 1020] } };
+    if (query.reconciliationMonth && /^\d{4}-\d{2}$/.test(query.reconciliationMonth)) {
+      const [year, month] = query.reconciliationMonth.split('-').map(Number);
+      const cutoffDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+      glWhere.journal = { transactionDate: { lte: cutoffDate } };
+    }
+
     const glEntries = await prisma.generalLedgerEntry.findMany({
-      where: { accountNumber: { in: [2100, 1020] } },
+      where: glWhere,
       select: { accountNumber: true, debit: true, credit: true },
     });
 

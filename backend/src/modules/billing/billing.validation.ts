@@ -16,10 +16,42 @@ export const createInvoiceSchema = z.object({
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dueDate must be YYYY-MM-DD'),
   notes: z.string().max(2000).optional(),
   lineItems: z.array(invoiceLineItemInputSchema).min(1, 'At least one line item is required'),
+}).superRefine((data, ctx) => {
+  const timeEntryIds = data.lineItems
+    .map((li) => li.timeEntryId)
+    .filter((id): id is string => Boolean(id));
+  const seenTime = new Set<string>();
+  for (const tid of timeEntryIds) {
+    if (seenTime.has(tid)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Duplicate time entry reference detected: Time entry '${tid}' cannot be billed multiple times in the same invoice.`,
+        path: ['lineItems'],
+      });
+      break;
+    }
+    seenTime.add(tid);
+  }
+
+  const expenseIds = data.lineItems
+    .map((li) => li.expenseId)
+    .filter((id): id is string => Boolean(id));
+  const seenExp = new Set<string>();
+  for (const eid of expenseIds) {
+    if (seenExp.has(eid)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Duplicate expense reference detected: Expense '${eid}' cannot be billed multiple times in the same invoice.`,
+        path: ['lineItems'],
+      });
+      break;
+    }
+    seenExp.add(eid);
+  }
 });
 
 export const updateInvoiceStatusSchema = z.object({
-  status: z.enum(['Draft', 'Issued', 'Partially Paid', 'Paid', 'Void', 'Overdue']),
+  status: z.enum(['Draft', 'Issued', 'Partially Paid', 'Paid', 'Void', 'Overdue', 'Cancelled']),
 });
 
 export const recordPaymentSchema = z.object({
