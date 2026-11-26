@@ -39,11 +39,45 @@ export class NotificationService {
 
   /**
    * Retrieves active notification preferences for the authenticated user.
+   * Reads from user_notification_preferences table with fallback to Utah Law defaults.
    */
   static async getPreferences(userId: string): Promise<NotificationPreferencesResponse> {
-    const existing = this.userPreferencesStore.get(userId);
     const gatewayStatus = this.getGatewayStatus();
 
+    try {
+      const pref = await prisma.userNotificationPreference.findUnique({
+        where: { userId },
+      });
+
+      if (pref) {
+        const preferences: UserNotificationPreferences = {
+          courtDeadlineEmail: pref.courtDeadlineEmail,
+          courtDeadlineSms: pref.courtDeadlineSms,
+          courtDeadlineLeadTime: pref.courtDeadlineLeadTime,
+          timeApprovalAlerts: pref.timeApprovalAlerts,
+          conflictCheckNotices: pref.conflictCheckNotices,
+          dailyDigestEmail: pref.dailyDigestEmail,
+          clientMessageNotification: pref.clientMessageNotification,
+        };
+
+        // Sync local cache
+        this.userPreferencesStore.set(userId, {
+          preferences,
+          updatedAt: pref.updatedAt.toISOString(),
+        });
+
+        return {
+          preferences,
+          gatewayStatus,
+          userId,
+          updatedAt: pref.updatedAt.toISOString(),
+        };
+      }
+    } catch (err) {
+      console.warn('Failed to query user_notification_preferences table, checking cache/defaults:', err);
+    }
+
+    const existing = this.userPreferencesStore.get(userId);
     if (existing) {
       return {
         preferences: existing.preferences,
@@ -51,38 +85,6 @@ export class NotificationService {
         userId,
         updatedAt: existing.updatedAt,
       };
-    }
-
-    // Fallback: check audit log history for previously persisted user preferences
-    try {
-      const latestLog = await prisma.auditLog.findFirst({
-        where: {
-          resourceType: 'NOTIFICATION_PREFERENCES',
-          action: 'NOTIFICATION_PREFERENCES_UPDATED',
-          resourceId: userId,
-        },
-        orderBy: { timestamp: 'desc' },
-      });
-
-      if (latestLog?.details && (latestLog.details as any).preferences) {
-        const prefs: UserNotificationPreferences = {
-          ...DEFAULT_NOTIFICATION_PREFERENCES,
-          ...(latestLog.details as any).preferences,
-        };
-        this.userPreferencesStore.set(userId, {
-          preferences: prefs,
-          updatedAt: latestLog.timestamp.toISOString(),
-        });
-
-        return {
-          preferences: prefs,
-          gatewayStatus,
-          userId,
-          updatedAt: latestLog.timestamp.toISOString(),
-        };
-      }
-    } catch (err) {
-      console.warn('Failed to query user notification preferences from audit log:', err);
     }
 
     return {
@@ -94,14 +96,13 @@ export class NotificationService {
   }
 
   /**
-   * Persists user notification preferences with strict user-level isolation.
+   * Persists user notification preferences with strict user-level isolation in MySQL.
    */
   static async updatePreferences(
     userId: string,
     input: UpdateNotificationPreferencesInput,
     context: { userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<NotificationPreferencesResponse> {
-    const updatedAt = new Date().toISOString();
     const prefs: UserNotificationPreferences = {
       courtDeadlineEmail: Boolean(input.courtDeadlineEmail),
       courtDeadlineSms: Boolean(input.courtDeadlineSms),
@@ -111,6 +112,31 @@ export class NotificationService {
       dailyDigestEmail: Boolean(input.dailyDigestEmail),
       clientMessageNotification: Boolean(input.clientMessageNotification),
     };
+
+    const saved = await prisma.userNotificationPreference.upsert({
+      where: { userId },
+      create: {
+        userId,
+        courtDeadlineEmail: prefs.courtDeadlineEmail,
+        courtDeadlineSms: prefs.courtDeadlineSms,
+        courtDeadlineLeadTime: prefs.courtDeadlineLeadTime,
+        timeApprovalAlerts: prefs.timeApprovalAlerts,
+        conflictCheckNotices: prefs.conflictCheckNotices,
+        dailyDigestEmail: prefs.dailyDigestEmail,
+        clientMessageNotification: prefs.clientMessageNotification,
+      },
+      update: {
+        courtDeadlineEmail: prefs.courtDeadlineEmail,
+        courtDeadlineSms: prefs.courtDeadlineSms,
+        courtDeadlineLeadTime: prefs.courtDeadlineLeadTime,
+        timeApprovalAlerts: prefs.timeApprovalAlerts,
+        conflictCheckNotices: prefs.conflictCheckNotices,
+        dailyDigestEmail: prefs.dailyDigestEmail,
+        clientMessageNotification: prefs.clientMessageNotification,
+      },
+    });
+
+    const updatedAt = saved.updatedAt.toISOString();
 
     // Update user-isolated memory store
     this.userPreferencesStore.set(userId, { preferences: prefs, updatedAt });
@@ -151,15 +177,38 @@ export class NotificationService {
   }
 
   /**
-   * Resets notification preferences back to Utah Law defaults for the specific user.
+   * Resets notification preferences back to Utah Law defaults for the specific user in MySQL.
    */
   static async resetPreferences(
     userId: string,
     context: { userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
   ): Promise<NotificationPreferencesResponse> {
-    const updatedAt = new Date().toISOString();
     const prefs = { ...DEFAULT_NOTIFICATION_PREFERENCES };
 
+    const saved = await prisma.userNotificationPreference.upsert({
+      where: { userId },
+      create: {
+        userId,
+        courtDeadlineEmail: prefs.courtDeadlineEmail,
+        courtDeadlineSms: prefs.courtDeadlineSms,
+        courtDeadlineLeadTime: prefs.courtDeadlineLeadTime,
+        timeApprovalAlerts: prefs.timeApprovalAlerts,
+        conflictCheckNotices: prefs.conflictCheckNotices,
+        dailyDigestEmail: prefs.dailyDigestEmail,
+        clientMessageNotification: prefs.clientMessageNotification,
+      },
+      update: {
+        courtDeadlineEmail: prefs.courtDeadlineEmail,
+        courtDeadlineSms: prefs.courtDeadlineSms,
+        courtDeadlineLeadTime: prefs.courtDeadlineLeadTime,
+        timeApprovalAlerts: prefs.timeApprovalAlerts,
+        conflictCheckNotices: prefs.conflictCheckNotices,
+        dailyDigestEmail: prefs.dailyDigestEmail,
+        clientMessageNotification: prefs.clientMessageNotification,
+      },
+    });
+
+    const updatedAt = saved.updatedAt.toISOString();
     this.userPreferencesStore.set(userId, { preferences: prefs, updatedAt });
 
     try {

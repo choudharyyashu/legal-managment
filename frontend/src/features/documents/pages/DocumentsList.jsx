@@ -18,6 +18,8 @@ import {
   History,
   Edit3,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { documentService } from '../../../services/documentService';
 import { useMatters } from '../../../context/MatterContext';
@@ -79,6 +81,15 @@ export function DocumentsList() {
   const [automationPracticeArea, setAutomationPracticeArea] = useState('');
   const [automationMatterId, setAutomationMatterId] = useState('');
   const [triggeringCatId, setTriggeringCatId] = useState(null);
+  const [automationPage, setAutomationPage] = useState(1);
+  const [automationPageSize, setAutomationPageSize] = useState(50);
+  const [automationPagination, setAutomationPagination] = useState({
+    totalCatalogCount: 300,
+    filteredCount: 300,
+    totalPages: 6,
+    page: 1,
+    limit: 50,
+  });
 
   // Modals
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -179,16 +190,24 @@ export function DocumentsList() {
         documentService.getAutomations({
           practiceAreaId: automationPracticeArea || undefined,
           search: searchQuery || undefined,
-          limit: 100,
+          page: automationPage,
+          limit: automationPageSize,
         }),
         documentService.getAutomationSummary(),
       ]);
       setAutomations(listRes?.items || []);
+      setAutomationPagination({
+        totalCatalogCount: listRes?.totalCatalogCount ?? 300,
+        filteredCount: listRes?.filteredCount ?? (listRes?.items?.length || 0),
+        totalPages: listRes?.totalPages ?? 1,
+        page: listRes?.page ?? automationPage,
+        limit: listRes?.limit ?? automationPageSize,
+      });
       setAutomationSummary(summaryRes || null);
     } catch {
       setAutomations([]);
     }
-  }, [automationPracticeArea, searchQuery]);
+  }, [automationPracticeArea, searchQuery, automationPage, automationPageSize]);
 
   useEffect(() => {
     loadDocuments();
@@ -566,7 +585,10 @@ export function DocumentsList() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setAutomationPage(1);
+              }}
               placeholder={
                 viewMode === 'automations'
                   ? 'Search 300 automations by ID (CAT-001), title, trigger, or mapped fields...'
@@ -913,7 +935,10 @@ export function DocumentsList() {
             <div className="flex flex-wrap items-center gap-2">
               <select
                 value={automationPracticeArea}
-                onChange={(e) => setAutomationPracticeArea(e.target.value)}
+                onChange={(e) => {
+                  setAutomationPracticeArea(e.target.value);
+                  setAutomationPage(1);
+                }}
                 className="px-3 py-1.5 rounded-lg border border-[#D0D5DD] bg-[#F9FAFB] text-xs font-medium"
               >
                 <option value="">All 10 Practice Categories ({automationSummary?.totalAutomations || 300})</option>
@@ -936,9 +961,29 @@ export function DocumentsList() {
                 ))}
               </select>
             </div>
-            <span className="text-[11px] text-slate-500">
-              Showing {automations.length} automations (total catalog: {automationSummary?.totalAutomations || 300})
-            </span>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span>Per page:</span>
+                <select
+                  value={automationPageSize}
+                  onChange={(e) => {
+                    setAutomationPageSize(Number(e.target.value));
+                    setAutomationPage(1);
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg border border-[#D0D5DD] bg-white text-xs font-semibold text-[#06244B]"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={300}>300 (All)</option>
+                </select>
+              </div>
+
+              <span className="text-[11px] text-slate-500 font-medium">
+                Showing {automations.length === 0 ? 0 : ((automationPage - 1) * automationPageSize) + 1}–{Math.min(automationPage * automationPageSize, automationPagination.filteredCount)} of {automationPagination.filteredCount} filtered automations (Catalog Total: {automationPagination.totalCatalogCount || 300})
+              </span>
+            </div>
           </div>
 
           <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm overflow-hidden">
@@ -991,6 +1036,66 @@ export function DocumentsList() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {automationPagination.totalPages > 1 && (
+              <div className="bg-[#F9FAFB] px-4 py-3 border-t border-[#EAECF0] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="text-slate-500 text-[11px]">
+                  Page <span className="font-semibold text-slate-800">{automationPage}</span> of <span className="font-semibold text-slate-800">{automationPagination.totalPages}</span> ({automationPagination.filteredCount} entries)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    icon={ChevronLeft}
+                    disabled={automationPage <= 1}
+                    onClick={() => setAutomationPage((prev) => Math.max(1, prev - 1))}
+                    className="px-2 py-1 text-xs"
+                  >
+                    Previous
+                  </Button>
+
+                  {Array.from({ length: automationPagination.totalPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      if (automationPagination.totalPages <= 7) return true;
+                      if (p === 1 || p === automationPagination.totalPages) return true;
+                      if (Math.abs(p - automationPage) <= 1) return true;
+                      return false;
+                    })
+                    .map((p, idx, arr) => {
+                      const prevP = arr[idx - 1];
+                      const showEllipsis = prevP && p - prevP > 1;
+                      return (
+                        <React.Fragment key={p}>
+                          {showEllipsis && <span className="px-1 text-slate-400">...</span>}
+                          <button
+                            type="button"
+                            onClick={() => setAutomationPage(p)}
+                            className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center transition-colors ${
+                              automationPage === p
+                                ? 'bg-[#06244B] text-white shadow-sm'
+                                : 'bg-white text-slate-700 border border-[#D0D5DD] hover:bg-slate-100'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })}
+
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    icon={ChevronRight}
+                    disabled={automationPage >= automationPagination.totalPages}
+                    onClick={() => setAutomationPage((prev) => Math.min(automationPagination.totalPages, prev + 1))}
+                    className="px-2 py-1 text-xs"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
