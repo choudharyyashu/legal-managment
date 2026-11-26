@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Database, CheckCircle2, RefreshCw, ArrowUpRight, ShieldCheck, Clock, FileSpreadsheet, AlertTriangle, Key } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Database, CheckCircle2, RefreshCw, ArrowUpRight, ShieldCheck, Clock, FileSpreadsheet, AlertTriangle, Key, AlertCircle } from 'lucide-react';
 import { useTime } from '../../../context/TimeContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -9,6 +9,7 @@ import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
 import { formatCurrency, formatHours } from '../../../utils/formatCurrency';
+import { integrationService } from '../../../services/integrationService';
 
 export function CosmoLexSettings() {
   const { cosmoLexExports, exportApprovedToCosmoLex, timeEntries } = useTime();
@@ -16,17 +17,56 @@ export function CosmoLexSettings() {
   const permissions = usePermissions();
   const { addToast } = useToast();
 
-  const [connectionStatus, setConnectionStatus] = useState('Connected'); // 'Connected', 'Attention Required', 'Disconnected'
+  const [connectionStatus, setConnectionStatus] = useState('Checking Status...');
+  const [tenantInfo, setTenantInfo] = useState('Awaiting Server Credentials');
+  const [hasCredentials, setHasCredentials] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+
+  useEffect(() => {
+    integrationService.getStatuses()
+      .then((list) => {
+        const item = (list || []).find((i) => i.id === 'cosmolex');
+        if (item) {
+          setHasCredentials(Boolean(item.hasCredentials));
+          setTenantInfo(item.tenant || 'Awaiting Server Credentials');
+          setConnectionStatus(
+            item.status === 'CONNECTED'
+              ? 'Connected'
+              : item.status === 'CONFIGURED'
+              ? 'Configured'
+              : 'Credentials Required'
+          );
+        } else {
+          setConnectionStatus('Credentials Required');
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load CosmoLex status from backend:', err?.message);
+        setConnectionStatus('Credentials Required');
+      });
+  }, []);
 
   const pendingReadyEntries = timeEntries.filter(t => t.status === 'Approved');
 
-  const handleTestConnection = () => {
-    addToast('Testing CosmoLex REST API endpoint connectivity...', 'info');
-    setTimeout(() => {
-      setConnectionStatus('Connected');
-      addToast('CosmoLex API handshake verified (Firm Account #UT-HB-88192). Status: Active & Synced.', 'success');
-    }, 800);
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    addToast('Testing CosmoLex API endpoint connectivity via backend gateway...', 'info');
+    try {
+      const res = await integrationService.testConnection('cosmolex');
+      if (res?.success) {
+        setConnectionStatus('Connected');
+        addToast(res.message || 'CosmoLex API handshake verified.', 'success');
+      } else {
+        setConnectionStatus(res?.status === 'BLOCKED' ? 'Upstream Blocked' : 'Credentials Required');
+        addToast(res?.message || 'CosmoLex API credentials required in server environment.', 'warning');
+      }
+    } catch (err) {
+      setConnectionStatus('Credentials Required');
+      addToast(err?.message || 'Failed to verify CosmoLex connection.', 'error');
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const handleRunExport = () => {
@@ -41,12 +81,23 @@ export function CosmoLexSettings() {
     }
 
     setIsExporting(true);
-    setTimeout(() => {
+    try {
       const entryIds = pendingReadyEntries.map(e => e.id);
-      const batch = exportApprovedToCosmoLex(entryIds, currentUser.name);
+      const batch = exportApprovedToCosmoLex(entryIds, currentUser?.name || 'Authorized Staff');
       setIsExporting(false);
-      addToast(`Batch ${batch.batchId} successfully synchronized to CosmoLex ledger!`, 'success');
-    }, 1000);
+
+      if (hasCredentials) {
+        addToast(`Batch ${batch.batchId} created and staged for CosmoLex ledger sync.`, 'success');
+      } else {
+        addToast(
+          `Batch ${batch.batchId} recorded internally. External CosmoLex live sync is unconfigured pending API credentials.`,
+          'info'
+        );
+      }
+    } catch (err) {
+      setIsExporting(false);
+      addToast(err?.message || 'Failed to generate export batch.', 'error');
+    }
   };
 
   const columns = [
@@ -98,7 +149,7 @@ export function CosmoLexSettings() {
     <div className="space-y-6">
       <PageHeader
         title="CosmoLex Integration &amp; Export Bridge"
-        subtitle="CosmoLex remains the official firm accounting system. Export approved billable hours and disbursements into general ledger batches."
+        subtitle="Optional downstream general ledger batch export bridge. Native double-entry accounting operates independently inside LegalPro (Utah RPC 1.15)."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'CosmoLex Export' }]}
         actions={
           <Button
@@ -106,8 +157,10 @@ export function CosmoLexSettings() {
             size="sm"
             icon={RefreshCw}
             onClick={handleTestConnection}
+            loading={isTesting}
+            disabled={isTesting}
           >
-            Test API Connection
+            {isTesting ? 'Verifying Gateway...' : 'Test API Connection'}
           </Button>
         }
       />
@@ -127,10 +180,10 @@ export function CosmoLexSettings() {
                 <StatusBadge status={connectionStatus} />
               </div>
               <p className="text-xs text-[#667085] mt-1">
-                Firm Tenant: <strong>Heugly &amp; Bludworth LLC (Account #UT-88192)</strong> • API Version: <strong>v3.2 (REST Endpoint)</strong>
+                Firm Gateway Status: <strong>{tenantInfo}</strong> • Protocol: <strong>REST API Bridge</strong>
               </p>
               <p className="text-[11px] text-[#A4432B] font-semibold mt-1">
-                Demonstration integration interface. Real accounting records remain safe in your official CosmoLex portal.
+                CosmoLex is optional. Full standalone General Ledger, Trust Sub-Ledgers, and Utah RPC 1.15 Compliance are maintained natively.
               </p>
             </div>
           </div>
@@ -153,8 +206,15 @@ export function CosmoLexSettings() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-[#D9D6CF]/60 text-xs">
           <div>
             <span className="text-[#667085] block font-medium">Connection State:</span>
-            <span className="font-bold text-sm text-[#287A55] flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" /> Ready &amp; Connected
+            <span className={`font-bold text-sm flex items-center gap-1 ${
+              connectionStatus === 'Connected' ? 'text-[#287A55]' : 'text-[#A4432B]'
+            }`}>
+              {connectionStatus === 'Connected' ? (
+                <CheckCircle2 className="w-4 h-4 text-[#287A55]" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-[#A4432B]" />
+              )}
+              {connectionStatus}
             </span>
           </div>
           <div>
@@ -187,30 +247,30 @@ export function CosmoLexSettings() {
       {/* CosmoLex Config Settings Form */}
       <div className="bg-white p-6 rounded border border-[#D9D6CF] shadow-subtle space-y-4">
         <h3 className="font-serif font-bold text-base text-[#06244B] border-b border-[#D9D6CF]/60 pb-2">
-          CosmoLex API Configuration (Demo Environment)
+          CosmoLex API Gateway Settings
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div>
             <label className="block font-semibold uppercase text-[#202A35] mb-1">
-              CosmoLex Firm Tenant ID
+              CosmoLex Firm Tenant Status
             </label>
             <input
               type="text"
               readOnly
-              value="TENANT-UT-HEUGLY-BLUDWORTH-088192"
+              value={tenantInfo}
               className="w-full p-2 rounded border border-[#D9D6CF] bg-[#F5F0E5]/40 text-[#667085] font-mono text-xs"
             />
           </div>
 
           <div>
             <label className="block font-semibold uppercase text-[#202A35] mb-1">
-              Endpoint URL
+              Target Endpoint URL
             </label>
             <input
               type="text"
               readOnly
-              value="https://api.cosmolex.com/v3/sync/batch"
+              value={hasCredentials ? "https://api.cosmolex.com/v3/sync/batch" : "Not configured (Set COSMOLEX_API_KEY)"}
               className="w-full p-2 rounded border border-[#D9D6CF] bg-[#F5F0E5]/40 text-[#667085] font-mono text-xs"
             />
           </div>

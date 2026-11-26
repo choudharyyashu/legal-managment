@@ -33,3 +33,22 @@ export const createAccountSchema = z.object({
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
+export const journalQuerySchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD').optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD').optional(),
+  accountNumber: z.coerce.number().int().positive().optional(),
+  search: z.string().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50).optional(),
+});
+
+export type JournalQueryInput = z.infer<typeof journalQuerySchema>;
+export type JournalQuerySchemaInput = JournalQueryInput;
+
+export const chartOfAccountQuerySchema = z.object({
+  asOfDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'asOfDate must be YYYY-MM-DD').optional(),
+});
+
+export type ChartOfAccountQueryInput = z.infer<typeof chartOfAccountQuerySchema>;
+
+

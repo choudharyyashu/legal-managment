@@ -5,10 +5,23 @@ import { AuthenticatedRequest } from '../auth/auth.types.js';
 export class LedgerController {
   static async getChartOfAccounts(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const accounts = await LedgerService.getChartOfAccounts();
+      const accounts = await LedgerService.getChartOfAccounts(req.query as any);
       res.status(200).json({
         success: true,
         data: accounts,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getTrialBalance(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const asOfDate = req.query.asOfDate as string | undefined;
+      const trialBalance = await LedgerService.getTrialBalance(asOfDate);
+      res.status(200).json({
+        success: true,
+        data: trialBalance,
       });
     } catch (err) {
       next(err);
@@ -36,10 +49,11 @@ export class LedgerController {
 
   static async getJournals(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const journals = await LedgerService.getJournals();
+      const result = await LedgerService.getJournals(req.query as any);
       res.status(200).json({
         success: true,
-        data: journals,
+        data: result.journals,
+        pagination: result.pagination,
       });
     } catch (err) {
       next(err);

@@ -33,7 +33,7 @@ import { formatCurrency, formatHours } from '../../../utils/formatCurrency';
 
 export function BillingOverview() {
   const navigate = useNavigate();
-  const { timeEntries, expenses, invoices } = useTime();
+  const { timeEntries, expenses, invoices, payments } = useTime();
   const { matters } = useMatters();
 
   const totalBillableHours = timeEntries.filter(t => t.isBillable).reduce((sum, t) => sum + (t.hours || 0), 0);
@@ -42,10 +42,12 @@ export function BillingOverview() {
   const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
   const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
-  const totalCollected = invoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
+  const totalCollected = (payments && payments.length > 0)
+    ? payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+    : invoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
   const outstandingInvoices = invoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
 
-  // Dynamic monthly data for past 6 calendar months computed from actual database invoices
+  // Dynamic monthly data for past 6 calendar months computed from actual database invoices and payment records
   const monthlyData = React.useMemo(() => {
     const months = [];
     const now = new Date();
@@ -67,8 +69,19 @@ export function BillingOverview() {
         );
       });
 
+      // Billed: issued invoices in this calendar month
       const billed = monthInvoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
-      const collected = monthInvoices.reduce((sum, inv) => sum + (Number(inv.paidAmount) || 0), 0);
+
+      // Collections: actual payment receipts recorded in this calendar month using payment.receivedDate
+      const monthPayments = (payments || []).filter((p) => {
+        if (!p.receivedDate) return false;
+        const pDate = new Date(p.receivedDate);
+        return pDate.getFullYear() === year && pDate.getMonth() === monthIndex;
+      });
+
+      const collected = monthPayments.length > 0
+        ? monthPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+        : monthInvoices.reduce((sum, inv) => sum + (Number(inv.paidAmount) || 0), 0);
 
       months.push({
         month: monthLabel,
@@ -77,7 +90,7 @@ export function BillingOverview() {
       });
     }
     return months;
-  }, [invoices]);
+  }, [invoices, payments]);
 
   // Dynamic practice area billing distribution computed from matters and issued invoices
   const practiceBillingData = React.useMemo(() => {

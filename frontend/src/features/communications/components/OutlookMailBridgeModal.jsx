@@ -4,15 +4,25 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
 import { communicationService } from '../../../services/communicationService';
+import { integrationService } from '../../../services/integrationService';
 
 export function OutlookMailBridgeModal({ isOpen, onClose, onFileEmail }) {
   const { addToast } = useToast();
   const [inboxEmails, setInboxEmails] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isM365Configured, setIsM365Configured] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
+
+    integrationService.getStatuses()
+      .then((list) => {
+        const item = (list || []).find((i) => i.id === 'm365');
+        setIsM365Configured(Boolean(item?.hasCredentials));
+      })
+      .catch(() => setIsM365Configured(false));
+
     communicationService.getUnmatchedQueue()
       .then((items) => {
         const list = Array.isArray(items) ? items : (items?.data || []);
@@ -52,19 +62,35 @@ export function OutlookMailBridgeModal({ isOpen, onClose, onFileEmail }) {
       isOpen={isOpen}
       onClose={onClose}
       title="Microsoft 365 / Outlook Mail Bridge"
-      subtitle="Connected to firm Exchange tenant: mail.heuglybludworthlaw.com • Automatic Matter Auto-Matching"
+      subtitle={
+        isM365Configured
+          ? "Connected to firm Exchange tenant • Automatic Matter Auto-Matching"
+          : "Inbound Client Communications Queue • Automatic Matter Triage & Matching"
+      }
       maxWidth="max-w-3xl"
     >
       <div className="space-y-4 text-xs">
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-blue-900">
+        <div className={`p-3 rounded-lg flex items-center justify-between ${
+          isM365Configured
+            ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+            : 'bg-amber-50 border border-amber-200 text-amber-900'
+        }`}>
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4 text-blue-700 shrink-0" />
+            <Mail className={`w-4 h-4 shrink-0 ${isM365Configured ? 'text-emerald-700' : 'text-amber-700'}`} />
             <span>
-              <strong>[PROTOTYPE] Microsoft Graph API Simulator:</strong> Automatically scans sender email addresses, matches open matter dockets, and extracts litigation attachments directly to matter pleadings.
+              {isM365Configured ? (
+                <><strong>Microsoft 365 Gateway Active:</strong> Automatically scanning inbound client correspondence and matching open matter dockets.</>
+              ) : (
+                <><strong>Internal Unmatched Queue:</strong> Viewing pending client communications. Live Microsoft 365 Exchange ingestion requires Azure App Registration credentials.</>
+              )}
             </span>
           </div>
-          <span className="font-mono text-[10px] bg-blue-200 text-blue-900 px-2 py-0.5 rounded font-bold">
-            SYNCED
+          <span className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold ${
+            isM365Configured
+              ? 'bg-emerald-200 text-emerald-900'
+              : 'bg-amber-200 text-amber-900'
+          }`}>
+            {isM365Configured ? 'CONFIGURED' : 'LOCAL QUEUE'}
           </span>
         </div>
 

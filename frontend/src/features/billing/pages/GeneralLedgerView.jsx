@@ -23,17 +23,27 @@ export function GeneralLedgerView() {
       const res = await ledgerService.getJournals();
       const raw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.journals || []));
       setJournalEntries(
-        raw.map((j) => ({
-          id: j.journalNumber || j.id,
-          date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
-          ref: j.reference || j.memo || 'GL-REF',
-          description: j.memo || j.description || 'Journal Entry',
-          accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || j.entries?.find((e) => Number(e.debit) > 0)?.accountNumber || 1010} - Debit`,
-          debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit || j.entries?.find((e) => Number(e.debit) > 0)?.debit || 0),
-          accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || j.entries?.find((e) => Number(e.credit) > 0)?.accountNumber || 2100} - Credit`,
-          credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit || j.entries?.find((e) => Number(e.credit) > 0)?.credit || 0),
-          postedBy: j.postedByUser?.name || j.postedByName || 'System / Authorized User',
-        }))
+        raw.map((j) => {
+          const rawEntries = j.entries || j.lines || [];
+          const debits = rawEntries.filter((e) => Number(e.debit) > 0);
+          const credits = rawEntries.filter((e) => Number(e.credit) > 0);
+          const debitAmount = Number(j.totalDebit) || debits.reduce((sum, e) => sum + Number(e.debit), 0);
+          const creditAmount = Number(j.totalCredit) || credits.reduce((sum, e) => sum + Number(e.credit), 0);
+          const debitAccountsStr = debits.map((e) => `${e.accountNumber}${e.accountName ? ` (${e.accountName})` : ''}`).join(', ') || '—';
+          const creditAccountsStr = credits.map((e) => `${e.accountNumber}${e.accountName ? ` (${e.accountName})` : ''}`).join(', ') || '—';
+
+          return {
+            id: j.journalNumber || j.id,
+            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
+            ref: j.reference || j.memo || 'GL-REF',
+            description: j.memo || j.description || 'Journal Entry',
+            accountDebit: debitAccountsStr,
+            debit: debitAmount,
+            accountCredit: creditAccountsStr,
+            credit: creditAmount,
+            postedBy: j.postedByUser?.name || j.createdByName || j.postedByName || 'Authorized User',
+          };
+        })
       );
     } catch (err) {
       console.warn('Could not load journals from API:', err?.message);

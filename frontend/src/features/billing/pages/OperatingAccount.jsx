@@ -259,7 +259,7 @@ export function OperatingAccount() {
       <BankReconciliationModal
         isOpen={isReconOpen}
         onClose={() => setIsReconOpen(false)}
-        transactions={transactions}
+        onReconciliationComplete={() => loadOperatingLedger()}
       />
 
       {/* Record Operating Disbursement Modal */}

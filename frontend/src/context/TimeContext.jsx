@@ -12,6 +12,7 @@ export function TimeProvider({ children }) {
   const [timeEntries, setTimeEntries] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [cosmoLexExports, setCosmoLexExports] = useState([]);
   const [reviewSlots, setReviewSlots] = useState(INITIAL_REVIEW_SLOTS);
   const [loading, setLoading] = useState(false);
@@ -76,6 +77,21 @@ export function TimeProvider({ children }) {
     dueDate: i.dueDate ? new Date(i.dueDate).toISOString().split('T')[0] : '',
   });
 
+  const normalizePayment = (p) => ({
+    id: p.id,
+    paymentReference: p.paymentReference,
+    invoiceId: p.invoiceId,
+    invoiceNumber: p.invoiceNumber,
+    clientId: p.clientId,
+    clientName: p.clientName,
+    amount: Number(p.amount) || 0,
+    paymentMethod: p.paymentMethod,
+    destinationAccount: p.destinationAccount,
+    transactionReference: p.transactionReference,
+    receivedDate: p.receivedDate ? new Date(p.receivedDate).toISOString().split('T')[0] : '',
+    createdAt: p.createdAt,
+  });
+
   const refreshTimeEntries = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
@@ -109,6 +125,17 @@ export function TimeProvider({ children }) {
     }
   }, [isAuthenticated, canViewInvoices]);
 
+  const refreshPayments = useCallback(async () => {
+    if (!isAuthenticated || !canViewInvoices) return;
+    try {
+      const data = await billingService.getPayments({ limit: 100 });
+      const raw = Array.isArray(data?.payments) ? data.payments : (Array.isArray(data) ? data : []);
+      setPayments(raw.map(normalizePayment));
+    } catch (err) {
+      console.warn('Failed to load payments from API:', err?.message);
+    }
+  }, [isAuthenticated, canViewInvoices]);
+
   const refreshReviewSlots = useCallback(async (dateStr) => {
     if (!isAuthenticated) return;
     try {
@@ -125,13 +152,18 @@ export function TimeProvider({ children }) {
     if (isAuthenticated) {
       refreshTimeEntries();
       refreshReviewSlots();
+      if (canViewInvoices) {
+        refreshInvoices();
+        refreshPayments();
+      }
     } else {
       setTimeEntries([]);
       setExpenses([]);
       setInvoices([]);
+      setPayments([]);
       setReviewSlots(INITIAL_REVIEW_SLOTS);
     }
-  }, [isAuthenticated, refreshTimeEntries, refreshReviewSlots]);
+  }, [isAuthenticated, canViewInvoices, refreshTimeEntries, refreshReviewSlots, refreshInvoices, refreshPayments]);
 
   const markSlotReviewed = async (slotId, dateStr) => {
     // Optimistic UI update
@@ -295,7 +327,7 @@ export function TimeProvider({ children }) {
       };
 
       await billingService.recordPayment(payload);
-      await refreshInvoices();
+      await Promise.all([refreshInvoices(), refreshPayments()]);
     } catch (err) {
       console.warn('Failed to record payment on API:', err?.message);
       // Optimistic fallback
@@ -374,7 +406,9 @@ export function TimeProvider({ children }) {
         addExpense,
         invoices,
         addInvoice,
+        payments,
         recordPayment,
+        refreshPayments,
         cosmoLexExports,
         exportApprovedToCosmoLex,
         reviewSlots,

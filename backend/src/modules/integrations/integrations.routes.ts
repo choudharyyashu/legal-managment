@@ -5,12 +5,26 @@
 
 import { Router } from 'express';
 import { IntegrationsController } from './integrations.controller.js';
-import { requireAuth } from '../../middleware/auth.js';
+import { requireAuth, requireAnyPermission } from '../../middleware/auth.js';
 
 export const integrationsRouter = Router();
 
 integrationsRouter.use(requireAuth);
 
-integrationsRouter.get('/status', IntegrationsController.getStatuses);
-integrationsRouter.post('/:id/test', IntegrationsController.testConnection);
-integrationsRouter.post('/:id/disconnect', IntegrationsController.disconnect);
+integrationsRouter.get(
+  '/status',
+  requireAnyPermission(['integrations:view', 'cosmolex:view', 'settings:view', 'system:admin']),
+  IntegrationsController.getStatuses
+);
+
+integrationsRouter.post(
+  '/:id/test',
+  requireAnyPermission(['integrations:manage', 'cosmolex:export', 'settings:manage', 'system:admin']),
+  IntegrationsController.testConnection
+);
+
+integrationsRouter.post(
+  '/:id/disconnect',
+  requireAnyPermission(['integrations:manage', 'settings:manage', 'system:admin']),
+  IntegrationsController.disconnect
+);

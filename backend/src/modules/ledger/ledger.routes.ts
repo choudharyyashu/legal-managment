@@ -14,6 +14,12 @@ ledgerRouter.get(
   LedgerController.getChartOfAccounts
 );
 
+ledgerRouter.get(
+  '/trial-balance',
+  requireAnyPermission(['operating:view', 'trust:view', 'billing:overview_view', 'reports:financial_view']),
+  LedgerController.getTrialBalance
+);
+
 ledgerRouter.post(
   '/accounts',
   requireAnyPermission(['invoices:manage', 'payments:record', 'billing:overview_view']),

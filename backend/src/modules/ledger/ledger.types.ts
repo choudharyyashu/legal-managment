@@ -3,6 +3,35 @@ export interface ChartOfAccountResponse {
   accountName: string;
   accountType: string;
   isActive: boolean;
+  totalDebit?: number;
+  totalCredit?: number;
+  balance?: number;
+}
+
+export interface TrialBalanceItem {
+  accountNumber: number;
+  accountName: string;
+  accountType: string;
+  debitBalance: number;
+  creditBalance: number;
+}
+
+export interface TrialBalanceResponse {
+  asOfDate: string;
+  accounts: TrialBalanceItem[];
+  totalDebits: number;
+  totalCredits: number;
+  isBalanced: boolean;
+  variance: number;
+}
+
+export interface JournalQueryInput {
+  startDate?: string;
+  endDate?: string;
+  accountNumber?: number;
+  search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface GeneralLedgerEntryResponse {
