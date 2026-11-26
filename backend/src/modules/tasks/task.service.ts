@@ -185,26 +185,41 @@ export class TaskService {
 
     const taskCode = await this.generateTaskCode();
 
-    const created = await prisma.task.create({
-      data: {
-        taskCode,
-        matterId: matter.id,
-        title: input.title,
-        description: input.description,
-        assignedToUserId: assignee.id,
-        createdByUserId: context.userId,
-        dueDate: new Date(input.dueDate),
-        priority: input.priority,
-        reminderSetting: input.reminderSetting,
-        urcpRuleReference: input.urcpRuleReference,
-        status: 'Not Started',
-      },
-      include: {
-        matter: { select: { id: true, matterNumber: true, title: true } },
-        assignee: { select: { id: true, name: true } },
-        creator: { select: { id: true, name: true } },
-      },
-    });
+    let created: any;
+    let attempts = 0;
+    let currentTaskCode = taskCode;
+    while (attempts < 5) {
+      try {
+        created = await prisma.task.create({
+          data: {
+            taskCode: currentTaskCode,
+            matterId: matter.id,
+            title: input.title,
+            description: input.description,
+            assignedToUserId: assignee.id,
+            createdByUserId: context.userId,
+            dueDate: new Date(input.dueDate),
+            priority: input.priority,
+            reminderSetting: input.reminderSetting,
+            urcpRuleReference: input.urcpRuleReference,
+            status: 'Not Started',
+          },
+          include: {
+            matter: { select: { id: true, matterNumber: true, title: true } },
+            assignee: { select: { id: true, name: true } },
+            creator: { select: { id: true, name: true } },
+          },
+        });
+        break;
+      } catch (err: any) {
+        if (err.code === 'P2002' && attempts < 4) {
+          attempts++;
+          currentTaskCode = `TSK-${new Date().getFullYear().toString().slice(-2)}-${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 10)}`;
+          continue;
+        }
+        throw err;
+      }
+    }
 
     await createAuditLog({
       userId: context.userId,

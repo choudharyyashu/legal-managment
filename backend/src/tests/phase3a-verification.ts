@@ -131,6 +131,9 @@ async function runPhase3aVerification() {
   AutoDraftService.initSubscriptions();
   record('STAGE 0', 'AutoDraftService Subscriptions Initialized', 'PASSED');
 
+  const runTag = `R${Date.now().toString().slice(-6)}`;
+  console.log(`[TEST SUITE] Active Test Run Tag: ${runTag}\n`);
+
   const fictionalCreatedIds: { intakes: string[]; matters: string[]; drafts: string[] } = {
     intakes: [],
     matters: [],
@@ -142,12 +145,13 @@ async function runPhase3aVerification() {
   // ============================================================================
   console.log('\n--- WORKFLOW 1: CAT-001 Consultation Confirmation & Rescheduling Lifecycle ---');
   try {
+    const cat001ClientName = `Fictional Client CAT001 ${runTag}`;
     // 1.A Initial Booking
     const intake1 = await prisma.intake.create({
       data: {
-        intakeNumber: `INT-3A-CAT001-${Date.now().toString().slice(-6)}`,
-        prospectiveClient: 'Fictional Client CAT001',
-        email: 'cat001.client@example.com',
+        intakeNumber: `INT-3A-CAT001-${runTag}`,
+        prospectiveClient: cat001ClientName,
+        email: `cat001.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-0101',
         practiceArea: { connect: { id: 'pa-fam' } },
         matterSummary: 'Initial divorce and custody consultation inquiry.',
@@ -172,7 +176,7 @@ async function runPhase3aVerification() {
     const draft1 = await waitForDraft({
       where: {
         template: { templateCode: 'CAT-001' },
-        title: { contains: 'Fictional Client CAT001' },
+        title: { contains: cat001ClientName },
       },
       orderBy: { createdAt: 'desc' },
       include: { template: true },
@@ -209,7 +213,7 @@ async function runPhase3aVerification() {
       const draftsAfterReplay = await prisma.documentDraft.findMany({
         where: {
           template: { templateCode: 'CAT-001' },
-          title: { contains: 'Fictional Client CAT001' },
+          title: { contains: cat001ClientName },
         },
       });
       const replayPrevented = draftsAfterReplay.length === 1;
@@ -233,7 +237,7 @@ async function runPhase3aVerification() {
       const draft2 = await waitForDraft({
         where: {
           template: { templateCode: 'CAT-001' },
-          title: { contains: 'Rescheduled Consultation Confirmation' },
+          title: { contains: cat001ClientName },
           id: { not: draft1.id },
         },
         orderBy: { createdAt: 'desc' },
@@ -275,6 +279,7 @@ async function runPhase3aVerification() {
         const draft3 = await waitForDraft({
           where: {
             template: { templateCode: 'CAT-001' },
+            title: { contains: cat001ClientName },
             id: { notIn: [draft1.id, draft2.id] },
           },
           orderBy: { createdAt: 'desc' },
@@ -316,11 +321,12 @@ async function runPhase3aVerification() {
     ];
 
     for (const pc of practiceCases) {
+      const clientName = `Fictional Client ${pc.label} ${runTag}`;
       const intake = await prisma.intake.create({
         data: {
-          intakeNumber: `INT-3A-CAT002-${pc.label}-${Date.now().toString().slice(-5)}`,
-          prospectiveClient: `Fictional Client ${pc.label}`,
-          email: `${pc.label.toLowerCase()}.client@example.com`,
+          intakeNumber: `INT-3A-CAT002-${pc.label}-${runTag}`,
+          prospectiveClient: clientName,
+          email: `${pc.label.toLowerCase()}.${runTag.toLowerCase()}@example.com`,
           phone: '801-555-0202',
           practiceArea: { connect: { id: pc.paId } },
           matterSummary: `Inquiry regarding ${pc.expectedSubtype} representation.`,
@@ -394,11 +400,12 @@ async function runPhase3aVerification() {
   console.log('\n--- WORKFLOW 3: CAT-003 Conflict Search Report & Ethical Safeguards ---');
   try {
     // 3.A Known Conflict Scenario
+    const adversaryName = `Fictional Adversary Corp ${runTag}`;
     const conflictIntake = await prisma.intake.create({
       data: {
-        intakeNumber: `INT-3A-CAT003-CONF-${Date.now().toString().slice(-5)}`,
-        prospectiveClient: 'Fictional Adversary Corp',
-        email: 'adversary@example.com',
+        intakeNumber: `INT-3A-CAT003-CONF-${runTag}`,
+        prospectiveClient: adversaryName,
+        email: `adversary.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-0301',
         practiceArea: { connect: { id: 'pa-civ' } },
         matterSummary: 'Contract litigation against existing client.',
@@ -423,14 +430,14 @@ async function runPhase3aVerification() {
             severity: 'HARD_CONFLICT',
           },
         ],
-        queriedTerms: ['Existing Client LLC', 'Adversary Corp'],
+        queriedTerms: ['Existing Client LLC', adversaryName],
       },
       { user: adminUser }
     );
     const flaggedReport = await waitForDraft({
       where: {
         template: { templateCode: 'CAT-003' },
-        title: { contains: 'Fictional Adversary Corp' },
+        title: { contains: adversaryName },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -453,11 +460,12 @@ async function runPhase3aVerification() {
     }
 
     // 3.B Clean Scan Scenario
+    const cleanName = `Fictional Clean Client ${runTag}`;
     const cleanIntake = await prisma.intake.create({
       data: {
-        intakeNumber: `INT-3A-CAT003-CLN-${Date.now().toString().slice(-5)}`,
-        prospectiveClient: 'Fictional Clean Client',
-        email: 'clean@example.com',
+        intakeNumber: `INT-3A-CAT003-CLN-${runTag}`,
+        prospectiveClient: cleanName,
+        email: `clean.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-0302',
         practiceArea: { connect: { id: 'pa-civ' } },
         matterSummary: 'Clean breach of contract inquiry.',
@@ -475,7 +483,7 @@ async function runPhase3aVerification() {
         conflictStatus: 'Cleared',
         hasConflicts: false,
         matches: [],
-        queriedTerms: ['Clean Client'],
+        queriedTerms: [cleanName],
       },
       { user: adminUser }
     );
@@ -483,7 +491,7 @@ async function runPhase3aVerification() {
     const cleanReport = await waitForDraft({
       where: {
         template: { templateCode: 'CAT-003' },
-        title: { contains: 'Fictional Clean Client' },
+        title: { contains: cleanName },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -502,11 +510,12 @@ async function runPhase3aVerification() {
     }
 
     // 3.C Pending Review Scenario (Must NEVER auto-clear)
+    const pendingName = `Fictional Potential Match Client ${runTag}`;
     const pendingIntake = await prisma.intake.create({
       data: {
-        intakeNumber: `INT-3A-CAT003-PND-${Date.now().toString().slice(-5)}`,
-        prospectiveClient: 'Fictional Potential Match Client',
-        email: 'potential@example.com',
+        intakeNumber: `INT-3A-CAT003-PND-${runTag}`,
+        prospectiveClient: pendingName,
+        email: `potential.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-0303',
         practiceArea: { connect: { id: 'pa-civ' } },
         matterSummary: 'Potential party overlap needing attorney review.',
@@ -532,7 +541,7 @@ async function runPhase3aVerification() {
     const pendingReport = await waitForDraft({
       where: {
         template: { templateCode: 'CAT-003' },
-        title: { contains: 'Fictional Potential Match Client' },
+        title: { contains: pendingName },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -579,11 +588,12 @@ async function runPhase3aVerification() {
   // ============================================================================
   console.log('\n--- WORKFLOW 4: CAT-010 Intake-to-Matter Conversion Welcome Letter ---');
   try {
+    const retainedName = `Fictional Retained Client ${runTag}`;
     const intakeForConvert = await prisma.intake.create({
       data: {
-        intakeNumber: `INT-3A-CAT010-${Date.now().toString().slice(-5)}`,
-        prospectiveClient: 'Fictional Retained Client',
-        email: 'retained@example.com',
+        intakeNumber: `INT-3A-CAT010-${runTag}`,
+        prospectiveClient: retainedName,
+        email: `retained.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-0100',
         practiceArea: { connect: { id: 'pa-fam' } },
         matterSummary: 'Divorce proceeding approved for representation.',
@@ -597,7 +607,7 @@ async function runPhase3aVerification() {
     const convertResult = await IntakeService.convertToMatter(
       intakeForConvert.id,
       {
-        title: 'Retained Client Divorce Matter',
+        title: `Retained Client Divorce Matter ${runTag}`,
         practiceAreaId: 'pa-fam',
         responsibleAttorneyId: attorneyUser.id,
         billingType: 'Hourly',
@@ -675,17 +685,17 @@ async function runPhase3aVerification() {
     // 5.A Full Satisfaction Scenario ($3,200 judgment, $3,200 collected, $0 balance)
     const clientFull = await prisma.client.create({
       data: {
-        clientNumber: `CLI-3A-FULL-${Date.now().toString().slice(-4)}`,
-        name: 'Landlord Properties LLC',
+        clientNumber: `CLI-3A-FULL-${runTag}`,
+        name: `Landlord Properties LLC ${runTag}`,
         clientType: 'Corporate',
-        email: 'landlord.full@example.com',
+        email: `landlord.full.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-3001',
       },
     });
     const matterFull = await prisma.matter.create({
       data: {
-        matterNumber: `26-EVICT-FULL-${Date.now().toString().slice(-4)}`,
-        title: 'Landlord Properties v. Resident Doe (Full)',
+        matterNumber: `26-EVICT-FULL-${runTag}`,
+        title: `Landlord Properties v. Resident Doe (Full) ${runTag}`,
         clientId: clientFull.id,
         practiceAreaId: 'pa-evict',
         responsibleAttorneyId: attorneyUser.id,
@@ -734,17 +744,17 @@ async function runPhase3aVerification() {
     // 5.B Partial Payment Scenario ($3,200 judgment, $1,200 collected, $2,000 balance)
     const clientPart = await prisma.client.create({
       data: {
-        clientNumber: `CLI-3A-PART-${Date.now().toString().slice(-4)}`,
-        name: 'Mountain Real Estate Corp',
+        clientNumber: `CLI-3A-PART-${runTag}`,
+        name: `Mountain Real Estate Corp ${runTag}`,
         clientType: 'Corporate',
-        email: 'landlord.part@example.com',
+        email: `landlord.part.${runTag.toLowerCase()}@example.com`,
         phone: '801-555-3002',
       },
     });
     const matterPart = await prisma.matter.create({
       data: {
-        matterNumber: `26-EVICT-PART-${Date.now().toString().slice(-4)}`,
-        title: 'Mountain RE Corp v. Resident Smith (Partial)',
+        matterNumber: `26-EVICT-PART-${runTag}`,
+        title: `Mountain RE Corp v. Resident Smith (Partial) ${runTag}`,
         clientId: clientPart.id,
         practiceAreaId: 'pa-evict',
         responsibleAttorneyId: attorneyUser.id,
