@@ -1,8 +1,24 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
-import { CreateTimeEntryInput, UpdateTimeEntryInput, ApproveTimeEntryInput } from './time.validation.js';
-import { TimeEntryResponse, TimeEntryListQuery, SuggestedBillingResponse } from './time.types.js';
+import {
+  CreateTimeEntryInput,
+  UpdateTimeEntryInput,
+  ApproveTimeEntryInput,
+  ReviewSlotQueryInput,
+  MarkSlotReviewedInput,
+  ReviewFlagQueryInput,
+  UpdateReviewFlagStatusInput,
+} from './time.validation.js';
+import {
+  TimeEntryResponse,
+  TimeEntryListQuery,
+  SuggestedBillingResponse,
+  ReviewSlotResponse,
+  IdleFlagResponse,
+  OverlapFlagResponse,
+  ReviewFlagsResponse,
+} from './time.types.js';
 
 export class TimeService {
   private static async generateEntryCode(): Promise<string> {
@@ -323,6 +339,374 @@ export class TimeService {
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
+  }
+
+  public static readonly MOUNTAIN_TIME_REVIEW_SLOTS = [
+    {
+      id: 'slot-noon',
+      label: 'Noon Review Slot',
+      scheduledTime: '12:00 PM MT (Noon)',
+      timezone: 'Mountain Time (MT)',
+      windowDescription: 'Morning passive email, call, and drafting sweep (8:00 AM – 12:00 PM MT)',
+    },
+    {
+      id: 'slot-4pm',
+      label: '4 PM Review Slot',
+      scheduledTime: '4:00 PM MT',
+      timezone: 'Mountain Time (MT)',
+      windowDescription: 'Mid-afternoon court conferences, document edits, and VoIP call sweep',
+    },
+    {
+      id: 'slot-6pm',
+      label: '6 PM Review Slot',
+      scheduledTime: '6:00 PM MT',
+      timezone: 'Mountain Time (MT)',
+      windowDescription: 'End-of-day billing capture reconciliation & unmatched communication check',
+    },
+    {
+      id: 'slot-9pm',
+      label: '9 PM Review Slot',
+      scheduledTime: '9:00 PM MT',
+      timezone: 'Mountain Time (MT)',
+      windowDescription: 'Final evening Mountain Time wrap-up & pre-ledger lock',
+    },
+  ];
+
+  public static getMountainTimeDate(date: Date = new Date()): string {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Denver',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    return formatter.format(date);
+  }
+
+  public static getMountainTimeDayRange(dateStr: string): { startUtc: Date; endUtc: Date } {
+    const testDate = new Date(`${dateStr}T12:00:00Z`);
+    const fmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', timeZoneName: 'shortOffset' });
+    const part = fmt.formatToParts(testDate).find((p) => p.type === 'timeZoneName')?.value || 'GMT-7';
+    const match = part.match(/GMT([+-])(\d+)(?::(\d+))?/);
+    let offsetStr = '-07:00';
+    if (match) {
+      const sign = match[1];
+      const hours = match[2].padStart(2, '0');
+      const mins = (match[3] || '00').padStart(2, '0');
+      offsetStr = `${sign}${hours}:${mins}`;
+    }
+
+    const startUtc = new Date(`${dateStr}T00:00:00.000${offsetStr}`);
+    const endUtc = new Date(`${dateStr}T23:59:59.999${offsetStr}`);
+    return { startUtc, endUtc };
+  }
+
+  static async getReviewSlots(query: ReviewSlotQueryInput): Promise<ReviewSlotResponse[]> {
+    const targetDate = query.date || this.getMountainTimeDate();
+    const { startUtc, endUtc } = this.getMountainTimeDayRange(targetDate);
+
+    const [reviewLogs, pendingCount] = await Promise.all([
+      prisma.auditLog.findMany({
+        where: {
+          resourceType: 'TIME_REVIEW_SLOT',
+          action: 'TIME_REVIEW_SLOT_COMPLETED',
+          timestamp: {
+            gte: startUtc,
+            lte: endUtc,
+          },
+        },
+        orderBy: { timestamp: 'desc' },
+      }),
+      prisma.timeEntry.count({
+        where: {
+          date: new Date(targetDate),
+          status: 'Submitted',
+        },
+      }),
+    ]);
+
+    const completedSlotsMap = new Map<string, any>();
+    for (const log of reviewLogs) {
+      const slotId = log.resourceId || (log.details as any)?.slotId;
+      if (slotId && !completedSlotsMap.has(slotId)) {
+        completedSlotsMap.set(slotId, log);
+      }
+    }
+
+    return this.MOUNTAIN_TIME_REVIEW_SLOTS.map((slot) => {
+      const completedLog = completedSlotsMap.get(slot.id);
+      if (completedLog) {
+        const timeStr = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/Denver',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        }).format(completedLog.timestamp);
+
+        return {
+          id: slot.id,
+          label: slot.label,
+          scheduledTime: slot.scheduledTime,
+          timezone: slot.timezone,
+          reviewStatus: 'Completed',
+          pendingSuggestions: 0,
+          lastReviewedTime: `Reviewed at ${timeStr} MT by ${completedLog.userName}`,
+          windowDescription: slot.windowDescription,
+          reviewedByUserName: completedLog.userName,
+          reviewedAt: completedLog.timestamp.toISOString(),
+        };
+      }
+
+      return {
+        id: slot.id,
+        label: slot.label,
+        scheduledTime: slot.scheduledTime,
+        timezone: slot.timezone,
+        reviewStatus: 'Pending',
+        pendingSuggestions: pendingCount,
+        lastReviewedTime: 'Pending Review',
+        windowDescription: slot.windowDescription,
+        reviewedByUserName: null,
+        reviewedAt: null,
+      };
+    });
+  }
+
+  static async markReviewSlotCompleted(
+    slotId: string,
+    input: MarkSlotReviewedInput,
+    context: { userId: string; userName: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<{ success: boolean; isAlreadyCompleted: boolean; message: string; slot: ReviewSlotResponse }> {
+    const validSlotIds = this.MOUNTAIN_TIME_REVIEW_SLOTS.map((s) => s.id);
+    if (!validSlotIds.includes(slotId)) {
+      throw AppError.badRequest(`Invalid review slot ID '${slotId}'. Valid slots: ${validSlotIds.join(', ')}`);
+    }
+
+    const targetDate = input.date || this.getMountainTimeDate();
+    const { startUtc, endUtc } = this.getMountainTimeDayRange(targetDate);
+
+    // Prevent duplicate review completion records (Requirement 6)
+    const existing = await prisma.auditLog.findFirst({
+      where: {
+        resourceType: 'TIME_REVIEW_SLOT',
+        action: 'TIME_REVIEW_SLOT_COMPLETED',
+        resourceId: slotId,
+        timestamp: {
+          gte: startUtc,
+          lte: endUtc,
+        },
+      },
+    });
+
+    let completionLog = existing;
+    let isAlreadyCompleted = true;
+
+    if (!existing) {
+      completionLog = await prisma.auditLog.create({
+        data: {
+          userId: context.userId,
+          userName: context.userName,
+          userRole: context.userRole,
+          action: 'TIME_REVIEW_SLOT_COMPLETED',
+          resourceType: 'TIME_REVIEW_SLOT',
+          resourceId: slotId,
+          details: {
+            slotId,
+            targetDate,
+            timezone: 'America/Denver',
+            completedAt: new Date().toISOString(),
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        },
+      });
+      isAlreadyCompleted = false;
+    }
+
+    const slotConfig = this.MOUNTAIN_TIME_REVIEW_SLOTS.find((s) => s.id === slotId)!;
+    const timeStr = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Denver',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(completionLog!.timestamp);
+
+    const slotResponse: ReviewSlotResponse = {
+      id: slotConfig.id,
+      label: slotConfig.label,
+      scheduledTime: slotConfig.scheduledTime,
+      timezone: slotConfig.timezone,
+      reviewStatus: 'Completed',
+      pendingSuggestions: 0,
+      lastReviewedTime: `Reviewed at ${timeStr} MT by ${completionLog!.userName}`,
+      windowDescription: slotConfig.windowDescription,
+      reviewedByUserName: completionLog!.userName,
+      reviewedAt: completionLog!.timestamp.toISOString(),
+    };
+
+    return {
+      success: true,
+      isAlreadyCompleted,
+      message: isAlreadyCompleted
+        ? `Review slot '${slotConfig.label}' was already marked as completed for ${targetDate}.`
+        : `Review slot '${slotConfig.label}' marked as completed.`,
+      slot: slotResponse,
+    };
+  }
+
+  static async getReviewFlags(
+    query: ReviewFlagQueryInput,
+    context: { userId: string; userRole: string }
+  ): Promise<ReviewFlagsResponse> {
+    const targetDate = query.date || this.getMountainTimeDate();
+
+    // Query time entries for the target date
+    const entries = await prisma.timeEntry.findMany({
+      where: {
+        date: new Date(targetDate),
+        ...(query.slotId ? {} : {}),
+      },
+      include: {
+        matter: { select: { id: true, matterNumber: true, title: true } },
+        user: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Requirement 7: Generate overlap flags ONLY when actual start and end timestamps establish overlapping time intervals.
+    // Do NOT classify total daily hours above eight as overlapping entries.
+    // Parse time range format if explicitly recorded in description (e.g. "14:00-15:30" or "2:00 PM – 3:30 PM")
+    const timeRangeRegex = /(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?\s*(?:–|-|to)\s*(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/;
+
+    const parseToMinutes = (hStr: string, mStr: string, ampmStr?: string): number => {
+      let h = parseInt(hStr, 10);
+      const m = parseInt(mStr, 10);
+      if (ampmStr) {
+        const isPm = ampmStr.toUpperCase() === 'PM';
+        if (isPm && h < 12) h += 12;
+        if (!isPm && h === 12) h = 0;
+      }
+      return h * 60 + m;
+    };
+
+    const intervalEntries: { entry: any; startMin: number; endMin: number; rangeStr: string }[] = [];
+    let intervalDataAvailable = false;
+
+    for (const e of entries) {
+      const match = (e.description || '').match(timeRangeRegex);
+      if (match) {
+        intervalDataAvailable = true;
+        const startMin = parseToMinutes(match[1], match[2], match[3]);
+        const endMin = parseToMinutes(match[4], match[5], match[6] || match[3]);
+        if (endMin > startMin) {
+          intervalEntries.push({
+            entry: e,
+            startMin,
+            endMin,
+            rangeStr: match[0],
+          });
+        }
+      }
+    }
+
+    const overlapFlags: OverlapFlagResponse[] = [];
+
+    // Group intervals by user to detect collisions
+    const userIntervals = new Map<string, typeof intervalEntries>();
+    for (const item of intervalEntries) {
+      const uId = item.entry.userId;
+      if (!userIntervals.has(uId)) userIntervals.set(uId, []);
+      userIntervals.get(uId)!.push(item);
+    }
+
+    for (const [userId, uItems] of userIntervals.entries()) {
+      for (let i = 0; i < uItems.length; i++) {
+        for (let j = i + 1; j < uItems.length; j++) {
+          const a = uItems[i];
+          const b = uItems[j];
+          // True interval overlap condition: startA < endB && startB < endA
+          if (a.startMin < b.endMin && b.startMin < a.endMin) {
+            const overlapStart = Math.max(a.startMin, b.startMin);
+            const overlapEnd = Math.min(a.endMin, b.endMin);
+            const overlapMins = overlapEnd - overlapStart;
+
+            overlapFlags.push({
+              id: `OVL-${a.entry.id}-${b.entry.id}`,
+              slotId: query.slotId || 'slot-6pm',
+              userId,
+              userName: a.entry.user?.name || 'Staff Member',
+              date: targetDate,
+              overlapDuration: `${overlapMins} mins overlap`,
+              reason: `Simultaneous active time logs detected across matters ${a.entry.matter?.matterNumber || 'Matter 1'} and ${b.entry.matter?.matterNumber || 'Matter 2'} during the same time interval.`,
+              reviewNote: '',
+              status: 'Pending',
+              entries: [
+                {
+                  id: a.entry.id,
+                  matterNumber: a.entry.matter?.matterNumber || 'Matter 1',
+                  matterTitle: a.entry.matter?.title || 'Matter Title',
+                  timeRange: a.rangeStr,
+                  hours: Number(a.entry.hours),
+                },
+                {
+                  id: b.entry.id,
+                  matterNumber: b.entry.matter?.matterNumber || 'Matter 2',
+                  matterTitle: b.entry.matter?.title || 'Matter Title',
+                  timeRange: b.rangeStr,
+                  hours: Number(b.entry.hours),
+                },
+              ],
+            });
+          }
+        }
+      }
+    }
+
+    // Requirement 8: Generate idle flags ONLY when reliable inactivity evidence exists.
+    // Do NOT fabricate idle periods from differences between actual and billable durations.
+    // Inactivity telemetry is not currently stored in the database.
+    const idleFlags: IdleFlagResponse[] = [];
+
+    return {
+      idleFlags,
+      overlapFlags,
+      metadata: {
+        targetDate,
+        timezone: 'Mountain Time (America/Denver)',
+        intervalDataAvailable,
+        inactivityTelemetryAvailable: false,
+      },
+    };
+  }
+
+  static async updateReviewFlagStatus(
+    flagId: string,
+    input: UpdateReviewFlagStatusInput,
+    context: { userId: string; userName: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<{ success: boolean; flagId: string; status: string; reviewNote?: string | null }> {
+    // Requirement 10: Keep flag resolution separate from formal time-entry approval and rejection workflows.
+    await createAuditLog({
+      userId: context.userId,
+      userName: context.userName,
+      userRole: context.userRole,
+      action: 'TIME_REVIEW_FLAG_RESOLVED',
+      resourceType: 'TIME_REVIEW_FLAG',
+      resourceId: flagId,
+      details: {
+        flagId,
+        status: input.status,
+        reviewNote: input.reviewNote || null,
+        resolvedAt: new Date().toISOString(),
+      },
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    return {
+      success: true,
+      flagId,
+      status: input.status,
+      reviewNote: input.reviewNote || null,
+    };
   }
 }
 

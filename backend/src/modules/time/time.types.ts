@@ -51,3 +51,64 @@ export interface TimeEntryListQuery {
   endDate?: string;
 }
 
+export interface ReviewSlotResponse {
+  id: string;
+  label: string;
+  scheduledTime: string;
+  timezone: string;
+  reviewStatus: 'Pending' | 'Completed';
+  pendingSuggestions: number;
+  lastReviewedTime: string;
+  windowDescription: string;
+  reviewedByUserName?: string | null;
+  reviewedAt?: string | null;
+}
+
+export interface IdleFlagResponse {
+  id: string;
+  slotId: string;
+  userId: string;
+  userName: string;
+  clientName: string;
+  matterNumber: string;
+  matterTitle: string;
+  date: string;
+  loggedDuration: string;
+  idleDuration: string;
+  reason: string;
+  reviewNote?: string | null;
+  status: 'Pending' | 'Reviewed' | 'Approved' | 'Rejected';
+}
+
+export interface OverlapFlagEntry {
+  id: string;
+  matterNumber: string;
+  matterTitle: string;
+  timeRange: string;
+  hours: number;
+}
+
+export interface OverlapFlagResponse {
+  id: string;
+  slotId: string;
+  userId: string;
+  userName: string;
+  date: string;
+  overlapDuration: string;
+  reason: string;
+  reviewNote?: string | null;
+  status: 'Pending' | 'Reviewed' | 'Approved' | 'Rejected';
+  entries: OverlapFlagEntry[];
+}
+
+export interface ReviewFlagsResponse {
+  idleFlags: IdleFlagResponse[];
+  overlapFlags: OverlapFlagResponse[];
+  metadata: {
+    targetDate: string;
+    timezone: string;
+    intervalDataAvailable: boolean;
+    inactivityTelemetryAvailable: boolean;
+  };
+}
+

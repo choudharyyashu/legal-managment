@@ -17,6 +17,8 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { useClients } from '../../context/ClientContext';
 import { useMatters } from '../../context/MatterContext';
 import { useTasks } from '../../context/TaskContext';
+import { useTime } from '../../context/TimeContext';
+import { useNotificationPreferences } from '../../context/NotificationContext';
 import { Button } from '../ui/Button';
 
 export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNewMatter }) {
@@ -26,6 +28,8 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
   const { clients } = useClients();
   const { matters, setActiveMatter } = useMatters();
   const { tasks } = useTasks();
+  const { timeEntries } = useTime();
+  const { preferences } = useNotificationPreferences();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -62,35 +66,74 @@ export function Topbar({ onMenuToggle, onOpenLogTime, onOpenAddClient, onOpenNew
     }
   });
 
-  // Dynamically derive firm notifications from real active tasks and deadlines
+  // Dynamically derive firm notifications respecting user notification preferences
   const notifications = React.useMemo(() => {
-    if (!Array.isArray(tasks) || tasks.length === 0) return [];
+    const list = [];
 
-    // Filter pending/in-progress tasks, priority-ranked (Critical/High first)
-    const activeTasks = tasks.filter((t) => t.status !== 'Completed');
-    const priorityOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-    activeTasks.sort((a, b) => {
-      const prioDiff = (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
-      if (prioDiff !== 0) return prioDiff;
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-    });
+    // 1. Time Approval Queue Notifications (controlled by preferences.timeApprovalAlerts)
+    const canApproveTime =
+      currentUser?.role === 'super_admin' ||
+      currentUser?.role === 'supervisor' ||
+      currentUser?.role === 'billing';
 
-    return activeTasks.slice(0, 6).map((t) => {
-      const notifId = `notif-task-${t.id}`;
-      const isUrgent = t.priority === 'Critical' || t.priority === 'High';
-      return {
-        id: notifId,
-        title: isUrgent ? `Urgent Task: ${t.title}` : t.title,
-        description: `${t.matterName || 'Matter Task'} • Assigned to ${t.assignedToName || 'Staff'}`,
-        time: t.dueDate ? `Due ${t.dueDate}` : 'Pending',
-        read: readNotifIds.has(notifId),
-        type: isUrgent ? 'warning' : 'info',
-        link: '/tasks',
-      };
-    });
-  }, [tasks, readNotifIds]);
+    if (preferences?.timeApprovalAlerts && canApproveTime && Array.isArray(timeEntries)) {
+      const pendingApprovals = timeEntries.filter((e) => e.status === 'Submitted');
+      if (pendingApprovals.length > 0) {
+        const notifId = 'notif-time-approvals';
+        list.push({
+          id: notifId,
+          title: 'Time Approval Queue',
+          description: `${pendingApprovals.length} submitted time ${pendingApprovals.length === 1 ? 'entry' : 'entries'} awaiting partner approval`,
+          time: 'Needs Review',
+          read: readNotifIds.has(notifId),
+          type: 'warning',
+          link: '/tasks',
+        });
+      }
+    }
+
+    // 2. Active Tasks and Court Appearance Deadlines
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      const activeTasks = tasks.filter((t) => t.status !== 'Completed');
+      const priorityOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+      activeTasks.sort((a, b) => {
+        const prioDiff = (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
+        if (prioDiff !== 0) return prioDiff;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });
+
+      // Filter by lead time and court deadline preferences
+      const courtAlertsEnabled = preferences?.courtDeadlineEmail || preferences?.courtDeadlineSms;
+
+      const taskNotifs = activeTasks
+        .filter((t) => {
+          // If court deadline alerts are disabled, suppress court appearance tasks from urgent alerts
+          const isCourtRelated = /court|hearing|trial|motion|deposition/i.test(`${t.title} ${t.description || ''}`);
+          if (isCourtRelated && !courtAlertsEnabled) return false;
+          return true;
+        })
+        .slice(0, 5)
+        .map((t) => {
+          const notifId = `notif-task-${t.id}`;
+          const isUrgent = t.priority === 'Critical' || t.priority === 'High';
+          return {
+            id: notifId,
+            title: isUrgent ? `Urgent Task: ${t.title}` : t.title,
+            description: `${t.matterName || 'Matter Task'} • Assigned to ${t.assignedToName || 'Staff'}`,
+            time: t.dueDate ? `Due ${t.dueDate}` : 'Pending',
+            read: readNotifIds.has(notifId),
+            type: isUrgent ? 'warning' : 'info',
+            link: '/tasks',
+          };
+        });
+
+      list.push(...taskNotifs);
+    }
+
+    return list;
+  }, [tasks, timeEntries, preferences, currentUser, readNotifIds]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

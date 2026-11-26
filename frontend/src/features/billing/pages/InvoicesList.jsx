@@ -20,6 +20,7 @@ import {
 import { useTime } from '../../../context/TimeContext';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
+import { useBranding } from '../../../context/BrandingContext';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -35,6 +36,7 @@ export function InvoicesList() {
   const { invoices, addInvoice, recordPayment, refreshInvoices, timeEntries = [], expenses = [] } = useTime();
   const { clients } = useClients();
   const { matters } = useMatters();
+  const { branding } = useBranding();
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -655,15 +657,22 @@ export function InvoicesList() {
               {/* Firm Letterhead Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b-2 border-[#06244B] pb-4">
                 <div>
+                  {branding?.logoUrl && (
+                    <img
+                      src={branding.logoUrl}
+                      alt={branding?.firmName || 'Firm Logo'}
+                      className="max-h-12 max-w-[180px] object-contain mb-2"
+                    />
+                  )}
                   <h2 className="font-serif font-bold text-2xl text-[#06244B]">
-                    HEUGLY &amp; BLUDWORTH
+                    {branding?.firmName || 'HEUGLY & BLUDWORTH'}
                   </h2>
                   <p className="text-[11px] font-semibold text-[#A4432B] uppercase tracking-widest">
-                    ATTORNEYS AT LAW
+                    {branding?.tagline || 'ATTORNEYS AT LAW'}
                   </p>
                   <p className="text-[10px] text-[#667085] mt-1">
-                    250 State Street, Suite 800, Salt Lake City, UT 84111<br />
-                    Tel: (801) 555-0100 • contact@utahslawyers.com
+                    {branding?.address || '250 State Street, Suite 800, Salt Lake City, UT 84111'}<br />
+                    Tel: {branding?.primaryPhone || '(801) 555-0100'} • {branding?.primaryEmail || 'contact@utahslawyers.com'}
                   </p>
                 </div>
 

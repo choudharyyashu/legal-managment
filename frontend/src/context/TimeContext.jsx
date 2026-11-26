@@ -109,15 +109,32 @@ export function TimeProvider({ children }) {
     }
   }, [isAuthenticated, canViewInvoices]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setTimeEntries([]);
-      setExpenses([]);
-      setInvoices([]);
+  const refreshReviewSlots = useCallback(async (dateStr) => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await timeService.getReviewSlots(dateStr ? { date: dateStr } : {});
+      if (Array.isArray(data) && data.length > 0) {
+        setReviewSlots(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load review slots from API:', err?.message);
     }
   }, [isAuthenticated]);
 
-  const markSlotReviewed = (slotId) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshTimeEntries();
+      refreshReviewSlots();
+    } else {
+      setTimeEntries([]);
+      setExpenses([]);
+      setInvoices([]);
+      setReviewSlots(INITIAL_REVIEW_SLOTS);
+    }
+  }, [isAuthenticated, refreshTimeEntries, refreshReviewSlots]);
+
+  const markSlotReviewed = async (slotId, dateStr) => {
+    // Optimistic UI update
     setReviewSlots((prev) =>
       prev.map((slot) =>
         slot.id === slotId
@@ -129,6 +146,18 @@ export function TimeProvider({ children }) {
           : slot
       )
     );
+
+    try {
+      const result = await timeService.markReviewSlotCompleted(slotId, dateStr ? { date: dateStr } : {});
+      if (result) {
+        setReviewSlots((prev) =>
+          prev.map((slot) => (slot.id === slotId ? { ...slot, ...result } : slot))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to persist review slot completion:', err?.message);
+      refreshReviewSlots(dateStr);
+    }
   };
 
   const addTimeEntry = async (entryData) => {
@@ -336,6 +365,7 @@ export function TimeProvider({ children }) {
         cosmoLexExports,
         exportApprovedToCosmoLex,
         reviewSlots,
+        refreshReviewSlots,
         markSlotReviewed,
         loading,
         refreshTimeEntries,

@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Calendar, TimerOff, Copy, FileSpreadsheet } from 'lucide-react';
 import { useTime } from '../../../context/TimeContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { useToast } from '../../../components/ui/Toast';
+import { timeService } from '../../../services/timeService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Tabs } from '../../../components/ui/Tabs';
@@ -24,8 +25,30 @@ export function DailyTimeReview() {
 
   const [idleFlags, setIdleFlags] = useState([]);
   const [overlapFlags, setOverlapFlags] = useState([]);
+  const [flagsLoading, setFlagsLoading] = useState(false);
+  const [flagsMetadata, setFlagsMetadata] = useState(null);
 
-  const handleUpdateIdleFlagStatus = (flagId, status, reviewNote) => {
+  const fetchFlags = useCallback(async () => {
+    setFlagsLoading(true);
+    try {
+      const res = await timeService.getReviewFlags({
+        slotId: activeSlotId || undefined,
+      });
+      setIdleFlags(res.idleFlags || []);
+      setOverlapFlags(res.overlapFlags || []);
+      setFlagsMetadata(res.metadata || null);
+    } catch (err) {
+      console.warn('Failed to load review flags:', err?.message);
+    } finally {
+      setFlagsLoading(false);
+    }
+  }, [activeSlotId]);
+
+  useEffect(() => {
+    fetchFlags();
+  }, [fetchFlags]);
+
+  const handleUpdateIdleFlagStatus = async (flagId, status, reviewNote) => {
     setIdleFlags((prev) =>
       prev.map((f) =>
         f.id === flagId
@@ -33,10 +56,17 @@ export function DailyTimeReview() {
           : f
       )
     );
-    addToast(`Idle flag ${flagId} updated to ${status}.`, status === 'Rejected' ? 'info' : 'success');
+    try {
+      await timeService.updateReviewFlagStatus(flagId, { status, reviewNote });
+      addToast(`Idle flag ${flagId} updated to ${status}.`, status === 'Rejected' ? 'info' : 'success');
+    } catch (err) {
+      console.error('Failed to update idle flag status:', err);
+      addToast(`Failed to update flag status: ${err?.message || 'Unknown error'}`, 'error');
+      fetchFlags();
+    }
   };
 
-  const handleUpdateOverlapFlagStatus = (flagId, status, reviewNote) => {
+  const handleUpdateOverlapFlagStatus = async (flagId, status, reviewNote) => {
     setOverlapFlags((prev) =>
       prev.map((f) =>
         f.id === flagId
@@ -44,7 +74,14 @@ export function DailyTimeReview() {
           : f
       )
     );
-    addToast(`Overlap flag ${flagId} updated to ${status}.`, status === 'Rejected' ? 'info' : 'success');
+    try {
+      await timeService.updateReviewFlagStatus(flagId, { status, reviewNote });
+      addToast(`Overlap flag ${flagId} updated to ${status}.`, status === 'Rejected' ? 'info' : 'success');
+    } catch (err) {
+      console.error('Failed to update overlap flag status:', err);
+      addToast(`Failed to update flag status: ${err?.message || 'Unknown error'}`, 'error');
+      fetchFlags();
+    }
   };
 
   const pendingIdleCount = idleFlags.filter((f) => f.status === 'Pending' || f.status === 'Reviewed').length;
@@ -128,6 +165,8 @@ export function DailyTimeReview() {
           mode="idle"
           flags={idleFlags}
           activeSlotId={activeSlotId}
+          loading={flagsLoading}
+          metadata={flagsMetadata}
           onUpdateFlagStatus={handleUpdateIdleFlagStatus}
         />
       )}
@@ -138,6 +177,8 @@ export function DailyTimeReview() {
           mode="overlap"
           flags={overlapFlags}
           activeSlotId={activeSlotId}
+          loading={flagsLoading}
+          metadata={flagsMetadata}
           onUpdateFlagStatus={handleUpdateOverlapFlagStatus}
         />
       )}
