@@ -553,6 +553,15 @@ export function SettlementCalculator() {
         isOpen={isStatementModalOpen}
         onClose={() => setIsStatementModalOpen(false)}
         matterTitle={selectedMatter?.title}
+        matter={selectedMatter}
+        settlementData={{
+          grossSettlement,
+          feeSelection,
+          feeRateOption,
+          contingencyPct,
+          costs,
+          liens,
+        }}
       />
     </div>
   );

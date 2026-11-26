@@ -45,23 +45,69 @@ export function BillingOverview() {
   const totalCollected = invoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
   const outstandingInvoices = invoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
 
-  // Chart data
-  const monthlyData = [
-    { month: 'Jun', billed: 42000, collected: 38000 },
-    { month: 'Jul', billed: 48500, collected: 45000 },
-    { month: 'Aug', billed: 53000, collected: 50200 },
-    { month: 'Sep', billed: 61000, collected: 58000 },
-    { month: 'Oct', billed: 68500, collected: 62000 },
-    { month: 'Nov', billed: 34500, collected: 25390 },
-  ];
+  // Dynamic monthly data for past 6 calendar months computed from actual database invoices
+  const monthlyData = React.useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthIndex = d.getMonth();
+      const monthLabel = d.toLocaleString('en-US', { month: 'short' });
 
-  const practiceBillingData = [
-    { name: 'Civil Litigation', value: 96500, color: '#06244B' },
-    { name: 'Real Estate & Water', value: 68400, color: '#A66A16' },
-    { name: 'Commercial Law', value: 37500, color: '#7B8890' },
-    { name: 'Family Law', value: 31250, color: '#A4432B' },
-    { name: 'Trust & Estates', value: 24000, color: '#315F8C' },
-  ];
+      const monthInvoices = (invoices || []).filter((inv) => {
+        if (!inv.issueDate) return false;
+        const invDate = new Date(inv.issueDate);
+        return (
+          invDate.getFullYear() === year &&
+          invDate.getMonth() === monthIndex &&
+          inv.status !== 'Draft' &&
+          inv.status !== 'Void' &&
+          inv.status !== 'Cancelled'
+        );
+      });
+
+      const billed = monthInvoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+      const collected = monthInvoices.reduce((sum, inv) => sum + (Number(inv.paidAmount) || 0), 0);
+
+      months.push({
+        month: monthLabel,
+        billed: Math.round(billed),
+        collected: Math.round(collected),
+      });
+    }
+    return months;
+  }, [invoices]);
+
+  // Dynamic practice area billing distribution computed from matters and issued invoices
+  const practiceBillingData = React.useMemo(() => {
+    const palette = ['#06244B', '#A66A16', '#7B8890', '#A4432B', '#315F8C', '#287A55', '#4B6B94'];
+    const matterMap = new Map();
+    (matters || []).forEach((m) => {
+      matterMap.set(m.id, m.practiceAreaName || m.practiceArea?.name || 'General Practice');
+    });
+
+    const revenueByPractice = {};
+    (invoices || []).forEach((inv) => {
+      if (inv.status === 'Draft' || inv.status === 'Void' || inv.status === 'Cancelled') return;
+      const paName = matterMap.get(inv.matterId) || inv.matter?.practiceArea?.name || 'General Practice';
+      const amount = Number(inv.totalAmount) || 0;
+      revenueByPractice[paName] = (revenueByPractice[paName] || 0) + amount;
+    });
+
+    const entries = Object.entries(revenueByPractice);
+    if (entries.length === 0) {
+      return [];
+    }
+
+    return entries
+      .map(([name, value], idx) => ({
+        name,
+        value: Math.round(value),
+        color: palette[idx % palette.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [invoices, matters]);
 
   return (
     <div className="space-y-6">
@@ -181,36 +227,47 @@ export function BillingOverview() {
           </div>
 
           <div className="h-48 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={practiceBillingData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={75}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {practiceBillingData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val) => formatCurrency(val)} />
-              </PieChart>
-            </ResponsiveContainer>
+            {practiceBillingData.length === 0 || practiceBillingData.every((p) => p.value === 0) ? (
+              <div className="text-center text-[#667085] text-xs">
+                <p className="font-semibold text-[#06244B]">No Practice Area Invoices</p>
+                <p className="text-[11px] mt-0.5">Year-to-date fees will appear as invoices are issued.</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={practiceBillingData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {practiceBillingData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(val) => formatCurrency(val)} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           <div className="space-y-1.5 text-xs pt-3 border-t border-[#D9D6CF]/50">
-            {practiceBillingData.slice(0, 4).map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center">
-                <span className="flex items-center gap-1.5 truncate">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="text-[#202A35] truncate">{item.name}</span>
-                </span>
-                <span className="font-bold text-[#06244B]">{formatCurrency(item.value)}</span>
-              </div>
-            ))}
+            {practiceBillingData.length === 0 || practiceBillingData.every((p) => p.value === 0) ? (
+              <p className="text-center text-[11px] text-[#667085]">Zero billed revenue across practice areas.</p>
+            ) : (
+              practiceBillingData.slice(0, 4).map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center">
+                  <span className="flex items-center gap-1.5 truncate">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-[#202A35] truncate">{item.name}</span>
+                  </span>
+                  <span className="font-bold text-[#06244B]">{formatCurrency(item.value)}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

@@ -826,6 +826,8 @@ export function InvoicesList() {
       <SettlementStatementModal
         isOpen={isSettlementOpen}
         onClose={() => setIsSettlementOpen(false)}
+        matterId={selectedInvoice?.matterId || matters[0]?.id}
+        matterTitle={selectedInvoice?.matterName || matters[0]?.title}
       />
     </div>
   );

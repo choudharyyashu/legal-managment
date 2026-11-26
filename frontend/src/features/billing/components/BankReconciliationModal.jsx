@@ -10,14 +10,14 @@ export function BankReconciliationModal({
   onClose,
   transactions = [],
   reconciliationPeriod = '2026-10',
-  initialOpeningBalance = 150000.0,
+  initialOpeningBalance = 0.0,
 }) {
   const { addToast } = useToast();
 
   const [period, setPeriod] = useState(reconciliationPeriod);
   const [openingBalance, setOpeningBalance] = useState(() => {
     const saved = localStorage.getItem(`bank_rec_${reconciliationPeriod}_opening_balance`);
-    return saved !== null ? Number(saved) : initialOpeningBalance;
+    return saved !== null ? Number(saved) : (Number(initialOpeningBalance) || 0);
   });
 
   const [statementEndingBalance, setStatementEndingBalance] = useState(() => {
@@ -109,8 +109,8 @@ export function BankReconciliationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Monthly Bank Statement Reconciliation"
-      subtitle={`Zions Bank Commercial Operating Account • Reconciliation Period: ${period}`}
+      title="Monthly Operating Bank Statement Reconciliation"
+      subtitle={`Commercial Operating Bank Statement • Reconciliation Period: ${period}`}
       maxWidth="max-w-2xl"
     >
       <form onSubmit={handleFinishReconciliation} className="space-y-4 text-xs">

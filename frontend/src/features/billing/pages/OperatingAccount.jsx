@@ -16,13 +16,15 @@ export function OperatingAccount() {
   const [isDisbursementOpen, setIsDisbursementOpen] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [disbDesc, setDisbDesc] = useState('');
-  const [disbAmount, setDisbAmount] = useState(450);
+  const [disbAmount, setDisbAmount] = useState('');
 
   // Load live operating account transactions from General Ledger
   const loadOperatingLedger = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await ledgerService.getJournals();
       const rawJournals = Array.isArray(res)
@@ -65,24 +67,26 @@ export function OperatingAccount() {
         }
       });
 
-      // Sort by date descending
-      opTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort chronologically ascending to compute exact running balance from General Ledger entries
+      opTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-      // Compute running balance
-      let currentBal = 184520.50; // Operating baseline
-      const withBalances = opTransactions.map((tx) => {
-        const bal = currentBal;
+      let running = 0;
+      const withChronologicalBalances = opTransactions.map((tx) => {
         if (tx.type === 'Credit') {
-          currentBal -= tx.amount;
+          running += tx.amount;
         } else {
-          currentBal += tx.amount;
+          running -= tx.amount;
         }
-        return { ...tx, balance: bal };
+        return { ...tx, balance: Number(running.toFixed(2)) };
       });
 
-      setTransactions(withBalances);
+      // Reverse for table display (newest first)
+      const tableData = [...withChronologicalBalances].reverse();
+      setTransactions(tableData);
+      setError(null);
     } catch (err) {
       console.warn('Could not load operating ledger from API:', err?.message);
+      setError(err?.message || 'Failed to retrieve General Ledger records.');
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -95,10 +99,10 @@ export function OperatingAccount() {
 
   const handleCreateDisbursement = async (e) => {
     e.preventDefault();
-    if (!disbDesc.trim() || disbAmount <= 0) return;
+    const amt = Number(disbAmount);
+    if (!disbDesc.trim() || !Number.isFinite(amt) || amt <= 0) return;
 
     try {
-      const amt = Number(disbAmount);
       await ledgerService.createJournal({
         transactionDate: new Date().toISOString().split('T')[0],
         memo: disbDesc.trim(),
@@ -119,13 +123,22 @@ export function OperatingAccount() {
       addToast(`Operating check disbursement of ${formatCurrency(amt)} posted to General Ledger (Account #1010 / #5000).`, 'success');
       setIsDisbursementOpen(false);
       setDisbDesc('');
-      setDisbAmount(450);
+      setDisbAmount('');
       loadOperatingLedger();
     } catch (err) {
       console.error('Failed to post disbursement:', err);
       addToast(err?.response?.data?.message || err?.message || 'Failed to post disbursement.', 'error');
     }
   };
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const currentOperatingBalance = transactions.length > 0 ? (transactions[0]?.balance ?? 0) : 0;
+  const thirtyDayInflow = transactions
+    .filter((t) => t.type === 'Credit' && t.date && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const thirtyDayDisbursements = transactions
+    .filter((t) => t.type === 'Debit' && t.date && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const columns = [
     { key: 'date', label: 'Transaction Date', sortable: true },
@@ -203,23 +216,36 @@ export function OperatingAccount() {
         }
       />
 
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded text-red-900 text-xs flex items-center justify-between">
+          <span>Failed to load General Ledger records: {error}</span>
+          <Button size="xs" variant="outline" onClick={loadOperatingLedger}>
+            Retry
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">Current Operating Balance</span>
           <p className="text-2xl font-serif font-bold text-[#06244B] mt-1">
-            {formatCurrency(transactions[0]?.balance || 148200)}
+            {loading ? 'Loading...' : error ? 'Unavailable' : formatCurrency(currentOperatingBalance)}
           </p>
-          <span className="text-[11px] text-[#287A55] font-semibold">Zions Bank Main Commercial Account</span>
+          <span className="text-[11px] text-[#667085] font-semibold">General Ledger Account #1010 (Book Balance)</span>
         </div>
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">30-Day Inflow</span>
-          <p className="text-2xl font-serif font-bold text-[#287A55] mt-1">+$47,890.00</p>
-          <span className="text-[11px] text-[#667085]">Earned fees transferred</span>
+          <p className="text-2xl font-serif font-bold text-[#287A55] mt-1">
+            {loading ? 'Loading...' : error ? 'Unavailable' : `+${formatCurrency(thirtyDayInflow)}`}
+          </p>
+          <span className="text-[11px] text-[#667085]">Earned fees & operating receipts</span>
         </div>
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">30-Day Disbursements</span>
-          <p className="text-2xl font-serif font-bold text-[#B42318] mt-1">-$12,450.00</p>
-          <span className="text-[11px] text-[#667085]">Litigation &amp; expert expenses</span>
+          <p className="text-2xl font-serif font-bold text-[#B42318] mt-1">
+            {loading ? 'Loading...' : error ? 'Unavailable' : `-${formatCurrency(thirtyDayDisbursements)}`}
+          </p>
+          <span className="text-[11px] text-[#667085]">Operating expenses & firm disbursements</span>
         </div>
       </div>
 
