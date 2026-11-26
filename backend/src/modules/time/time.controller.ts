@@ -133,5 +133,72 @@ export class TimeController {
       next(err);
     }
   }
+
+  static async getReviewSlots(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const slots = await TimeService.getReviewSlots(req.query as any);
+      res.status(200).json({
+        success: true,
+        data: slots,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async markReviewSlotCompleted(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await TimeService.markReviewSlotCompleted(req.params.id, req.body, {
+        userId: req.user!.id,
+        userName: (req.user as any)?.name || req.user!.email,
+        userRole: req.user!.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result.slot,
+        isAlreadyCompleted: result.isAlreadyCompleted,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getReviewFlags(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const flags = await TimeService.getReviewFlags(req.query as any, {
+        userId: req.user!.id,
+        userRole: req.user!.role,
+      });
+      res.status(200).json({
+        success: true,
+        data: flags,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateReviewFlagStatus(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await TimeService.updateReviewFlagStatus(req.params.id, req.body, {
+        userId: req.user!.id,
+        userName: (req.user as any)?.name || req.user!.email,
+        userRole: req.user!.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+      res.status(200).json({
+        success: true,
+        message: 'Review flag status updated successfully.',
+        data: result,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

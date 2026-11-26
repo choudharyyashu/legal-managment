@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-15",
+  "kind": "Original synthetic acceptance scenarios;not executed",
+  "new_tests": [
+    {
+      "id": "AT-0440",
+      "scenario_and_expected_result": "Activate a client with two matters and five documents; share only one item. Verify the other four do not appear in lists, search, activity feeds, counts or APIs. Inviting the client is not document delivery. Revoke a grant and test existing direct links, sessions and downloads. Log inviter, recipient, item, revision and grant/revoke times.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0441",
+      "scenario_and_expected_result": "Use a client linked to cases A and B. Upload a ZIP to A; verify recipient/case validation and one archive receipt. Do not mark its members ingested until extraction and indexing succeed. Test mixed successes, duplicate names, encrypted ormalformed archives, malware scanning and safe size/path limits. Keep failures visible without losing original bytes. Notification preferences do not determine whether ingestion succeeded.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0442",
+      "scenario_and_expected_result": "Perform preview, details access and download independently as two contacts. Record action, contact, document revision and first timestamp; repeat access must not overwrite first view. Share a new revision and retain prior evidence. Unauthorized orfailed requests cannot mark viewed. Email scanning/prefetch must be distinguishable from authenticated client activity. Never equate viewed withsigned, understood, completed task or consent.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0443",
+      "scenario_and_expected_result": "Share/update several documents at14:00, 14:14:59 and14:15:01 under anexplicit batching policy. Verify expected grouping, boundary behavior and deduplication byevent/revision. Revoke sharing before dispatch:omit unauthorized content and links. A recipient cannot access another client document. Log queued, sent, failed/retried and portal-view outcomes separately. A digest record alone cannot prove receipt orreading.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0444",
+      "scenario_and_expected_result": "Use the guide example July 3, 2013 plus 2 weekdays:expect July 5, 2013. With a synthetic holiday set excluding July 4, 2013, expect July 8, 2013 for 2 eligible days. Keep both calculations distinct; this is not a statement of applicable court rules. Test zero/negative offsets, weekend anchors, leap dates and timezone transitions. Record anchor, label, basis, rule version and override reason before applying deadlines.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0445",
+      "scenario_and_expected_result": "Create an all-day multiday event and timed events measured in minutes, hours and days. Verify stored date boundaries, timezone, start/end and DST policy; all-day mode must not require a hidden start time. Change an anchor and preview resulting events before applying updates. Avoid duplicates; preserve explicit overrides and notify only authorized attendees. Report invalid duration ormissing anchor instead of guessing.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0446",
+      "scenario_and_expected_result": "Simulate downgrade without changing a real subscription. Verify restricted historical data remains accessible according toexplicit policy, exportable and protected from edit/delete through UI/API/bulktools. Check all users receive the firm-level policy. Pending automations, uploads ormessages must not disappear orbe reported complete when blocked. Upgrading must not duplicate records. Exact plan/contract differences require versioned entitlement evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0447",
+      "scenario_and_expected_result": "Share an event requiring attendance and one informational event. Verify required marker, updated/unviewed attention and only permitted details. Add a client-visible comment:confirm intended audience and notification evidence. Internal comments must never leak. Cross the event time boundary and test the declared past-event policy without deleting firm history. Revoking access must also protect comments, attachments and direct URLs.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0448",
+      "scenario_and_expected_result": "Create two firm users withidentical display names and a client with two cases. Select one recipient for case A; verify one correct target identity, case-scoped history and notifications. An unselected user orclient from case B must not gain access. Preserve drafts, delivery/retry status and recipient changes; do not infer send from a saved draft. Include message activity in thedaily time ledger withunresolved mapping rather than omission.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "extended_tests": [
+    {
+      "id": "AT-0017-MYCASE-SNAPSHOT",
+      "scenario_and_expected_result": "Apply workflow revision A tocase 1, then add two tasks in revision B and apply to case 2. Case1 retains A until an explicit migration; case 2 gets B. Do not silently backfill older cases. Retain source revision and application identity.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0398-MYCASE-ANCHOR-EDIT",
+      "scenario_and_expected_result": "Edit an applied case trigger date separately from the template definition. Preview recalculated tasks/events, completed items and manual overrides; apply only the approved changes. Preserve old/new dates, reason and actor. A template edit alone must not reschedule existing cases.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0019-MYCASE-DEPENDENT-CREATE",
+      "scenario_and_expected_result": "Configure tasks based on a trigger, another task completion and no due date. The dependent task must not exist as active work before the predecessor completes. At zero delay, create it once after verified completion. Reject cycles and stale/replayed events. Preserve four named anchor limits as competitor metadata, not a forced limit on the proposed program.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0040-MYCASE-TASK-DOCUMENT",
+      "scenario_and_expected_result": "Complete the configured predecessor task once:generate one versioned document from the approved template/context. Reopen/recomplete/retry:follow explicit idempotency policy. Verify recipient-visible description excludes internal notes. Generation, review, sharing and transmission remain separate states.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0134-MYCASE-CONCURRENT-VERSIONS",
+      "scenario_and_expected_result": "Two users edit the same base revision. Preserve both results, detect conflict and require reviewed merge; do not claim automatic merging from a newversion upload. Show which bytes arecurrent and retain archived originals withpermissions.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0413-MYCASE-CLIENT-COMPLETION",
+      "scenario_and_expected_result": "Have a client upload evidence and mark an assigned task complete. Record client actor, evidence/checklist status and completion time separately from staff verification. Missing evidence cannot be treated as filing completed. Keep individual calls/texts and portal activity in the master time-review ledger.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0252-MYCASE-INSTANCE-SCOPE",
+      "scenario_and_expected_result": "Open an applied workflow and trace itscreator, case, anchors and generated items. Remove one item versus removing the workflow:preview effects and retain audit/recovery evidence. Complete/edit one item without touching another instance with the same task name. No action performed in this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "date_basis_fixture": {
+    "anchor": "2013-07-03",
+    "offset": 2,
+    "weekday_only_expected": "2013-07-05",
+    "synthetic_holiday_exclusions": [
+      "2013-07-04"
+    ],
+    "configured_eligible_day_expected": "2013-07-08",
+    "not_a_court_rule_opinion": true
+  },
+  "digest_fixture_times": [
+    "14:00:00",
+    "14:14:59",
+    "14:15:01"
+  ],
+  "identities": {
+    "client": "synthetic-client-1",
+    "cases": [
+      "synthetic-A",
+      "synthetic-B"
+    ],
+    "same_display_name_users": [
+      "synthetic-user-1",
+      "synthetic-user-2"
+    ]
+  },
+  "build": null,
+  "environment": null,
+  "real_actions_performed": false
+}

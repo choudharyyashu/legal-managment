@@ -1,8 +1,20 @@
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
-import { SubmitReconciliationInput, LiveReconciliationQuery } from './reconciliation.validation.js';
-import { ReconciliationStatusResponse, ReconciliationRecordResponse } from './reconciliation.types.js';
+import {
+  SubmitReconciliationInput,
+  LiveReconciliationQuery,
+  OperatingReconciliationQuery,
+  SaveOperatingDraftInput,
+  FinalizeOperatingInput,
+} from './reconciliation.validation.js';
+import {
+  ReconciliationStatusResponse,
+  ReconciliationRecordResponse,
+  OperatingReconciliationStatusResponse,
+  OperatingReconciliationHistoryResponse,
+  OperatingReconciliationItem,
+} from './reconciliation.types.js';
 
 export class ReconciliationService {
   private static formatRecord(rec: any): ReconciliationRecordResponse {
@@ -24,29 +36,59 @@ export class ReconciliationService {
   }
 
   static async calculateLiveStatus(query: LiveReconciliationQuery): Promise<ReconciliationStatusResponse> {
-    // 1. Calculate sum of all active client trust sub-ledgers
+    // 1. Calculate sum of all active client trust sub-ledgers (Pillar 3)
     const subLedgers = await prisma.trustSubLedger.findMany({ select: { balance: true } });
     const clientSubledgersTotalBalance = subLedgers.reduce((sum, l) => sum + Number(l.balance), 0);
 
-    // 2. Calculate GL Trust Liability Balance (Account 1010 IOLTA or 2100 Trust Liability)
-    // Query GeneralLedgerEntry for account 1010
+    // 2. Calculate GL Trust Liability Balance from Pillar 2 control accounts (Account 2100 Client Trust Liability, or Account 1020 IOLTA Trust Bank)
+    //    We deliberately DO NOT query Operating Account 1010 to prevent commingling or operating expense contamination.
+    //    We deliberately DO NOT fall back to clientSubledgersTotalBalance when GL entries are absent.
+    //    An empty GL is a data-availability problem, not a balanced state.
+    const glWhere: any = { accountNumber: { in: [2100, 1020] } };
+    if (query.reconciliationMonth && /^\d{4}-\d{2}$/.test(query.reconciliationMonth)) {
+      const [year, month] = query.reconciliationMonth.split('-').map(Number);
+      const cutoffDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+      glWhere.journal = { transactionDate: { lte: cutoffDate } };
+    }
+
     const glEntries = await prisma.generalLedgerEntry.findMany({
-      where: { accountNumber: 1010 },
-      select: { debit: true, credit: true },
+      where: glWhere,
+      select: { accountNumber: true, debit: true, credit: true },
     });
-    const glTrustLiabilityBalance = glEntries.reduce((sum, e) => sum + (Number(e.debit) - Number(e.credit)), 0);
 
-    // Fall back to client subledgers if no journals posted yet to ensure baseline consistency
-    const effectiveGlBalance = glEntries.length > 0 ? glTrustLiabilityBalance : clientSubledgersTotalBalance;
+    const liabilityEntries = glEntries.filter((e) => e.accountNumber === 2100);
+    const assetEntries = glEntries.filter((e) => e.accountNumber === 1020);
+    const glDataAvailable = liabilityEntries.length > 0 || assetEntries.length > 0;
 
-    // 3. Calculate adjusted bank balance
+    // Account 2100 is Client Trust Liability (credit-normal: credit increases, debit decreases).
+    // Account 1020 is IOLTA Trust Bank Asset (debit-normal: debit increases, credit decreases).
+    let glTrustLiabilityBalance = 0;
+    if (liabilityEntries.length > 0) {
+      glTrustLiabilityBalance = Number(
+        liabilityEntries.reduce((sum, e) => sum + (Number(e.credit) - Number(e.debit)), 0).toFixed(2)
+      );
+    } else if (assetEntries.length > 0) {
+      glTrustLiabilityBalance = Number(
+        assetEntries.reduce((sum, e) => sum + (Number(e.debit) - Number(e.credit)), 0).toFixed(2)
+      );
+    }
+
+    // 3. Calculate adjusted bank balance (Pillar 1)
     const bankBalance = Number(query.bankStatementBalance || 0);
     const inTransit = Number(query.depositsInTransit || 0);
     const outstanding = Number(query.outstandingChecks || 0);
     const adjustedBankBalance = Number((bankBalance + inTransit - outstanding).toFixed(2));
 
+    // 4. Variance: Adjusted Bank vs Client Sub-Ledgers (primary three-way check)
     const reconciliationVariance = Number((adjustedBankBalance - clientSubledgersTotalBalance).toFixed(2));
-    const isBalanced = Math.abs(reconciliationVariance) < 0.01 && Math.abs(adjustedBankBalance - effectiveGlBalance) < 0.01;
+
+    // 5. isBalanced requires ALL THREE pillars to match within $0.01 tolerance.
+    //    If GL data is unavailable the reconciliation is INCOMPLETE and cannot be declared balanced,
+    //    regardless of whether the variance between Bank and Client Ledgers happens to be zero.
+    const bankMatchesClientLedger = Math.abs(reconciliationVariance) < 0.01;
+    const bankMatchesGl = glDataAvailable && Math.abs(adjustedBankBalance - glTrustLiabilityBalance) < 0.01;
+    const glMatchesClientLedger = glDataAvailable && Math.abs(glTrustLiabilityBalance - clientSubledgersTotalBalance) < 0.01;
+    const isBalanced = bankMatchesClientLedger && bankMatchesGl && glMatchesClientLedger;
 
     return {
       reconciliationMonth: query.reconciliationMonth,
@@ -54,7 +96,8 @@ export class ReconciliationService {
       depositsInTransit: Number(inTransit.toFixed(2)),
       outstandingChecks: Number(outstanding.toFixed(2)),
       adjustedBankBalance,
-      glTrustLiabilityBalance: Number(effectiveGlBalance.toFixed(2)),
+      glTrustLiabilityBalance,
+      glDataAvailable,
       clientSubledgersTotalBalance: Number(clientSubledgersTotalBalance.toFixed(2)),
       reconciliationVariance,
       isBalanced,
@@ -127,6 +170,475 @@ export class ReconciliationService {
       },
     });
     return records.map(this.formatRecord);
+  }
+
+  // =========================================================================
+  // OPERATING BANK RECONCILIATION METHODS (ACCOUNT 1010)
+  // Strictly segregated from Trust Three-Way Reconciliation
+  // =========================================================================
+
+  static async getOperatingReconciliationStatus(
+    query: OperatingReconciliationQuery,
+    clearedItemIdsOverride?: string[]
+  ): Promise<OperatingReconciliationStatusResponse> {
+    const period = query.reconciliationPeriod;
+    const [year, month] = period.split('-').map(Number);
+    const lastDay = new Date(year, month, 0).getDate();
+    const statementDate = new Date(Date.UTC(year, month - 1, lastDay, 0, 0, 0, 0));
+    const cutoffDate = new Date(Date.UTC(year, month - 1, lastDay, 23, 59, 59, 999));
+
+    // 1. Fetch GL Account 1010 entries up to cutoffDate
+    const glEntries = await prisma.generalLedgerEntry.findMany({
+      where: {
+        accountNumber: 1010,
+        journal: { transactionDate: { lte: cutoffDate } },
+      },
+      include: {
+        journal: { select: { id: true, journalNumber: true, transactionDate: true, memo: true } },
+        account: { select: { accountName: true } },
+      },
+      orderBy: { journal: { transactionDate: 'desc' } },
+    });
+
+    // Check for existing persisted draft or certified record in MySQL
+    let savedRecon: any = null;
+    try {
+      savedRecon = await prisma.operatingBankReconciliation.findUnique({
+        where: {
+          uq_operating_recon_account_date: {
+            accountNumber: 1010,
+            statementDate,
+          },
+        },
+        include: {
+          certifiedByUser: { select: { id: true, name: true, role: true } },
+          preparedByUser: { select: { id: true, name: true, role: true } },
+        },
+      });
+    } catch (err) {
+      console.warn('Failed to query operating_bank_reconciliations:', err);
+    }
+
+    const glDataAvailable = glEntries.length > 0;
+    let totalDebit = 0;
+    let totalCredit = 0;
+    glEntries.forEach((e) => {
+      totalDebit += Number(e.debit);
+      totalCredit += Number(e.credit);
+    });
+    // Independent GL 1010 Book Balance (Asset account: Debits - Credits) through cutoff date
+    const gl1010BookBalance = Number((totalDebit - totalCredit).toFixed(2));
+    const bookAdjustments =
+      query.bookAdjustments !== undefined && query.bookAdjustments !== null
+        ? Number(query.bookAdjustments)
+        : (savedRecon ? Number(savedRecon.bookAdjustments) : 0);
+    const adjustedBookBalance = Number((gl1010BookBalance + bookAdjustments).toFixed(2));
+
+    // External Statement Balances: Do NOT assume missing statement balance is zero
+    let statementOpening: number | null = null;
+    if (query.statementOpeningBalance !== undefined && query.statementOpeningBalance !== null) {
+      statementOpening = Number(query.statementOpeningBalance);
+    } else if (savedRecon && savedRecon.statementOpeningBalance !== null) {
+      statementOpening = Number(savedRecon.statementOpeningBalance);
+    }
+
+    let statementEnding: number | null = null;
+    if (query.statementEndingBalance !== undefined && query.statementEndingBalance !== null) {
+      statementEnding = Number(query.statementEndingBalance);
+    } else if (savedRecon && savedRecon.statementEndingBalance !== null) {
+      statementEnding = Number(savedRecon.statementEndingBalance);
+    }
+
+    let savedClearedIds: string[] = [];
+    if (savedRecon && Array.isArray(savedRecon.clearedTransactionIds)) {
+      savedClearedIds = savedRecon.clearedTransactionIds as string[];
+    }
+
+    const effectiveClearedIds = clearedItemIdsOverride || savedClearedIds;
+    const clearedItemSet: Set<string> = new Set(effectiveClearedIds);
+
+    // 2. Classify items on or before cutoff date and compute cleared & uncleared stats
+    let clearedInflows = 0;
+    let clearedOutflows = 0;
+    let depositsInTransit = 0;
+    let outstandingChecks = 0;
+
+    const items: OperatingReconciliationItem[] = glEntries.map((e) => {
+      const debitVal = Number(e.debit);
+      const creditVal = Number(e.credit);
+      const isDeposit = debitVal > 0;
+      const amt = isDeposit ? debitVal : creditVal;
+      const id = `${e.journal.journalNumber}-${e.id}`;
+      const isCleared = clearedItemSet.has(id) || clearedItemSet.has(e.id) || clearedItemSet.has(e.journal.id);
+
+      if (isCleared) {
+        if (isDeposit) clearedInflows += amt;
+        else clearedOutflows += amt;
+      } else {
+        if (isDeposit) depositsInTransit += amt;
+        else outstandingChecks += amt;
+      }
+
+      return {
+        id,
+        journalId: e.journalId,
+        date: e.journal.transactionDate.toISOString().split('T')[0],
+        description: e.journal.memo || 'Operating Cash Entry',
+        type: isDeposit ? 'Credit' : 'Debit',
+        amount: amt,
+        cleared: isCleared,
+      };
+    });
+
+    clearedInflows = Number(clearedInflows.toFixed(2));
+    clearedOutflows = Number(clearedOutflows.toFixed(2));
+    depositsInTransit = Number(depositsInTransit.toFixed(2));
+    outstandingChecks = Number(outstandingChecks.toFixed(2));
+    const clearedNetActivity = Number((clearedInflows - clearedOutflows).toFixed(2));
+
+    const clearedBookBalance =
+      statementOpening !== null ? Number((statementOpening + clearedNetActivity).toFixed(2)) : null;
+
+    // 3. Independent Reconciliation Equation:
+    // Adjusted Bank Balance = Ending Statement Balance + Valid Deposits in Transit - Valid Outstanding Payments
+    // Final Reconciliation Variance = Adjusted Bank Balance - Independently Calculated GL Book Balance
+    let adjustedBankBalance: number | null = null;
+    let reconciliationVariance: number | null = null;
+    let isBalanced = false;
+
+    if (statementEnding !== null) {
+      adjustedBankBalance = Number((statementEnding + depositsInTransit - outstandingChecks).toFixed(2));
+      reconciliationVariance = Number((adjustedBankBalance - adjustedBookBalance).toFixed(2));
+      isBalanced =
+        Math.abs(reconciliationVariance) < 0.01 &&
+        glDataAvailable &&
+        statementEnding !== null &&
+        statementOpening !== null;
+    }
+
+    const isCertified = savedRecon?.status === 'Certified';
+
+    return {
+      reconciliationPeriod: period,
+      cutoffDate: cutoffDate.toISOString().split('T')[0],
+      statementOpeningBalance: statementOpening,
+      statementEndingBalance: statementEnding,
+      gl1010BookBalance,
+      bookAdjustments,
+      adjustedBookBalance,
+      glDataAvailable,
+      clearedInflows,
+      clearedOutflows,
+      clearedNetActivity,
+      clearedBookBalance,
+      depositsInTransit,
+      outstandingChecks,
+      adjustedBankBalance,
+      reconciliationVariance,
+      isBalanced,
+      isFinalized: isCertified,
+      databasePersistenceAvailable: true,
+      finalizedAt: savedRecon?.certifiedAt ? savedRecon.certifiedAt.toISOString() : null,
+      finalizedBy: isCertified && savedRecon?.certifiedByUser
+        ? {
+            userId: savedRecon.certifiedByUser.id,
+            userName: savedRecon.certifiedByUser.name,
+            userRole: savedRecon.certifiedByUser.role,
+          }
+        : null,
+      items,
+    };
+  }
+
+  static async saveOperatingDraft(
+    input: SaveOperatingDraftInput,
+    context: { userId: string; userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<OperatingReconciliationStatusResponse> {
+    const authorizedRoles = ['super_admin', 'attorney', 'supervisor', 'billing'];
+    if (!authorizedRoles.includes(context.userRole)) {
+      throw AppError.forbidden('You do not have permission to manage bank reconciliations.', 'FORBIDDEN');
+    }
+
+    const period = input.reconciliationPeriod;
+    const [year, month] = period.split('-').map(Number);
+    const lastDay = new Date(year, month, 0).getDate();
+    const statementDate = new Date(Date.UTC(year, month - 1, lastDay, 0, 0, 0, 0));
+
+    // Check if record is already certified/locked
+    const existing = await prisma.operatingBankReconciliation.findUnique({
+      where: {
+        uq_operating_recon_account_date: {
+          accountNumber: 1010,
+          statementDate,
+        },
+      },
+    });
+
+    if (existing && (existing.isLocked || existing.status === 'Certified')) {
+      throw AppError.badRequest(
+        'This operating bank reconciliation has already been certified and locked. Draft updates are prohibited.',
+        'RECONCILIATION_ALREADY_CERTIFIED'
+      );
+    }
+
+    // Compute live reconciliation status
+    const liveStatus = await this.getOperatingReconciliationStatus(
+      {
+        reconciliationPeriod: input.reconciliationPeriod,
+        statementOpeningBalance: input.statementOpeningBalance,
+        statementEndingBalance: input.statementEndingBalance,
+        bookAdjustments: existing?.bookAdjustments ? Number(existing.bookAdjustments) : 0,
+      },
+      input.clearedItemIds
+    );
+
+    // Persist draft in operating_bank_reconciliations table
+    const clearedIds = input.clearedItemIds || [];
+    const unclearedIds = liveStatus.items.filter((i) => !i.cleared).map((i) => i.id);
+
+    await prisma.operatingBankReconciliation.upsert({
+      where: {
+        uq_operating_recon_account_date: {
+          accountNumber: 1010,
+          statementDate,
+        },
+      },
+      create: {
+        accountNumber: 1010,
+        statementDate,
+        statementOpeningBalance: liveStatus.statementOpeningBalance,
+        statementEndingBalance: liveStatus.statementEndingBalance,
+        glBookBalance: liveStatus.gl1010BookBalance,
+        clearedDepositsTotal: liveStatus.clearedInflows,
+        clearedChecksTotal: liveStatus.clearedOutflows,
+        clearedTransactionIds: clearedIds,
+        depositsInTransit: liveStatus.depositsInTransit,
+        outstandingChecks: liveStatus.outstandingChecks,
+        outstandingTransactionIds: unclearedIds,
+        bookAdjustments: liveStatus.bookAdjustments,
+        adjustedBankBalance: liveStatus.adjustedBankBalance,
+        reconciliationVariance: liveStatus.reconciliationVariance,
+        status: 'Draft',
+        isLocked: false,
+        preparedByUserId: context.userId,
+      },
+      update: {
+        statementOpeningBalance: liveStatus.statementOpeningBalance,
+        statementEndingBalance: liveStatus.statementEndingBalance,
+        glBookBalance: liveStatus.gl1010BookBalance,
+        clearedDepositsTotal: liveStatus.clearedInflows,
+        clearedChecksTotal: liveStatus.clearedOutflows,
+        clearedTransactionIds: clearedIds,
+        depositsInTransit: liveStatus.depositsInTransit,
+        outstandingChecks: liveStatus.outstandingChecks,
+        outstandingTransactionIds: unclearedIds,
+        bookAdjustments: liveStatus.bookAdjustments,
+        adjustedBankBalance: liveStatus.adjustedBankBalance,
+        reconciliationVariance: liveStatus.reconciliationVariance,
+        preparedByUserId: context.userId,
+      },
+    });
+
+    return liveStatus;
+  }
+
+  static async finalizeOperating(
+    input: FinalizeOperatingInput,
+    context: { userId: string; userName?: string; userRole: string; ipAddress?: string; userAgent?: string }
+  ): Promise<OperatingReconciliationStatusResponse> {
+    const certifierRoles = ['super_admin', 'attorney', 'supervisor'];
+    if (!certifierRoles.includes(context.userRole)) {
+      throw AppError.forbidden(
+        'Only supervising counsel, partners, or system administrators may certify bank reconciliations under Utah RPC 1.15 standards.',
+        'UNAUTHORIZED_CERTIFICATION'
+      );
+    }
+
+    const period = input.reconciliationPeriod;
+    const [year, month] = period.split('-').map(Number);
+    const lastDay = new Date(year, month, 0).getDate();
+    const statementDate = new Date(Date.UTC(year, month - 1, lastDay, 0, 0, 0, 0));
+
+    // 1. Compute live reconciliation status and perform business validations before transaction
+    const liveStatus = await this.getOperatingReconciliationStatus(
+      {
+        reconciliationPeriod: input.reconciliationPeriod,
+        statementOpeningBalance: input.statementOpeningBalance,
+        statementEndingBalance: input.statementEndingBalance,
+      },
+      input.clearedItemIds
+    );
+
+    // Validate completeness before entering transaction
+    if (!liveStatus.glDataAvailable) {
+      throw AppError.badRequest(
+        'Cannot certify operating reconciliation: No General Ledger records exist for Account 1010 in this period.',
+        'MISSING_GL_RECORDS'
+      );
+    }
+
+    if (liveStatus.statementOpeningBalance === null || liveStatus.statementEndingBalance === null) {
+      throw AppError.badRequest(
+        'Cannot certify operating reconciliation: Opening and ending bank statement balances are mandatory.',
+        'MISSING_STATEMENT_BALANCES'
+      );
+    }
+
+    if (!liveStatus.isBalanced || Math.abs(liveStatus.reconciliationVariance || 0) >= 0.01) {
+      throw AppError.badRequest(
+        `Cannot certify operating reconciliation: An unresolved variance of $${(liveStatus.reconciliationVariance || 0).toFixed(2)} remains. Variance must be $0.00 to certify under Utah RPC 1.15.`,
+        'UNRESOLVED_VARIANCE'
+      );
+    }
+
+    const certifiedAt = new Date();
+    const clearedIds = input.clearedItemIds || [];
+    const unclearedIds = liveStatus.items.filter((i) => !i.cleared).map((i) => i.id);
+
+    // 2. Execute persistence within atomic transaction with row locking to prevent concurrent certification
+    return await prisma.$transaction(
+      async (tx) => {
+        // Row lock existing record if it exists
+        const existingRows = await tx.$queryRaw<any[]>`
+          SELECT id, status, is_locked FROM operating_bank_reconciliations
+          WHERE account_number = 1010 AND statement_date = ${statementDate}
+          FOR UPDATE
+        `;
+        const existing = existingRows[0];
+
+        if (existing && (existing.is_locked || existing.status === 'Certified')) {
+          throw AppError.badRequest(
+            'This operating bank reconciliation has already been certified and locked. Duplicate certification is prohibited.',
+            'RECONCILIATION_ALREADY_CERTIFIED'
+          );
+        }
+
+        // Persist finalized & locked certification in MySQL
+        await tx.operatingBankReconciliation.upsert({
+          where: {
+            uq_operating_recon_account_date: {
+              accountNumber: 1010,
+              statementDate,
+            },
+          },
+          create: {
+            accountNumber: 1010,
+            statementDate,
+            statementOpeningBalance: liveStatus.statementOpeningBalance,
+            statementEndingBalance: liveStatus.statementEndingBalance,
+            glBookBalance: liveStatus.gl1010BookBalance,
+            clearedDepositsTotal: liveStatus.clearedInflows,
+            clearedChecksTotal: liveStatus.clearedOutflows,
+            clearedTransactionIds: clearedIds,
+            depositsInTransit: liveStatus.depositsInTransit,
+            outstandingChecks: liveStatus.outstandingChecks,
+            outstandingTransactionIds: unclearedIds,
+            bookAdjustments: liveStatus.bookAdjustments,
+            adjustedBankBalance: liveStatus.adjustedBankBalance,
+            reconciliationVariance: 0.00,
+            status: 'Certified',
+            isLocked: true,
+            preparedByUserId: context.userId,
+            certifiedByUserId: context.userId,
+            certifiedAt,
+            notes: input.certificationNotes || null,
+          },
+          update: {
+            statementOpeningBalance: liveStatus.statementOpeningBalance,
+            statementEndingBalance: liveStatus.statementEndingBalance,
+            glBookBalance: liveStatus.gl1010BookBalance,
+            clearedDepositsTotal: liveStatus.clearedInflows,
+            clearedChecksTotal: liveStatus.clearedOutflows,
+            clearedTransactionIds: clearedIds,
+            depositsInTransit: liveStatus.depositsInTransit,
+            outstandingChecks: liveStatus.outstandingChecks,
+            outstandingTransactionIds: unclearedIds,
+            bookAdjustments: liveStatus.bookAdjustments,
+            adjustedBankBalance: liveStatus.adjustedBankBalance,
+            reconciliationVariance: 0.00,
+            status: 'Certified',
+            isLocked: true,
+            certifiedByUserId: context.userId,
+            certifiedAt,
+            notes: input.certificationNotes || null,
+          },
+        });
+
+        // Record audit log for regulatory compliance
+        try {
+          await tx.auditLog.create({
+            data: {
+              userId: context.userId,
+              userName: context.userName || 'Certifying Attorney',
+              userRole: context.userRole,
+              action: 'OPERATING_RECONCILIATION_CERTIFIED',
+              resourceType: 'ACCOUNTING_OPERATING',
+              resourceId: `1010-${period}`,
+              details: {
+                reconciliationPeriod: period,
+                statementOpeningBalance: liveStatus.statementOpeningBalance,
+                statementEndingBalance: liveStatus.statementEndingBalance,
+                glBookBalance: liveStatus.gl1010BookBalance,
+                adjustedBankBalance: liveStatus.adjustedBankBalance,
+                certifiedAt: certifiedAt.toISOString(),
+              } as any,
+              ipAddress: context.ipAddress,
+              userAgent: context.userAgent,
+            },
+          });
+        } catch (auditErr) {
+          console.warn('Failed to record operating reconciliation audit log:', auditErr);
+        }
+
+        return {
+          ...liveStatus,
+          isFinalized: true,
+          databasePersistenceAvailable: true,
+          finalizedAt: certifiedAt.toISOString(),
+          finalizedBy: {
+            userId: context.userId,
+            userName: context.userName || 'Certifying Attorney',
+            userRole: context.userRole,
+          },
+        };
+      },
+      { maxWait: 10000, timeout: 20000 }
+    );
+  }
+
+  static async getOperatingHistory(): Promise<OperatingReconciliationHistoryResponse[]> {
+    const records = await prisma.operatingBankReconciliation.findMany({
+      where: { accountNumber: 1010 },
+      orderBy: { statementDate: 'desc' },
+      include: {
+        certifiedByUser: { select: { id: true, name: true, role: true } },
+        preparedByUser: { select: { id: true, name: true, role: true } },
+      },
+    });
+
+    return records.map((r) => {
+      const year = r.statementDate.getUTCFullYear();
+      const month = String(r.statementDate.getUTCMonth() + 1).padStart(2, '0');
+      const period = `${year}-${month}`;
+
+      return {
+        id: r.id,
+        reconciliationPeriod: period,
+        statementOpeningBalance: Number(r.statementOpeningBalance),
+        statementEndingBalance: Number(r.statementEndingBalance),
+        gl1010BookBalance: Number(r.glBookBalance),
+        depositsInTransit: Number(r.depositsInTransit),
+        outstandingChecks: Number(r.outstandingChecks),
+        adjustedBankBalance: Number(r.adjustedBankBalance),
+        reconciliationVariance: Number(r.reconciliationVariance),
+        isBalanced: Math.abs(Number(r.reconciliationVariance)) < 0.01 && r.status === 'Certified',
+        certifiedByUserId: r.certifiedByUserId || r.preparedByUserId,
+        certifiedByUserName: r.certifiedByUser?.name || r.preparedByUser?.name || 'Administrator',
+        certifiedByUserRole: r.certifiedByUser?.role || r.preparedByUser?.role || 'admin',
+        certifiedAt: r.certifiedAt ? r.certifiedAt.toISOString() : r.createdAt.toISOString(),
+        status: (r.status === 'Certified' ? 'FINALIZED' : 'DRAFT') as 'FINALIZED' | 'DRAFT',
+      };
+    });
   }
 }
 

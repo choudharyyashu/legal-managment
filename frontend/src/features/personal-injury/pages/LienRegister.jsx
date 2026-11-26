@@ -19,22 +19,20 @@ import { StatCard } from '../../../components/shared/StatCard';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 import { piService } from '../../../services/piService';
 
 export function LienRegister() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    const filtered = (matters || []).filter(
+    return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
-    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [liens, setLiens] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -316,13 +314,13 @@ export function LienRegister() {
         />
       </div>
 
-      {/* Utah Common Fund & Made-Whole Legal Precedent Notice */}
+      {/* Reference: Utah Common Fund & Made-Whole Principles */}
       <div className="bg-[#F5F0E5]/60 p-4 rounded border border-[#D9D6CF] space-y-2 text-xs text-slate-800">
         <h4 className="font-serif font-bold text-xs text-[#06244B] uppercase tracking-wider flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Utah Common Fund Doctrine &amp; Statutory Fee Apportionment
+          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Common Fund &amp; Fee Apportionment Reference
         </h4>
         <p className="text-[11px] leading-relaxed text-[#667085]">
-          Under Utah law and established equitable principles, a subrogated insurer or statutory lienholder who recovers through an attorney's efforts must bear a proportionate share of the attorney fees and costs expended in generating the fund. This allows our firm to negotiate reductions of 33.33% to 50% on medical liens.
+          Under equitable common-fund principles, lien apportionment or fee reductions depend on the specific subrogation plan, governing statute, and facts of the matter. Verify actual lien reduction terms with supervising counsel before finalizing settlement disbursements.
         </p>
       </div>
 

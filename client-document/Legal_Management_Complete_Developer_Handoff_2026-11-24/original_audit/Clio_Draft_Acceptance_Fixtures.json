@@ -1,0 +1,204 @@
+{
+  "date": "2026-11-15",
+  "status": "Original synthetic fixtures; application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0487",
+      "workflow": {
+        "input": "Selected template/form versions and field mappings",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Build and review a pinned questionnaire",
+        "output": "Versioned document manifest and mapping-coverage report",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0487",
+        "scenario_and_expected_result": "Build a synthetic questionnaire from T1-v2 and court form F1-edition2026. Record all document/field IDs and hashes. Attempt to add T2 after build: do not silently change the live field map; create an explicitly related replacement questionnaire if that is the declared policy. Preserve prior answers and links. Preview every required document field for coverage, duplicates and unmapped values. A new court edition must trigger mapping review rather than silently reuse old bindings.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0488",
+      "workflow": {
+        "input": "Live questionnaire ID, client answers, reviewer edits and matter version",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Submit, review and finalize test answers",
+        "output": "Immutable finalized response snapshot with auditable matter writes",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0488",
+        "scenario_and_expected_result": "Create a synthetic live copy. In-progress answers are visible but staff cannot edit/finalize them. Submit once: enter Needs review; staff edits retain original client value and reviewer reason. Save reviewed responses to the correct matter once and enter Completed. Concurrent/double saves do not duplicate or overwrite matter data. A finalized set cannot be silently edited; a correction uses an explicit new version/amendment workflow. Link creation, partial entry and client submission alone never imply completion.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0489",
+      "workflow": {
+        "input": "Template versions, live-copy IDs and saved matter response IDs",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Edit/reuse templates and manage disposable live copies",
+        "output": "Independent lifecycle outcomes without cross-object loss",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0489",
+        "scenario_and_expected_result": "Create live L1 from template T-v1. Edit T to v2, rename it, duplicate it and delete the original in a disposable environment. L1 and finalized responses retain their original structure/provenance. A newly shared L2 uses v2 with a distinct ID and link. Deleting L1 does not delete T or saved matter responses. Preview the affected objects before deletion, retain an audit trail and enforce permissions. No real questionnaire is deleted by this audit.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0490",
+      "workflow": {
+        "input": "Source template cards, fields and tagged conditional text",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Import and verify destination structure",
+        "output": "Resolved destination graph or explicit exceptions",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0490",
+        "scenario_and_expected_result": "Copy a synthetic nested condition and import reusable cards from T1 into T2. Retain source/destination IDs, field types and condition references. Detect same-name incompatible fields, dangling tags and missing dependencies. While reconstruction is pending, show processing and block final generation under firm policy. Simulate partial failure and retry without duplicate conditions. A copied paragraph alone is not proof the condition exists. Source T1 remains unchanged, and destination cases/formatting are reviewed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0491",
+      "workflow": {
+        "input": "Nonempty test document, template draft and saved version",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Choose creation mode, edit, save and reopen",
+        "output": "Preserved originals and explicit dirty/saved/error state",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0491",
+        "scenario_and_expected_result": "Open a synthetic nonempty Word file. Starting from scratch must show the affected document and a safe choice to cancel or create a separate blank copy; cancel preserves bytes. Edit a template without saving, close/reload and disclose whether edits remain recoverable. Save/confirm creates an identifiable version; failure must not show saved. A web-library generation uses the selected committed version. Do not infer autosave merely because the questionnaire editor autosaves. No real document text is erased.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0492",
+      "workflow": {
+        "input": "Selected DOCX files, source clients, expected fields and case fixtures",
+        "initial_state": "Synthetic fixture and proposed application state; no live case data used",
+        "user_action": "Validate, convert and review templates",
+        "output": "Per-file conversion states and approved mapping evidence",
+        "exceptions_and_dependencies": "Plan, selected add-in, template/form edition, permissions and field mapping must be verified; actual runtime untested."
+      },
+      "acceptance_test": {
+        "id": "AT-0492",
+        "scenario_and_expected_result": "Submit synthetic DOCX batches at five/six files and just below/above the configured5MB boundary; expose the unit convention and reject unsupported/corrupt inputs before processing. A mixed batch reports each file separately. Review AI placeholders against repeated party names, amounts and dates, and flag unreplaced source-client facts. No job or Ready status substitutes for attorney/template approval. Save original hashes and conversion provenance; generate against two different synthetic matters to detect carryover. Preserve I/me/my and four-digit years.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0095",
+      "title": "Typed display-logic truth tables",
+      "scenario_and_expected_result": "Test equals/not-equals, contains/not-contains/contains-only and each before/on/after inclusive date operator with explicit null, empty and multi-select semantics. Combine AND/OR without relying on display order. First section cannot depend on later answers. Reordering sections must reject or explicitly repair forward references; no hidden required question may deadlock submission.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/24663592578075-Clio-Draft-Create-Questionnaire-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0034",
+      "title": "AI question-to-document mapping review",
+      "scenario_and_expected_result": "Preserve the AI-generated blue-field provenance separately from staff edits. Reconcile every required document field to a question or authorized known value; omitted or merged questions cannot silently lose a party role. Long-text formatting loss must be disclosed. Test manual question/section rename and reorder without changing stable mappings.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/24663592578075-Clio-Draft-Create-Questionnaire-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0067",
+      "title": "New-link invalidation scope is unresolved",
+      "scenario_and_expected_result": "Create disposable L1 and L2 from the same template for different matters. Record exactly which old URLs become invalid after generating a new link for L2, and verify unauthorized clients never access the wrong matter. The guide says prior links invalidate but does not clearly establish cross-matter scope. Declare and test the firm policy; do not infer a global invalidation rule.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/41950874052123-Clio-Draft-Preview-and-Share-Questionnaire-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0027",
+      "title": "Staff edits versus original client assertions",
+      "scenario_and_expected_result": "Store original submitted answer, staff revision, editor/time/reason and finalized value separately. A staff correction is not a client assertion or consent. Export and document generation retain that lineage. Already-finalized answers require a declared correction route, not silent mutation.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/33309999460891-Clio-Draft-Live-Questionnaires",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0403",
+      "title": "Saved Word version and browser refresh",
+      "scenario_and_expected_result": "Save T-v2 in the Word add-in, then generate from an already-open web library. Detect a stale cached selection and require a refreshed/version-pinned choice; preserve T-v1 outputs. A successful Word save does not prove the browser is using that version.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/41958805755803-Clio-Draft-Manage-Import-and-Update-Word-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0103",
+      "title": "Standalone choices versus field triggers",
+      "scenario_and_expected_result": "Test a drafter-selected standalone condition separately from a field-triggered condition. Use case-sensitive text values, Exists with blank/unknown data, nested conditions and compound AND/OR criteria. Preserve If/End structure and make unexpected exclusion visible; do not silently normalize case unless the declared rule does so.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/50120936599451-Clio-for-Word-Template-Builder",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0461",
+      "title": "Separate products, occupied seats and billing timing",
+      "scenario_and_expected_result": "In a synthetic admin preview, distinguish court-form and document-automation products and occupied/unoccupied seats. Removing an occupied seat must not silently revoke a user. Model monthly-to-annual as immediate and annual-to-monthly as deferred under this guide, with exact effective date and next invoice. Cancellation requires an observable end-date confirmation; no real charge, plan change or cancellation is performed.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/24314530232603-Clio-Draft-Subscription-and-Billing-Information",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0252",
+      "title": "Old/new Word add-in and entitlement route",
+      "scenario_and_expected_result": "Identify old Clio Draft add-in versus Clio for Word before showing instructions. Test a legacy-ineligible account, Draft entitlement and Work/Vincent entitlement independently. A Work redline/direct-edit capability must not be promised to a Draft-only user. Do not install/uninstall software or grant Word access during the audit.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/50120936599451-Clio-for-Word-Template-Builder",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0440",
+      "title": "Questionnaire preview and distribution are not completion",
+      "scenario_and_expected_result": "Preview navigation, branding and display logic using test answers. Separately record generated link, copied link, channel delivery, start, submission and finalized matter save. Sharing through SMS/email/client portal does not itself prove delivery or opening; no real message is sent.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/41950874052123-Clio-Draft-Preview-and-Share-Questionnaire-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0034",
+      "title": "Bulk placeholder replacement",
+      "scenario_and_expected_result": "Use a synthetic document containing the same client name in a party paragraph, quotation and exhibit filename. Preview all matches; replace a selected occurrence without changing others, then test declared Replace All behavior. Repeated placeholders share the intended field identity; similar names and unselected text remain intact. Preserve original bytes and allow review before save.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/50120936599451-Clio-for-Word-Template-Builder",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0461",
+      "title": "Billing history and payment-method controls",
+      "scenario_and_expected_result": "In a controlled mock-provider test, deny non-admin billing changes and ensure card data remains tokenized/masked. Show historical invoice/receipt IDs, periods and amounts independently of the next invoice. A downloaded receipt does not prove a later payment or successful cancellation. Do not enter credentials, change a real card or charge a subscription.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/24314530232603-Clio-Draft-Subscription-and-Billing-Information",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0252",
+      "title": "Host-specific add-in recovery",
+      "scenario_and_expected_result": "Declare Windows Edge cache versus Mac add-in cache recovery paths without changing real computer settings. In a controlled test, preserve committed template versions and disclose any loss of unsaved state after reload. A successful reload does not prove permissions, entitlement or template mapping is repaired.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/41958805755803-Clio-Draft-Manage-Import-and-Update-Word-Templates",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0457",
+      "title": "Word redline versus direct-apply mode",
+      "scenario_and_expected_result": "For a Work/Vincent-entitled test account, distinguish proposed native Track Changes from direct edits; show the active mode and explicit authorization scope. Reject unapproved proposed edits individually. Direct mode requires the firm-approved policy and preserved prior bytes; a Draft-only account cannot receive Work/Vincent actions by inference. No real document is modified.",
+      "source_url": "https://help.clio.com/hc/en-us/articles/50120936599451-Clio-for-Word-Template-Builder",
+      "status": "Not executed"
+    }
+  ]
+}

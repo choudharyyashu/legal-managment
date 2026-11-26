@@ -12,12 +12,20 @@ export function AuthProvider({ children }) {
   const [allUsers, setAllUsers] = useState([]);
   const [rolePermissions, setRolePermissions] = useState(DEFAULT_ROLE_PERMISSIONS);
 
-  // Load real firm staff from backend /users
-  const refreshUsers = useCallback(async () => {
+  // Load real firm staff from backend (/users for super_admin, /users/directory for all authenticated staff)
+  const refreshUsers = useCallback(async (roleHint) => {
     try {
-      const data = await userService.getUsers({ limit: 100 });
-      if (Array.isArray(data?.users) && data.users.length > 0) {
-        setAllUsers(data.users);
+      const effectiveRole = roleHint || authService.getCachedUser()?.role;
+      if (effectiveRole === 'super_admin') {
+        const data = await userService.getUsers({ limit: 100 });
+        if (Array.isArray(data?.users) && data.users.length > 0) {
+          setAllUsers(data.users);
+          return;
+        }
+      }
+      const directory = await userService.getDirectory();
+      if (Array.isArray(directory) && directory.length > 0) {
+        setAllUsers(directory);
       }
     } catch (err) {
       console.warn('Could not fetch remote users list:', err?.message);
@@ -39,9 +47,7 @@ export function AuthProvider({ children }) {
         if (isMounted && user) {
           setCurrentUser(user);
           setIsAuthenticated(true);
-          if (user.role === 'super_admin') {
-            await refreshUsers(user.role);
-          }
+          await refreshUsers(user.role);
         }
       } catch (err) {
         console.warn('Session verification error:', err?.message);
@@ -78,7 +84,7 @@ export function AuthProvider({ children }) {
         setCurrentUser(data.user);
         setIsAuthenticated(true);
         // Sync full users roster in background without blocking immediate login redirect
-        refreshUsers();
+        refreshUsers(data.user.role);
         return {
           success: true,
           user: data.user,
@@ -171,21 +177,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Delete user via backend /users/:id
+  // Deactivate user via backend soft deactivation
   const deleteUser = async (userId) => {
     if (userId === currentUser?.id) {
       return {
         success: false,
-        message: 'Security Violation: You cannot delete your own logged-in account.',
+        message: 'Security Violation: You cannot deactivate your own logged-in account.',
       };
     }
 
     try {
-      await userService.deleteUser(userId);
+      const updated = await userService.deleteUser(userId);
       await refreshUsers();
-      return { success: true };
+      return { success: true, user: updated };
     } catch (err) {
-      return { success: false, message: err?.message || 'Failed to delete user' };
+      return { success: false, message: err?.message || 'Failed to deactivate user' };
     }
   };
 

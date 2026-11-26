@@ -40,6 +40,18 @@ export class ClientController {
     }
   }
 
+  static async getClient360(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const summary = await ClientService.getClient360(req.params.id, req.user);
+      res.status(200).json({
+        success: true,
+        data: summary,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async createClient(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const client = await ClientService.createClient(req.body, {

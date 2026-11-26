@@ -4,11 +4,11 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useToast } from '../../../components/ui/Toast';
 
-export function TextMessageThreadModal({ isOpen, onClose, clientName = 'Robert H. Henderson', clientPhone = '(801) 555-0192', matterTitle = '25-CV-0101 (Wasatch Mountain Logistics)' }) {
+export function TextMessageThreadModal({ isOpen, onClose, clientName = 'Client Contact', clientPhone = '(801) 555-0100', matterTitle = 'Selected Matter' }) {
   const { addToast } = useToast();
   const [messages, setMessages] = useState([
     { id: 'sms-1', fromMe: false, sender: clientName, time: 'Nov 4, 11:20 AM', text: 'Hi Thomas, we received the deposition subpoena for our operations manager. Does he need to appear in person or Zoom?' },
-    { id: 'sms-2', fromMe: true, sender: 'Thomas Bludworth, Esq.', time: 'Nov 4, 11:35 AM', text: 'Good morning Robert. Opposing counsel agreed to conduct this deposition remotely via Zoom. Marcus will email the link and scheduling order today.' },
+    { id: 'sms-2', fromMe: true, sender: 'Assigned Counsel', time: 'Nov 4, 11:35 AM', text: 'Opposing counsel agreed to conduct the deposition remotely via Zoom. Your legal team will email the link and scheduling order today.' },
     { id: 'sms-3', fromMe: false, sender: clientName, time: 'Nov 4, 11:42 AM', text: 'Perfect. We will have him dial in from our Salt Lake headquarters conference room.' },
   ]);
   const [reply, setReply] = useState('');
@@ -20,7 +20,7 @@ export function TextMessageThreadModal({ isOpen, onClose, clientName = 'Robert H
     const newSms = {
       id: `sms-${Date.now()}`,
       fromMe: true,
-      sender: 'Thomas Bludworth, Esq.',
+      sender: 'Assigned Counsel',
       time: 'Just now',
       text: reply.trim()
     };

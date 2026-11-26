@@ -19,6 +19,12 @@ import {
   MissingRecordsPayload,
   DemandReadyPayload,
   AutoDraftTriggerResult,
+  ConsultationBookedPayload,
+  ConsultationRescheduledPayload,
+  ProspectSavedPayload,
+  ConflictSearchCompletedPayload,
+  MatterCreatedFromIntakePayload,
+  EvictionClosureReviewedPayload,
 } from './event.types.js';
 import { DocumentEventBus, DomainEventContext } from './event-bus.js';
 
@@ -71,6 +77,109 @@ export class AutoDraftService {
           ipAddress: context.ipAddress,
           userAgent: context.userAgent,
         });
+      }
+    );
+
+    // Phase 3.A: Core Intake & Priority 4 Event Subscriptions
+    DocumentEventBus.subscribe<ConsultationBookedPayload>(
+      DOCUMENT_EVENT.INTAKE_CONSULTATION_BOOKED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleConsultationBooked(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] ConsultationBooked errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] ConsultationBooked skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] ConsultationBooked drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] ConsultationBooked exception:', e);
+        }
+      }
+    );
+
+    DocumentEventBus.subscribe<ConsultationRescheduledPayload>(
+      DOCUMENT_EVENT.INTAKE_CONSULTATION_RESCHEDULED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleConsultationRescheduled(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] ConsultationRescheduled errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] ConsultationRescheduled skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] ConsultationRescheduled drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] ConsultationRescheduled exception:', e);
+        }
+      }
+    );
+
+    DocumentEventBus.subscribe<ProspectSavedPayload>(
+      DOCUMENT_EVENT.INTAKE_PROSPECT_SAVED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleProspectSaved(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] ProspectSaved errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] ProspectSaved skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] ProspectSaved drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] ProspectSaved exception:', e);
+        }
+      }
+    );
+
+    DocumentEventBus.subscribe<ConflictSearchCompletedPayload>(
+      DOCUMENT_EVENT.INTAKE_CONFLICT_SEARCH_COMPLETED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleConflictSearchCompleted(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] ConflictSearchCompleted errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] ConflictSearchCompleted skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] ConflictSearchCompleted drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] ConflictSearchCompleted exception:', e);
+        }
+      }
+    );
+
+    DocumentEventBus.subscribe<MatterCreatedFromIntakePayload>(
+      DOCUMENT_EVENT.MATTER_CREATED_FROM_INTAKE,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleMatterCreatedFromIntake(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] MatterCreatedFromIntake errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] MatterCreatedFromIntake skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] MatterCreatedFromIntake drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] MatterCreatedFromIntake exception:', e);
+        }
+      }
+    );
+
+    DocumentEventBus.subscribe<EvictionClosureReviewedPayload>(
+      DOCUMENT_EVENT.EVICTION_CLOSURE_REVIEWED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleEvictionClosureReviewed(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] EvictionClosureReviewed errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] EvictionClosureReviewed skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] EvictionClosureReviewed drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] EvictionClosureReviewed exception:', e);
+        }
       }
     );
   }
@@ -851,5 +960,920 @@ export class AutoDraftService {
     }
 
     return result;
+  }
+
+  /**
+   * EVENT: Consultation Booked (CAT-001)
+   */
+  static async handleConsultationBooked(
+    payload: ConsultationBookedPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.INTAKE_CONSULTATION_BOOKED,
+      matterId: payload.matterId || payload.intakeId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `consultation:${payload.intakeId}:${payload.consultationDate}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await this.resolveMatterForIntake(payload, user);
+        if (!matter) {
+          result.skipped.push({ reason: `No matter context available for intake '${payload.intakeId}'.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-001', '001'], 'consultation confirmation');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-001', reason: 'Template CAT-001 is unavailable.' });
+          return result;
+        }
+
+        // Idempotency check: Do not create duplicate draft for same consultation date
+        const existingDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { not: 'Archived' },
+            title: { contains: payload.consultationDate },
+          },
+        });
+        if (existingDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Consultation confirmation draft '${existingDraft.draftCode}' already exists for date '${payload.consultationDate}' (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        const clientName = payload.prospectiveClient || matter.client?.name || 'Prospective Client';
+        const draftTitle = `Consultation confirmation - ${clientName} (${payload.consultationDate})`;
+
+        const customOverrides = {
+          client_name: clientName,
+          consultation_date: payload.consultationDate,
+          consultation_time: payload.consultationTime || '10:00 AM MST',
+          consultation_location: payload.location || 'Heugly & Bludworth Law Offices, Salt Lake City, UT',
+          attorney_name: payload.attorneyName || matter.responsibleAttorney?.name || 'Responsible Counsel',
+          preparation_instructions: payload.preparationInstructions || 'Please bring government-issued photo ID and all documents relating to your inquiry.',
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: draftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draft.title,
+          missingFieldsCount: draft.missingFieldsFlags.length,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, template.templateName, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.INTAKE_CONSULTATION_BOOKED,
+            matterId: matter.id,
+            intakeId: payload.intakeId,
+            draftCode: draft.draftCode,
+            templateCode: template.templateCode,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * EVENT: Consultation Rescheduled (CAT-001 explicitly approved rule)
+   * Preserves previous draft, marks superseded/archived, generates new linked draft.
+   */
+  static async handleConsultationRescheduled(
+    payload: ConsultationRescheduledPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.INTAKE_CONSULTATION_RESCHEDULED,
+      matterId: payload.matterId || payload.intakeId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `reschedule:${payload.intakeId}:${payload.consultationDate}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await this.resolveMatterForIntake(payload, user);
+        if (!matter) {
+          result.skipped.push({ reason: `No matter context available for intake '${payload.intakeId}'.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-001', '001'], 'consultation confirmation');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-001', reason: 'Template CAT-001 is unavailable.' });
+          return result;
+        }
+
+        const clientName = payload.prospectiveClient || matter.client?.name || 'Prospective Client';
+        const newDraftTitle = `Rescheduled Consultation Confirmation - ${clientName} (${payload.consultationDate})`;
+
+        // Idempotency: Prevent duplicate rescheduled draft for identical new date
+        const existingNewDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            title: newDraftTitle,
+            status: { not: 'Archived' },
+          },
+        });
+        if (existingNewDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Rescheduled consultation confirmation '${existingNewDraft.draftCode}' already exists for date '${payload.consultationDate}' (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        // 1. Locate previous active draft(s)
+        const priorDrafts = await prisma.documentDraft.findMany({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { in: ['Draft', 'Under Review', 'Approved'] },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        // 2. Mark prior draft as Archived without deleting or overwriting
+        let supersededRef = '';
+        if (priorDrafts.length > 0) {
+          const prior = priorDrafts[0];
+          supersededRef = prior.draftCode;
+          await prisma.documentDraft.update({
+            where: { id: prior.id },
+            data: {
+              status: 'Archived',
+            },
+          });
+        }
+
+        // 3. Generate New Linked Draft
+        const customOverrides = {
+          client_name: clientName,
+          consultation_date: payload.consultationDate,
+          consultation_time: payload.consultationTime || '10:00 AM MST',
+          consultation_location: payload.location || 'Heugly & Bludworth Law Offices, Salt Lake City, UT',
+          attorney_name: payload.attorneyName || matter.responsibleAttorney?.name || 'Responsible Counsel',
+          is_rescheduled: true,
+          superseded_draft_code: supersededRef || 'Initial Draft',
+          reschedule_reason: payload.rescheduleReason || 'Client requested scheduling adjustment.',
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: newDraftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draft.title,
+          missingFieldsCount: draft.missingFieldsFlags.length,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, `Rescheduled: ${template.templateName}`, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.INTAKE_CONSULTATION_RESCHEDULED,
+            matterId: matter.id,
+            intakeId: payload.intakeId,
+            draftCode: draft.draftCode,
+            supersededDraftCode: supersededRef,
+            newDate: payload.consultationDate,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * EVENT: Prospective Client Saved (CAT-002)
+   * Segregates practice area subtypes (Family, PI, Estate).
+   */
+  static async handleProspectSaved(
+    payload: ProspectSavedPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.INTAKE_PROSPECT_SAVED,
+      matterId: payload.matterId || payload.intakeId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `prospect:${payload.intakeId}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await this.resolveMatterForIntake(payload, user);
+        if (!matter) {
+          result.skipped.push({ reason: `No matter context available for intake '${payload.intakeId}'.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-002', '002'], 'prospective client questionnaire');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-002', reason: 'Template CAT-002 is unavailable.' });
+          return result;
+        }
+
+        // Idempotency: Do not duplicate questionnaire for same intake
+        const existingDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { not: 'Archived' },
+          },
+        });
+        if (existingDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Questionnaire draft '${existingDraft.draftCode}' already exists for this prospect (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        const clientName = payload.prospectiveClient || matter.client?.name || 'Prospect';
+        const paId = (payload.practiceAreaId || matter.practiceAreaId || '').toLowerCase();
+
+        let subtypeLabel = 'General Legal';
+        const conditionalFlags: Record<string, boolean> = {
+          is_family_law: false,
+          is_personal_injury: false,
+          is_estate_probate: false,
+        };
+
+        if (paId.includes('fam')) {
+          subtypeLabel = 'Family Law';
+          conditionalFlags.is_family_law = true;
+        } else if (paId.includes('pi') || paId.includes('injury')) {
+          subtypeLabel = 'Personal Injury';
+          conditionalFlags.is_personal_injury = true;
+        } else if (paId.includes('prob') || paId.includes('estate') || paId.includes('trust')) {
+          subtypeLabel = 'Estate & Probate';
+          conditionalFlags.is_estate_probate = true;
+        }
+
+        const draftTitle = `Prospective Client Questionnaire - ${subtypeLabel} (${clientName})`;
+
+        const customOverrides = {
+          client_name: clientName,
+          practice_subtype: subtypeLabel,
+          matter_summary: payload.matterSummary || matter.title || 'Prospective Inquiry',
+          ...conditionalFlags,
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: draftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draft.title,
+          missingFieldsCount: draft.missingFieldsFlags.length,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, template.templateName, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.INTAKE_PROSPECT_SAVED,
+            matterId: matter.id,
+            intakeId: payload.intakeId,
+            subtype: subtypeLabel,
+            draftCode: draft.draftCode,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * EVENT: Conflict Search Completed (CAT-003)
+   * Mandatory Safety: Never auto-clear pending/flagged conflicts; status must remain Under Review.
+   */
+  static async handleConflictSearchCompleted(
+    payload: ConflictSearchCompletedPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.INTAKE_CONFLICT_SEARCH_COMPLETED,
+      matterId: payload.matterId || payload.intakeId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `conflict:${payload.intakeId}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await this.resolveMatterForIntake(payload, user);
+        if (!matter) {
+          result.skipped.push({ reason: `No matter context available for intake '${payload.intakeId}'.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-003', '003'], 'conflict search report');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-003', reason: 'Template CAT-003 is unavailable.' });
+          return result;
+        }
+
+        // Idempotency: Do not duplicate conflict report for same search
+        const existingDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { in: ['Draft', 'Under Review'] },
+          },
+        });
+        if (existingDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Conflict report '${existingDraft.draftCode}' already active for this matter (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        const clientName = payload.prospectiveClient || matter.client?.name || 'Subject Party';
+        const hasUnresolved =
+          payload.hasConflicts === true ||
+          payload.conflictStatus !== 'Cleared' ||
+          (payload.matches && payload.matches.some((m) => m.status === 'FLAGGED' || m.status === 'PENDING' || m.entityType === 'ADVERSE_PARTY'));
+
+        const draftTitle = hasUnresolved
+          ? `Conflict Search Report (FLAGGED) - ${clientName}`
+          : `Conflict Search Report (CLEARED) - ${clientName}`;
+
+        const missingFieldsFlags: any[] = [];
+        if (hasUnresolved) {
+          missingFieldsFlags.push({
+            type: 'CONFLICT_ALERT',
+            status: 'FLAGGED_CONFLICT',
+            details: 'Unresolved conflict or pending attorney review. Auto-clearance prohibited under Utah RPC 1.7.',
+            matches: payload.matches,
+          });
+        }
+
+        const customOverrides = {
+          client_name: clientName,
+          queried_terms: (payload.queriedTerms || []).join(', '),
+          conflict_status: hasUnresolved ? 'FLAGGED / UNDER REVIEW' : 'CLEARED',
+          unresolved_conflict: hasUnresolved,
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: draftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        // Ensure status reflects Under Review when unresolved
+        if (hasUnresolved) {
+          await prisma.documentDraft.update({
+            where: { id: draft.id },
+            data: {
+              status: 'Under Review',
+              missingFieldsFlags,
+            },
+          });
+        }
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draftTitle,
+          missingFieldsCount: missingFieldsFlags.length,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, `Compliance Review: ${template.templateName}`, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.INTAKE_CONFLICT_SEARCH_COMPLETED,
+            matterId: matter.id,
+            intakeId: payload.intakeId,
+            hasUnresolved,
+            draftCode: draft.draftCode,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * EVENT: Matter Created From Intake (CAT-010)
+   * Dispatches welcome letter on successful matter conversion.
+   */
+  static async handleMatterCreatedFromIntake(
+    payload: MatterCreatedFromIntakePayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.MATTER_CREATED_FROM_INTAKE,
+      matterId: payload.matterId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `matter_convert:${payload.matterId}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await prisma.matter.findUnique({
+          where: { id: payload.matterId },
+          include: { client: true, responsibleAttorney: true },
+        });
+        if (!matter) {
+          result.skipped.push({ reason: `Matter '${payload.matterId}' not found.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-010', '010'], 'welcome letter');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-010', reason: 'Template CAT-010 is unavailable.' });
+          return result;
+        }
+
+        // Idempotency: Prevent duplicate welcome letter for same converted matter
+        const existingDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { not: 'Archived' },
+          },
+        });
+        if (existingDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Welcome letter draft '${existingDraft.draftCode}' already exists for matter '${matter.matterNumber}' (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        const draftTitle = `Welcome letter and next steps - ${matter.title}`;
+
+        const customOverrides = {
+          intake_number: payload.intakeNumber,
+          client_name: payload.clientName || matter.client?.name,
+          matter_number: payload.matterNumber || matter.matterNumber,
+          matter_title: payload.matterTitle || matter.title,
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: draftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draft.title,
+          missingFieldsCount: draft.missingFieldsFlags.length,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, template.templateName, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.MATTER_CREATED_FROM_INTAKE,
+            matterId: matter.id,
+            intakeId: payload.intakeId,
+            draftCode: draft.draftCode,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * EVENT: Eviction Closure Reviewed (CAT-300)
+   * Mandatory Financial Safeguard: Full satisfaction ONLY if balance=0. Partial balance preserved and release withheld.
+   */
+  static async handleEvictionClosureReviewed(
+    payload: EvictionClosureReviewedPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.EVICTION_CLOSURE_REVIEWED,
+      matterId: payload.matterId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    const inFlightKey = `eviction_close:${payload.matterId}`;
+    if (this.inFlightOperations.has(inFlightKey)) {
+      return await this.inFlightOperations.get(inFlightKey)!;
+    }
+
+    const operation = (async () => {
+      try {
+        const matter = await prisma.matter.findUnique({
+          where: { id: payload.matterId },
+          include: { client: true, responsibleAttorney: true, evictionsCase: true },
+        });
+        if (!matter) {
+          result.skipped.push({ reason: `Matter '${payload.matterId}' not found.` });
+          return result;
+        }
+
+        const template = await this.findTemplate(['CAT-300', '300'], 'eviction judgment payment and closure letter');
+        if (!template) {
+          result.skipped.push({ templateCode: 'CAT-300', reason: 'Template CAT-300 is unavailable.' });
+          return result;
+        }
+
+        // Idempotency: Prevent duplicate closure letter for this eviction case
+        const existingDraft = await prisma.documentDraft.findFirst({
+          where: {
+            matterId: matter.id,
+            templateId: template.id,
+            status: { in: ['Draft', 'Under Review'] },
+          },
+        });
+        if (existingDraft) {
+          result.skipped.push({
+            templateCode: template.templateCode,
+            reason: `Eviction closure letter draft '${existingDraft.draftCode}' already active for matter '${matter.matterNumber}' (Idempotent trigger).`,
+          });
+          return result;
+        }
+
+        const bal = Number(payload.outstandingBalance || 0);
+        const isFull = bal === 0;
+
+        const draftTitle = isFull
+          ? `Eviction Closure Letter - Full Satisfaction ($${Number(payload.totalCollected || 0).toFixed(2)})`
+          : `Eviction Closure Letter - Partial Payment (Remaining Balance: $${bal.toFixed(2)})`;
+
+        const customOverrides = {
+          tenant_name: payload.tenantName || matter.evictionsCase?.tenantName || 'Tenant',
+          landlord_name: payload.landlordName || matter.client?.name || 'Landlord',
+          property_address: payload.propertyAddress || matter.evictionsCase?.propertyAddress || 'Subject Premises',
+          judgment_amount: Number(payload.judgmentAmount || 0),
+          total_collected: Number(payload.totalCollected || 0),
+          outstanding_balance: bal,
+          is_full_satisfaction: isFull,
+          satisfaction_declared: isFull,
+          release_authorized: isFull,
+          closure_review_notes: payload.closureReviewNotes || '',
+          ...payload.customOverrides,
+        };
+
+        const draft = await DraftService.generateDraft(
+          {
+            matterId: matter.id,
+            templateId: template.id,
+            title: draftTitle,
+            allowIncomplete: true,
+            customOverrides,
+          },
+          user,
+          context
+        );
+
+        if (!isFull) {
+          // Explicitly set to Under Review with withholding flag
+          await prisma.documentDraft.update({
+            where: { id: draft.id },
+            data: {
+              status: 'Under Review',
+              missingFieldsFlags: [
+                {
+                  type: 'FINANCIAL_SAFEGUARD',
+                  balanceStatus: 'UNSATISFIED_BALANCE',
+                  remainingBalance: bal,
+                  details: `Partial payment of $${Number(payload.totalCollected || 0).toFixed(2)} received against judgment $${Number(payload.judgmentAmount || 0).toFixed(2)}. Full satisfaction withheld. Remaining balance: $${bal.toFixed(2)}.`,
+                },
+              ],
+            },
+          });
+        }
+
+        result.draftsCreated.push({
+          id: draft.id,
+          draftCode: draft.draftCode,
+          templateCode: template.templateCode,
+          templateName: template.templateName,
+          title: draftTitle,
+          missingFieldsCount: isFull ? 0 : 1,
+          filePath: draft.docxStorageKey || '',
+        });
+
+        await this.createDraftReviewTask(matter, draft, template.templateName, user, context);
+
+        await createAuditLog({
+          userId: user.id,
+          action: 'CREATE',
+          resourceType: 'document_drafts',
+          resourceId: draft.id,
+          details: {
+            event: DOCUMENT_EVENT.EVICTION_CLOSURE_REVIEWED,
+            matterId: matter.id,
+            isFullSatisfaction: isFull,
+            outstandingBalance: bal,
+            draftCode: draft.draftCode,
+          },
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        });
+      } catch (err: any) {
+        result.success = false;
+        result.errors.push(err.message || String(err));
+      }
+      return result;
+    })();
+
+    this.inFlightOperations.set(inFlightKey, operation);
+    try {
+      return await operation;
+    } finally {
+      this.inFlightOperations.delete(inFlightKey);
+    }
+  }
+
+  /**
+   * Helper: Resolves or provisions an intake-stage matter and client so that drafts
+   * satisfy database foreign key requirements before formal intake conversion.
+   */
+  private static async resolveMatterForIntake(
+    payload: { matterId?: string; clientId?: string; intakeId?: string; prospectiveClient?: string },
+    user: AuthenticatedUser
+  ): Promise<any | null> {
+    if (payload.matterId) {
+      const matter = await prisma.matter.findFirst({
+        where: { OR: [{ id: payload.matterId }, { matterNumber: payload.matterId }] },
+        include: { client: true, responsibleAttorney: true },
+      });
+      if (matter) return matter;
+    }
+
+    if (payload.intakeId) {
+      const intake = await prisma.intake.findUnique({
+        where: { id: payload.intakeId },
+        include: {
+          convertedMatter: { include: { client: true, responsibleAttorney: true } },
+          convertedClient: true,
+        },
+      });
+
+      if (intake?.convertedMatter) {
+        return intake.convertedMatter;
+      }
+
+      if (intake) {
+        // Check if an intake-phase matter already exists for this intakeNumber
+        const intakeMatterNumber = `INTAKE-${intake.intakeNumber}`;
+        const existingIntakeMatter = await prisma.matter.findFirst({
+          where: { matterNumber: intakeMatterNumber },
+          include: { client: true, responsibleAttorney: true },
+        });
+        if (existingIntakeMatter) return existingIntakeMatter;
+
+        // Provision lightweight client & matter for pre-conversion intake drafts
+        let client = intake.convertedClient;
+        if (!client) {
+          const clientNumber = `CLT-INT-${intake.intakeNumber}`;
+          client = await prisma.client.findFirst({ where: { clientNumber } });
+          if (!client) {
+            client = await prisma.client.create({
+              data: {
+                clientNumber,
+                name: intake.prospectiveClient || 'Prospective Client',
+                email: intake.email || `${intake.intakeNumber.toLowerCase()}@intake.test`,
+                phone: intake.phone || '(801) 555-0100',
+                clientType: 'Individual',
+                status: 'Active',
+              },
+            });
+          }
+        }
+
+        const activeAttorney = await prisma.user.findFirst({
+          where: { role: { in: ['attorney', 'super_admin'] }, status: 'Active' },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        let newMatter: any;
+        try {
+          newMatter = await prisma.matter.create({
+            data: {
+              matterNumber: intakeMatterNumber,
+              title: `${intake.prospectiveClient} - Intake Inquiry`,
+              clientId: client.id,
+              practiceAreaId: intake.practiceAreaId || 'pa-civ',
+              responsibleAttorneyId: activeAttorney?.id || user.id,
+              billingType: 'Hourly',
+              openDate: new Date(),
+              status: 'Intake',
+            },
+            include: { client: true, responsibleAttorney: true },
+          });
+        } catch (mErr: any) {
+          if (mErr.code === 'P2002') {
+            newMatter = await prisma.matter.findFirst({
+              where: { matterNumber: intakeMatterNumber },
+              include: { client: true, responsibleAttorney: true },
+            });
+          } else {
+            throw mErr;
+          }
+        }
+
+        return newMatter;
+      }
+    }
+
+    return null;
   }
 }

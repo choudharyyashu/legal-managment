@@ -2,8 +2,14 @@ import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
+import { LedgerService } from '../ledger/ledger.service.js';
 import { CreateTrustDepositInput, CreateTrustDisbursementInput } from './trust.validation.js';
-import { TrustSubLedgerResponse, TrustTransactionResponse, TrustLedgerListQuery } from './trust.types.js';
+import {
+  TrustSubLedgerResponse,
+  TrustTransactionResponse,
+  TrustLedgerListQuery,
+  TrustTransactionListQuery,
+} from './trust.types.js';
 
 export class TrustService {
   private static async generateLedgerCode(client: any = prisma): Promise<string> {
@@ -176,6 +182,36 @@ export class TrustService {
       },
     });
 
+    // Post balanced General Ledger journal entry for trust deposit (Requirement 2):
+    // Debit 1020 - IOLTA Trust Bank (Asset increases)
+    // Credit 2100 - Client Trust Liability (Liability increases)
+    const txDate = new Date().toISOString().split('T')[0];
+    const matterNumber = ledgerRecord.matter?.matterNumber || 'Matter';
+    const memo = `Trust Deposit - Matter ${matterNumber} (${input.sourceReference || input.purpose || 'Client Retainer'})`;
+
+    await LedgerService.executePostJournal(
+      {
+        transactionDate: txDate,
+        memo,
+        entries: [
+          {
+            accountNumber: 1020, // IOLTA Trust Bank
+            debit: depositAmount.toNumber(),
+            credit: 0.0,
+            matterId: input.matterId,
+          },
+          {
+            accountNumber: 2100, // Client Trust Liability
+            debit: 0.0,
+            credit: depositAmount.toNumber(),
+            matterId: input.matterId,
+          },
+        ],
+      },
+      { userId: context.userId },
+      tx
+    );
+
     return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
   }
 
@@ -237,6 +273,36 @@ export class TrustService {
         matter: { select: { id: true, matterNumber: true, title: true } },
       },
     });
+
+    // Post balanced General Ledger journal entry for external trust disbursement (Requirement 3):
+    // Debit 2100 - Client Trust Liability (Liability decreases)
+    // Credit 1020 - IOLTA Trust Bank (Asset decreases)
+    const txDate = new Date().toISOString().split('T')[0];
+    const matterNumber = ledgerRecord.matter?.matterNumber || 'Matter';
+    const memo = `Trust Disbursement - Matter ${matterNumber} (${input.purpose || input.sourceReference || 'Disbursement'})`;
+
+    await LedgerService.executePostJournal(
+      {
+        transactionDate: txDate,
+        memo,
+        entries: [
+          {
+            accountNumber: 2100, // Client Trust Liability
+            debit: disburseAmount.toNumber(),
+            credit: 0.0,
+            matterId: input.matterId,
+          },
+          {
+            accountNumber: 1020, // IOLTA Trust Bank
+            debit: 0.0,
+            credit: disburseAmount.toNumber(),
+            matterId: input.matterId,
+          },
+        ],
+      },
+      { userId: context.userId },
+      tx
+    );
 
     return { transaction: txRecord, updatedLedger: ledgerRecord, newBalance: calculatedBalance.toNumber() };
   }
@@ -327,15 +393,55 @@ export class TrustService {
     };
   }
 
-  static async getTransactions(): Promise<TrustTransactionResponse[]> {
-    const transactions = await prisma.trustTransaction.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        authorizedByUser: { select: { id: true, name: true } },
-      },
-    });
+  static async getTransactions(
+    query?: TrustTransactionListQuery
+  ): Promise<{ transactions: TrustTransactionResponse[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+    const limit = Math.min(Math.max(Number(query?.limit || 50), 1), 200);
+    const page = Math.max(Number(query?.page || 1), 1);
+    const skip = query?.offset !== undefined ? Number(query.offset) : (page - 1) * limit;
 
-    return transactions.map((t) => ({
+    const where: any = {};
+    if (query?.trustSubLedgerId) {
+      where.trustSubLedgerId = query.trustSubLedgerId;
+    }
+
+    if (query?.month) {
+      const parts = query.month.split('-');
+      if (parts.length === 2) {
+        const year = parseInt(parts[0], 10);
+        const monthNum = parseInt(parts[1], 10);
+        if (!isNaN(year) && !isNaN(monthNum)) {
+          const startDate = new Date(Date.UTC(year, monthNum - 1, 1, 0, 0, 0, 0));
+          const endDate = new Date(Date.UTC(year, monthNum, 0, 23, 59, 59, 999));
+          where.createdAt = { gte: startDate, lte: endDate };
+        }
+      }
+    } else if (query?.startDate || query?.endDate) {
+      where.createdAt = {};
+      if (query.startDate) where.createdAt.gte = new Date(query.startDate);
+      if (query.endDate) where.createdAt.lte = new Date(query.endDate);
+    }
+
+    const [transactions, total] = await Promise.all([
+      prisma.trustTransaction.findMany({
+        where,
+        take: limit,
+        skip,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          authorizedByUser: { select: { id: true, name: true } },
+          trustSubLedger: {
+            include: {
+              matter: { select: { id: true, matterNumber: true, title: true } },
+              client: { select: { id: true, name: true } },
+            },
+          },
+        },
+      }),
+      prisma.trustTransaction.count({ where }),
+    ]);
+
+    const formatted = transactions.map((t) => ({
       id: t.id,
       trustSubLedgerId: t.trustSubLedgerId,
       transactionType: t.transactionType,
@@ -346,7 +452,20 @@ export class TrustService {
       authorizedByName: t.authorizedByUser?.name || null,
       purpose: t.purpose,
       createdAt: t.createdAt.toISOString(),
+      matterNumber: t.trustSubLedger?.matter?.matterNumber || null,
+      matterTitle: t.trustSubLedger?.matter?.title || null,
+      clientName: t.trustSubLedger?.client?.name || null,
     }));
+
+    return {
+      transactions: formatted,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
   }
 }
 

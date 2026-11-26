@@ -18,15 +18,17 @@ import {
   Trash2, 
   HelpCircle,
   SlidersHorizontal,
-  Server
+  Server,
+  MessageSquare,
+  Gavel,
+  Clock
 } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../components/ui/Toast';
-
-const STORAGE_KEY = 'hb_external_integrations_config_v2';
+import { integrationService } from '../../../services/integrationService';
 
 const DEFAULT_INTEGRATIONS = [
   {
@@ -173,34 +175,120 @@ const DEFAULT_INTEGRATIONS = [
       { key: 'trustAccountRouting', label: 'Designated IOLTA Trust Account', type: 'text', placeholder: 'Zions Bank Trust #****4491', helper: 'Client retainer deposits are routed directly to this trust account', required: true },
       { key: 'separateProcessingFees', label: 'Strict Fee Isolation (RPC 1.15)', type: 'checkbox', helper: 'Processing fees must NEVER be deducted from trust accounts; charge operating account only' }
     ]
+  },
+  {
+    id: 'twilio',
+    name: 'Twilio Legal SMS & Court Reminders',
+    category: 'Client Messaging',
+    purpose: 'Automated appointment reminders and court appearance notifications via SMS.',
+    icon: MessageSquare,
+    status: 'Ready to Configure',
+    tenant: 'Pending Phone Number Assignment',
+    lastSync: 'Not Synchronized',
+    credentials: {
+      accountSid: '',
+      authToken: '',
+      phoneNumber: '',
+    },
+    fields: [
+      { key: 'accountSid', label: 'Twilio Account SID', type: 'text', placeholder: 'ACxxxxxxxx...', helper: 'Twilio Console Project Account SID', required: true },
+      { key: 'authToken', label: 'Twilio Auth Token', type: 'password', placeholder: 'Auth Token', helper: 'Twilio Console API Secret Auth Token', required: true },
+      { key: 'phoneNumber', label: 'Twilio Sender Phone Number', type: 'text', placeholder: '+18015550199', helper: 'Firm SMS phone number configured for two-way messaging', required: true },
+    ]
+  },
+  {
+    id: 'judicialink',
+    name: 'Judicialink Utah Court e-Filing Bridge',
+    category: 'Utah Courts & Pleadings',
+    purpose: 'Direct Utah State Courts GreenFiling docket integration and electronic pleading service.',
+    icon: Gavel,
+    status: 'Ready to Configure',
+    tenant: 'Awaiting Utah Bar Credentials',
+    lastSync: 'Not Synchronized',
+    credentials: {
+      firmCode: '',
+      apiKey: '',
+      courtDistrict: 'Third Judicial District',
+    },
+    fields: [
+      { key: 'firmCode', label: 'Utah State Bar Firm E-Filing ID', type: 'text', placeholder: 'UT-HB-8819', helper: 'Utah State Courts e-filing firm identifier', required: true },
+      { key: 'apiKey', label: 'Judicialink API Gateway Key', type: 'password', placeholder: 'jlink_sec_...', helper: 'Secure API token from Judicialink gateway', required: true },
+    ]
+  },
+  {
+    id: 'timing',
+    name: 'Timing Automatic Billing Telemetry',
+    category: 'Time & Activity Capture',
+    purpose: 'Automated desktop legal research and document activity capture for suggested billing entries.',
+    icon: Clock,
+    status: 'Ready to Configure',
+    tenant: 'Pending Timing Team ID',
+    lastSync: 'Not Synchronized',
+    credentials: {
+      teamId: '',
+      apiToken: '',
+    },
+    fields: [
+      { key: 'teamId', label: 'Timing Team Identifier', type: 'text', placeholder: 'team_...', helper: 'Organization identifier from Timing Web', required: true },
+      { key: 'apiToken', label: 'Timing Developer API Token', type: 'password', placeholder: 'timing_tok_...', helper: 'Generated under Timing Web integrations', required: true },
+    ]
   }
 ];
 
 export function ExternalIntegrations() {
   const { addToast } = useToast();
 
-  const [integrations, setIntegrations] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Merge with DEFAULT_INTEGRATIONS in case new providers were added
-        return DEFAULT_INTEGRATIONS.map(def => {
-          const match = parsed.find(p => p.id === def.id);
-          return match ? { ...def, ...match, credentials: { ...def.credentials, ...match.credentials } } : def;
-        });
-      }
-      return DEFAULT_INTEGRATIONS;
-    } catch {
-      return DEFAULT_INTEGRATIONS;
-    }
-  });
-
+  const [integrations, setIntegrations] = useState(DEFAULT_INTEGRATIONS);
+  const [loading, setLoading] = useState(true);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
   const [modalForm, setModalForm] = useState({});
   const [showSecrets, setShowSecrets] = useState({});
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+
+  // Load authoritative server-side integration status
+  const loadStatuses = async () => {
+    setLoading(true);
+    try {
+      const serverList = await integrationService.getStatuses();
+      if (Array.isArray(serverList) && serverList.length > 0) {
+        setIntegrations((prev) =>
+          prev.map((item) => {
+            const serverItem = serverList.find((s) => s.id === item.id);
+            if (serverItem) {
+              return {
+                ...item,
+                status: serverItem.status === 'CONNECTED'
+                  ? 'Connected'
+                  : serverItem.status === 'CONFIGURED'
+                  ? 'Configured'
+                  : 'Credentials Required',
+                statusCode: serverItem.status,
+                statusLabel: serverItem.statusLabel,
+                tenant: serverItem.tenant,
+                lastSync: serverItem.lastSync,
+                hasCredentials: serverItem.hasCredentials,
+              };
+            }
+            return item;
+          })
+        );
+      }
+    } catch (err) {
+      console.warn('Could not load integrations status from backend:', err?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // F05: Purge legacy client-side localStorage credentials on mount
+    try {
+      localStorage.removeItem('hb_external_integrations_config_v2');
+      localStorage.removeItem('hb_external_integrations_config');
+    } catch (_) {}
+    loadStatuses();
+  }, []);
 
   // Open modal for specific integration
   const handleOpenConfig = (item) => {
@@ -231,8 +319,8 @@ export function ExternalIntegrations() {
     }));
   };
 
-  // Test Handshake
-  const handleTestConnection = () => {
+  // Test Handshake via Backend Verification
+  const handleTestConnection = async () => {
     if (!selectedIntegration) return;
 
     // Check required fields
@@ -252,17 +340,26 @@ export function ExternalIntegrations() {
     setIsTesting(true);
     setTestResult(null);
 
-    setTimeout(() => {
-      setIsTesting(false);
+    try {
+      const res = await integrationService.testConnection(selectedIntegration.id, modalForm);
+      setTestResult(res);
+      if (res?.success) {
+        addToast(`${selectedIntegration.name} connection verified!`, 'success');
+      } else {
+        addToast(res?.message || 'Server reports integration credentials required.', 'warning');
+      }
+    } catch (err) {
       setTestResult({
-        success: true,
-        message: `API Handshake Successful! Endpoint responded with HTTP 200 OK. TLS 1.3 secured handshake verified for ${selectedIntegration.name}.`
+        success: false,
+        message: err?.response?.data?.message || err?.message || 'Connection test failed at backend gateway.'
       });
-      addToast(`${selectedIntegration.name} connection test passed!`, 'success');
-    }, 900);
+      addToast('Connection test failed. Check server logs.', 'error');
+    } finally {
+      setIsTesting(false);
+    }
   };
 
-  // Save Credentials & Connect
+  // Save Credentials Notification (Server-Side Storage Rule)
   const handleSaveConfig = (e) => {
     e?.preventDefault();
     if (!selectedIntegration) return;
@@ -277,73 +374,30 @@ export function ExternalIntegrations() {
       return;
     }
 
-    // Determine tenant preview text
-    let tenantPreview = 'Configured & Active';
-    if (selectedIntegration.id === 'cosmolex') {
-      tenantPreview = `Account #${modalForm.accountNumber || 'Configured'}`;
-    } else if (selectedIntegration.id === 'm365') {
-      tenantPreview = modalForm.mailboxEmail || `Tenant: ${modalForm.tenantId?.slice(0, 8)}...`;
-    } else if (selectedIntegration.id === 'onedrive') {
-      tenantPreview = modalForm.documentLibrary || 'SharePoint Connected';
-    } else if (selectedIntegration.id === 'dropbox') {
-      tenantPreview = modalForm.rootFolder || 'Dropbox Linked';
-    } else if (selectedIntegration.id === 'docusign') {
-      tenantPreview = `Account: ${modalForm.accountId?.slice(0, 8) || 'Active'}...`;
-    } else if (selectedIntegration.id === 'lawpay') {
-      tenantPreview = `Merchant: ${modalForm.merchantId || 'Active'}`;
-    }
-
-    const updated = integrations.map(item => {
-      if (item.id === selectedIntegration.id) {
-        return {
-          ...item,
-          status: 'Connected',
-          tenant: tenantPreview,
-          lastSync: 'Just now',
-          credentials: { ...modalForm }
-        };
-      }
-      return item;
-    });
-
-    setIntegrations(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
-
-    addToast(`${selectedIntegration.name} credentials saved and connected successfully!`, 'success');
+    addToast(
+      `${selectedIntegration.name} configuration noted. Sensitive production keys must be provisioned in the backend environment.`,
+      'info'
+    );
     handleCloseModal();
+    loadStatuses();
   };
 
   // Disconnect & Clear
-  const handleDisconnect = (id) => {
-    const updated = integrations.map(item => {
-      if (item.id === id) {
-        // Reset credentials to defaults
-        const def = DEFAULT_INTEGRATIONS.find(d => d.id === id);
-        return {
-          ...item,
-          status: 'Ready to Configure',
-          tenant: def?.tenant || 'Pending Configuration',
-          lastSync: 'Not Synchronized',
-          credentials: { ...def?.credentials }
-        };
-      }
-      return item;
-    });
-
-    setIntegrations(updated);
+  const handleDisconnect = async (id) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
-
-    addToast('Integration disconnected and credentials cleared.', 'info');
+      await integrationService.disconnect(id);
+      addToast('Integration disconnected and credentials cleared from backend session.', 'info');
+    } catch {
+      addToast('Integration status reset to unconfigured.', 'info');
+    }
+    loadStatuses();
     if (selectedIntegration?.id === id) {
       handleCloseModal();
     }
   };
 
   const connectedCount = integrations.filter(i => i.status === 'Connected').length;
+  const configuredCount = integrations.filter(i => i.status === 'Configured').length;
 
   return (
     <div className="space-y-6">
@@ -363,7 +417,7 @@ export function ExternalIntegrations() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#06244B] flex items-center gap-2">
               <span>Production Credential Vault &amp; Live Bridges</span>
               <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#287A55]/10 text-[#287A55]">
-                {connectedCount} of {integrations.length} Active
+                {connectedCount} Connected, {configuredCount} Configured of {integrations.length} Gateways
               </span>
             </h4>
             <p className="text-xs text-[#667085] mt-0.5">

@@ -1,0 +1,193 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design only;no executed tests",
+  "roles": {
+    "owner": "A",
+    "task_assignee": "B",
+    "appointment_host": "C",
+    "mentioned_user": "D",
+    "conflict_creator": "E"
+  },
+  "form_submissions": [
+    "SUB-1",
+    "SUB-2",
+    "SUB-1-replayed"
+  ],
+  "file_request_items": [
+    "X",
+    "Y"
+  ],
+  "activation_existing_targets": 7,
+  "activation_count_note": "Synthetic test count;7 also appears in recorded vendor example,butno live operation performed.",
+  "tests": [
+    {
+      "id": "AT-0374",
+      "scenario_and_expected_result": "Submit synthetic form A twice while its first run is delayed. Repeatable mode creates two distinct run IDs with separate delay/action histories;one-time mode enrolls once. Replaying the same submission webhook does not create a third run. Merge or exit one run without cancelling the other inadvertently.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0375",
+      "scenario_and_expected_result": "Request synthetic files X and Y. Sending sets pending,uploading X sets partial,and both accepted uploads set complete. A corrupt,rejected or replaced upload cannot silently satisfy required Y. Trigger IS and IS NOT rules against the exact request-template instance;retries create one downstream action.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0376",
+      "scenario_and_expected_result": "Use a synthetic two-signer agreement. First signature does not trigger completed-agreement intake. Second valid signature triggers once against the reviewed edition. Decline,expiry,amendment or signer replacement invalidates the appropriate completion state;retain evidence and never treat sending as execution.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0377",
+      "scenario_and_expected_result": "Attach synthetic shared rule R-v1 to workflows A and B. Preview a v2 change and its impacted matches before publication. Pin each run’s evaluated version;cloning or deleting a rule cannot silently alter historical eligibility. Reject circular dependencies and preserve workflow-local conditions.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0378",
+      "scenario_and_expected_result": "Test synthetic expression (practice=PI OR practice=Immigration) AND amount>100. Show each evaluated clause and final match. Distinguish blank,zero,false and unknown. Reject numeric comparison on text unless conversion is explicit. Mixed trigger families retain their documented grouping;an empty all-matters filter requires a scope preview.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0379",
+      "scenario_and_expected_result": "Configure synthetic event-registration,email-open,email-link-click,appointment-created,task-created and task-completed events with stable IDs. An email lacking links cannot yield a click event. Task tags map to the intended type;appointment-created is separate from time-relative scheduling. Invoice-paid trigger is unavailable when the configured payment connector is absent. Preserve evidence;telemetry does not prove human reading or settled payment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0380",
+      "scenario_and_expected_result": "Use synthetic owner A,task assignee B,appointment host C,mentioned user D and conflict creator E. Verify each configured event reaches only its intended recipients. Document/SMS/email-bounce role sets,payment roles,mail-sync user and portal-thread participants are separate. Recheck permissions at dispatch. Keep conflict owner-versus-creator policy unresolved until verified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "id": "AT-0381",
+      "scenario_and_expected_result": "Set synthetic event E to in-app only,then email only. Retain prior notifications and apply changes to future events without duplicate delivery. Form-filled email attachment matches the submitted snapshot and authorized matter link. Non-user delivery requires a separately configured communication action;failure alerts respect visibility and retries. A delivered email does not establish that its recipient opened it.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "extended_tests": [
+    {
+      "requirement": "F-0017",
+      "expected": "Pause a synthetic run at step2,edit step3 and reactivate. Record pause/resume times and configuration at each step. Targets past step3 retain historical outcomes;targets yet to reach it use the explicitly selected version. A finished target does not restart merely because activation toggled.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0019",
+      "expected": "Record eligibility blockers separately:pending conflict,wrong matter status or prior completed run. An authorized manual restart creates a distinct run with provenance and action-level idempotency. Repeated form submissions follow F-0374 rather than a global once-only rule.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0021",
+      "expected": "Send a synthetic form,enter a delay,then receive submission during the delay. Show completion evidence and next-action cancellation eligibility separately from current delay status. At wake-up exit before reminder or branch. A separate completion-triggered workflow creates the review task once;do not expect an earlier no-branch to re-evaluate.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0039",
+      "expected": "Search synthetic names,email and phone using exact,contains,AND and OR. Show rendered term groups and scope so a name-plus-email exact match cannot silently stand in for an alternative match. Preserve non-match,possible-match and human decision separately;CSV includes the same matched record IDs and evaluation time.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0096",
+      "expected": "With required email absent,test skip and pause policies explicitly. Skipped is not approved. Empty search cannot become no-conflict automatically. Only a valid completed search with a separately configured policy may yield automated no-result approval;later identity changes require a fresh check.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0097",
+      "expected": "Deny a synthetic matter and retain its timeline/search history. Normal intake actions stay blocked. If a denied/undecided remediation workflow is configured,make the override specific to that workflow and limit allowed actions. Do not globally disable conflict protection to make a rejection-report workflow run.",
+      "status": "Not executed"
+    },
+    {
+      "requirement": "F-0158",
+      "expected": "Preview all currently eligible synthetic target IDs and count before activation. Immediate mode enrolls that snapshot;future-only excludes preexisting matches. Show concurrent eligibility changes and per-target results. Reactivation resumes existing paused runs without replaying sent actions;no live workflow is activated during this audit.",
+      "status": "Not executed"
+    }
+  ],
+  "review_date": "2026-11-17",
+  "R72": {
+    "status": "Synthetic proposed tests; no execution",
+    "blank_component_fixture": {
+      "first_name": "Alex",
+      "last_name": "Sample",
+      "email": null
+    },
+    "conflict_states": [
+      "denied",
+      "undecided",
+      "approved",
+      "skipped",
+      "paused",
+      "error"
+    ],
+    "cases_to_execute": [
+      {
+        "requirement_id": "F-0038",
+        "id": "AT-0038-R72-7",
+        "title": "Preserve manual and dynamic conflict-query semantics",
+        "developer_story_extension": "As intake staff, I need the exact evaluated query and missing inputs visible before relying on a conflict result.",
+        "scenario_and_expected_result": "Use two synthetic matters with the same name but different email, a known alias and a name-only match. Compare manual exact/contains and explicit AND/OR trees with a dynamic name-plus-email query. Display normalized values and match passages; never treat the narrower combined query’s empty result as proof that no name-only candidate exists. Changing a merge field creates a new evaluated query/version, with the original retained.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://help.lawmatics.com/en/articles/10699811-conflict-checking",
+        "timestamp_or_section": "Article sections: Running a New Conflict Check; Search Term",
+        "review_date": "2026-11-17",
+        "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+      },
+      {
+        "requirement_id": "F-0096",
+        "id": "AT-0096-R72-8",
+        "title": "Missing one merge value is not cleared by remaining text",
+        "developer_story_extension": "As intake staff, I need a missing required search component to remain unresolved even when other components are populated.",
+        "scenario_and_expected_result": "Use first_name=Alex, last_name=Sample, email=null. Evaluate Skip When Blank on/off with a declared whole-query versus component policy. A skipped check records skipped plus missing input and does not become approved. Paused mode identifies the field and resume owner. Populate email and retry once against the new snapshot. Auto-approve with zero matches is disabled unless the required query completed successfully under the approved policy; an error or skipped check cannot qualify.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://help.lawmatics.com/en/articles/10699811-conflict-checking",
+        "timestamp_or_section": "Article sections: Auto Approve; Skip When Blank Search",
+        "review_date": "2026-11-17",
+        "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+      },
+      {
+        "requirement_id": "F-0097",
+        "id": "AT-0097-R72-9",
+        "title": "Conflict-remediation enrollment needs an explicit exception route",
+        "developer_story_extension": "As the attorney, I need rejected or undecided intake records preserved while a controlled remediation workflow remains separate from client onboarding.",
+        "scenario_and_expected_result": "Set matter status denied, then undecided, and evaluate an automation whose trigger targets that status with Skip Conflicts enabled and disabled. Preview why it is blocked or eligible. A designated internal remediation branch may run once with restricted recipients and no welcome letter, fee agreement or client-onboarding action. Approval later must re-evaluate the exact current matter/check version; it cannot retroactively rewrite the denied history.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://help.lawmatics.com/en/articles/10699907-automation-entry-conditions-triggers",
+        "timestamp_or_section": "Article section: Conflict Checking; FAQs",
+        "review_date": "2026-11-17",
+        "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+      },
+      {
+        "requirement_id": "F-0039",
+        "id": "AT-0039-R72-10",
+        "title": "Record dispositions, history and review export without deleting rejected matters",
+        "developer_story_extension": "As the attorney, I need reviewer decisions and match evidence preserved independently of whether I accept the representation.",
+        "scenario_and_expected_result": "Run a synthetic multi-match search, flag it, export the authorized results as CSV and record a later approve/deny decision with reviewer, date, query version and reason. Verify the related timeline and history reference the same check ID. Denied matter remains retained under its record policy. A no-match automatic outcome is labeled with its policy and search coverage rather than a legal conclusion; authorized review is still required by the firm’s chosen policy.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://help.lawmatics.com/en/articles/10699811-conflict-checking",
+        "timestamp_or_section": "Article sections: Reviewing Past Conflict Checks; FAQs",
+        "review_date": "2026-11-17",
+        "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+      }
+    ],
+    "policy_limits": "Distinct human review, auto-approval, blank query and workflow enrollment decisions. Firm policy is not automatically inherited from vendor settings."
+  }
+}

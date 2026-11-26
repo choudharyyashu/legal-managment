@@ -11,7 +11,8 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
     matterTitle,
     clientName,
     grossRecovery = 0,
-    contingencyFeePercentage = 33.3333,
+    contingencyFeePercentage = 33.33,
+    feeRateLabel,
     contingencyFeeAmount = 0,
     caseExpenses = [],
     totalCaseExpenses = 0,
@@ -59,7 +60,7 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
           <div className="bg-[#F5F0E5]/60 p-3 rounded border border-[#D9D6CF] grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
             <div>
               <span className="text-[#667085] block font-medium">Client / Claimant:</span>
-              <span className="font-bold text-[#06244B]">{clientName || 'Sarah Jenkins'}</span>
+              <span className="font-bold text-[#06244B]">{clientName || 'Client'}</span>
             </div>
             <div>
               <span className="text-[#667085] block font-medium">Legal Action / Matter:</span>
@@ -82,7 +83,7 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
             {/* 2. Attorney Contingency Fee */}
             <div className="p-3 bg-slate-50 rounded border border-slate-200 space-y-1">
               <div className="flex justify-between items-center font-bold text-[#06244B]">
-                <span>II. ATTORNEY CONTINGENCY FEE ({contingencyFeePercentage.toFixed(2)}%)</span>
+                <span>II. ATTORNEY CONTINGENCY FEE ({feeRateLabel || `${Number(contingencyFeePercentage).toFixed(2)}%`})</span>
                 <span className="text-[#B42318]">-{formatCurrency(contingencyFeeAmount)}</span>
               </div>
               <p className="text-[11px] text-slate-500 italic">
@@ -164,13 +165,13 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
               <div className="border-t border-slate-400 pt-1.5 space-y-1">
-                <p className="font-bold text-slate-900">{clientName || 'Sarah Jenkins'} (Client)</p>
+                <p className="font-bold text-slate-900">{clientName || 'Client'} (Client)</p>
                 <p className="text-[10px] text-slate-500">Date Signed: ___________________________</p>
               </div>
 
               <div className="border-t border-slate-400 pt-1.5 space-y-1">
-                <p className="font-bold text-slate-900">Thomas Bludworth, Esq. (Managing Attorney)</p>
-                <p className="text-[10px] text-slate-500">Utah State Bar No. 10482 • Date: {statementDate}</p>
+                <p className="font-bold text-slate-900">{settlement.attorneyName || 'Managing Attorney'}</p>
+                <p className="text-[10px] text-slate-500">Supervising Counsel • Date: {statementDate}</p>
               </div>
             </div>
           </div>

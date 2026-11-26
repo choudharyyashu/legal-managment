@@ -3,6 +3,18 @@ import { UserService } from './user.service.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
 
 export class UserController {
+  static async getDirectory(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const users = await UserService.getDirectory();
+      res.status(200).json({
+        success: true,
+        data: users,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await UserService.getUsers(req.query as any);
@@ -81,6 +93,26 @@ export class UserController {
       res.status(200).json({
         success: true,
         message: `User status changed to ${req.body.status}.`,
+        data: { user },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await UserService.setUserStatus(req.params.id, 'Inactive', {
+        userId: req.user!.id,
+        userName: req.user!.email,
+        userRole: req.user!.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'User account deactivated successfully.',
         data: { user },
       });
     } catch (err) {

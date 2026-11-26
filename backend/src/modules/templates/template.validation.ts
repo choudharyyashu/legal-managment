@@ -3,14 +3,14 @@ import { z } from 'zod';
 export const createTemplateSchema = z.object({
   templateCode: z
     .string()
-    .min(3)
+    .min(2)
     .max(50)
     .regex(/^[A-Z0-9_\-]+$/i, 'Template code must contain only alphanumeric characters, dashes, or underscores'),
   templateName: z.string().min(2).max(255),
   description: z.string().max(2000).optional(),
   practiceAreaId: z.string().min(1).max(50),
   category: z.string().min(2).max(100),
-  outputFormat: z.enum(['DOCX', 'PDF', 'BOTH']).default('DOCX'),
+  outputFormat: z.enum(['DOCX', 'PDF', 'BOTH']).default('BOTH'),
   isSystemDefault: z.boolean().default(false),
 });
 
@@ -38,15 +38,19 @@ export const uploadTemplateVersionSchema = z.object({
     .string()
     .min(1)
     .max(255)
-    .refine((name) => name.toLowerCase().endsWith('.docx'), 'File must have a .docx extension'),
-  fileContentBase64: z.string().min(1, 'Base64 file content is required'),
+    .refine((name) => name.toLowerCase().endsWith('.docx'), 'File must have a .docx extension')
+    .optional(),
+  fileContentBase64: z.string().min(1).optional(),
+  templateBody: z.string().min(1).optional(),
   status: z.enum(['Draft', 'Published', 'Archived']).default('Published'),
   changeSummary: z.string().max(2000).optional(),
+}).refine((val) => Boolean(val.fileContentBase64 || val.templateBody), {
+  message: 'Either fileContentBase64 (.docx) or templateBody text is required.',
 });
 
 export const templateQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional().default(1),
-  limit: z.coerce.number().int().positive().max(100).optional().default(20),
+  limit: z.coerce.number().int().positive().max(500).optional().default(20),
   practiceAreaId: z.string().optional(),
   category: z.string().optional(),
   isActive: z
@@ -56,25 +60,48 @@ export const templateQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+export const SUPPORTED_SOURCE_ENTITIES = [
+  'Client',
+  'Matter',
+  'User',
+  'ResponsibleAttorney',
+  'Attorney',
+  'PracticeArea',
+  'Intake',
+  'Court',
+  'WorkflowStage',
+  'Incident',
+  'Insurance',
+  'MedicalProvider',
+  'MedicalRecords',
+  'Demand',
+  'Damages',
+  'WageLoss',
+  'MedicalBilling',
+  'Specials',
+  'Litigation',
+  'Bankruptcy',
+  'Immigration',
+  'Probate',
+  'FamilyLaw',
+  'Criminal',
+  'Appeals',
+  'Evictions',
+  'Firm',
+  'CurrentDate',
+  'CustomField',
+] as const;
+
 export const createFieldMappingSchema = z.object({
   placeholderTag: z
     .string()
     .min(2)
     .max(150)
-    .regex(/^(\{\{)?([A-Za-z0-9_.]+(\[[0-9]+\])?)+(\}\})?$/, 'Placeholder tag format invalid (e.g. {{Client.Name}} or Client.Name)'),
-  sourceEntity: z.enum([
-    'Client',
-    'Matter',
-    'User',
-    'ResponsibleAttorney',
-    'Intake',
-    'Court',
-    'WorkflowStage',
-    'CustomField',
-  ]),
+    .regex(/^(\{\{)?([A-Za-z0-9_.\s]+(\[[0-9]+\])?)+(\}\})?$/, 'Placeholder tag format invalid (e.g. {{Client.Name}} or Client.Name)'),
+  sourceEntity: z.enum(SUPPORTED_SOURCE_ENTITIES),
   sourceField: z.string().min(1).max(100),
   isRequired: z.boolean().default(true),
-  defaultValue: z.string().max(255).optional(),
+  defaultValue: z.string().max(255).optional().nullable(),
   formattingRule: z
     .enum([
       'UPPERCASE',
@@ -87,8 +114,9 @@ export const createFieldMappingSchema = z.object({
       'PHONE_STANDARD',
       'NONE',
     ])
-    .optional(),
-  conditionalExpression: z.string().max(255).optional(),
+    .optional()
+    .nullable(),
+  conditionalExpression: z.string().max(255).optional().nullable(),
 });
 
 export const batchFieldMappingsSchema = z.object({
@@ -103,4 +131,3 @@ export type UploadTemplateVersionInput = z.infer<typeof uploadTemplateVersionSch
 export type CreateFieldMappingInput = z.infer<typeof createFieldMappingSchema>;
 export type BatchFieldMappingsInput = z.infer<typeof batchFieldMappingsSchema>;
 export type UpdateFieldMappingInput = z.infer<typeof updateFieldMappingSchema>;
-

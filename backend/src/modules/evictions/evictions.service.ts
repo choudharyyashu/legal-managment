@@ -7,6 +7,8 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
+import { DOCUMENT_EVENT } from '../documents/events/event.types.js';
 
 export class EvictionsService {
   static async getEvictionsCase(matterId: string) {
@@ -108,5 +110,52 @@ export class EvictionsService {
     });
 
     return updated;
+  }
+
+  static async reviewClosure(
+    matterId: string,
+    data: {
+      judgmentAmount?: number;
+      totalCollected?: number;
+      outstandingBalance?: number;
+      closureReviewNotes?: string;
+    },
+    currentUser: AuthenticatedUser,
+    context?: { ipAddress?: string; userAgent?: string }
+  ) {
+    const evCase = await this.getEvictionsCase(matterId);
+
+    const judgmentAmount = Number(data.judgmentAmount !== undefined ? data.judgmentAmount : (Number(evCase.monthlyRent) * 2 || 3200));
+    const totalCollected = Number(data.totalCollected ?? 0);
+    const outstandingBalance = Number(data.outstandingBalance !== undefined ? data.outstandingBalance : (judgmentAmount - totalCollected));
+
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.EVICTION_CLOSURE_REVIEWED,
+      {
+        matterId: evCase.matterId,
+        evictionCaseId: evCase.id,
+        tenantName: evCase.tenantName,
+        landlordName: evCase.landlordName,
+        propertyAddress: evCase.propertyAddress,
+        judgmentAmount,
+        totalCollected,
+        outstandingBalance,
+        closureReviewNotes: data.closureReviewNotes,
+      },
+      {
+        user: currentUser,
+        ipAddress: context?.ipAddress,
+        userAgent: context?.userAgent,
+      }
+    );
+
+    return {
+      success: true,
+      matterId,
+      judgmentAmount,
+      totalCollected,
+      outstandingBalance,
+      isFullSatisfaction: outstandingBalance === 0,
+    };
   }
 }

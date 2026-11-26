@@ -1,0 +1,190 @@
+{
+  "date": "2026-11-17",
+  "status": "Proposed synthetic test design only; all application cases Not executed",
+  "high_value_limit_boundaries_cents": [
+    24999999,
+    25000000,
+    25000001,
+    null
+  ],
+  "high_value_design_rule": "Proposed configurable (qualifying limit OR type OR entity OR manual) AND open; vendor exact Boolean/override behavior unresolved",
+  "card_fixture": {
+    "limit_cents": 500000,
+    "account_ceiling_cents": 1000000,
+    "over_limit_cents": 500001,
+    "actual_card": null
+  },
+  "allocation_fixture": {
+    "purchase_cents": 12345,
+    "approved_client_cost_cents": 10000,
+    "firm_cost_cents": 2345,
+    "later_refund_cents": 2000
+  },
+  "tests": [
+    {
+      "requirement_id": "F-0588",
+      "id": "AT-0588",
+      "scenario_and_expected_result": "Create open matters with policy limits249999.99,250000.00,250000.01 and unknown; separate wrongful-death and each named entity-type fixtures; close each and toggle the manual flag. Before implementation, version an explicit inclusion truth table and manual-override policy: the vendor list does not settle Boolean grouping or closed-case precedence. For the proposed default use (qualifying limit OR type OR entity OR manual) AND open, subject to Dusten’s approved configuration, and label that a design choice. Show matching reason, original source field, rule version, manual actor/date and unknown values. Filter/search/sort then export: stable IDs, selected population, column meanings and totals must match; denied roles see/export no restricted cases. Never label queue membership collected profit or guaranteed recovery.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0589",
+      "id": "AT-0589",
+      "scenario_and_expected_result": "In a synthetic issuer sandbox assign one physical and one virtual card to different staff; configure a5000.00 limit against a10000.00 account ceiling. Deny a5000.01 authorization, unauthorized limit raise and cross-user secret access under the approved policy. Exercise pending pause, confirmed lock, unlock, stale response, retry and issuer timeout; render requested/acknowledged/effective states separately and retain actor/time/provider correlation. An old successful response cannot overwrite a newer lock. Mask credentials in screens, exports, logs and artifacts. Require independently authorized enrollment/credit approval; software entitlement alone cannot create a credit facility or actual charge.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0590",
+      "id": "AT-0590",
+      "scenario_and_expected_result": "Replay the same provider transaction twice, then import two different purchases with identical amount/date and a late receipt. Preserve provider IDs, currency, receipt hash and pending/posted/reversed states; one repeated transaction yields one cost while distinct purchases remain distinct. Split a123.45 purchase into100.00 client cost and23.45 firm cost; only approved reimbursable100.00 reaches the draft invoice. Reassign a matter, refund20.00 and receive a delayed original event: show reversible adjustments, old/new allocation and invoice linkage without silent history loss. Block final invoice posting for unresolved mapping, inaccessible matter, missing required approval or disputed receipt. Reconcile source, expense ledger, invoice and bank/issuer statement independently; card synchronization cannot prove trust reconciliation or full cost recovery.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0162",
+      "id": "AT-0162-R76-1",
+      "title": "Preserve draft approval across AI rewrite actions",
+      "developer_story_extension": "As the attorney, I need AI edits previewed against the current draft and persisted only after deliberate approval.",
+      "scenario_and_expected_result": "Start a synthetic note and task containing I, me, my, my clients and November14,2026. Request each configured rewrite/tone, English/Spanish/Arabic translation and summary; preserve exact quotations/proper plurals and four-digit date years. Present insert versus selected-text replacement separately. Discard leaves original byte content and approval untouched; stale suggestions cannot overwrite concurrent edits. Save persists only the reviewed result; composing a text cannot send it. Retry and no-entitlement failures retain the draft. Flag any proposed attorney-voice/date exception for explicit Dusten approval in Codex.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://supportcenter.casepeer.com/en/articles/12449513-8am-iq-for-casepeer-ai-writing-assistant",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0068",
+      "id": "AT-0068-R76-2",
+      "title": "AI translation does not change communication language or recipients",
+      "developer_story_extension": "As intake staff, I need an approved message language independent from the language of a generated suggestion.",
+      "scenario_and_expected_result": "Use a Spanish-preference intake contact, an English matter contact and an Arabic draft. Translation creates a versioned preview with original retained; it must not overwrite the recipient’s language preference, invitation language or channel. Reviewer verifies names, dates, numbers and quoted text before approval. Missing translation/reviewer and failed sends remain unresolved; no automatic SMS/email from a rewrite.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://supportcenter.casepeer.com/en/articles/12449513-8am-iq-for-casepeer-ai-writing-assistant",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0173",
+      "id": "AT-0173-R76-3",
+      "title": "Independent backup narration is not restore evidence",
+      "developer_story_extension": "As the administrator, I need recovery evidence from a consistent tested application set, independent from marketing statements.",
+      "scenario_and_expected_result": "Store the tutorial04:20–04:37 AWS/rolling-backup assertion as legacy narration only. A recovery status remains unverified until an isolated restore reconciles database, files, object versions, keys, permissions and application access at the same recovery point. File/hash/structural checks alone cannot pass the application restore test. All actual restore execution remains pending here.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=xV2C1AxlPnY",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0213",
+      "id": "AT-0213-R76-4",
+      "title": "Case expense/trust tracking is distinct from accounting reconciliation",
+      "developer_story_extension": "As finance staff, I need a dated capability statement that distinguishes expense entry and client-trust views from verified accounting controls.",
+      "scenario_and_expected_result": "For the tutorial03:57–04:13 and06:19 expense/trust claims, preserve narration provenance and legacy date. Do not auto-enable full general ledger, bank-feed or three-way-trust-complete flags. Proposed accounting test must reconcile bank statement, trust control account and individual client ledger, including outstanding items; unresolved variance blocks a passed status even if a dashboard balance is present.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=xV2C1AxlPnY",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0384",
+      "id": "AT-0384-R76-5",
+      "title": "Task/calendar features cannot prove completed work or delivered reminders",
+      "developer_story_extension": "As the attorney, I need reminders and case tasks distinguished from event completion and daily call/text work evidence.",
+      "scenario_and_expected_result": "At tutorial03:07–03:30 and05:57–06:11, classify calendar/task narration as source claims. In the proposed application create deadline and call/text tasks with reminder delivery failure, a snooze, reassignment and a later timezone change. Preserve independent due, notification, acknowledgement and done states. Daily time review still lists individual calls/texts with unresolved mapping; neither a scheduled task nor a never-miss marketing promise marks work reviewed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=xV2C1AxlPnY",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0200",
+      "id": "AT-0200-R76-6",
+      "title": "Keep legacy waitlists, module entitlement and card credit gates separate",
+      "developer_story_extension": "As the administrator, I need a dated product capability/license matrix so a historical tutorial cannot set current availability.",
+      "scenario_and_expected_result": "Retain April2,2025 IQ waitlist narration06:39–07:07 next to the currently served Pro/Advanced writing guide. Store Smart Spend software/subscription and issuer-credit approval as separate gates. Reconcile MyCase any-subscription versus8am/LawPay subscription wording and the LawPay-only10million revenue ceiling before offering enrollment. Zero software/annual fees cannot mean no APR/other charges. Generic LawPay integrations and tutorial07:20–07:36 do not establish CASEpeer Smart Spend support. Vendor USCIS payment wording is an unverified legal-process claim; require current official filing/payment requirements and approved fee workflow before any actual filing payment.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.8am.com/smart-spend/",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0591",
+      "id": "AT-0591",
+      "scenario_and_expected_result": "Use an explicitly synthetic offer with threshold7000.00,90-day window and500.00 statement credit. Test6999.99/7000.00, pending versus posted purchases, excluded fees and returned purchases. Store rule version and evaluated inputs. A qualifying projection is not a posted credit; duplicates cannot award twice. A reversal changes eligibility/history without deleting the prior decision. Missing current terms or actual statement credit leaves the incentive unresolved. Do not reduce a client cost or trust balance automatically. This fixture is test design, not enrollment or guaranteed current offer.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0589",
+      "id": "AT-0589-R76-7",
+      "title": "Separate administrator controls, account ceiling and beta capability",
+      "developer_story_extension": "As the administrator, I need effective provider capabilities and roles enforced before a control can be requested.",
+      "scenario_and_expected_result": "Synthetic roles: administrator changes limits; a cardholder can view only assigned charges and upload their receipt. Reject privilege escalation server-side. Test two cards below their individual limits whose combined request exceeds the remaining account ceiling. Mark unsupported beta transaction limits unavailable; never render local policy configuration as issuer enforcement. A wallet token or replacement-card request is pending until provider confirmation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.8am.com/terms-of-service/smart-spend/",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0590",
+      "id": "AT-0590-R76-8",
+      "title": "Reconcile statements, disputed charges and authorized debits independently",
+      "developer_story_extension": "As finance staff, I need provider statements and disputes separated from expense review and payment authorization.",
+      "scenario_and_expected_result": "Import a synthetic statement containing purchase, fee, refund, payment and disputed transaction. Each retains provider identity and category. A dispute request cannot mark a refund posted; a dashboard update cannot prove bank settlement. Test duplicate statement, NSF/retry and canceled account. Require separately recorded, explicit debit authorization for any future real autopay setup; this audit performs no financial action. Preserve old statement evidence after correction.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.8am.com/terms-of-service/smart-spend/",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0200",
+      "id": "AT-0200-R76-9",
+      "title": "Retain accepted agreement versions and pending incorporated terms",
+      "developer_story_extension": "As the administrator, I need the exact accepted service/cardholder version and effective capabilities recorded.",
+      "scenario_and_expected_result": "A current public terms URL cannot prove customer acceptance. Store supplied accepted-document hash, effective date, signatory authority and unresolved incorporated documents. Present plan, beta, issuer and third-party wallet availability independently. Ending service disables new connector requests while preserving accessible historical evidence subject to the actual contract; no deletion or debt-extinguishment assumption.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.8am.com/terms-of-service/smart-spend/",
+      "review_date": "2026-11-17"
+    },
+    {
+      "requirement_id": "F-0384",
+      "id": "AT-0384-R76-10",
+      "title": "Separate transaction alerts, SMS preference and actual receipt",
+      "developer_story_extension": "As the administrator, I need transaction alerts and mandatory account notices distinguished from client communications and delivery proof.",
+      "scenario_and_expected_result": "Deduplicate a synthetic transaction alert by provider event identity. Record send, carrier delivery and human acknowledgement separately; contractual deemed notice is a different field. Test opt-out, re-enrollment, HELP, changed phone and bounced email without altering client marketing consent or daily call/text review. Unobserved delivery remains unknown; no message is sent in this audit.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.8am.com/terms-of-service/smart-spend/",
+      "review_date": "2026-11-17"
+    }
+  ],
+  "voice_rules": "I/me/my, my clients; preserve exact quotations/proper plurals; four-digit years in every attorney-letter date; exceptions only explicit Dusten approval in Codex.",
+  "evidence_limit": "Arithmetic checks verify fixture consistency only, not vendor/application behavior or legal/card eligibility.",
+  "reward_fixture": {
+    "threshold_cents": 700000,
+    "window_days": 90,
+    "credit_cents": 50000,
+    "current_offer_verified": false
+  },
+  "alignment_fixture": {
+    "MyCase_embed_duration_seconds": 32.043,
+    "MyCase_caption_last_end_seconds": 60.718,
+    "alignment": "Blocked; no matching transcript claim"
+  }
+}

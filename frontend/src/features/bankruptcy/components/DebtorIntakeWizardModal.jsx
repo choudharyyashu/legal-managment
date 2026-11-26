@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   ChevronRight,
@@ -20,6 +20,11 @@ import {
 } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
+import { useClients } from '../../../context/ClientContext';
+import { useAuth } from '../../../hooks/useAuth';
+import { useToast } from '../../../components/ui/Toast';
+import { matterService } from '../../../services/matterService';
+import { bankruptcyService } from '../../../services/bankruptcyService';
 
 // Utah Median Income By Household Size (Form 122 Census Data 2026)
 const UTAH_MEDIAN_INCOME = {
@@ -34,12 +39,17 @@ const UTAH_MEDIAN_INCOME = {
 };
 
 export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
+  const { clients } = useClients();
+  const { currentUser } = useAuth();
+  const { addToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
 
   // Step 1: Debtor & Joint Debtor Demographics
+  const [clientId, setClientId] = useState('');
   const [debtorName, setDebtorName] = useState('');
   const [ssnLast4, setSsnLast4] = useState('');
-  const [phone, setPhone] = useState('(801) 555-');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
   const [city, setCity] = useState('Salt Lake City');
@@ -52,6 +62,13 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
   const [maritalStatus, setMaritalStatus] = useState('Single');
   const [employer, setEmployer] = useState('');
   const [yearsEmployed, setYearsEmployed] = useState(3.0);
+  const [meeting341Date, setMeeting341Date] = useState('');
+
+  useEffect(() => {
+    if (clients.length > 0 && !clientId) {
+      setClientId(clients[0].id);
+    }
+  }, [clients, clientId]);
 
   // Step 2: Income, Census & Means-Test
   const [householdSize, setHouseholdSize] = useState(2);
@@ -108,7 +125,11 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
 
   const handleNext = () => {
     if (currentStep === 1 && !debtorName.trim()) {
-      alert('Please enter primary debtor full legal name.');
+      addToast('Please enter primary debtor full legal name.', 'error');
+      return;
+    }
+    if (currentStep === 1 && !clientId) {
+      addToast('Please select a Client record.', 'error');
       return;
     }
     setCurrentStep(prev => Math.min(prev + 1, 5));
@@ -118,72 +139,68 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!clientId) {
+      addToast('Please select a Client record.', 'error');
+      setCurrentStep(1);
+      return;
+    }
     if (!debtorName.trim()) {
-      alert('Please enter primary debtor name.');
+      addToast('Please enter primary debtor name.', 'error');
+      setCurrentStep(1);
       return;
     }
 
-    const newCase = {
-      id: `BNK-2026-${Date.now().toString().slice(-4)}`,
-      caseNumber: `26-2${Math.floor(1000 + Math.random() * 9000)}-${targetChapter === 'Chapter 13' ? 'KRA' : 'JTM'}`,
-      debtorName,
-      jointDebtorName: isJointFiling && jointDebtorName ? jointDebtorName : 'None (Individual)',
-      chapter: targetChapter,
-      filingType: targetChapter === 'Chapter 13' ? (isJointFiling ? 'Joint Wage Earner Adjustment' : 'Wage Earner Adjustment') : 'Individual Liquidation',
-      filingDate: new Date().toISOString().split('T')[0],
-      courtVenue: `United States Bankruptcy Court, District of Utah (${county})`,
-      assignedJudge: targetChapter === 'Chapter 13' ? 'Hon. Kevin R. Anderson' : 'Hon. Joel T. Marker',
-      trusteeName: targetChapter === 'Chapter 13' ? 'Lon A. Jenkins, Standing Chapter 13 Trustee' : 'D. Ray Strong, Standing Ch. 7 Trustee',
-      meeting341Date: new Date(Date.now() + 32 * 86400000).toISOString().split('T')[0],
-      meeting341Status: 'Scheduled (Via Zoom Video Conference)',
-      claimsBarDate: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0],
-      dischargeDate: targetChapter === 'Chapter 7' ? new Date(Date.now() + 110 * 86400000).toISOString().split('T')[0] : null,
-      householdSize: Number(householdSize),
-      annualGrossIncome: annualizedIncome,
-      meansTestStatus: isBelowMedian ? 'Below Utah Median (Passed Form 122A-1)' : 'Above Median (Form 122A-2 Rebuttal)',
-      totalAssets,
-      totalSecuredDebt,
-      totalPriorityDebt: Number(priorityDebt),
-      totalUnsecuredDebt: Number(unsecuredDebt),
-      status: isEmergencyFiling ? 'Emergency Filing (14-Day Deficiency)' : 'In Progress',
-      emergencyFiling: isEmergencyFiling,
-      deficiencyDeadline: isEmergencyFiling ? new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0] : null,
-      creditCounselingFiled: hasCreditCounseling,
-      financialManagementFiled: false,
-      assignedAttorneyId: 'usr-2',
-      assignedAttorneyName: 'Thomas Bludworth, Esq.',
-      assignedParalegalId: 'usr-4',
-      assignedParalegalName: 'Marcus Vance',
-      notes: isEmergencyFiling ? `Emergency petition filed: ${emergencyReason}` : 'Comprehensive Chapter petition intake completed.',
-      debtorProfile: {
-        ssnMasked: `***-**-${ssnLast4 || '4410'}`,
-        phone,
-        email: email || 'debtor@clientportal.legal',
-        address: `${streetAddress || '100 South State St'}, ${city}, ${state} ${zipCode}`,
-        county: `${county} (Proper Venue Under 28 U.S.C. § 1408)`,
-        taxFilingStatus: maritalStatus,
-        employer: employer || 'Private Sector Professional',
-        yearsEmployed: Number(yearsEmployed)
-      },
-      jointDebtorProfile: isJointFiling && jointDebtorName ? {
-        name: jointDebtorName,
-        ssnMasked: `***-**-${jointSsnLast4 || '8831'}`,
-        employer: 'Healthcare Services',
-        yearsEmployed: 2.5
-      } : null,
-      statutoryDocs: [
-        { id: 'doc-1', title: 'Pre-Filing Certificate of Credit Counseling (11 U.S.C. § 109(h))', status: hasCreditCounseling ? 'Verified & Filed' : 'Deficient / Pending', date: new Date().toISOString().split('T')[0], certNumber: ccCertNumber, required: true },
-        { id: 'doc-2', title: 'Payment Advices / Pay Stubs (Last 60 Days)', status: hasPayStubs60Days ? 'Verified & Admitted' : 'Pending', date: new Date().toISOString().split('T')[0], required: true },
-        { id: 'doc-3', title: 'Federal Tax Returns (Past 2 Years Form 1040)', status: hasTaxReturns2Years ? 'Verified & Admitted' : 'Pending', date: new Date().toISOString().split('T')[0], required: true },
-        { id: 'doc-4', title: 'Bank Account Statements (Past 60 Days)', status: hasBankStatements60Days ? 'Verified & Admitted' : 'Pending', date: new Date().toISOString().split('T')[0], required: true },
-        { id: 'doc-5', title: 'Debtor Verified Declaration of Schedules', status: hasAffidavitSigned ? 'Executed & Filed' : 'Unsigned', date: new Date().toISOString().split('T')[0], required: true }
-      ]
-    };
+    setSubmitting(true);
+    try {
+      const todayIso = new Date().toISOString().split('T')[0];
+      const meansStatusText = isBelowMedian
+        ? 'Below Utah Median (Passed Form 122A-1)'
+        : 'Above Median (Form 122A-2 Rebuttal)';
+      const petitionStatus = isEmergencyFiling
+        ? 'Emergency Filing (14-Day Deficiency)'
+        : 'Pre-Filing';
 
-    onComplete(newCase);
-    onClose();
+      const createdMatter = await matterService.createMatter({
+        title: `${targetChapter} Petition - ${debtorName.trim()}`,
+        clientId,
+        practiceAreaId: 'pa-bk',
+        responsibleAttorneyId: currentUser?.id || 'usr-1',
+        billingType: 'Flat Fee',
+        flatFeeAmount: 0,
+        status: 'Active',
+        openDate: todayIso,
+      });
+
+      await bankruptcyService.saveBankruptcyCase(createdMatter.id, {
+        chapter: targetChapter,
+        courtDistrict: 'District of Utah',
+        courtDivision: county || 'Salt Lake City',
+        debtorType: isJointFiling ? 'Joint' : 'Individual',
+        filingDate: todayIso,
+        meeting341Date: meeting341Date || undefined,
+        status: petitionStatus,
+        householdSize: Number(householdSize) || 1,
+        monthlyGrossIncome: totalMonthlyGross,
+        meansTestStatus: meansStatusText,
+        totalSecuredDebt,
+        totalUnsecuredDebt: Number(unsecuredDebt) || 0,
+        totalPriorityDebt: Number(priorityDebt) || 0,
+        totalAssets,
+        notes: isEmergencyFiling
+          ? `Emergency petition filed: ${emergencyReason}`
+          : `Comprehensive ${targetChapter} debtor intake completed for ${debtorName.trim()}.`,
+      });
+
+      addToast(`Bankruptcy docket ${createdMatter.matterNumber} created and persisted.`, 'success');
+      if (onComplete) await onComplete(createdMatter);
+      onClose();
+    } catch (err) {
+      addToast(err?.message || 'Failed to create bankruptcy docket.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const steps = [
@@ -279,12 +296,38 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
                     <User className="w-3.5 h-3.5 text-[#A4432B]" /> Primary Debtor Information
                   </h4>
                   <div>
+                    <label className="block text-xs font-semibold text-[#202A35] mb-1">
+                      Client Record *
+                    </label>
+                    <select
+                      value={clientId}
+                      onChange={(e) => setClientId(e.target.value)}
+                      required
+                      className="w-full text-xs p-2 rounded border border-[#D9D6CF] bg-white font-medium"
+                    >
+                      <option value="">Select Client...</option>
+                      {clients.map((cl) => (
+                        <option key={cl.id} value={cl.id}>
+                          {cl.clientNumber || cl.id} — {cl.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
                     <Input
                       label="Primary Debtor Full Legal Name *"
                       value={debtorName}
                       onChange={(e) => setDebtorName(e.target.value)}
                       placeholder="e.g. Rachel Lynn Walker"
                       required
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="Section 341 Meeting Date (Optional)"
+                      type="date"
+                      value={meeting341Date}
+                      onChange={(e) => setMeeting341Date(e.target.value)}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -906,7 +949,7 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
                   <span>OFFICIAL COURT CM/ECF TRANSMISSION NOTICE</span>
                 </div>
                 <p className="text-[#202A35] leading-relaxed">
-                  This system compiles, validates, and packages debtor schedules and the creditor matrix in strict compliance with the Federal Rules of Bankruptcy Procedure (FRBP) and District of Utah Local Rules. The final electronic filing submission must be executed through the official CM/ECF court portal by counsel of record.
+                  This system organizes and validates debtor schedules and the creditor matrix for counsel review under Federal Rules of Bankruptcy Procedure (FRBP) and District of Utah guidelines. The final electronic filing submission must be verified and executed through the official CM/ECF court portal by counsel of record.
                 </p>
                 <div className="flex items-center gap-4 text-[11px] font-mono text-[#667085] pt-1">
                   <span>Venue: District of Utah (Salt Lake City)</span>
@@ -950,9 +993,10 @@ export function DebtorIntakeWizardModal({ isOpen, onClose, onComplete }) {
               size="sm"
               icon={CheckCircle2}
               onClick={handleSubmit}
+              disabled={submitting}
               className="bg-emerald-700 hover:bg-emerald-800"
             >
-              Complete Intake &amp; Open Docket
+              {submitting ? 'Saving Docket...' : 'Complete Intake & Open Docket'}
             </Button>
           )}
         </div>

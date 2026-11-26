@@ -186,12 +186,23 @@ export function UserManagement() {
     }
 
     const actionText = user.status === 'Active' ? 'deactivate' : 'activate';
+
+    if (actionText === 'deactivate' && user.role === 'super_admin') {
+      const activeAdmins = allUsers.filter(u => u.role === 'super_admin' && u.status === 'Active');
+      if (activeAdmins.length <= 1) {
+        addToast('Security Violation: Cannot deactivate the last active Super Admin account.', 'error');
+        return;
+      }
+    }
+
     setConfirmDialog({
       isOpen: true,
       title: `${actionText === 'activate' ? 'Activate' : 'Deactivate'} User Account`,
+      confirmLabel: actionText === 'activate' ? 'Activate User' : 'Deactivate User',
+      variant: actionText === 'activate' ? 'primary' : 'danger',
       message: `Are you sure you want to ${actionText} ${user.name}? ${
         actionText === 'deactivate'
-          ? 'Deactivated users will immediately lose workstation login access.'
+          ? 'Deactivated users will immediately lose workstation login access while historic matters and records remain preserved.'
           : 'Activated users will regain workstation access.'
       }`,
       onConfirm: async () => {
@@ -211,6 +222,8 @@ export function UserManagement() {
     setConfirmDialog({
       isOpen: true,
       title: 'Reset Account Password',
+      confirmLabel: 'Send Reset Email',
+      variant: 'primary',
       message: `Send an official password reset authorization email and token to ${user.name} (${user.email})?`,
       onConfirm: () => {
         const res = resetPassword(user.id);
@@ -220,23 +233,33 @@ export function UserManagement() {
     });
   };
 
-  // Action: Delete User
+  // Action: Deactivate User (Soft Deactivation)
   const handleDeleteUserPrompt = (user) => {
     if (user.id === currentUser.id) {
-      addToast('Security Violation: You cannot delete your own active account.', 'error');
+      addToast('Security Violation: You cannot deactivate your own active session account.', 'error');
       return;
+    }
+
+    if (user.role === 'super_admin' && user.status === 'Active') {
+      const activeAdmins = allUsers.filter(u => u.role === 'super_admin' && u.status === 'Active');
+      if (activeAdmins.length <= 1) {
+        addToast('Security Violation: Cannot deactivate the last active Super Admin account.', 'error');
+        return;
+      }
     }
 
     setConfirmDialog({
       isOpen: true,
-      title: `Delete Personnel Record: ${user.name}`,
-      message: `Warning: This will permanently remove the personnel profile for ${user.name} from the firm directory. Historic billable hours and case filings remain preserved. Continue?`,
+      title: `Deactivate Personnel Account: ${user.name}`,
+      confirmLabel: 'Deactivate User',
+      variant: 'danger',
+      message: `Are you sure you want to deactivate ${user.name}? This will revoke workstation login access immediately while strictly preserving all historical matter assignments, invoices, time entries, accounting records, and audit logs. Continue?`,
       onConfirm: async () => {
         const res = await deleteUser(user.id);
         if (res.success) {
-          addToast(`User record for ${user.name} deleted.`, 'success');
+          addToast(`User account for ${user.name} has been deactivated.`, 'success');
         } else {
-          addToast(res.message, 'error');
+          addToast(res.message || 'Failed to deactivate user account.', 'error');
         }
         setConfirmDialog(prev => ({ ...prev, isOpen: false }));
       },
@@ -385,12 +408,12 @@ export function UserManagement() {
             </button>
           )}
 
-          {/* Delete User (Cannot delete oneself) */}
+          {/* Deactivate User (Cannot deactivate oneself) */}
           {permissions.canManageUsers && row.id !== currentUser.id && (
             <button
               onClick={() => handleDeleteUserPrompt(row)}
               className="p-1.5 rounded text-gray-400 hover:text-red-700 hover:bg-red-50 transition-colors"
-              title="Delete User Record"
+              title="Deactivate User Account"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -916,7 +939,10 @@ export function UserManagement() {
         isOpen={confirmDialog.isOpen}
         title={confirmDialog.title}
         message={confirmDialog.message}
+        confirmLabel={confirmDialog.confirmLabel || 'Confirm'}
+        variant={confirmDialog.variant || 'danger'}
         onConfirm={confirmDialog.onConfirm}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
     </div>

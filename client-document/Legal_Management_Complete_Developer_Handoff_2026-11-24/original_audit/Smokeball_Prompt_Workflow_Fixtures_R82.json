@@ -1,0 +1,140 @@
+{
+  "date": "2026-11-17",
+  "tests": [
+    {
+      "requirement_id": "F-0017",
+      "id": "AT-0017-R82-1",
+      "title": "Version scoped prompt releases and copies",
+      "developer_story_extension": "As the attorney, I need prompt authorship, audience and revision history separated from each execution.",
+      "scenario_and_expected_result": "Create synthetic personal, firm and vendor prompts. Duplicate a vendor prompt, edit the copy and reorder two actions; retain source revision and creator without modifying the original. A change from private to firm/published requires explicit authorized approval and a preview of audience/data. Do not infer that public means open Internet from the guide label. Revoke access then search/run through both prompt and TemplateLab routes: denied prompts remain inaccessible. Existing runs pin their approved revision; deleting a reusable prompt does not erase run evidence.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/29816246368919-Using-the-Archie-Prompt-Library",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Version scoped prompt releases and copies",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0023",
+      "id": "AT-0023-R82-2",
+      "title": "Validate typed prerequisites before prompt execution",
+      "developer_story_extension": "As the attorney, I need structured missing facts gathered without treating contextual answers as exact inserted text.",
+      "scenario_and_expected_result": "Build a synthetic form with required short/long text, date, single select, multiple choice and document upload. Reject missing required values, ambiguous date years and denied/corrupt files before run. Version answers and distinguish a context-only priority from a literal amount/date/name variable. Insert exact approved values at their mapped locations and test conditional sections; do not let model paraphrase protected variables. Changing matter invalidates stale answers/file access. Preserve I/me/my and four-digit years in every attorney-letter date; unknown years are flagged, not guessed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/37083035412375-Using-Prompt-Inputs-in-your-Archie-Prompt",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Validate typed prerequisites before prompt execution",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0450",
+      "id": "AT-0450-R82-3",
+      "title": "Extract discovery questions before drafting answers",
+      "developer_story_extension": "As the attorney, I need exact question text and numbering reviewed before any matter-grounded draft response.",
+      "scenario_and_expected_result": "Use a synthetic PDF with numbered subparts, page breaks, a repeated heading and one unreadable scan region. Produce an editable question list with page/span provenance; preserve verbatim text where legible, flag uncertainty and do not silently omit/reorder subparts. Approve the extracted set before generating draft answers from the selected matter snapshot. Missing facts remain unresolved rather than invented. Regeneration preserves approved question identities and objections; no answer is served or certified automatically.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=u84W2WDTp7s",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Extract discovery questions before drafting answers",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0108",
+      "id": "AT-0108-R82-4",
+      "title": "Separate negotiation chronology from client authority and sending",
+      "developer_story_extension": "As the attorney, I need every offer/demand tied to its actual source while a client-update draft remains separate from authority to settle.",
+      "scenario_and_expected_result": "Seed three synthetic offers, one revoked offer, conflicting dates and a client instruction limiting authority. Produce a source-linked table with sender, amount, date/year, status and uncertainty. Draft a counteroffer-update letter in I/me/my voice with four-digit dates; never turn an opposing offer into client acceptance or send the draft. Late source correction invalidates the draft/review snapshot. Duplicate messages do not duplicate offers, and an unsourced amount cannot become an established negotiation fact.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=u84W2WDTp7s",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Separate negotiation chronology from client authority and sending",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0007",
+      "id": "AT-0007-R82-5",
+      "title": "Bound a medical narrative by the selected record set",
+      "developer_story_extension": "As the attorney, I need a medical chronology that identifies omitted records and conflicting evidence instead of presenting a selected-page summary as the complete medical history.",
+      "scenario_and_expected_result": "Use synthetic progress, operative and imaging reports with overlapping visits, illegible text and a contradicted date. Preserve record/page citations and chronology, flag gaps/contradictions and separate reported diagnosis from an AI inference. Show precisely which pages were selected, not a claim of full ingestion. If size/context limits are unknown or exceeded, pause with a measurable gap rather than silently truncating. A suggested large-record integration requires its own verified entitlement/provider/data path. Demand/complaint drafting needs separate attorney approval.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=u84W2WDTp7s",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Bound a medical narrative by the selected record set",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0104",
+      "id": "AT-0104-R82-6",
+      "title": "Keep prompt test mode separate from saved matter outputs",
+      "developer_story_extension": "As the attorney, I need a test run clearly labeled, with data processing and persistent outputs separately evidenced.",
+      "scenario_and_expected_result": "Run only synthetic input against two matter fixtures. Record prompt/schema/source snapshot and output status without claiming a saved document or approved template. Closing a non-saving test cannot create a finalized letter, billed activity, task completion or external message. Test-mode absence from the matter list does not prove absence from provider logs; disclose unknown processing/retention and require verified policy before client data use. Switching test matter clears stale private context and rechecks file permissions.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/37083035412375-Using-Prompt-Inputs-in-your-Archie-Prompt",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Keep prompt test mode separate from saved matter outputs",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    },
+    {
+      "requirement_id": "F-0296",
+      "id": "AT-0296-R82-7",
+      "title": "Preserve approval and unresolved matches before billing export",
+      "developer_story_extension": "As the attorney, I need one master review ledger with uncertain matter matches visible and billing export gated by approval.",
+      "scenario_and_expected_result": "Combine synthetic Timing, individual call/text, email and drafting events; retain provider IDs, raw intervals and unresolved matter selections. Hold/unreviewed rows never export to a synthetic CosmoLex adapter. Approving a mapped row records actor/version and creates one idempotent export request; repeated updates or alternate CSV route cannot duplicate a timecard. A source synchronization flag or exported filename does not prove provider ingestion. Reconcile all required daily source windows and corrections before calling a review complete. Archived proposals are historical context, not evidence a connector currently works.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.dropbox.com/scl/fi/fo30fwvva2qtp1sm2qb75",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Original synthetic prompt, matter, source-document and activity fixtures only",
+        "initial_state": "Proposed case; no user app/repository accessible",
+        "user_action": "Preserve approval and unresolved matches before billing export",
+        "output": "Versioned reviewable result or explicit unresolved failure",
+        "exceptions_and_dependencies": "Authorized Archie add-on/plan, current prompt/schema, region, matter/file permissions and ingestion freshness required. Private/public/published audience semantics and test-mode processing/retention unresolved. Screenshot regional examples are not Utah legal templates. All generated outputs require attorney review; no AI narrative, transcript or mockup proves implementation."
+      }
+    }
+  ],
+  "status": "Seven proposed synthetic cases; all Not executed",
+  "coverage_limits": "No AI run, Word extraction, client update, legal filing, billing export or external message executed."
+}

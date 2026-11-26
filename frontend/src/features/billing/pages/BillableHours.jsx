@@ -127,7 +127,7 @@ export function BillableHours() {
     <div className="space-y-6">
       <PageHeader
         title="Approved Billable Hours"
-        subtitle="Time entries cleared by supervising counsel, ready for client billing and CosmoLex accounting ledger transfer."
+        subtitle="Time entries cleared by supervising counsel, ready for client invoice generation and general ledger posting."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'Billable Hours' }]}
         actions={
           <div className="flex items-center gap-2">

@@ -1,38 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Globe,
   Plus,
   Search,
   Filter,
-  AlertTriangle,
   FileText,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
   Eye,
   Layers,
-  ShieldCheck,
-  Printer,
-  Download,
-  Award,
-  RotateCcw
+  RotateCcw,
 } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
 import { StatusBadge } from '../../../components/shared/StatusBadge';
 import { Button } from '../../../components/ui/Button';
-import { SearchBar } from '../../../components/shared/SearchBar';
-import { FilterBar } from '../../../components/shared/FilterBar';
 import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
-import { formatDate } from '../../../utils/formatDate';
 import { Link } from 'react-router-dom';
 import { ImmigrationCaseDrawer } from '../components/ImmigrationCaseDrawer';
 import { FilingPackageAssemblerModal } from '../components/FilingPackageAssemblerModal';
 import { useToast } from '../../../components/ui/Toast';
 import { matterService } from '../../../services/matterService';
+import { immigrationService } from '../../../services/immigrationService';
+import { useClients } from '../../../context/ClientContext';
+import { useAuth } from '../../../hooks/useAuth';
 
 export function ImmigrationCasesList() {
+  const { clients } = useClients();
+  const { currentUser } = useAuth();
+  const { addToast } = useToast();
+
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,44 +38,10 @@ export function ImmigrationCasesList() {
   const [isAddCaseOpen, setIsAddCaseOpen] = useState(false);
   const [isAssemblerOpen, setIsAssemblerOpen] = useState(false);
   const [assemblerCase, setAssemblerCase] = useState(null);
-  const { addToast } = useToast();
-
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-    matterService.getMatters({ practiceAreaId: 'pa-imm' })
-      .then((res) => {
-        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted) {
-          const mapped = realMatters.map((m) => ({
-            id: m.id,
-            title: m.title,
-            clientName: m.client?.name || m.clientName || m.title,
-            matterNumber: m.matterNumber,
-            category: m.title.includes('Naturalization') ? 'Naturalization (N-400)' : (m.title.includes('Employment') ? 'Employment-Based' : 'Family-Based Adjustment of Status'),
-            status: m.status === 'Active' ? 'Pending USCIS Review' : (m.status === 'Concluded' ? 'Approved' : 'Document Collection'),
-            alienNumber: '—',
-            receiptNumber: '—',
-            priorityDate: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
-            formsRequired: [],
-            assignedAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
-            isRealDbMatter: true,
-            matterId: m.id,
-          }));
-          setCases(mapped);
-        }
-      })
-      .catch((err) => {
-        console.warn('Could not load immigration matters from API:', err?.message);
-        if (isMounted) setCases([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-    return () => { isMounted = false; };
-  }, []);
+  const [creatingCase, setCreatingCase] = useState(false);
 
   // New Case form state
+  const [newClientId, setNewClientId] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [newBeneficiary, setNewBeneficiary] = useState('');
   const [newPetitioner, setNewPetitioner] = useState('');
@@ -87,93 +49,220 @@ export function ImmigrationCasesList() {
   const [newCategory, setNewCategory] = useState('Family-Based Adjustment of Status');
   const [newReceiptNumber, setNewReceiptNumber] = useState('');
 
-  const handleOpenAssembler = (caseItem) => {
-    setAssemblerCase(caseItem || cases[0]);
+  useEffect(() => {
+    if (clients.length > 0 && !newClientId) {
+      setNewClientId(clients[0].id);
+    }
+  }, [clients, newClientId]);
+
+  const loadImmigrationCases = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await matterService.getMatters({ practiceAreaId: 'pa-imm' });
+      const realMatters = Array.isArray(res) ? res : res?.matters || [];
+
+      const enriched = await Promise.all(
+        realMatters.map(async (m) => {
+          let imm = null;
+          try {
+            imm = await immigrationService.getImmigrationCase(m.id);
+          } catch {
+            imm = null;
+          }
+
+          const receipts = Array.isArray(imm?.receipts) ? imm.receipts : [];
+          const parties = Array.isArray(imm?.parties) ? imm.parties : [];
+          const petitionerParty = parties.find((p) =>
+            (p.relationshipRole || '').toLowerCase().includes('petitioner')
+          );
+
+          return {
+            id: m.id,
+            matterId: m.id,
+            immigrationCaseId: imm?.id || null,
+            title: m.title,
+            clientName: m.client?.name || m.clientName || '—',
+            matterNumber: m.matterNumber,
+            category:
+              imm?.visaCategory ||
+              (m.title.includes('Naturalization')
+                ? 'Naturalization (N-400)'
+                : m.title.includes('Employment')
+                ? 'Employment-Based'
+                : 'Family-Based Adjustment of Status'),
+            status: imm?.status || m.status || 'Preparation',
+            currentStage: imm?.status || m.currentStage?.stageName || 'Preparation',
+            beneficiaryName: imm?.beneficiaryName || m.client?.name || '—',
+            petitionerName: petitionerParty?.name || m.client?.name || '—',
+            alienNumber: imm?.alienRegistrationNum || '—',
+            i94Number: imm?.i94Number || '',
+            classOfAdmission: imm?.classOfAdmission || '',
+            countryOfCitizenship: imm?.countryOfCitizenship || '',
+            receiptNumber: receipts[0]?.receiptNumber || '—',
+            serviceCenter: receipts[0]?.serviceCenter || 'Pending Assignment',
+            priorityDate: imm?.priorityDate
+              ? new Date(imm.priorityDate).toISOString().split('T')[0]
+              : m.openDate
+              ? new Date(m.openDate).toISOString().split('T')[0]
+              : '',
+            receipts,
+            parties,
+            formsRequired: [],
+            assignedAttorneyName:
+              m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
+            isRealDbMatter: true,
+          };
+        })
+      );
+
+      setCases(enriched);
+    } catch (err) {
+      console.warn('Could not load immigration matters from API:', err?.message);
+      setCases([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadImmigrationCases();
+  }, [loadImmigrationCases]);
+
+  // Compute real metrics strictly from loaded matters & USCIS receipt records (zero hardcoded counts)
+  const metrics = useMemo(() => {
+    const allReceipts = cases.flatMap((c) => c.receipts || []);
+    const pendingReceipts = allReceipts.filter((r) => {
+      const st = (r.currentStatus || '').toLowerCase();
+      return !st.includes('approved') && !st.includes('closed') && !st.includes('denied');
+    });
+
+    const now = new Date();
+    const in30Days = new Date();
+    in30Days.setDate(now.getDate() + 30);
+
+    const rfeDueSoon = allReceipts.filter((r) => {
+      if (!r.rfeDueDate) return false;
+      const d = new Date(r.rfeDueDate);
+      return !isNaN(d.getTime()) && d <= in30Days;
+    });
+
+    const scheduledInterviews = allReceipts.filter((r) => Boolean(r.interviewDate));
+
+    return {
+      activePetitions: cases.length,
+      pendingReceiptsCount: pendingReceipts.length,
+      rfeDueCount: rfeDueSoon.length,
+      rfeHighlight: rfeDueSoon[0]?.receiptNumber || 'No active RFEs',
+      interviewsCount: scheduledInterviews.length,
+      nextInterviewHighlight: scheduledInterviews[0]?.interviewDate
+        ? new Date(scheduledInterviews[0].interviewDate).toLocaleDateString()
+        : 'No upcoming interviews',
+    };
+  }, [cases]);
+
+  const handleOpenAssembler = (caseItem = null) => {
+    setAssemblerCase(caseItem || cases[0] || null);
     setIsAssemblerOpen(true);
   };
 
   const handlePackageCleared = (caseId, attorneyName) => {
-    setCases(prev => prev.map(c => {
-      if (c.id === caseId) {
-        return {
-          ...c,
-          filingPackage: {
-            ...c.filingPackage,
-            status: 'Attorney Cleared for Filing ✓',
-            clearedByAttorney: true,
-            clearedAt: new Date().toISOString(),
-            clearingAttorney: attorneyName
-          }
-        };
-      }
-      return c;
-    }));
+    setCases((prev) =>
+      prev.map((c) => {
+        if (c.id === caseId) {
+          return {
+            ...c,
+            filingPackage: {
+              ...c.filingPackage,
+              status: 'Attorney Cleared for Filing ✓',
+              clearedByAttorney: true,
+              clearedAt: new Date().toISOString(),
+              clearingAttorney: attorneyName,
+            },
+          };
+        }
+        return c;
+      })
+    );
   };
 
-  const handleCreateCase = (e) => {
+  const handleCreateCase = async (e) => {
     e.preventDefault();
-    if (!newTitle || !newBeneficiary) {
+    if (!newTitle.trim() || !newBeneficiary.trim()) {
       addToast('Please enter petition title and beneficiary name.', 'error');
       return;
     }
 
-    const created = {
-      id: `IMM-2026-00${cases.length + 1}`,
-      matterNumber: `IMM-2026-00${cases.length + 1}`,
-      title: newTitle,
-      category: newCategory,
-      petitionType: newCategory,
-      petitionerName: newPetitioner || 'Self-Petitioning',
-      beneficiaryName: newBeneficiary,
-      alienNumber: newAlienNumber || 'Pending A-Number',
-      receiptNumber: newReceiptNumber || `IOE-26-900-${Math.floor(10000 + Math.random() * 90000)}`,
-      priorityDate: new Date().toISOString().split('T')[0],
-      currentStage: 'Filing Package Prepared',
-      serviceCenter: 'Nebraska Service Center (LIN)',
-      filingDate: new Date().toISOString().split('T')[0],
-      status: 'In Progress',
-      assignedAttorneyId: 'usr-3',
-      assignedAttorneyName: 'Sarah Jenkins, Esq.',
-      assignedParalegalId: 'usr-4',
-      assignedParalegalName: 'Marcus Vance',
-      notes: 'Newly initiated immigration matter docket.',
-      travelHistory: [],
-      evidenceChecklist: [
-        { id: 'ev-init-1', category: 'Civil Document', title: 'Certified Birth Certificate', status: 'Pending Review', file: null, required: true },
-        { id: 'ev-init-2', category: 'Legal Appearance', title: 'Executed Form G-28 Appearance of Counsel', status: 'Verified & Admitted', file: 'g28_executed.pdf', required: true }
-      ],
-      filingPackage: {
-        status: 'Paralegal Drafting',
-        packageId: `PKG-IMM-2026-0${cases.length + 1}`,
-        clearedByAttorney: false,
-        exhibitTabs: [
-          { tab: 'Tab A', title: 'Form G-28 Notice of Entry of Appearance' },
-          { tab: 'Tab B', title: 'Immigration Petitions & Exhibits' }
-        ]
-      }
-    };
+    const clientId = newClientId || clients[0]?.id;
+    const attorneyId = currentUser?.id;
+    if (!clientId || !attorneyId) {
+      addToast('An active client record and signed-in counsel are required to create a matter.', 'error');
+      return;
+    }
 
-    setCases(prev => [created, ...prev]);
-    addToast(`Immigration matter ${created.matterNumber} created successfully!`, 'success');
-    setIsAddCaseOpen(false);
-    setNewTitle('');
-    setNewBeneficiary('');
-    setNewPetitioner('');
-    setNewAlienNumber('');
+    setCreatingCase(true);
+    try {
+      const createdMatter = await matterService.createMatter({
+        title: newTitle.trim(),
+        clientId,
+        practiceAreaId: 'pa-imm',
+        responsibleAttorneyId: attorneyId,
+        billingType: 'Flat Fee',
+        flatFeeAmount: 0,
+        status: 'Active',
+        openDate: new Date().toISOString().split('T')[0],
+      });
+
+      await immigrationService.saveImmigrationCase(createdMatter.id, {
+        visaCategory: newCategory,
+        beneficiaryName: newBeneficiary.trim(),
+        alienRegistrationNum: newAlienNumber.trim() || undefined,
+        status: 'Preparation',
+      });
+
+      if (newPetitioner.trim()) {
+        await immigrationService.createParty(createdMatter.id, {
+          name: newPetitioner.trim(),
+          relationshipRole: 'Petitioner',
+        });
+      }
+
+      if (newReceiptNumber.trim()) {
+        await immigrationService.createReceipt(createdMatter.id, {
+          receiptNumber: newReceiptNumber.trim().toUpperCase(),
+          formType: 'I-130',
+          filingDate: new Date().toISOString().split('T')[0],
+          currentStatus: 'Case Was Received',
+        });
+      }
+
+      addToast(`Immigration matter ${createdMatter.matterNumber} created and persisted.`, 'success');
+      setIsAddCaseOpen(false);
+      setNewTitle('');
+      setNewBeneficiary('');
+      setNewPetitioner('');
+      setNewAlienNumber('');
+      setNewReceiptNumber('');
+      await loadImmigrationCases();
+    } catch (err) {
+      addToast(err?.message || 'Failed to create immigration petition.', 'error');
+    } finally {
+      setCreatingCase(false);
+    }
   };
 
   const handleUpdateCase = (updated) => {
-    setCases(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setCases((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     setSelectedCase(updated);
   };
 
-  const filteredCases = cases.filter(c => {
+  const filteredCases = cases.filter((c) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
       searchQuery === '' ||
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.beneficiaryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.alienNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.receiptNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      (c.title && c.title.toLowerCase().includes(q)) ||
+      (c.beneficiaryName && c.beneficiaryName.toLowerCase().includes(q)) ||
+      (c.alienNumber && c.alienNumber.toLowerCase().includes(q)) ||
+      (c.receiptNumber && c.receiptNumber.toLowerCase().includes(q));
     const matchesCategory = categoryFilter === '' || c.category === categoryFilter;
     const matchesStatus = statusFilter === '' || c.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;
@@ -288,16 +377,16 @@ export function ImmigrationCasesList() {
 
   return (
     <div className="space-y-6">
-      {/* Disclaimer banner */}
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      {/* Live Workspace Status Banner */}
+      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
         <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-amber-700 shrink-0" />
+          <Globe className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>[DEMO SIMULATION] Specialty Practice Workspace:</strong> Immigration Management prototype modeled after Docketwise. All USCIS receipt tracking, A-numbers, and filing packages operate strictly client-side.
+            <strong>Immigration Matter &amp; Form Studio Workspace:</strong> Counts and case records query live immigration matters, receipts, and participants. Prepared packets require attorney clearance before external USCIS filing.
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">
+          CONNECTED RECORDS
         </span>
       </div>
 
@@ -308,7 +397,7 @@ export function ImmigrationCasesList() {
             <Layers className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-bold text-sm tracking-wide text-white">
                 DOCKETWISE MULTI-FORM AUTO-FILL &amp; FILING ASSEMBLY ENGINE
               </h3>
@@ -317,7 +406,7 @@ export function ImmigrationCasesList() {
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
-              Eliminate repetitive data entry across Form G-28, Form I-130, Form I-485, Form I-765, and Form I-864. Enter client questionnaire data once to simultaneously generate compliant USCIS forms, 7-tab indexed exhibit binders, fee check vouchers ($1,975), and attorney clearance cover letters.
+              Eliminate repetitive data entry across Form G-28, Form I-130, Form I-485, Form I-765, and Form I-864. Enter client questionnaire data once to populate case records, indexed exhibits, fee summaries, and downloadable filing packages.
             </p>
           </div>
         </div>
@@ -335,13 +424,13 @@ export function ImmigrationCasesList() {
 
       <PageHeader
         title="Immigration Practice Workspace"
-        subtitle="Family-based petitions, employment visas, removal defense, and USCIS receipt tracking (Docketwise Model)."
+        subtitle="Family-based petitions, employment visas, removal defense, and USCIS receipt tracking."
         breadcrumbs={[
           { label: 'Clients & Matters', to: '/matters' },
-          { label: 'Immigration Workspace' }
+          { label: 'Immigration Workspace' },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="primary"
               size="sm"
@@ -378,33 +467,36 @@ export function ImmigrationCasesList() {
         }
       />
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Metrics Row — Derived strictly from loaded matters & receipt records */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Active Petitions</span>
-          <span className="text-2xl font-bold text-[#06244B] mt-1 block">{cases.length}</span>
-          <span className="text-[11px] text-emerald-700 font-medium">Family, Employment &amp; Court Defense</span>
+          <span className="text-2xl font-bold text-[#06244B] mt-1 block">{metrics.activePetitions}</span>
+          <span className="text-[11px] text-emerald-700 font-medium">
+            {metrics.activePetitions > 0 ? 'Linked to Immigration Matters' : 'No active petitions'}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Pending USCIS Receipts</span>
-          <span className="text-2xl font-bold text-amber-700 mt-1 block">5</span>
-          <span className="text-[11px] text-[#667085]">Nebraska, Texas &amp; Vermont Centers</span>
+          <span className="text-2xl font-bold text-amber-700 mt-1 block">{metrics.pendingReceiptsCount}</span>
+          <span className="text-[11px] text-[#667085]">
+            {metrics.pendingReceiptsCount > 0 ? 'Active receipt filings tracked' : 'No pending receipts'}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">RFEs Due &lt;30 Days</span>
-          <span className="text-2xl font-bold text-red-700 mt-1 block">1</span>
-          <span className="text-[11px] text-red-600 font-semibold">Dr. Klaus Richter (EB-2 NIW)</span>
+          <span className="text-2xl font-bold text-red-700 mt-1 block">{metrics.rfeDueCount}</span>
+          <span className="text-[11px] text-[#667085] font-medium">{metrics.rfeHighlight}</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
-          <span className="text-xs text-[#667085] uppercase font-bold block">Naturalization Interviews</span>
-          <span className="text-2xl font-bold text-[#06244B] mt-1 block">1</span>
-          <span className="text-[11px] text-emerald-700 font-medium">Nov 24 (Fatima Al-Mansoor)</span>
+          <span className="text-xs text-[#667085] uppercase font-bold block">Scheduled Interviews</span>
+          <span className="text-2xl font-bold text-[#06244B] mt-1 block">{metrics.interviewsCount}</span>
+          <span className="text-[11px] text-[#667085] font-medium">{metrics.nextInterviewHighlight}</span>
         </div>
       </div>
 
       {/* Unified Executive Search & Filter Toolbar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row items-center justify-between gap-3">
-        {/* Search Input */}
         <div className="relative w-full lg:max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-[#98A2B3]" />
           <input
@@ -416,7 +508,6 @@ export function ImmigrationCasesList() {
           />
         </div>
 
-        {/* Filter Dropdowns & Reset */}
         <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#475467] mr-1">
             <Filter className="w-3.5 h-3.5 text-[#A4432B]" />
@@ -430,10 +521,10 @@ export function ImmigrationCasesList() {
           >
             <option value="">Category: All</option>
             <option value="Family-Based Adjustment of Status">Family-Based Adjustment</option>
-            <option value="Employment-Based Immigrant">Employment-Based</option>
+            <option value="Employment-Based">Employment-Based</option>
             <option value="Non-Immigrant Employment">Non-Immigrant (H-1B)</option>
             <option value="Humanitarian / Asylum">Asylum</option>
-            <option value="Naturalization">Naturalization (N-400)</option>
+            <option value="Naturalization (N-400)">Naturalization (N-400)</option>
             <option value="Immigration Court Defense">EOIR Court Defense</option>
           </select>
 
@@ -443,6 +534,7 @@ export function ImmigrationCasesList() {
             className="px-3 py-2 text-xs border border-[#D0D5DD] rounded-lg bg-[#F9FAFB] text-[#344054] focus:outline-none focus:ring-2 focus:ring-[#06244B] cursor-pointer"
           >
             <option value="">Status: All</option>
+            <option value="Preparation">Preparation</option>
             <option value="In Progress">In Progress</option>
             <option value="RFE Issued">RFE Issued</option>
             <option value="Approved">Approved</option>
@@ -471,7 +563,8 @@ export function ImmigrationCasesList() {
         columns={columns}
         data={filteredCases}
         keyField="id"
-        emptyMessage="No immigration cases found matching your criteria."
+        loading={loading}
+        emptyMessage="No immigration cases found. Click 'New Petition' to create an immigration matter."
       />
 
       {/* Case Management Drawer */}
@@ -484,36 +577,60 @@ export function ImmigrationCasesList() {
         />
       )}
 
-      {/* Filing Package Assembler & Multi-Form Auto-Fill Modal */}
-      {isAssemblerOpen && assemblerCase && (
-        <FilingPackageAssemblerModal
-          isOpen={isAssemblerOpen}
-          onClose={() => setIsAssemblerOpen(false)}
-          immigrationCase={assemblerCase}
-          onPackageCleared={handlePackageCleared}
-        />
-      )}
+      {/* Filing Package Assembler & Multi-Form Auto-Fill Modal (Always opens visibly when triggered) */}
+      <FilingPackageAssemblerModal
+        isOpen={isAssemblerOpen}
+        onClose={() => setIsAssemblerOpen(false)}
+        immigrationCase={assemblerCase}
+        cases={cases}
+        onSelectCase={(selected) => setAssemblerCase(selected)}
+        onOpenCreatePetition={() => {
+          setIsAssemblerOpen(false);
+          setIsAddCaseOpen(true);
+        }}
+        onCaseSaved={loadImmigrationCases}
+        onPackageCleared={handlePackageCleared}
+      />
 
       {/* New Immigration Petition Modal */}
       <Modal
         isOpen={isAddCaseOpen}
         onClose={() => setIsAddCaseOpen(false)}
         title="Initiate New Immigration Petition Docket"
-        subtitle="Open new family, employment, or defense case file"
+        subtitle="Creates a persisted Immigration Matter and linked USCIS case record"
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleCreateCase} className="space-y-4 text-xs">
+          <div>
+            <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
+              Client Record *
+            </label>
+            <select
+              value={newClientId}
+              onChange={(e) => setNewClientId(e.target.value)}
+              required
+              className="w-full text-xs p-2.5 rounded border border-[#D9D6CF] bg-white font-medium"
+            >
+              <option value="">Select Client...</option>
+              {clients.map((cl) => (
+                <option key={cl.id} value={cl.id}>
+                  {cl.clientNumber || cl.id} — {cl.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <Input
               label="Petition Title / Proceeding Description"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="e.g. Maria Santos: Form I-130 / I-485 Immediate Relative Adjustment"
+              placeholder="e.g. Form I-130 / I-485 Immediate Relative Adjustment"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Input
                 label="Beneficiary Full Legal Name"
@@ -533,7 +650,7 @@ export function ImmigrationCasesList() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
                 Immigration Category
@@ -544,10 +661,10 @@ export function ImmigrationCasesList() {
                 className="w-full text-xs p-2.5 rounded border border-[#D9D6CF] bg-white font-medium"
               >
                 <option value="Family-Based Adjustment of Status">Family-Based Adjustment (I-130/I-485)</option>
-                <option value="Employment-Based Immigrant">Employment-Based (EB-1, EB-2 NIW, EB-3)</option>
+                <option value="Employment-Based">Employment-Based (EB-1, EB-2 NIW, EB-3)</option>
                 <option value="Non-Immigrant Employment">Non-Immigrant Work Visa (H-1B, L-1, O-1)</option>
                 <option value="Humanitarian / Asylum">Affirmative Asylum (I-589)</option>
-                <option value="Naturalization">Naturalization (N-400)</option>
+                <option value="Naturalization (N-400)">Naturalization (N-400)</option>
                 <option value="Immigration Court Defense">EOIR Removal Defense (EOIR-42B)</option>
               </select>
             </div>
@@ -566,7 +683,7 @@ export function ImmigrationCasesList() {
               label="USCIS Receipt Number (if issued)"
               value={newReceiptNumber}
               onChange={(e) => setNewReceiptNumber(e.target.value)}
-              placeholder="e.g. LIN-26-900-##### (Optional)"
+              placeholder="e.g. LIN2690012345 (Optional)"
             />
           </div>
 
@@ -574,8 +691,8 @@ export function ImmigrationCasesList() {
             <Button size="sm" variant="outline" type="button" onClick={() => setIsAddCaseOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" variant="primary" type="submit">
-              Create Petition Docket
+            <Button size="sm" variant="primary" type="submit" disabled={creatingCase}>
+              {creatingCase ? 'Creating...' : 'Create Petition Docket'}
             </Button>
           </div>
         </form>

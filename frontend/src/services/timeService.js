@@ -41,4 +41,24 @@ export const timeService = {
     const res = await apiClient.post(`/time/suggested-billing/${id}/convert`);
     return res?.data?.entry;
   },
+
+  async getReviewSlots(params = {}) {
+    const res = await apiClient.get('/time/review-slots', params);
+    return res?.data || [];
+  },
+
+  async markReviewSlotCompleted(slotId, data = {}) {
+    const res = await apiClient.post(`/time/review-slots/${slotId}/reviewed`, data);
+    return res?.data;
+  },
+
+  async getReviewFlags(params = {}) {
+    const res = await apiClient.get('/time/review-flags', params);
+    return res?.data || { idleFlags: [], overlapFlags: [], metadata: {} };
+  },
+
+  async updateReviewFlagStatus(flagId, data = {}) {
+    const res = await apiClient.patch(`/time/review-flags/${flagId}/status`, data);
+    return res?.data;
+  },
 };

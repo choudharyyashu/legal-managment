@@ -1145,55 +1145,124 @@ export class PersonalInjuryService {
 
   static async createSettlement(matterId: string, input: any, currentUser: AuthenticatedUser) {
     const matter = await MatterService.getMatterByIdOrNumber(matterId, currentUser);
-    const gross = new Prisma.Decimal(input.grossSettlementAmount || input.grossSettlement || 0);
-    const feePct = new Prisma.Decimal(input.contingencyFeePercentage || input.attorneyFeePercent || 33.33);
-    const feeAmount = new Prisma.Decimal(input.calculatedAttorneyFee || input.attorneyFee || (Number(gross) * Number(feePct) / 100));
-    const costs = new Prisma.Decimal(input.totalLitigationCosts || input.costs || 0);
-    const liens = new Prisma.Decimal(input.totalMedicalLiens || input.liens || 0);
-    const advances = new Prisma.Decimal(input.totalClientAdvances || 0);
-    const deductions = new Prisma.Decimal(input.otherDeductions || 0);
+    const gross = new Prisma.Decimal(input.grossSettlementAmount ?? input.grossSettlement ?? 0);
+    const feeBasis = input.feeBasis === 'EXACT_ONE_THIRD' || input.feeRateOption === 'exact'
+      ? 'EXACT_ONE_THIRD'
+      : 'PERCENTAGE';
+    const feePct = new Prisma.Decimal(input.contingencyFeePercentage ?? input.attorneyFeePercent ?? 33.33);
+    const computedFee = feeBasis === 'EXACT_ONE_THIRD'
+      ? gross.div(3).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
+      : gross.mul(feePct).div(100).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const feeAmount = new Prisma.Decimal(
+      input.calculatedAttorneyFee ?? input.attorneyFee ?? computedFee
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const costs = new Prisma.Decimal(input.totalLitigationCosts ?? input.costs ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const liens = new Prisma.Decimal(input.totalMedicalLiens ?? input.liens ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const advances = new Prisma.Decimal(input.totalClientAdvances ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const deductions = new Prisma.Decimal(input.otherDeductions ?? 0).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+    const computedNet = Prisma.Decimal.max(
+      new Prisma.Decimal(0),
+      gross.minus(feeAmount).minus(costs).minus(liens).minus(advances).minus(deductions)
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
     const net = new Prisma.Decimal(
-      input.netClientRecovery ||
-      (Number(gross) - Number(feeAmount) - Number(costs) - Number(liens) - Number(advances) - Number(deductions))
-    );
+      input.netClientRecovery ?? computedNet
+    ).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 
-    const settlement = await prisma.pISettlementDisbursement.create({
-      data: {
+    // Server-Side Duplicate Prevention & Version Control
+    const existingDraft = await prisma.pISettlementDisbursement.findFirst({
+      where: {
         matterId: matter.id,
-        settlementTitle: input.settlementTitle || `Settlement Disbursement - ${matter.title}`,
-        status: input.status || 'DRAFT',
-        versions: {
-          create: {
-            versionNumber: 1,
-            grossSettlementAmount: gross,
-            contingencyFeePercentage: feePct,
-            calculatedAttorneyFee: feeAmount,
-            totalLitigationCosts: costs,
-            totalClientAdvances: advances,
-            totalMedicalLiens: liens,
-            otherDeductions: deductions,
-            netClientRecovery: net,
-            versionStatus: 'DRAFT',
-            createdByUserId: currentUser.id,
-            notes: input.notes || null,
-          },
-        },
+        status: 'DRAFT',
       },
       include: {
-        versions: true,
+        versions: {
+          orderBy: { versionNumber: 'desc' },
+          take: 1,
+        },
       },
     });
+
+    let settlement;
+    if (existingDraft) {
+      const latestVersion = existingDraft.versions[0];
+      // Check if identical figures were already saved (idempotent duplicate request prevention)
+      const isIdentical =
+        latestVersion &&
+        latestVersion.grossSettlementAmount.equals(gross) &&
+        latestVersion.calculatedAttorneyFee.equals(feeAmount) &&
+        latestVersion.totalLitigationCosts.equals(costs) &&
+        latestVersion.totalMedicalLiens.equals(liens) &&
+        latestVersion.netClientRecovery.equals(net);
+
+      if (isIdentical) {
+        return existingDraft;
+      }
+
+      // Add incremented version to existing settlement disbursement record rather than creating duplicate parent
+      const nextVersionNum = (latestVersion?.versionNumber || 0) + 1;
+      await prisma.pISettlementDisbursementVersion.create({
+        data: {
+          settlementDisbursementId: existingDraft.id,
+          versionNumber: nextVersionNum,
+          grossSettlementAmount: gross,
+          contingencyFeePercentage: feePct,
+          calculatedAttorneyFee: feeAmount,
+          totalLitigationCosts: costs,
+          totalClientAdvances: advances,
+          totalMedicalLiens: liens,
+          otherDeductions: deductions,
+          netClientRecovery: net,
+          versionStatus: 'DRAFT',
+          createdByUserId: currentUser.id,
+          notes: input.notes || null,
+        },
+      });
+
+      settlement = await prisma.pISettlementDisbursement.findUnique({
+        where: { id: existingDraft.id },
+        include: { versions: { orderBy: { versionNumber: 'desc' } } },
+      });
+    } else {
+      settlement = await prisma.pISettlementDisbursement.create({
+        data: {
+          matterId: matter.id,
+          settlementTitle: input.settlementTitle || `Settlement Disbursement - ${matter.title}`,
+          status: input.status || 'DRAFT',
+          versions: {
+            create: {
+              versionNumber: 1,
+              grossSettlementAmount: gross,
+              contingencyFeePercentage: feePct,
+              calculatedAttorneyFee: feeAmount,
+              totalLitigationCosts: costs,
+              totalClientAdvances: advances,
+              totalMedicalLiens: liens,
+              otherDeductions: deductions,
+              netClientRecovery: net,
+              versionStatus: 'DRAFT',
+              createdByUserId: currentUser.id,
+              notes: input.notes || null,
+            },
+          },
+        },
+        include: {
+          versions: true,
+        },
+      });
+    }
+
+    const targetSettlement = settlement || existingDraft;
 
     await createAuditLog({
       userId: currentUser.id,
       userRole: currentUser.role,
       action: 'SETTLEMENT_RECORD_CREATED',
       resourceType: 'PI_SETTLEMENT',
-      resourceId: settlement.id,
+      resourceId: targetSettlement?.id || '',
       details: { matterId: matter.id, gross: String(gross), net: String(net) },
     });
 
-    return settlement;
+    return targetSettlement;
   }
 
   // ---------------------------------------------------------------------------
@@ -1304,6 +1373,51 @@ export class PersonalInjuryService {
     let demandsInProgressCount = 0;
     let readyForSettlementCount = 0;
     let totalLienAmount = 0;
+    let pendingInsuranceCount = 0;
+
+    const caseSummaries = piMatters.map((m) => {
+      // Calculate total medical bills from medicalProviders
+      const totalMedicalBills = (m.medicalProviders || []).reduce((sum, p) => {
+        return sum + (Number((p as any).totalBilled) || 0);
+      }, 0);
+
+      // Check verified insurance policies
+      const hasVerifiedInsurance = (m.insurancePolicies || []).length > 0 &&
+        m.insurancePolicies.some(p => p.claimNumber || (p.policyLimits && p.policyLimits !== 'Pending'));
+      
+      if (!hasVerifiedInsurance) {
+        pendingInsuranceCount++;
+      }
+
+      // Statute of Limitations calculation
+      // Under Utah legal practice rules, unconditional automated 4-year calculations are prohibited without attorney sign-off.
+      // Only attorney-approved statute dates recorded on the matter are authoritative; unverified matters are marked 'Pending Attorney Review'.
+      const solDate = m.statuteOfLimitations
+        ? new Date(m.statuteOfLimitations).toISOString().split('T')[0]
+        : 'Pending Attorney Review';
+      const solApproved = Boolean(m.statuteOfLimitations);
+
+      const totalMatterLiens = (m.liens || []).reduce(
+        (sum, l) => sum + Number(l.finalPayoffAmount || l.assertedAmount || 0),
+        0
+      );
+
+      return {
+        id: m.id,
+        matterNumber: m.matterNumber,
+        title: m.title,
+        clientName: m.client?.name || m.title,
+        status: m.status,
+        totalMedicalBills,
+        totalLiens: totalMatterLiens,
+        hasInsurance: Boolean(m.insurancePolicies?.length),
+        solDate,
+        solApproved,
+        targetDemand: m.demandPackages?.[0]?.demandedAmount
+          ? Number(m.demandPackages[0].demandedAmount)
+          : null,
+      };
+    });
 
     piMatters.forEach((m) => {
       m.medicalProviders.forEach((p) => {
@@ -1325,10 +1439,12 @@ export class PersonalInjuryService {
     return {
       activeCasesCount,
       pendingRecordsCount,
+      pendingInsuranceCount,
       demandsInProgressCount,
       readyForSettlementCount,
       totalLienAmount,
       totalCases: activeCasesCount,
+      caseSummaries,
     };
   }
 }

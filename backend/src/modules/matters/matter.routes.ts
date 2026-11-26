@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { MatterController } from './matter.controller.js';
 import { PersonalInjuryController } from '../personal-injury/pi.controller.js';
+import { relatedPartyRouter } from '../related-parties/related-party.routes.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
 import {
@@ -35,6 +36,8 @@ matterRouter.get(
   requirePermission('matters:view'),
   MatterController.getOverviewPanels
 );
+
+matterRouter.use('/:matterId/related-parties', relatedPartyRouter);
 
 matterRouter.put(
   '/:id/overview-panels',

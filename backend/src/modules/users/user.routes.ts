@@ -15,6 +15,11 @@ export const userRouter = Router();
 userRouter.use(requireAuth);
 
 userRouter.get(
+  '/directory',
+  UserController.getDirectory
+);
+
+userRouter.get(
   '/',
   requirePermission('users:view'),
   validateRequest({ query: userQuerySchema }),
@@ -46,5 +51,11 @@ userRouter.patch(
   requirePermission('users:manage'),
   validateRequest({ body: updateStatusSchema }),
   UserController.updateStatus
+);
+
+userRouter.delete(
+  '/:id',
+  requirePermission('users:manage'),
+  UserController.deleteUser
 );
 

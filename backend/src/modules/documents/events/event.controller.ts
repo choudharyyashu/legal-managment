@@ -6,13 +6,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { DOCUMENT_EVENT, DocumentEventType } from './event.types.js';
 import { AutoDraftService } from './auto-draft.service.js';
+import { AutomationCatalogService } from '../catalog/automation-catalog.service.js';
 import { AppError } from '../../../errors/AppError.js';
 
 export class DocumentEventController {
   /**
-   * Returns supported domain events and their automatic document generation triggers.
+   * Returns supported domain events and their automatic document generation triggers
+   * (4 core PI events + full 300-document automation catalog summary).
    */
   static getEventCatalog(req: Request, res: Response): void {
+    const catalogSummary = AutomationCatalogService.getSummary();
     res.json({
       success: true,
       data: {
@@ -46,6 +49,7 @@ export class DocumentEventController {
             idempotencyScope: 'One per demand package',
           },
         ],
+        catalogSummary,
       },
     });
   }
@@ -102,8 +106,65 @@ export class DocumentEventController {
           );
           break;
 
-        default:
-          throw AppError.badRequest(`Unknown document trigger event: '${event}'`);
+        default: {
+          // Check if event matches any of the 300-document catalog triggers or catalog IDs
+          const catalog = AutomationCatalogService.loadCatalog();
+          const evLower = String(event).toLowerCase().trim();
+          const matchingItems = catalog.items.filter(
+            (i) =>
+              i.trigger.toLowerCase() === evLower ||
+              i.catalogId.toLowerCase() === evLower ||
+              i.templateCode.toLowerCase() === evLower
+          );
+
+          if (matchingItems.length === 0) {
+            throw AppError.badRequest(`Unknown document trigger event: '${event}'`);
+          }
+
+          const draftsCreated: any[] = [];
+          const skipped: any[] = [];
+          const errors: string[] = [];
+
+          for (const item of matchingItems.slice(0, 10)) {
+            try {
+              const triggered = await AutomationCatalogService.triggerAutomation(
+                item.catalogId,
+                matterId,
+                user,
+                payload?.customOverrides || payload || {},
+                context
+              );
+              if (triggered.isDuplicate) {
+                skipped.push({
+                  templateCode: item.templateCode,
+                  reason: `Draft '${triggered.draft.draftCode}' already exists for ${item.catalogId}.`,
+                });
+              } else {
+                draftsCreated.push({
+                  id: triggered.draft.id,
+                  draftCode: triggered.draft.draftCode,
+                  templateCode: item.templateCode,
+                  templateName: item.title,
+                  title: triggered.draft.title,
+                  missingFieldsCount: triggered.draft.missingFieldsFlags?.length || 0,
+                  filePath: triggered.draft.docxStorageKey || '',
+                });
+              }
+            } catch (e: any) {
+              errors.push(`${item.catalogId}: ${e?.message || 'Trigger failed'}`);
+            }
+          }
+
+          result = {
+            success: errors.length === 0,
+            event: event as DocumentEventType,
+            matterId,
+            draftsCreated,
+            skipped,
+            errors,
+          };
+          break;
+        }
       }
 
       res.status(200).json({

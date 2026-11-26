@@ -43,15 +43,15 @@ export function CreditorMatrixGenerator() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-700">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-amber-700 shrink-0" />
+          <FileText className="w-4 h-4 text-slate-600 shrink-0" />
           <span>
-            <strong>[MOCK COURT MATRIX]:</strong> District of Utah standard creditor mailing matrix generator. Complies with Clerk of Court plain ASCII formatting rules (left-aligned, 5 lines maximum per block).
+            <strong>District of Utah Creditor Mailing Matrix:</strong> Complies with District of Utah Bankruptcy Clerk of Court ASCII formatting standards (left-aligned, 5 lines maximum per creditor block).
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-medium px-2 py-0.5 rounded text-[10px]">
+          D. UTAH COMPLIANT
         </span>
       </div>
 
@@ -112,7 +112,7 @@ export function CreditorMatrixGenerator() {
           {matrixText}
         </div>
 
-        <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs text-[#202A35] flex items-center justify-between">
+        <div className="p-3 bg-[#F5F0E5] rounded border border-[#D9D6CF] text-xs text-[#202A35] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-4 h-4 text-emerald-600" />
             <span>

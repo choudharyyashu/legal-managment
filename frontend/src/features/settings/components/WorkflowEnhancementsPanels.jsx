@@ -274,7 +274,7 @@ export function ParallelTasksPanel({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState({
     taskName: '',
-    assignedUser: 'Marcus Vance (Paralegal)',
+    assignedUser: 'Assigned Paralegal',
     track: 'Track D — Concurrent Filing',
     dueWindow: 'Day 10 of Stage',
     status: 'Pending',
@@ -288,7 +288,7 @@ export function ParallelTasksPanel({
   const openModal = () => {
     setForm({
       taskName: '',
-      assignedUser: 'Marcus Vance (Paralegal)',
+      assignedUser: 'Assigned Paralegal',
       track: `Track ${String.fromCharCode(65 + Math.min(totalCount, 10))} — Parallel Activity`,
       dueWindow: 'Day 10 of Stage',
       status: 'Pending',
@@ -435,11 +435,11 @@ export function ParallelTasksPanel({
               onChange={(e) => setForm({ ...form, assignedUser: e.target.value })}
               className="w-full p-2 border border-[#D9D6CF] rounded bg-white"
             >
-              <option value="Eleanor Heugly, Esq. (Managing Partner)">Eleanor Heugly, Esq. (Managing Partner)</option>
-              <option value="Thomas Bludworth, Esq. (Partner)">Thomas Bludworth, Esq. (Partner)</option>
-              <option value="Sarah Jenkins, Esq. (Associate)">Sarah Jenkins, Esq. (Associate)</option>
-              <option value="Marcus Vance (Paralegal)">Marcus Vance (Paralegal)</option>
-              <option value="Rachel Adams (Billing Admin)">Rachel Adams (Billing Admin)</option>
+              <option value="Managing Partner">Managing Partner</option>
+              <option value="Lead Partner">Lead Partner</option>
+              <option value="Associate Attorney">Associate Attorney</option>
+              <option value="Assigned Paralegal">Assigned Paralegal</option>
+              <option value="Billing Administrator">Billing Administrator</option>
             </select>
           </div>
 
@@ -496,7 +496,7 @@ export function EscalationRulesPanel({
     condition: '',
     trigger: '',
     timing: '',
-    responsibleUser: 'Eleanor Heugly, Esq. (Managing Partner)',
+    responsibleUser: 'Managing Partner',
   });
   const [errors, setErrors] = useState({});
 
@@ -505,7 +505,7 @@ export function EscalationRulesPanel({
       condition: '',
       trigger: '',
       timing: '',
-      responsibleUser: 'Eleanor Heugly, Esq. (Managing Partner)',
+      responsibleUser: 'Managing Partner',
     });
     setErrors({});
     setIsAddOpen(true);

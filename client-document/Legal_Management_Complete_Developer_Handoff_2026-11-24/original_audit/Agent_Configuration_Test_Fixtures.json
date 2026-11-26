@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic proposed inputs; not executed",
+  "scenarios": [
+    {
+      "id": "CONFIG-01",
+      "thresholds": {
+        "review": 50,
+        "auto": 95
+      },
+      "scores": [
+        49,
+        50,
+        94,
+        95,
+        null
+      ],
+      "expected": "Explicit boundary policy; missing score unresolved; below-threshold calls retained in raw ledger"
+    },
+    {
+      "id": "CONFIG-02",
+      "old_version": "t1",
+      "new_version": "t2",
+      "existing_queue_item": "q1",
+      "expected": "Newly scored calls use t2; q1 retains t1 unless explicitly re-evaluated"
+    },
+    {
+      "id": "CONFIG-03",
+      "candidate_fields": {
+        "name": "match",
+        "phone": "match",
+        "email": "different"
+      },
+      "expected": "Display mismatch and multiple candidates; authorized human review"
+    },
+    {
+      "id": "CONFIG-04",
+      "channel_results": {
+        "clio": "non-fit review",
+        "filevine": "documented service-area decline"
+      },
+      "expected": "Preserve distinct policy plus original inquiry; no autonomous firm rejection activated"
+    },
+    {
+      "id": "CONFIG-05",
+      "events": [
+        "website_rescan",
+        "outdated_fee",
+        "missing_practice",
+        "hostile_instruction"
+      ],
+      "expected": "Draft attributable suggestions; approved policy remains intact"
+    }
+  ]
+}

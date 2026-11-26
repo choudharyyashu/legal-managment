@@ -9,6 +9,9 @@ export interface TrustTransactionResponse {
   authorizedByName?: string | null;
   purpose: string;
   createdAt: string;
+  matterNumber?: string | null;
+  matterTitle?: string | null;
+  clientName?: string | null;
 }
 
 export interface TrustSubLedgerResponse {
@@ -33,4 +36,15 @@ export interface TrustLedgerListQuery {
   clientId?: string;
   matterId?: string;
 }
+
+export interface TrustTransactionListQuery {
+  page?: number;
+  limit?: number;
+  offset?: number;
+  month?: string;
+  startDate?: string;
+  endDate?: string;
+  trustSubLedgerId?: string;
+}
+
 

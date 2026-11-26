@@ -51,7 +51,7 @@ export function MatterReports() {
         title: m.title,
         clientName: m.clientName || 'Firm Client',
         practiceArea: m.practiceAreaName || m.practiceArea || 'General Practice',
-        leadAttorney: m.assignedAttorneyName || 'Thomas Bludworth, Esq.',
+        leadAttorney: m.responsibleAttorneyName || m.assignedAttorneyName || 'Assigned Counsel',
         currentStage: m.stage || m.status || 'Active',
         daysInactive: Math.max(30, Math.floor((now - updated) / (1000 * 60 * 60 * 24))),
         lastActivityDate: updated.toISOString().split('T')[0],
@@ -70,7 +70,7 @@ export function MatterReports() {
       clientName: m.clientName || 'Firm Client',
       missingDocument: 'Initial Engagement Agreement & Representation Letter',
       category: 'Mandatory Engagement Filing',
-      responsibleStaff: m.assignedAttorneyName || 'Thomas Bludworth, Esq.',
+      responsibleStaff: m.responsibleAttorneyName || m.assignedAttorneyName || 'Assigned Counsel',
       daysPending: Math.max(1, Math.floor((now - new Date(m.createdAt || now)) / (1000 * 60 * 60 * 24))),
       severity: 'High (Required for Formal Filing)',
     }));
@@ -94,7 +94,7 @@ export function MatterReports() {
         ruleCitation: t.ruleCitation || 'Utah R. Civ. P. Schedule',
         dueDate: t.dueDate,
         daysRemaining,
-        responsibleCounsel: t.assignedTo || 'Thomas Bludworth, Esq.',
+        responsibleCounsel: t.assignedToName || t.assignedTo || 'Assigned Counsel',
         riskLevel: daysRemaining <= 3 ? 'Critical' : daysRemaining <= 7 ? 'Urgent' : 'Standard',
       };
     });

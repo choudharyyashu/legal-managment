@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import { TemplateController } from './template.controller.js';
 import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { validateRequest } from '../../middleware/validate.js';
@@ -8,15 +9,38 @@ import {
   templateStatusSchema,
   uploadTemplateVersionSchema,
   templateQuerySchema,
-  createFieldMappingSchema,
   batchFieldMappingsSchema,
   updateFieldMappingSchema,
 } from './template.validation.js';
+
+const templateUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+const optionalMultipartTemplate = (req: Request, res: Response, next: NextFunction) => {
+  const ct = req.headers['content-type'] || '';
+  if (ct.includes('multipart/form-data')) {
+    templateUpload.single('file')(req, res, next);
+  } else {
+    next();
+  }
+};
 
 export const templateRouter = Router();
 
 // Enforce authentication across all template registry endpoints
 templateRouter.use(requireAuth);
+
+// -----------------------------------------------------------------------------
+// 0. Field Dictionary for Document Field Mapping UI
+// -----------------------------------------------------------------------------
+
+templateRouter.get(
+  '/field-dictionary',
+  requirePermission('templates:view'),
+  TemplateController.getFieldDictionary
+);
 
 // -----------------------------------------------------------------------------
 // 1. Template Metadata & Listing
@@ -57,7 +81,7 @@ templateRouter.patch(
 );
 
 // -----------------------------------------------------------------------------
-// 2. Template Versioning & DOCX Upload/Download
+// 2. Template Versioning & DOCX Upload/Download + Placeholder Detection
 // -----------------------------------------------------------------------------
 
 templateRouter.get(
@@ -73,6 +97,12 @@ templateRouter.get(
 );
 
 templateRouter.get(
+  '/:id/versions/:versionId/placeholders',
+  requirePermission('templates:view'),
+  TemplateController.detectVersionPlaceholders
+);
+
+templateRouter.get(
   '/:id/versions/:versionId/download',
   requirePermission('templates:view'),
   TemplateController.downloadTemplateVersion
@@ -81,7 +111,11 @@ templateRouter.get(
 templateRouter.post(
   '/:id/versions',
   requirePermission('templates:manage'),
-  validateRequest({ body: uploadTemplateVersionSchema }),
+  optionalMultipartTemplate,
+  (req: Request, res: Response, next: NextFunction) => {
+    if ((req as any).file) return next();
+    return validateRequest({ body: uploadTemplateVersionSchema })(req, res, next);
+  },
   TemplateController.uploadVersion
 );
 
@@ -114,4 +148,3 @@ templateRouter.delete(
   requirePermission('templates:manage'),
   TemplateController.deleteFieldMapping
 );
-

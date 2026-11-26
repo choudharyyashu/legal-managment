@@ -7,6 +7,10 @@ import {
   updateTimeEntrySchema,
   approveTimeEntrySchema,
   timeQuerySchema,
+  reviewSlotQuerySchema,
+  markSlotReviewedSchema,
+  reviewFlagQuerySchema,
+  updateReviewFlagStatusSchema,
 } from './time.validation.js';
 
 export const timeRouter = Router();
@@ -63,5 +67,33 @@ timeRouter.delete(
   '/entries/:id',
   requirePermission('time:log'),
   TimeController.deleteTimeEntry
+);
+
+timeRouter.get(
+  '/review-slots',
+  requireAnyPermission(['time:log', 'time:review_own', 'time:review_team', 'billing:hours_view']),
+  validateRequest({ query: reviewSlotQuerySchema }),
+  TimeController.getReviewSlots
+);
+
+timeRouter.post(
+  '/review-slots/:id/reviewed',
+  requireAnyPermission(['time:log', 'time:review_own', 'time:review_team', 'time:approve']),
+  validateRequest({ body: markSlotReviewedSchema }),
+  TimeController.markReviewSlotCompleted
+);
+
+timeRouter.get(
+  '/review-flags',
+  requireAnyPermission(['time:log', 'time:review_own', 'time:review_team', 'billing:hours_view']),
+  validateRequest({ query: reviewFlagQuerySchema }),
+  TimeController.getReviewFlags
+);
+
+timeRouter.patch(
+  '/review-flags/:id/status',
+  requireAnyPermission(['time:log', 'time:review_own', 'time:review_team', 'time:approve']),
+  validateRequest({ body: updateReviewFlagStatusSchema }),
+  TimeController.updateReviewFlagStatus
 );
 

@@ -1,5 +1,6 @@
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
+import PDFDocument from 'pdfkit';
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
@@ -8,6 +9,14 @@ import { promisify } from 'util';
 import { AppError } from '../../../errors/AppError.js';
 
 const execAsync = promisify(exec);
+
+export interface PdfRenderMetadata {
+  title?: string;
+  draftCode?: string;
+  matterNumber?: string;
+  clientName?: string;
+  attorneyName?: string;
+}
 
 export class DraftEngine {
   private static cachedSofficePath: string | null | false = null;
@@ -37,7 +46,6 @@ export class DraftEngine {
       }
     }
 
-    // Try finding via shell where / which
     try {
       const isWindows = os.platform() === 'win32';
       const cmd = isWindows ? 'where soffice' : 'which soffice';
@@ -55,9 +63,106 @@ export class DraftEngine {
     return null;
   }
 
+  /**
+   * PDF conversion is always available: uses LibreOffice if installed,
+   * otherwise renders crisp legal PDFs natively via PDFKit.
+   */
   static async isPdfConverterAvailable(): Promise<boolean> {
-    const exe = await this.getSofficeExecutable();
-    return Boolean(exe);
+    return true;
+  }
+
+  private static escapeXml(text: string): string {
+    return (text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  private static decodeXml(text: string): string {
+    return (text || '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'");
+  }
+
+  /**
+   * Builds a valid OpenXML .docx binary from plain text / paragraphs (for inline template creation).
+   */
+  static buildDocxFromText(title: string, bodyText: string): Buffer {
+    const lines = (bodyText || '').split(/\r?\n/);
+    const bodyParagraphs = lines
+      .map((line) => {
+        const escaped = this.escapeXml(line);
+        return `<w:p><w:r><w:t xml:space="preserve">${escaped}</w:t></w:r></w:p>`;
+      })
+      .join('');
+
+    const contentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:rPr><w:b/><w:sz w:val="30"/></w:rPr><w:t>${this.escapeXml(title)}</w:t></w:r></w:p>
+    <w:p><w:r><w:t></w:t></w:r></w:p>
+    ${bodyParagraphs}
+    <w:sectPr/>
+  </w:body>
+</w:document>`;
+
+    const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+    const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+
+    const zip = new PizZip();
+    zip.file('word/document.xml', contentXml);
+    zip.file('_rels/.rels', relsXml);
+    zip.file('[Content_Types].xml', contentTypesXml);
+
+    return zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' }) as Buffer;
+  }
+
+  /**
+   * Extracts clean ordered paragraphs from a DOCX buffer's word/document.xml.
+   */
+  static extractTextFromDocx(docxBuffer: Buffer): string[] {
+    const zip = new PizZip(docxBuffer);
+    const docXml = zip.file('word/document.xml')?.asText() || '';
+    const pMatches = docXml.match(/<w:p[\s\S]*?<\/w:p>/g) || [];
+    const paragraphs: string[] = [];
+
+    for (const pXml of pMatches) {
+      const runs = Array.from(pXml.matchAll(/<w:t[^>]*>([\s\S]*?)<\/w:t>/g) as Iterable<RegExpMatchArray>).map((m) =>
+        this.decodeXml(m[1])
+      );
+      const text = runs.join('').trim();
+      if (text) {
+        paragraphs.push(text);
+      }
+    }
+    return paragraphs;
+  }
+
+  /**
+   * Detects unique {{placeholder}} tags inside a DOCX template archive (handles split XML runs).
+   */
+  static extractPlaceholdersFromDocx(docxBuffer: Buffer): string[] {
+    const paragraphs = this.extractTextFromDocx(docxBuffer);
+    const joined = paragraphs.join('\n');
+    const matches = joined.match(/\{\{[^}]+\}\}/g) || [];
+    const cleaned = matches
+      .map((tag) => tag.trim())
+      .filter((tag) => !tag.startsWith('{{#') && !tag.startsWith('{{/'));
+    return Array.from(new Set(cleaned));
   }
 
   /**
@@ -83,6 +188,7 @@ export class DraftEngine {
         delimiters: { start: '{{', end: '}}' },
         paragraphLoop: true,
         linebreaks: true,
+        nullGetter: () => '',
       });
     } catch (err: any) {
       throw AppError.badRequest(
@@ -118,42 +224,150 @@ export class DraftEngine {
   }
 
   /**
-   * Converts a DOCX buffer to a real PDF buffer using headless LibreOffice if available.
-   * If LibreOffice is not installed, throws a clean operational error per Step 6 rules.
+   * Renders a real, multi-page legal PDF directly from populated DOCX paragraphs via PDFKit.
    */
-  static async convertDocxToPdf(docxBuffer: Buffer, baseFileName: string): Promise<Buffer> {
+  static async renderDocxToPdfWithPdfKit(
+    docxBuffer: Buffer,
+    baseFileName: string,
+    metadata?: PdfRenderMetadata
+  ): Promise<Buffer> {
+    const paragraphs = this.extractTextFromDocx(docxBuffer);
+
+    return await new Promise<Buffer>((resolve, reject) => {
+      const pdf = new PDFDocument({
+        size: 'LETTER',
+        margins: { top: 56, bottom: 56, left: 60, right: 60 },
+        bufferPages: true,
+        info: {
+          Title: metadata?.title || baseFileName,
+          Author: metadata?.attorneyName || 'Heugly & Bludworth, Attorneys at Law',
+          Subject: metadata?.matterNumber ? `Matter ${metadata.matterNumber}` : 'Legal Instrument',
+        },
+      });
+
+      const chunks: Buffer[] = [];
+      pdf.on('data', (chunk: Buffer) => chunks.push(chunk));
+      pdf.on('end', () => resolve(Buffer.concat(chunks)));
+      pdf.on('error', (err: any) => reject(err));
+
+      // Firm Header
+      pdf
+        .font('Helvetica-Bold')
+        .fontSize(13)
+        .fillColor('#06244B')
+        .text('HEUGLY & BLUDWORTH, ATTORNEYS AT LAW', { align: 'center' });
+      pdf
+        .font('Helvetica')
+        .fontSize(8.5)
+        .fillColor('#475467')
+        .text('136 E South Temple, Suite 1400, Salt Lake City, UT 84111 • (801) 532-7300', { align: 'center' });
+      pdf.moveDown(0.5);
+      pdf
+        .moveTo(60, pdf.y)
+        .lineTo(552, pdf.y)
+        .strokeColor('#06244B')
+        .lineWidth(1)
+        .stroke();
+      pdf.moveDown(0.75);
+
+      // Metadata block when provided
+      if (metadata && (metadata.draftCode || metadata.matterNumber || metadata.clientName)) {
+        pdf.font('Helvetica').fontSize(9).fillColor('#344054');
+        const metaItems = [
+          metadata.draftCode ? `Draft Code: ${metadata.draftCode}` : null,
+          metadata.matterNumber ? `Matter: ${metadata.matterNumber}` : null,
+          metadata.clientName ? `Client: ${metadata.clientName}` : null,
+          `Generated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+        ].filter(Boolean);
+        pdf.text(metaItems.join('   |   '), { align: 'left' });
+        pdf.moveDown(0.75);
+      }
+
+      // Document Title
+      const heading = paragraphs[0] || metadata?.title || baseFileName;
+      pdf
+        .font('Helvetica-Bold')
+        .fontSize(12.5)
+        .fillColor('#111827')
+        .text(heading, { align: 'left' });
+      pdf.moveDown(0.75);
+
+      // Body Paragraphs
+      const bodyLines = paragraphs.length > 1 ? paragraphs.slice(1) : paragraphs;
+      pdf.font('Helvetica').fontSize(10.5).fillColor('#1F2937');
+
+      for (const line of bodyLines) {
+        if (!line) {
+          pdf.moveDown(0.5);
+          continue;
+        }
+        const isSectionHeader =
+          line === line.toUpperCase() && line.length > 4 && line.length < 90 && /[A-Z]/.test(line);
+        if (isSectionHeader) {
+          pdf.moveDown(0.35);
+          pdf.font('Helvetica-Bold').fontSize(10.5).fillColor('#06244B').text(line, { lineGap: 3 });
+          pdf.font('Helvetica').fontSize(10.5).fillColor('#1F2937');
+        } else {
+          pdf.text(line, { lineGap: 3, align: 'left' });
+        }
+        pdf.moveDown(0.45);
+      }
+
+      // Page Footer numbering
+      const range = pdf.bufferedPageRange();
+      for (let i = range.start; i < range.start + range.count; i++) {
+        pdf.switchToPage(i);
+        pdf
+          .font('Helvetica')
+          .fontSize(8)
+          .fillColor('#667085')
+          .text(
+            `CONFIDENTIAL LEGAL INSTRUMENT — Page ${i + 1} of ${range.count}`,
+            60,
+            746,
+            { align: 'center', width: 492 }
+          );
+      }
+
+      pdf.end();
+    });
+  }
+
+  /**
+   * Converts a DOCX buffer to a real PDF buffer using LibreOffice if installed,
+   * or falls back seamlessly to native PDFKit rendering of the populated DOCX content.
+   */
+  static async convertDocxToPdf(
+    docxBuffer: Buffer,
+    baseFileName: string,
+    metadata?: PdfRenderMetadata
+  ): Promise<Buffer> {
     const soffice = await this.getSofficeExecutable();
 
-    if (!soffice) {
-      throw AppError.badRequest(
-        'PDF conversion is currently BLOCKED: LibreOffice (soffice) is not installed on this server environment. ' +
-        'DOCX generation is fully functional. Please install LibreOffice or configure an external conversion service to enable PDF generation.',
-        'PDF_CONVERSION_BLOCKED'
-      );
+    if (soffice) {
+      const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'legal-pdf-'));
+      const tempDocxPath = path.join(tempDir, `${baseFileName}.docx`);
+      const tempPdfPath = path.join(tempDir, `${baseFileName}.pdf`);
+
+      try {
+        await fs.writeFile(tempDocxPath, docxBuffer);
+        const cmd = `"${soffice}" --headless --convert-to pdf --outdir "${tempDir}" "${tempDocxPath}"`;
+        await execAsync(cmd, { timeout: 30000 });
+        return await fs.readFile(tempPdfPath);
+      } catch {
+        // Fallback to PDFKit if LibreOffice execution fails
+      } finally {
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+      }
     }
 
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'legal-pdf-'));
-    const tempDocxPath = path.join(tempDir, `${baseFileName}.docx`);
-    const tempPdfPath = path.join(tempDir, `${baseFileName}.pdf`);
-
     try {
-      await fs.writeFile(tempDocxPath, docxBuffer);
-
-      // Execute headless conversion
-      const cmd = `"${soffice}" --headless --convert-to pdf --outdir "${tempDir}" "${tempDocxPath}"`;
-      await execAsync(cmd, { timeout: 30000 });
-
-      const pdfBuffer = await fs.readFile(tempPdfPath);
-      return pdfBuffer;
+      return await this.renderDocxToPdfWithPdfKit(docxBuffer, baseFileName, metadata);
     } catch (err: any) {
       throw AppError.internal(
-        `PDF conversion failed during LibreOffice headless execution: ${err.message}`,
+        `PDF generation failed: ${err?.message || 'Unknown PDF rendering error'}`,
         'PDF_CONVERSION_FAILED'
       );
-    } finally {
-      // Clean up temporary files
-      await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {});
     }
   }
 }
-

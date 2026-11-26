@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Landmark, Filter, Search, Calendar, Download, FileSpreadsheet, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Landmark, Filter, Search, Calendar, Download, FileSpreadsheet, ArrowRight, ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import { ledgerService } from '../../../services/ledgerService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -12,99 +12,53 @@ export function GeneralLedgerView() {
   const { addToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [accountFilter, setAccountFilter] = useState('ALL');
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [journalEntries, setJournalEntries] = useState([
-    {
-      id: 'JE-2026-0101',
-      date: '2026-02-15',
-      ref: 'INV-2026-0041',
-      description: 'Fee Income recognition for Wasatch Mountain Logistics',
-      accountDebit: '1100 - Accounts Receivable',
-      debit: 14250.00,
-      accountCredit: '4010 - Legal Fee Income (Hourly)',
-      credit: 14250.00,
-      postedBy: 'Rachel Adams (Billing Director)'
-    },
-    {
-      id: 'JE-2026-0102',
-      date: '2026-02-16',
-      ref: 'ACH-49102',
-      description: 'Client payment receipt from Wasatch Mountain Logistics',
-      accountDebit: '1010 - Operating Checking Account',
-      debit: 14250.00,
-      accountCredit: '1100 - Accounts Receivable',
-      credit: 14250.00,
-      postedBy: 'Rachel Adams (Billing Director)'
-    },
-    {
-      id: 'JE-2026-0103',
-      date: '2026-02-18',
-      ref: 'TR-DEP-1003',
-      description: 'IOLTA Trust Retainer Deposit - Elena Rostova (USCIS Filing Escrow)',
-      accountDebit: '1020 - IOLTA Client Trust Account',
-      debit: 1440.00,
-      accountCredit: '2010 - Client Trust Liability',
-      credit: 1440.00,
-      postedBy: 'Thomas Bludworth, Esq.'
-    },
-    {
-      id: 'JE-2026-0104',
-      date: '2026-02-19',
-      ref: 'EXP-502',
-      description: 'LexisNexis Research Suite monthly firm subscription',
-      accountDebit: '5200 - Legal Research Subscriptions',
-      debit: 1850.00,
-      accountCredit: '1010 - Operating Checking Account',
-      credit: 1850.00,
-      postedBy: 'Rachel Adams (Billing Director)'
-    },
-    {
-      id: 'JE-2026-0105',
-      date: '2026-02-20',
-      ref: 'DRAW-TR-1002',
-      description: 'Earned fee drawdown from Dr. Evelyn Martinez Trust Retainer',
-      accountDebit: '2010 - Client Trust Liability',
-      debit: 3500.00,
-      accountCredit: '1020 - IOLTA Client Trust Account',
-      credit: 3500.00,
-      postedBy: 'Eleanor Heugly, Esq.'
-    },
-    {
-      id: 'JE-2026-0106',
-      date: '2026-02-20',
-      ref: 'FEE-TR-1002',
-      description: 'Operating deposit of earned trust fee transfer',
-      accountDebit: '1010 - Operating Checking Account',
-      debit: 3500.00,
-      accountCredit: '4010 - Legal Fee Income (Hourly)',
-      credit: 3500.00,
-      postedBy: 'Rachel Adams (Billing Director)'
-    }
-  ]);
+  const loadJournals = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await ledgerService.getJournals();
+      const raw = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.journals || []));
+      setJournalEntries(
+        raw.map((j) => {
+          const rawEntries = j.entries || j.lines || [];
+          const debits = rawEntries.filter((e) => Number(e.debit) > 0);
+          const credits = rawEntries.filter((e) => Number(e.credit) > 0);
+          const debitAmount = Number(j.totalDebit) || debits.reduce((sum, e) => sum + Number(e.debit), 0);
+          const creditAmount = Number(j.totalCredit) || credits.reduce((sum, e) => sum + Number(e.credit), 0);
+          const debitAccountsStr = debits.map((e) => `${e.accountNumber}${e.accountName ? ` (${e.accountName})` : ''}`).join(', ') || '—';
+          const creditAccountsStr = credits.map((e) => `${e.accountNumber}${e.accountName ? ` (${e.accountName})` : ''}`).join(', ') || '—';
 
-  useEffect(() => {
-    let isMounted = true;
-    ledgerService.getJournals().then((res) => {
-      if (isMounted && Array.isArray(res?.journals) && res.journals.length > 0) {
-        setJournalEntries(
-          res.journals.map((j) => ({
+          return {
             id: j.journalNumber || j.id,
-            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : '2026-11-13',
-            ref: j.reference || 'GL-REF',
-            description: j.memo || 'Journal Entry',
-            accountDebit: `${j.lines?.find((l) => Number(l.debit) > 0)?.accountNumber || 1010} - Debit`,
-            debit: Number(j.lines?.find((l) => Number(l.debit) > 0)?.debit) || 0,
-            accountCredit: `${j.lines?.find((l) => Number(l.credit) > 0)?.accountNumber || 2100} - Credit`,
-            credit: Number(j.lines?.find((l) => Number(l.credit) > 0)?.credit) || 0,
-            postedBy: j.postedByUser?.name || 'Firm Staff',
-          }))
-        );
-      }
-    }).catch((err) => console.warn('Could not load journals from API:', err?.message));
-    return () => { isMounted = false; };
+            date: j.entryDate ? new Date(j.entryDate).toISOString().split('T')[0] : (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
+            ref: j.reference || j.memo || 'GL-REF',
+            description: j.memo || j.description || 'Journal Entry',
+            accountDebit: debitAccountsStr,
+            debit: debitAmount,
+            accountCredit: creditAccountsStr,
+            credit: creditAmount,
+            postedBy: j.postedByUser?.name || j.createdByName || j.postedByName || 'Authorized User',
+          };
+        })
+      );
+    } catch (err) {
+      console.warn('Could not load journals from API:', err?.message);
+      setError(err?.message || 'Failed to connect to authoritative General Ledger database.');
+      setJournalEntries([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const filteredEntries = journalEntries.filter(entry => {
+  useEffect(() => {
+    loadJournals();
+  }, [loadJournals]);
+
+  const filteredEntries = journalEntries.filter((entry) => {
     const matchesSearch =
       searchQuery === '' ||
       entry.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,10 +89,10 @@ export function GeneralLedgerView() {
         'Debit Amount ($)',
         'Credit Account',
         'Credit Amount ($)',
-        'Authorized By'
+        'Authorized By',
       ];
 
-      const rows = filteredEntries.map(e => [
+      const rows = filteredEntries.map((e) => [
         `"${e.id}"`,
         `"${e.date}"`,
         `"${e.ref || ''}"`,
@@ -147,10 +101,9 @@ export function GeneralLedgerView() {
         Number(e.debit).toFixed(2),
         `"${(e.accountCredit || '').replace(/"/g, '""')}"`,
         Number(e.credit).toFixed(2),
-        `"${(e.postedBy || '').replace(/"/g, '""')}"`
+        `"${(e.postedBy || '').replace(/"/g, '""')}"`,
       ]);
 
-      // Summary totals row
       rows.push([
         '"TOTAL / BALANCED SUMMARY"',
         '""',
@@ -160,14 +113,10 @@ export function GeneralLedgerView() {
         totalDebits.toFixed(2),
         '"Total Credits"',
         totalCredits.toFixed(2),
-        `"Variance: $${(totalDebits - totalCredits).toFixed(2)}"`
+        '""',
       ]);
 
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(r => r.join(','))
-      ].join('\r\n');
-
+      const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
       const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -188,24 +137,12 @@ export function GeneralLedgerView() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
-        <div className="flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
-          <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] General Ledger Double-Entry Journal:</strong> Complete balanced journal entries (Debits = Credits) for firm revenue, client trust movements, and operating expenditures.
-          </span>
-        </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
-        </span>
-      </div>
-
       <PageHeader
         title="General Ledger Double-Entry Journal"
-        subtitle="Chronological audit record of balanced legal debits and credits across all accounts."
+        subtitle="Chronological audit record of balanced legal debits and credits across all accounts (Utah RPC 1.15)."
         breadcrumbs={[
           { label: 'Billing & Accounting', to: '/billing' },
-          { label: 'General Ledger' }
+          { label: 'General Ledger' },
         ]}
         actions={
           <Button variant="outline" size="sm" icon={Download} onClick={handleExportJournal}>
@@ -215,53 +152,60 @@ export function GeneralLedgerView() {
       />
 
       {/* Balance Summary Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Total Journal Debits</span>
-          <span className="text-2xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalDebits)}</span>
-          <span className="text-[11px] text-emerald-700">Balanced against credits</span>
+          <span className="text-xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalDebits)}</span>
+          <span className="text-[11px] text-emerald-700">Bank deposits &amp; expense debits</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">Total Journal Credits</span>
-          <span className="text-2xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalCredits)}</span>
-          <span className="text-[11px] text-emerald-700">Balanced against debits</span>
+          <span className="text-xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalCredits)}</span>
+          <span className="text-[11px] text-[#667085]">Trust liability &amp; fee income</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
-          <span className="text-xs text-[#667085] uppercase font-bold block">Trial Balance Variance</span>
-          <span className="text-2xl font-bold text-emerald-700 mt-1 block">$0.00</span>
-          <span className="text-[11px] text-emerald-800 font-semibold">In Strict Double-Entry Balance</span>
+          <span className="text-xs text-[#667085] uppercase font-bold block">Double-Entry Trial Balance</span>
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className={`text-xl font-bold ${Math.abs(totalDebits - totalCredits) < 0.01 ? 'text-emerald-700' : 'text-red-700'}`}
+            >
+              {Math.abs(totalDebits - totalCredits) < 0.01 ? 'In Perfect Balance' : `Variance: ${formatCurrency(Math.abs(totalDebits - totalCredits))}`}
+            </span>
+          </div>
+          <span className="text-[11px] text-[#667085]">Utah Supreme Court mandatory zero-variance rule</span>
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="w-80">
+        <div className="w-72">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search reference #, description, account..."
+            placeholder="Search journal #, ref, narrative, account..."
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-[#06244B]">Filter Account:</span>
+          <span className="text-xs font-semibold text-[#06244B]">Account Filter:</span>
           <select
             value={accountFilter}
             onChange={(e) => setAccountFilter(e.target.value)}
-            className="text-xs p-2 rounded border border-[#D9D6CF] bg-white font-medium text-[#06244B]"
+            className="text-xs p-1.5 rounded border border-[#D9D6CF] bg-white font-medium"
           >
-            <option value="ALL">All General Accounts</option>
-            <option value="1010">1010 - Operating Checking</option>
-            <option value="1020">1020 - IOLTA Client Trust</option>
-            <option value="1100">1100 - Accounts Receivable</option>
-            <option value="2010">2010 - Client Trust Liability</option>
-            <option value="4010">4010 - Legal Fee Income</option>
-            <option value="5200">5200 - Legal Subscriptions</option>
+            <option value="ALL">All Accounts</option>
+            <option value="1010">1010 - Operating Account</option>
+            <option value="1020">1020 - Trust Account (IOLTA)</option>
+            <option value="1200">1200 - Accounts Receivable</option>
+            <option value="2100">2100 - Client Trust Liability</option>
+            <option value="4000">4000 - Fee Revenue</option>
+            <option value="5000">5000 - Operating Expenses</option>
+            <option value="5010">5010 - Litigation Costs</option>
           </select>
         </div>
       </div>
 
-      {/* Journal Table */}
+      {/* Journal Table with Separate Loading, Error and Empty States */}
       <div className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
@@ -278,21 +222,53 @@ export function GeneralLedgerView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9D6CF]">
-              {filteredEntries.map(entry => (
-                <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3">
-                    <span className="font-mono font-bold text-[#A4432B] block">{entry.id}</span>
-                    <span className="text-[11px] text-[#667085]">{formatDate(entry.date)}</span>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs text-[#667085]">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                      <span>Loading authoritative General Ledger journal entries from database...</span>
+                    </div>
                   </td>
-                  <td className="p-3 font-mono font-semibold text-[#06244B]">{entry.ref}</td>
-                  <td className="p-3 font-medium text-[#202A35] max-w-xs">{entry.description}</td>
-                  <td className="p-3 text-blue-900 font-semibold">{entry.accountDebit}</td>
-                  <td className="p-3 text-right font-bold text-blue-800">{formatCurrency(entry.debit)}</td>
-                  <td className="p-3 text-red-900 font-semibold">{entry.accountCredit}</td>
-                  <td className="p-3 text-right font-bold text-red-800">{formatCurrency(entry.credit)}</td>
-                  <td className="p-3 text-[#667085] text-[11px]">{entry.postedBy}</td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs">
+                    <div className="max-w-md mx-auto p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 space-y-2">
+                      <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <span>Database Connectivity Error</span>
+                      </div>
+                      <p className="text-xs text-red-700">{error}</p>
+                      <Button size="sm" variant="outline" onClick={loadJournals} className="mt-2">
+                        Retry Loading
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xs text-[#667085]">
+                    No General Ledger journal entries found in database.
+                  </td>
+                </tr>
+              ) : (
+                filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3">
+                      <span className="font-mono font-bold text-[#A4432B] block">{entry.id}</span>
+                      <span className="text-[11px] text-[#667085]">{formatDate(entry.date)}</span>
+                    </td>
+                    <td className="p-3 font-mono font-semibold text-[#06244B]">{entry.ref}</td>
+                    <td className="p-3 font-medium text-[#202A35] max-w-xs">{entry.description}</td>
+                    <td className="p-3 text-blue-900 font-semibold">{entry.accountDebit}</td>
+                    <td className="p-3 text-right font-bold text-blue-800">{formatCurrency(entry.debit)}</td>
+                    <td className="p-3 text-red-900 font-semibold">{entry.accountCredit}</td>
+                    <td className="p-3 text-right font-bold text-red-800">{formatCurrency(entry.credit)}</td>
+                    <td className="p-3 text-[#667085] text-[11px]">{entry.postedBy}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot className="bg-[#F5F0E5]/60 font-bold border-t-2 border-[#D9D6CF]">
               <tr>
@@ -309,4 +285,3 @@ export function GeneralLedgerView() {
     </div>
   );
 }
-

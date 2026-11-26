@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic design fixtures;not executed",
+  "default_scope": "COURT-A",
+  "temporary_scope": "COURT-B",
+  "clock": "2026-11-15T12:00:00-07:00",
+  "date_bounds": [
+    1983,
+    1987
+  ],
+  "document_versions": [
+    "DOC-1-v1",
+    "DOC-1-v2"
+  ],
+  "cases": [
+    {
+      "feature_id": "F-0177",
+      "source_video": "7nxu_JatwMI",
+      "expected": "With synthetic scope A as default,apply scope B with Save/Continue. The next query uses B but reopening a new session still uses A until an explicit Save as default action. Record jurisdiction and document type together;changing a preference never rewrites a prior query snapshot.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0122",
+      "source_video": "eS6vDx6DPKo",
+      "expected": "Extend AT-0122-LEGACY-LIiSOiAC3Iw with separate draft/applied filter states. Enter1983–1987 without confirmation:results do not claim the new filter. Confirm it,then compare returned fixture IDs. Rolling presets anchor to an explicit November15,2026 clock;invalid bounds retain the last valid filter. Competitor inclusivity remains unverified.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0121",
+      "source_video": "R6x5hmXtUIc",
+      "expected": "Start with synthetic courts A and B. Remove B using either the source selector or the visible scope chip;both routes produce the same effective query and results. Preserve the original query and remaining court A. Show a deliberate empty-scope state if the final court is removed;do not silently search all courts.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0232",
+      "source_video": "xHJsPXhwC3E",
+      "expected": "Create two synthetic searches with the same phrase but different jurisdictions and open two document versions. Each history link reopens the correct scope/document snapshot with time evidence. Reopening a past item does not reset the saved default or overwrite newer research;revoked document access is clearly reported.",
+      "status": "Not executed"
+    }
+  ]
+}

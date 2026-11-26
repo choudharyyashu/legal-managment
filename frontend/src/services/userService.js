@@ -1,6 +1,11 @@
 import { apiClient } from './apiClient';
 
 export const userService = {
+  async getDirectory() {
+    const res = await apiClient.get('/users/directory');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
   async getUsers(params = {}) {
     const res = await apiClient.get('/users', params);
     const users = Array.isArray(res?.data) ? res.data : (res?.data?.users || []);
@@ -28,7 +33,8 @@ export const userService = {
   },
 
   async deleteUser(id) {
-    const res = await apiClient.delete(`/users/${id}`);
-    return res?.data;
+    // BUG-01 Fix: Soft-deactivate user via supported PATCH /users/:id/status
+    const res = await apiClient.patch(`/users/${id}/status`, { status: 'Inactive' });
+    return res?.data?.user;
   },
 };

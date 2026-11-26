@@ -50,12 +50,12 @@ import { intakeService } from '../../../services/intakeService';
 export function ClientDetails() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  const { clients, intakes = [] } = useClients();
-  const { getMattersByClient } = useMatters();
+  const { clients, intakes = [], refreshClients, refreshIntakes } = useClients();
+  const { getMattersByClient, refreshMatters } = useMatters();
   const permissions = usePermissions();
   const { addToast } = useToast();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const intakeId = searchParams.get('intakeId');
   const shouldOpenMatter = searchParams.get('openMatter') === 'true';
 
@@ -64,17 +64,33 @@ export function ClientDetails() {
   const [isNewMatterModalOpen, setIsNewMatterModalOpen] = useState(false);
   const [isEngagementLetterOpen, setIsEngagementLetterOpen] = useState(false);
   const [fetchedClient, setFetchedClient] = useState(null);
+  const [loadingClient, setLoadingClient] = useState(true);
+  const [client360, setClient360] = useState(null);
   const [fetchedIntake, setFetchedIntake] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    if (clientId && !clients.some(c => c.id === clientId || c.clientNumber === clientId)) {
-      clientService.getClientById(clientId).then(res => {
-        if (isMounted && res) setFetchedClient(res);
-      }).catch(() => {});
+  const loadClient360 = React.useCallback(async (targetId) => {
+    if (!targetId) return;
+    setLoadingClient(true);
+    try {
+      const data = await clientService.getClient360(targetId);
+      if (data) {
+        setClient360(data);
+        if (data.client) setFetchedClient(data.client);
+      }
+    } catch {
+      try {
+        const fallbackClient = await clientService.getClientById(targetId);
+        if (fallbackClient) setFetchedClient(fallbackClient);
+      } catch {}
+    } finally {
+      setLoadingClient(false);
     }
-    return () => { isMounted = false; };
-  }, [clientId, clients]);
+  }, []);
+
+  useEffect(() => {
+    setClient360(null);
+    loadClient360(clientId);
+  }, [clientId, loadClient360]);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,25 +115,52 @@ export function ClientDetails() {
     }
   }, [shouldOpenMatter]);
 
-  const client = clients.find(c => c.id === clientId || c.clientNumber === clientId) || fetchedClient;
-  const clientMatters = client ? getMattersByClient(client.id) : [];
+  const contextClient = clients.find(c => c.id === clientId || c.clientNumber === clientId);
+  const client = client360?.client || fetchedClient || contextClient;
+  const resolvedClientId = client?.id;
+
+  const clientMatters = client360?.matters
+    ? client360.matters
+    : resolvedClientId
+    ? getMattersByClient(resolvedClientId)
+    : [];
 
   const { invoices } = useTime();
   const linkedIntake = fetchedIntake || (intakeId ? intakes.find(i => i.id === intakeId || i.intakeNumber === intakeId) : null);
 
-  // 360° Financials & Invoices for this client
-  const clientInvoices = (invoices || []).filter(
-    inv => inv.clientId === client?.id || inv.clientName === client?.name
-  );
-  const totalBilled = clientInvoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
-  const totalPaid = clientInvoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
-  const totalOutstanding = clientInvoices.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
+  // Strict clientId isolation only (NEVER match by clientName!)
+  const clientInvoices = client360?.invoices
+    ? client360.invoices
+    : (invoices || []).filter(inv => resolvedClientId && inv.clientId === resolvedClientId);
 
-  // Client Trust Ledger: from actual client record or 0
-  const clientTrustBalance = Number(client?.trustBalance || 0);
+  const totalBilled = client360?.financialSummary
+    ? Number(client360.financialSummary.totalBilled || 0)
+    : clientInvoices.reduce((sum, i) => sum + Number(i.totalAmount || 0), 0);
+  const totalPaid = client360?.financialSummary
+    ? Number(client360.financialSummary.totalPaid || 0)
+    : clientInvoices.reduce((sum, i) => sum + Number(i.paidAmount || 0), 0);
+  const totalOutstanding = client360?.financialSummary
+    ? Number(client360.financialSummary.totalOutstanding || 0)
+    : clientInvoices.reduce((sum, i) => sum + Number(i.balanceDue || 0), 0);
 
-  // Client Communications: live list or empty
-  const clientComms = [];
+  const clientTrustLedgers = client360?.trustLedgers || [];
+  const clientTrustTransactions = client360?.trustTransactions || [];
+  const clientTrustBalance = client360?.financialSummary
+    ? Number(client360.financialSummary.trustBalance || 0)
+    : 0;
+
+  const clientComms = client360?.communications || [];
+  const clientDocs = client360?.documents || [];
+  const originatingIntakes = client360?.originatingIntakes || [];
+  const clientAuditLogs = client360?.auditLogs || [];
+
+  if (!client && loadingClient) {
+    return (
+      <div className="p-8 text-center bg-white rounded border border-[#D9D6CF] text-xs text-[#667085]">
+        Loading segregated client record...
+      </div>
+    );
+  }
 
   if (!client) {
     return (
@@ -133,11 +176,11 @@ export function ClientDetails() {
   const tabs = [
     { id: 'matters', label: 'Related Matters', count: clientMatters.length, icon: FolderOpen },
     { id: 'invoices', label: 'Invoices & Billing', count: clientInvoices.length, icon: CreditCard },
-    { id: 'trust-ledger', label: 'IOLTA Trust Ledger', icon: Landmark },
+    { id: 'trust-ledger', label: 'IOLTA Trust Ledger', count: clientTrustTransactions.length, icon: Landmark },
     { id: 'communications', label: 'Communications & Calls', count: clientComms.length, icon: MessageSquare },
-    { id: 'related-parties', label: 'Related Entities & Adversaries', icon: User },
+    { id: 'related-parties', label: 'Related Entities & Adversaries', count: client360?.relatedParties?.length || 0, icon: User },
     { id: 'contact', label: 'Contact & Addresses', icon: User },
-    { id: 'documents', label: 'Client Documents', count: 0, icon: FileText },
+    { id: 'documents', label: 'Client Documents', count: clientDocs.length, icon: FileText },
     { id: 'notes', label: 'Internal Notes', icon: MessageSquare },
     { id: 'activity', label: 'Activity History', icon: Clock },
   ];
@@ -223,7 +266,7 @@ export function ClientDetails() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-[#D9D6CF]/60 text-xs">
           <div>
             <span className="text-[#667085] block font-medium">Assigned Counsel:</span>
-            <span className="text-sm font-semibold text-[#06244B]">{client.assignedAttorneyName}</span>
+            <span className="text-sm font-semibold text-[#06244B]">{client.assignedAttorneyName || 'Unassigned'}</span>
           </div>
           <div>
             <span className="text-[#667085] block font-medium">Client Since:</span>
@@ -235,8 +278,8 @@ export function ClientDetails() {
           </div>
           <div>
             <span className="text-[#667085] block font-medium">Ledger Balance:</span>
-            <span className={`text-sm font-semibold ${client.outstandingBalance > 0 ? 'text-[#B42318]' : 'text-[#287A55]'}`}>
-              {formatCurrency(client.outstandingBalance)}
+            <span className={`text-sm font-semibold ${totalOutstanding > 0 ? 'text-[#B42318]' : 'text-[#287A55]'}`}>
+              {formatCurrency(totalOutstanding)}
             </span>
           </div>
         </div>
@@ -314,23 +357,23 @@ export function ClientDetails() {
             <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-subtle">
               <span className="text-xs uppercase font-bold text-[#667085] block">Total Invoiced to Date</span>
               <span className="text-xl font-serif font-bold text-[#06244B] mt-1 block">
-                {formatCurrency(totalBilled || 15390)}
+                {formatCurrency(totalBilled)}
               </span>
               <span className="text-[11px] text-[#667085]">Cumulative billing across all client matters</span>
             </div>
             <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-subtle">
               <span className="text-xs uppercase font-bold text-[#667085] block">Total Collections</span>
               <span className="text-xl font-serif font-bold text-emerald-800 mt-1 block">
-                {formatCurrency(totalPaid || 15390)}
+                {formatCurrency(totalPaid)}
               </span>
-              <span className="text-[11px] text-emerald-700">ACH, FedWire &amp; Retainer drawdowns</span>
+              <span className="text-[11px] text-emerald-700">Recorded payments &amp; trust transfers</span>
             </div>
             <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-subtle">
               <span className="text-xs uppercase font-bold text-[#667085] block">Outstanding Accounts Receivable</span>
               <span className={`text-xl font-serif font-bold mt-1 block ${totalOutstanding > 0 ? 'text-amber-800' : 'text-[#06244B]'}`}>
-                {formatCurrency(totalOutstanding || 0)}
+                {formatCurrency(totalOutstanding)}
               </span>
-              <span className="text-[11px] text-[#667085]">Aging receivables due within 30 days</span>
+              <span className="text-[11px] text-[#667085]">Unpaid invoice balances for this client</span>
             </div>
           </div>
 
@@ -419,14 +462,20 @@ export function ClientDetails() {
               <span className="text-2xl font-serif font-bold text-emerald-800 mt-1 block">
                 {formatCurrency(clientTrustBalance)}
               </span>
-              <span className="text-[11px] text-emerald-700 font-medium">Available for earned fee drawdown</span>
+              <span className="text-[11px] text-emerald-700 font-medium">
+                {clientTrustLedgers.length > 0
+                  ? `${clientTrustLedgers.length} segregated sub-ledger(s) on file`
+                  : 'No segregated trust sub-ledger opened yet'}
+              </span>
             </div>
             <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-subtle">
-              <span className="text-xs uppercase font-bold text-[#667085] block">Escrow Purpose</span>
+              <span className="text-xs uppercase font-bold text-[#667085] block">Active Sub-Ledgers</span>
               <span className="text-sm font-bold text-[#06244B] mt-1 block">
-                General Litigation Retainer &amp; Expert Witness Reserve
+                {clientTrustLedgers.length > 0
+                  ? clientTrustLedgers.map((l) => l.ledgerCode).join(', ')
+                  : 'None'}
               </span>
-              <span className="text-[11px] text-[#667085]">Designated pursuant to signed retainer</span>
+              <span className="text-[11px] text-[#667085]">Matter-segregated client IOLTA sub-accounts</span>
             </div>
             <div className="bg-white p-4 rounded border border-[#D9D6CF] shadow-subtle flex flex-col justify-between">
               <span className="text-xs uppercase font-bold text-[#667085] block">Quick Trust Actions</span>
@@ -441,11 +490,14 @@ export function ClientDetails() {
             </div>
           </div>
 
-          {/* Individual Client Sub-Ledger Table */}
           <div className="bg-white p-5 rounded border border-[#D9D6CF] shadow-subtle space-y-3">
             <div className="flex justify-between items-center">
               <h3 className="font-serif text-base font-bold text-[#06244B]">Client Segregated Ledger History</h3>
-              <span className="text-xs text-[#667085]">Ledger ID: TR-1001 • Sub-account of Chase IOLTA #4402</span>
+              <span className="text-xs text-[#667085]">
+                {clientTrustLedgers.length > 0
+                  ? `Sub-Ledger(s): ${clientTrustLedgers.map((l) => l.ledgerCode).join(', ')}`
+                  : 'No active IOLTA sub-ledger'}
+              </span>
             </div>
 
             <div className="overflow-x-auto">
@@ -456,39 +508,40 @@ export function ClientDetails() {
                     <th className="py-2.5 px-3">Transaction Type</th>
                     <th className="py-2.5 px-3">Description / Reference</th>
                     <th className="py-2.5 px-3">Linked Matter</th>
-                    <th className="py-2.5 px-3 text-right">Debit (-)</th>
-                    <th className="py-2.5 px-3 text-right">Credit (+)</th>
+                    <th className="py-2.5 px-3 text-right">Amount</th>
                     <th className="py-2.5 px-3 text-right">Running Trust Balance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9D6CF]/60">
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 text-[#667085]">2026-11-02</td>
-                    <td className="py-2.5 px-3 font-semibold text-rose-700">Earned Fee Drawdown</td>
-                    <td className="py-2.5 px-3 text-[#202A35]">Transfer to Operating for Invoice #HB-2026-1088 fees</td>
-                    <td className="py-2.5 px-3 text-[#667085]">25-CV-0101</td>
-                    <td className="py-2.5 px-3 text-right text-rose-700 font-semibold">-$5,000.00</td>
-                    <td className="py-2.5 px-3 text-right text-[#667085]">-</td>
-                    <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">{formatCurrency(clientTrustBalance)}</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 text-[#667085]">2026-10-15</td>
-                    <td className="py-2.5 px-3 font-semibold text-emerald-700">Retainer Deposit</td>
-                    <td className="py-2.5 px-3 text-[#202A35]">FedWire Retainer replenishment (Wire #W-98124)</td>
-                    <td className="py-2.5 px-3 text-[#667085]">25-CV-0101</td>
-                    <td className="py-2.5 px-3 text-right text-[#667085]">-</td>
-                    <td className="py-2.5 px-3 text-right text-emerald-700 font-semibold">+$15,000.00</td>
-                    <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">$30,000.00</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-2.5 px-3 text-[#667085]">2026-09-01</td>
-                    <td className="py-2.5 px-3 font-semibold text-emerald-700">Initial Retainer</td>
-                    <td className="py-2.5 px-3 text-[#202A35]">Opening deposit per Master Engagement Agreement</td>
-                    <td className="py-2.5 px-3 text-[#667085]">25-CV-0101</td>
-                    <td className="py-2.5 px-3 text-right text-[#667085]">-</td>
-                    <td className="py-2.5 px-3 text-right text-emerald-700 font-semibold">+$15,000.00</td>
-                    <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">$15,000.00</td>
-                  </tr>
+                  {clientTrustTransactions.length > 0 ? (
+                    clientTrustTransactions.map((tx) => {
+                      const isDebit = String(tx.transactionType || '').toLowerCase().includes('disburse') || Number(tx.amount) < 0;
+                      return (
+                        <tr key={tx.id} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3 text-[#667085]">{formatDate(tx.createdAt, { short: true })}</td>
+                          <td className={`py-2.5 px-3 font-semibold ${isDebit ? 'text-rose-700' : 'text-emerald-700'}`}>
+                            {tx.transactionType}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#202A35]">
+                            {tx.purpose || tx.sourceReference || 'Trust Transaction'}
+                          </td>
+                          <td className="py-2.5 px-3 text-[#667085]">{tx.matterNumber || tx.matterTitle || '-'}</td>
+                          <td className={`py-2.5 px-3 text-right font-semibold ${isDebit ? 'text-rose-700' : 'text-emerald-700'}`}>
+                            {formatCurrency(tx.amount)}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">
+                            {formatCurrency(tx.runningBalance)}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-6 text-center text-xs text-[#667085]">
+                        No trust deposits or disbursements recorded for this client.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -496,7 +549,6 @@ export function ClientDetails() {
         </div>
       )}
 
-      {/* Communications Tab (Clio 360° Requirement) */}
       {activeTab === 'communications' && (
         <div className="bg-white p-5 rounded border border-[#D9D6CF] shadow-subtle space-y-4">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
@@ -505,43 +557,50 @@ export function ClientDetails() {
               <p className="text-xs text-[#667085]">Direct emails, telephone conference logs, and portal correspondence with {client.name}</p>
             </div>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" icon={Phone} onClick={() => addToast('Opening phone call log modal...', 'info')}>
+              <Button size="sm" variant="outline" icon={Phone} onClick={() => navigate(`/communications?clientId=${client.id}&type=Phone+Call`)}>
                 Log Call Notes
               </Button>
-              <Button size="sm" variant="primary" icon={Mail} onClick={() => navigate('/communications')}>
+              <Button size="sm" variant="primary" icon={Mail} onClick={() => navigate(`/communications?clientId=${client.id}&type=Email`)}>
                 Compose Email
               </Button>
             </div>
           </div>
 
-          <div className="divide-y divide-[#D9D6CF]/50 text-xs">
-            {clientComms.map((comm) => (
-              <div key={comm.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 p-2 rounded">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      comm.type === 'Email' ? 'bg-blue-50 text-blue-800 border border-blue-200' : (comm.type === 'Telephone Call' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200')
-                    }`}>
-                      {comm.type}
-                    </span>
-                    <span className="font-bold text-[#06244B]">{comm.subject}</span>
+          {clientComms.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[#667085] border border-dashed border-[#D9D6CF] rounded">
+              No communications logged for this client yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-[#D9D6CF]/50 text-xs">
+              {clientComms.map((comm) => (
+                <div key={comm.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 p-2 rounded">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
+                        {comm.type}
+                      </span>
+                      <span className="font-bold text-[#06244B]">{comm.subject}</span>
+                      {comm.matterNumber && (
+                        <span className="text-[10px] font-mono text-[#667085]">({comm.matterNumber})</span>
+                      )}
+                    </div>
+                    <p className="text-[#667085] text-[11px] leading-relaxed">{comm.summary}</p>
+                    <div className="flex items-center gap-4 text-[10px] text-[#667085]">
+                      <span>From: <strong>{comm.sender}</strong></span>
+                      <span>•</span>
+                      <span>To: <strong>{comm.recipient}</strong></span>
+                    </div>
                   </div>
-                  <p className="text-[#667085] text-[11px] leading-relaxed">{comm.summary}</p>
-                  <div className="flex items-center gap-4 text-[10px] text-[#667085]">
-                    <span>From: <strong>{comm.sender}</strong></span>
-                    <span>•</span>
-                    <span>To: <strong>{comm.recipient}</strong></span>
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 shrink-0">
+                    <span className="text-[11px] text-[#667085]">{formatDate(comm.date, { short: true })}</span>
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/communications?clientId=${client.id}`)}>
+                      View in Log
+                    </Button>
                   </div>
                 </div>
-                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 shrink-0">
-                  <span className="text-[11px] text-[#667085]">{comm.date}</span>
-                  <Button size="sm" variant="outline" onClick={() => addToast(`Opening thread: ${comm.subject}`, 'info')}>
-                    View Thread
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -564,7 +623,7 @@ export function ClientDetails() {
                 <MapPin className="w-4 h-4 text-[#A4432B] flex-shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold text-[#06244B] block">Physical Location</span>
-                  <span className="text-[#667085]">{client.address || '1420 South Foothill Blvd, Salt Lake City, UT 84108'}</span>
+                  <span className="text-[#667085]">{client.address || 'Not provided'}</span>
                 </div>
               </div>
 
@@ -591,9 +650,19 @@ export function ClientDetails() {
               Engagement Terms &amp; Counsel Relationship
             </h3>
             <div className="space-y-2 text-xs">
-              <p><strong className="text-[#06244B]">Responsible Partner:</strong> {client.assignedAttorneyName}</p>
-              <p><strong className="text-[#06244B]">Fee Agreement Status:</strong> Countersigned engagement agreement on file</p>
-              <p><strong className="text-[#06244B]">Trust Retainer Deposit:</strong> Verified in Firm IOLTA Trust Account (Utah RPC 1.15)</p>
+              <p><strong className="text-[#06244B]">Responsible Partner:</strong> {client.assignedAttorneyName || 'Unassigned'}</p>
+              <p>
+                <strong className="text-[#06244B]">Originating Intake &amp; Conflict Review:</strong>{' '}
+                {originatingIntakes[0]
+                  ? `${originatingIntakes[0].intakeNumber} (${originatingIntakes[0].conflictStatus})`
+                  : 'Created directly in Clients'}
+              </p>
+              <p>
+                <strong className="text-[#06244B]">Trust Retainer Balance:</strong>{' '}
+                {clientTrustLedgers.length > 0
+                  ? `${formatCurrency(clientTrustBalance)} across ${clientTrustLedgers.length} sub-ledger(s)`
+                  : 'No active trust sub-ledger ($0.00)'}
+              </p>
               <p><strong className="text-[#06244B]">Client Entity Type:</strong> {client.type}</p>
             </div>
           </div>
@@ -603,31 +672,39 @@ export function ClientDetails() {
       {activeTab === 'documents' && (
         <div className="bg-white p-5 rounded border border-[#D9D6CF] shadow-subtle">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-serif text-base font-bold text-[#06244B]">Client Master Records</h3>
+            <h3 className="font-serif text-base font-bold text-[#06244B]">Client Documents ({clientDocs.length})</h3>
             <Button size="sm" variant="outline" onClick={() => navigate('/documents')}>
               Browse All Documents
             </Button>
           </div>
-          <div className="divide-y divide-[#D9D6CF]/50 text-xs">
-            <div className="py-3 flex justify-between items-center">
-              <div>
-                <p className="font-bold text-[#06244B]">Engagement Letter &amp; Hourly Fee Schedule.pdf</p>
-                <p className="text-[#667085]">Uploaded on 2025-01-16 by Rachel Adams • 520 KB</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => addToast('Opening secure document preview: Engagement Letter.pdf', 'info')}>
-                Preview
-              </Button>
+          {clientDocs.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[#667085] border border-dashed border-[#D9D6CF] rounded">
+              No documents have been uploaded or generated for this client yet.
             </div>
-            <div className="py-3 flex justify-between items-center">
-              <div>
-                <p className="font-bold text-[#06244B]">Corporate Certificate of Good Standing &amp; Articles.pdf</p>
-                <p className="text-[#667085]">Uploaded on 2025-01-18 by Marcus Vance • 1.8 MB</p>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => addToast('Opening secure document preview: Corporate Certificate.pdf', 'info')}>
-                Preview
-              </Button>
+          ) : (
+            <div className="divide-y divide-[#D9D6CF]/50 text-xs">
+              {clientDocs.map((doc) => (
+                <div key={doc.id} className="py-3 flex justify-between items-center gap-3">
+                  <div>
+                    <p className="font-bold text-[#06244B]">{doc.title}</p>
+                    <p className="text-[#667085]">
+                      {doc.documentCode ? `${doc.documentCode} • ` : ''}
+                      {doc.category || 'Document'}
+                      {doc.uploadedByName ? ` • Uploaded by ${doc.uploadedByName}` : ''}
+                      {doc.createdAt ? ` on ${formatDate(doc.createdAt, { short: true })}` : ''}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate(doc.matterId ? `/matters/${doc.matterId}` : '/documents')}
+                  >
+                    Open
+                  </Button>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -636,7 +713,7 @@ export function ClientDetails() {
           <h3 className="font-serif text-base font-bold text-[#06244B] border-b border-[#D9D6CF]/60 pb-2">
             Confidential Internal Client Notes
           </h3>
-          <div className="p-4 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] text-xs leading-relaxed text-[#202A35]">
+          <div className="p-4 bg-[#F5F0E5]/60 rounded border border-[#D9D6CF] text-xs leading-relaxed text-[#202A35] whitespace-pre-line">
             {client.notes || 'No confidential internal notes entered for this client.'}
           </div>
           <p className="text-[11px] text-[#A4432B] font-semibold">
@@ -648,30 +725,47 @@ export function ClientDetails() {
       {activeTab === 'activity' && (
         <div className="bg-white p-6 rounded border border-[#D9D6CF] shadow-subtle">
           <h3 className="font-serif text-base font-bold text-[#06244B] mb-4">
-            Chronological Matter &amp; Communication History
+            Chronological Client &amp; Matter Activity
           </h3>
           <ActivityTimeline
             activities={[
-              {
-                title: 'Engagement Initialized',
-                timestamp: client.createdAt,
-                type: 'document',
-                description: 'Client intake cleared conflict review and signed master fee agreement.',
-                author: client.assignedAttorneyName,
-              },
-              {
-                title: 'Initial Matter Opened',
-                timestamp: '2025-01-20',
+              ...clientAuditLogs.map((log) => ({
+                title: log.action,
+                timestamp: formatDate(log.timestamp, { short: true }),
+                type: log.resourceType === 'MATTER' ? 'task' : 'document',
+                description: `${log.resourceType} event recorded.`,
+                author: log.userName || 'System',
+              })),
+              ...clientMatters.map((m) => ({
+                title: `Matter Opened: ${m.matterNumber}`,
+                timestamp: formatDate(m.openDate, { short: true }),
                 type: 'task',
-                description: 'First lawsuit matter opened in Utah Third District Court.',
-                author: 'Thomas Bludworth, Esq.',
-              },
+                description: m.title,
+                author: m.responsibleAttorneyName || client.assignedAttorneyName || 'Assigned Counsel',
+              })),
+              ...originatingIntakes.map((i) => ({
+                title: `Converted from Intake ${i.intakeNumber}`,
+                timestamp: formatDate(i.reviewedAt || i.createdAt, { short: true }),
+                type: 'document',
+                description: `Conflict Status: ${i.conflictStatus}`,
+                author: i.reviewedByName || client.assignedAttorneyName || 'Staff',
+              })),
+              ...(clientAuditLogs.length === 0
+                ? [
+                    {
+                      title: 'Client Record Created',
+                      timestamp: formatDate(client.createdAt, { short: true }),
+                      type: 'document',
+                      description: `Client profile created (${client.clientNumber || client.id}).`,
+                      author: client.assignedAttorneyName || 'Firm Staff',
+                    },
+                  ]
+                : []),
             ]}
           />
         </div>
       )}
 
-      {/* Edit Client Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -679,15 +773,23 @@ export function ClientDetails() {
       >
         <ClientForm
           initialData={client}
-          onSuccess={() => setIsEditModalOpen(false)}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            loadClient360(client.id);
+            refreshClients();
+          }}
           onCancel={() => setIsEditModalOpen(false)}
         />
       </Modal>
 
-      {/* New Matter Modal pre-assigned to this client */}
       <Modal
         isOpen={isNewMatterModalOpen}
-        onClose={() => setIsNewMatterModalOpen(false)}
+        onClose={() => {
+          setIsNewMatterModalOpen(false);
+          if (shouldOpenMatter || intakeId) {
+            setSearchParams({}, { replace: true });
+          }
+        }}
         title={`Create New Matter for ${client.name}`}
         maxWidth="max-w-3xl"
       >
@@ -696,15 +798,25 @@ export function ClientDetails() {
           initialIntake={linkedIntake}
           onSuccess={(created) => {
             setIsNewMatterModalOpen(false);
+            setSearchParams({}, { replace: true });
+            refreshClients();
+            refreshIntakes();
+            refreshMatters();
             if (created?.id) {
               navigate(`/matters/${created.id}`);
+            } else {
+              loadClient360(client.id);
             }
           }}
-          onCancel={() => setIsNewMatterModalOpen(false)}
+          onCancel={() => {
+            setIsNewMatterModalOpen(false);
+            if (shouldOpenMatter || intakeId) {
+              setSearchParams({}, { replace: true });
+            }
+          }}
         />
       </Modal>
 
-      {/* Engagement Letter Generator Modal */}
       {isEngagementLetterOpen && (
         <EngagementLetterModal
           isOpen={isEngagementLetterOpen}
@@ -712,7 +824,11 @@ export function ClientDetails() {
           clientName={client.name}
           contactPerson={client.primaryContact || client.name}
           email={client.email}
-          attorneyName={client.assignedAttorneyName || 'Thomas Bludworth, Esq.'}
+          attorneyName={
+            client.assignedAttorneyName && client.assignedAttorneyName !== 'Unassigned'
+              ? client.assignedAttorneyName
+              : 'Assigned Counsel'
+          }
         />
       )}
     </div>

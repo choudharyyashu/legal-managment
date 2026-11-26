@@ -23,21 +23,19 @@ import { documentService } from '../../../services/documentService';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 
 export function DemandPackages() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    const filtered = (matters || []).filter(
+    return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
-    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [demandPackages, setDemandPackages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -299,7 +297,7 @@ export function DemandPackages() {
       {/* 10-Item Requirement Checklist Legend Banner */}
       <div className="bg-[#F5F0E5]/60 p-4 rounded border border-[#D9D6CF] space-y-2 text-xs">
         <h4 className="font-serif font-bold text-xs text-[#06244B] uppercase tracking-wider flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Mandatory 10-Item Utah Evidentiary Demand Checklist
+          <ShieldCheck className="w-4 h-4 text-[#A4432B]" /> Pre-Submission Evidentiary Demand Checklist (10 Items)
         </h4>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] text-slate-700 pt-1">
           <span>✓ 1. Incident Crash Report</span>

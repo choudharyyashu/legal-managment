@@ -51,12 +51,12 @@ export function ClientsList() {
       label: 'Client Name & Reference',
       sortable: true,
       render: (val, row) => (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded bg-[#F5F0E5] border border-[#D9D6CF] flex items-center justify-center text-[#06244B] flex-shrink-0">
             {row.type === 'Organization' ? <Building2 className="w-4 h-4 text-[#A4432B]" /> : <User className="w-4 h-4 text-[#06244B]" />}
           </div>
-          <div>
-            <span className="font-semibold text-[#06244B] hover:text-[#A4432B] block cursor-pointer">
+          <div className="min-w-0">
+            <span className="font-semibold text-[#06244B] hover:text-[#A4432B] block cursor-pointer break-words">
               {row.name}
             </span>
             <span className="text-[11px] text-[#667085]">{row.clientNumber || row.id} • {row.type}</span>
@@ -68,12 +68,12 @@ export function ClientsList() {
       key: 'primaryContact',
       label: 'Primary Contact & Comms',
       render: (val, row) => (
-        <div>
+        <div className="min-w-0">
           <p className="font-medium text-xs text-[#202A35]">{row.primaryContact || '—'}</p>
-          <div className="flex items-center gap-2 text-[11px] text-[#667085] mt-0.5">
-            <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-[#A4432B]" /> {row.email}</span>
-            <span>•</span>
-            <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-[#06244B]" /> {row.phone}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#667085] mt-0.5">
+            <span className="flex items-center gap-1 break-all"><Mail className="w-3 h-3 text-[#A4432B] shrink-0" /> {row.email}</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="flex items-center gap-1 whitespace-nowrap"><Phone className="w-3 h-3 text-[#06244B] shrink-0" /> {row.phone}</span>
           </div>
         </div>
       ),
@@ -163,7 +163,7 @@ export function ClientsList() {
       />
 
       {/* Unified Executive Search & Filter Toolbar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Search Input */}
         <div className="relative w-full lg:max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-[#98A2B3]" />
@@ -237,7 +237,7 @@ export function ClientsList() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title="Client Onboarding: Conflict Check Required"
-        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        subtitle="Conflict Screening Notice (Requires Supervising Counsel Review)"
         maxWidth="max-w-lg"
       >
         <div className="space-y-4 py-1">

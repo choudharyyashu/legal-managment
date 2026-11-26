@@ -65,11 +65,11 @@ export function LandingPage() {
     },
     {
       number: '04',
-      title: '4. Billing & CosmoLex Bridge',
-      description: 'Comprehensive financial tracking supporting hourly, flat-fee, and contingency billing models with automated export of approved hours directly into CosmoLex.',
+      title: '4. Billing & Accounting Ledger',
+      description: 'Comprehensive financial tracking supporting hourly, flat-fee, and contingency billing models with native General Ledger and trust accounting.',
       icon: CreditCard,
-      badge: 'Official Accounting Sync',
-      highlights: ['Billable Hours & Expenses', 'Formal Client Invoices', 'CosmoLex Batch Transfer', 'Operating Account Overview'],
+      badge: 'Integrated Ledger',
+      highlights: ['Billable Hours & Expenses', 'Formal Client Invoices', 'General Ledger & Trust', 'Operating Account Overview'],
     },
     {
       number: '05',
@@ -84,27 +84,27 @@ export function LandingPage() {
   const userRoles = [
     {
       title: 'Super Admin',
-      person: 'Eleanor Heugly, Esq.',
+      person: 'Managing Partner',
       subtitle: 'Managing Partner',
       scope: 'Unrestricted governance across all matters, financial ledgers, user credentials, and security policies.',
     },
     {
       title: 'Attorney',
-      person: 'Thomas Bludworth, Esq.',
+      person: 'Senior Litigation Partner',
       subtitle: 'Senior Litigation Partner',
       scope: 'Case docket leadership, client advisory, conflict review, and billable time entry submission.',
     },
     {
       title: 'Paralegal / Staff',
-      person: 'Marcus Vance',
+      person: 'Senior Paralegal',
       subtitle: 'Senior Litigation Paralegal',
       scope: 'Pleading filings, discovery index management, court deadline tracking, and task execution.',
     },
     {
       title: 'Billing Staff',
-      person: 'Rachel Adams',
+      person: 'Billing Director',
       subtitle: 'Billing & Accounting Director',
-      scope: 'Invoice preparation, disbursements, fee accounting, and batch export to CosmoLex ledger.',
+      scope: 'Invoice preparation, disbursements, fee accounting, and double-entry ledger management.',
     },
     {
       title: 'Practice Supervisor',
@@ -330,7 +330,7 @@ export function LandingPage() {
                     Commercial carrier cargo spoilage dispute. Expert fact discovery cutoff in 48 hours.
                   </p>
                   <div className="flex items-center justify-between pt-1 text-[10px] text-[#B8C0C4]">
-                    <span>Lead: Thomas Bludworth, Esq.</span>
+                    <span>Lead: Assigned Trial Counsel</span>
                     <span className="text-emerald-400 font-semibold">Conflict Cleared</span>
                   </div>
                 </div>
@@ -552,13 +552,13 @@ export function LandingPage() {
             <div className="space-y-3 max-w-2xl text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#A4432B]/20 text-[#A4432B] text-xs font-bold uppercase tracking-wider">
                 <Database className="w-3.5 h-3.5" />
-                <span>CosmoLex Accounting Bridge</span>
+                <span>Integrated Legal Accounting &amp; Ledger</span>
               </div>
               <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#F5F0E5]">
-                CosmoLex Remains the Firm's Official Accounting System
+                Independent Double-Entry General Ledger &amp; Accounting Architecture
               </h2>
               <p className="text-xs sm:text-sm text-[#B8C0C4] leading-relaxed">
-                All approved billable hours and disbursements pass through audit approval before synchronization into CosmoLex general and client trust ledgers, keeping legal timekeeping and firm accounting perfectly aligned.
+                Comprehensive native trust accounting, Utah RPC 1.15 three-way reconciliation, and General Ledger tracking with optional synchronization bridges for legacy accounting systems.
               </p>
             </div>
 
@@ -597,7 +597,7 @@ export function LandingPage() {
                 </div>
               </div>
               <p className="text-[#667085] max-w-md text-xs leading-relaxed">
-                Confidential legal practice management software engineered for litigation attorneys, court docket tracking, client conflict clearance, and CosmoLex financial synchronization.
+                Confidential legal practice management software engineered for litigation attorneys, court docket tracking, client conflict clearance, and Utah State Bar Rule 1.15 trust accounting compliance.
               </p>
             </div>
 
@@ -645,7 +645,7 @@ export function LandingPage() {
 
           <div className="pt-8 border-t border-[#0B356D] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#667085]">
             <p>© 2026 HEUGLY &amp; BLUDWORTH, LLC. All Rights Reserved. Attorney Work Product.</p>
-            <p>Protected by 256-Bit SSL Encryption • Utah Third Judicial District Court &amp; Bar Approved Standards</p>
+            <p>Protected by 256-Bit SSL Encryption • Role-Based Practice Access Controls</p>
           </div>
         </div>
       </footer>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Landmark, Plus, Search, Filter, ArrowUpRight, ArrowDownLeft, FileSpreadsheet, ShieldAlert, CheckCircle } from 'lucide-react';
+import { Landmark, Plus, Search, Filter, ArrowUpRight, ArrowDownLeft, FileSpreadsheet, ShieldAlert, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { ledgerService } from '../../../services/ledgerService';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -14,47 +14,19 @@ export function ChartOfAccounts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [isAddAccountOpen, setIsAddAccountOpen] = useState(false);
-
-  const [accounts, setAccounts] = useState([
-    // 1000 Assets
-    { code: '1010', name: 'Operating Checking Account (Chase)', type: 'Asset', category: 'Current Assets', balance: 184520.50, status: 'Active' },
-    { code: '1020', name: 'IOLTA Client Trust Account (First Republic)', type: 'Asset', category: 'Trust & Escrow', balance: 74278.00, status: 'Active' },
-    { code: '1050', name: 'Petty Cash Reserve', type: 'Asset', category: 'Current Assets', balance: 1500.00, status: 'Active' },
-    { code: '1100', name: 'Accounts Receivable (Client Invoices)', type: 'Asset', category: 'Receivables', balance: 92450.00, status: 'Active' },
-    { code: '1200', name: 'Law Library & Digital Legal Subscriptions', type: 'Asset', category: 'Fixed Assets', balance: 14500.00, status: 'Active' },
-    { code: '1250', name: 'Office Furniture & High-End Tech Hardware', type: 'Asset', category: 'Fixed Assets', balance: 48900.00, status: 'Active' },
-
-    // 2000 Liabilities
-    { code: '2010', name: 'Client Trust Liability (Unearned Retainers)', type: 'Liability', category: 'Trust Liabilities', balance: 74278.00, status: 'Active' },
-    { code: '2050', name: 'Accounts Payable (Trade Vendors)', type: 'Liability', category: 'Current Liabilities', balance: 18400.00, status: 'Active' },
-    { code: '2100', name: 'Utah State Bar & Professional Privilege Tax Payable', type: 'Liability', category: 'Taxes Payable', balance: 4250.00, status: 'Active' },
-    { code: '2200', name: 'Commercial Equipment Term Loan', type: 'Liability', category: 'Long-Term Debt', balance: 32000.00, status: 'Active' },
-
-    // 3000 Equity
-    { code: '3010', name: 'Partner Capital - Eleanor Heugly, Esq.', type: 'Equity', category: 'Partners Equity', balance: 140000.00, status: 'Active' },
-    { code: '3020', name: 'Partner Capital - Thomas Bludworth, Esq.', type: 'Equity', category: 'Partners Equity', balance: 110000.00, status: 'Active' },
-    { code: '3100', name: 'Retained Earnings Prior Years', type: 'Equity', category: 'Retained Earnings', balance: 85200.50, status: 'Active' },
-
-    // 4000 Revenue
-    { code: '4010', name: 'Legal Fee Income - Hourly Matters', type: 'Revenue', category: 'Fee Revenue', balance: 384500.00, status: 'Active' },
-    { code: '4020', name: 'Legal Fee Income - Flat Fee Engagements', type: 'Revenue', category: 'Fee Revenue', balance: 142000.00, status: 'Active' },
-    { code: '4030', name: 'Legal Fee Income - Contingency Recoveries', type: 'Revenue', category: 'Fee Revenue', balance: 95000.00, status: 'Active' },
-    { code: '4100', name: 'Client Reimbursed Litigation Costs', type: 'Revenue', category: 'Cost Recoveries', balance: 12400.00, status: 'Active' },
-
-    // 5000 Expenses
-    { code: '5010', name: 'Associate Attorney & Staff Salaries', type: 'Expense', category: 'Personnel', balance: 198000.00, status: 'Active' },
-    { code: '5050', name: 'Office Lease - Foothill Boulevard Tower', type: 'Expense', category: 'Facilities', balance: 54000.00, status: 'Active' },
-    { code: '5100', name: 'Legal Malpractice Insurance Premium', type: 'Expense', category: 'Insurance', balance: 18200.00, status: 'Active' },
-    { code: '5150', name: 'Deposition Reporters & Expert Witness Fees', type: 'Expense', category: 'Litigation Expense', balance: 24500.00, status: 'Active' },
-    { code: '5200', name: 'Westlaw / LexisNexis Research Subscriptions', type: 'Expense', category: 'Practice Tools', balance: 9600.00, status: 'Active' },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const loadAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const res = await ledgerService.getAccounts();
-      if (Array.isArray(res) && res.length > 0) {
+      const raw = Array.isArray(res) ? res : (Array.isArray(res?.accounts) ? res.accounts : (res?.data || []));
+      if (Array.isArray(raw) && raw.length > 0) {
         setAccounts(
-          res.map((a) => ({
+          raw.map((a) => ({
             code: String(a.accountNumber),
             name: a.accountName,
             type: a.accountType,
@@ -63,9 +35,15 @@ export function ChartOfAccounts() {
             status: a.isActive ? 'Active' : 'Inactive',
           }))
         );
+      } else {
+        setAccounts([]);
       }
     } catch (err) {
       console.warn('Could not load accounts from API:', err?.message);
+      setError(err?.message || 'Failed to connect to authoritative Chart of Accounts database.');
+      setAccounts([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -105,7 +83,7 @@ export function ChartOfAccounts() {
     }
   };
 
-  const filteredAccounts = accounts.filter(acc => {
+  const filteredAccounts = accounts.filter((acc) => {
     const matchesSearch =
       searchQuery === '' ||
       acc.code.includes(searchQuery) ||
@@ -115,31 +93,19 @@ export function ChartOfAccounts() {
     return matchesSearch && matchesCategory;
   });
 
-  const totalAssets = accounts.filter(a => a.type === 'Asset').reduce((s, a) => s + a.balance, 0);
-  const totalLiabilities = accounts.filter(a => a.type === 'Liability').reduce((s, a) => s + a.balance, 0);
-  const totalRevenue = accounts.filter(a => a.type === 'Revenue').reduce((s, a) => s + a.balance, 0);
-  const totalExpenses = accounts.filter(a => a.type === 'Expense').reduce((s, a) => s + a.balance, 0);
+  const totalAssets = accounts.filter((a) => a.type === 'Asset').reduce((s, a) => s + a.balance, 0);
+  const totalLiabilities = accounts.filter((a) => a.type === 'Liability').reduce((s, a) => s + a.balance, 0);
+  const totalRevenue = accounts.filter((a) => a.type === 'Revenue').reduce((s, a) => s + a.balance, 0);
+  const totalExpenses = accounts.filter((a) => a.type === 'Expense').reduce((s, a) => s + a.balance, 0);
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
-        <div className="flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
-          <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] Independent Chart of Accounts:</strong> Standard legal accounting hierarchy (Assets 1000, Liabilities 2000, Equity 3000, Revenue 4000, Expenses 5000). Provides standalone accounting visibility alongside CosmoLex.
-          </span>
-        </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
-        </span>
-      </div>
-
       <PageHeader
         title="Chart of Accounts"
-        subtitle="Standardized general ledger account classifications and balance summaries."
+        subtitle="Standardized general ledger account classifications and balance summaries (Assets 1000, Liabilities 2000, Equity 3000, Revenue 4000, Expenses 5000)."
         breadcrumbs={[
           { label: 'Billing & Accounting', to: '/billing' },
-          { label: 'Chart of Accounts' }
+          { label: 'Chart of Accounts' },
         ]}
         actions={
           <Button variant="primary" size="sm" icon={Plus} onClick={() => setIsAddAccountOpen(true)}>
@@ -163,12 +129,12 @@ export function ChartOfAccounts() {
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
           <span className="text-xs text-[#667085] uppercase font-bold block">4000 Year-to-Date Revenue</span>
           <span className="text-xl font-bold text-emerald-800 mt-1 block">{formatCurrency(totalRevenue)}</span>
-          <span className="text-[11px] text-[#667085]">Hourly, Flat &amp; Contingency Fees</span>
+          <span className="text-[11px] text-emerald-700">Legal Fees Earned</span>
         </div>
         <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm">
-          <span className="text-xs text-[#667085] uppercase font-bold block">5000 Operating Expenses</span>
-          <span className="text-xl font-bold text-amber-800 mt-1 block">{formatCurrency(totalExpenses)}</span>
-          <span className="text-[11px] text-[#667085]">Salaries, Lease, Practice Subscriptions</span>
+          <span className="text-xs text-[#667085] uppercase font-bold block">5000 Total Expenses</span>
+          <span className="text-xl font-bold text-[#06244B] mt-1 block">{formatCurrency(totalExpenses)}</span>
+          <span className="text-[11px] text-[#667085]">Operating &amp; Advanced Litigation</span>
         </div>
       </div>
 
@@ -183,7 +149,7 @@ export function ChartOfAccounts() {
         </div>
 
         <div className="flex items-center gap-1 bg-[#F5F0E5] p-1 rounded-lg border border-[#D9D6CF] text-xs">
-          {['ALL', 'Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map(cat => (
+          {['ALL', 'Asset', 'Liability', 'Equity', 'Revenue', 'Expense'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
@@ -199,7 +165,7 @@ export function ChartOfAccounts() {
         </div>
       </div>
 
-      {/* Accounts Table */}
+      {/* Accounts Table with Separate Loading, Error and Empty States */}
       <div className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
@@ -214,30 +180,69 @@ export function ChartOfAccounts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9D6CF]">
-              {filteredAccounts.map(acc => (
-                <tr key={acc.code} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-3 font-mono font-bold text-[#A4432B]">{acc.code}</td>
-                  <td className="p-3 font-semibold text-[#06244B]">{acc.name}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded font-semibold text-[10px] ${
-                      acc.type === 'Asset' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      acc.type === 'Liability' ? 'bg-red-50 text-red-700 border border-red-200' :
-                      acc.type === 'Revenue' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      acc.type === 'Expense' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      'bg-purple-50 text-purple-700 border border-purple-200'
-                    }`}>
-                      {acc.type}
-                    </span>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xs text-[#667085]">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                      <span>Loading authoritative Chart of Accounts from database...</span>
+                    </div>
                   </td>
-                  <td className="p-3 text-[#667085]">{acc.category}</td>
-                  <td className="p-3">
-                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-semibold text-[10px]">
-                      {acc.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right font-bold text-[#06244B]">{formatCurrency(acc.balance)}</td>
                 </tr>
-              ))}
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xs">
+                    <div className="max-w-md mx-auto p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 space-y-2">
+                      <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <span>Database Connectivity Error</span>
+                      </div>
+                      <p className="text-xs text-red-700">{error}</p>
+                      <Button size="sm" variant="outline" onClick={loadAccounts} className="mt-2">
+                        Retry Loading
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xs text-[#667085]">
+                    No Chart of Accounts records found in database.
+                  </td>
+                </tr>
+              ) : (
+                filteredAccounts.map((acc) => (
+                  <tr key={acc.code} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 font-mono font-bold text-[#A4432B]">{acc.code}</td>
+                    <td className="p-3 font-semibold text-[#06244B]">{acc.name}</td>
+                    <td className="p-3">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          acc.type === 'Asset'
+                            ? 'bg-blue-100 text-blue-800'
+                            : acc.type === 'Liability'
+                            ? 'bg-purple-100 text-purple-800'
+                            : acc.type === 'Revenue'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : acc.type === 'Expense'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-slate-100 text-slate-800'
+                        }`}
+                      >
+                        {acc.type}
+                      </span>
+                    </td>
+                    <td className="p-3 text-[#667085]">{acc.category}</td>
+                    <td className="p-3">
+                      <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        {acc.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right font-bold text-[#06244B]">{formatCurrency(acc.balance)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -248,24 +253,36 @@ export function ChartOfAccounts() {
         isOpen={isAddAccountOpen}
         onClose={() => setIsAddAccountOpen(false)}
         title="Add New General Ledger Account"
-        subtitle="Chart of Accounts Structure (Utah Bar Accounting Standard)"
-        maxWidth="max-w-md"
+        subtitle="Chart of Accounts Master Definition"
       >
         <form onSubmit={handleAddAccount} className="space-y-4 text-xs">
+          <div>
+            <label className="text-xs font-semibold text-[#06244B] block mb-1">
+              Account Number (e.g. 1030, 2150, 5020)
+            </label>
+            <Input
+              type="number"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+              placeholder="e.g. 1030"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-[#06244B] block mb-1">Account Legal Title</label>
+            <Input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="e.g. Payroll Operating Clearing"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Input
-                label="Account Code (e.g. 1060)"
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value)}
-                placeholder="4-digit code"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
-                Account Class
-              </label>
+              <label className="text-xs font-semibold text-[#06244B] block mb-1">Financial Classification</label>
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
@@ -278,43 +295,23 @@ export function ChartOfAccounts() {
                 <option value="Expense">Expense (5000s)</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <Input
-              label="Account Legal Title"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="e.g. Expert Witness Retainer Advance"
-              required
-            />
-          </div>
-
-          <div>
-            <Input
-              label="Sub-Category Classification"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="e.g. Direct Case Costs"
-              required
-            />
-          </div>
-
-          <div>
-            <Input
-              label="Opening Ledger Balance ($)"
-              type="number"
-              value={newBalance}
-              onChange={(e) => setNewBalance(e.target.value)}
-            />
+            <div>
+              <label className="text-xs font-semibold text-[#06244B] block mb-1">Category Classification</label>
+              <Input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="e.g. Current Assets"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-[#D9D6CF]">
             <Button size="sm" variant="outline" type="button" onClick={() => setIsAddAccountOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" variant="primary" type="submit" icon={Plus}>
-              Create Account
+            <Button size="sm" variant="primary" type="submit">
+              Save Account to Database
             </Button>
           </div>
         </form>
@@ -322,4 +319,3 @@ export function ChartOfAccounts() {
     </div>
   );
 }
-

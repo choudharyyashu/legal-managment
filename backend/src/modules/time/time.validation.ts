@@ -36,7 +36,29 @@ export const timeQuerySchema = z.object({
   endDate: z.string().optional(),
 });
 
+export const reviewSlotQuerySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format').optional(),
+});
+
+export const markSlotReviewedSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format').optional(),
+});
+
+export const reviewFlagQuerySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format').optional(),
+  slotId: z.string().optional(),
+});
+
+export const updateReviewFlagStatusSchema = z.object({
+  status: z.enum(['Pending', 'Reviewed', 'Approved', 'Rejected']),
+  reviewNote: z.string().max(1000).optional(),
+});
+
 export type CreateTimeEntryInput = z.infer<typeof createTimeEntrySchema>;
 export type UpdateTimeEntryInput = z.infer<typeof updateTimeEntrySchema>;
 export type ApproveTimeEntryInput = z.infer<typeof approveTimeEntrySchema>;
+export type ReviewSlotQueryInput = z.infer<typeof reviewSlotQuerySchema>;
+export type MarkSlotReviewedInput = z.infer<typeof markSlotReviewedSchema>;
+export type ReviewFlagQueryInput = z.infer<typeof reviewFlagQuerySchema>;
+export type UpdateReviewFlagStatusInput = z.infer<typeof updateReviewFlagStatusSchema>;
 

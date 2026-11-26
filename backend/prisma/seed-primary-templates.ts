@@ -232,6 +232,10 @@ async function seedTemplates() {
     console.log(`Seeded Template: ${createdTemplate.templateCode} - ${createdTemplate.templateName}`);
   }
 
+  console.log('Seeding remaining 300-Document Automation Catalog templates...');
+  const { AutomationCatalogService } = await import('../src/modules/documents/catalog/automation-catalog.service.js');
+  const catalogResult = await AutomationCatalogService.materializeCatalog(user.id);
+  console.log(`Catalog materialization complete: ${catalogResult.createdCount} created, ${catalogResult.existingCount} existing (total ${catalogResult.totalProcessed}).`);
   console.log('Seeding finished successfully.');
 }
 

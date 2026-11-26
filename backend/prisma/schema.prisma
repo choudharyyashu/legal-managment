@@ -53,6 +53,11 @@ model User {
   trustTransactionsAuth   TrustTransaction[]
   generalLedgerJournals   GeneralLedgerJournal[]
   reconciliationsAudited  ThreeWayReconciliation[]
+  notificationPreference UserNotificationPreference?
+  firmSettingsUpdated    FirmSetting[]                 @relation("FirmBrandingUpdater")
+  reconciliationsPrepared OperatingBankReconciliation[] @relation("ReconciliationPreparer")
+  reconciliationsCertified OperatingBankReconciliation[] @relation("ReconciliationCertifier")
+  closedAccountingPeriods AccountingPeriod[]
   documentVersionsUpload  DocumentVersion[]
   auditLogs               AuditLog[]
   templatesCreated        DocumentTemplate[]       @relation("TemplateCreator")
@@ -123,6 +128,7 @@ model Client {
   paymentRecords   PaymentRecord[]
   documentDrafts   DocumentDraft[]
   communications   Communication[]
+  relatedParties   RelatedParty[]
 
   @@index([name, email, clientNumber], name: "idx_clients_search")
   @@map("clients")
@@ -155,6 +161,7 @@ model Intake {
   convertedClient    Client?             @relation("ConvertedClient", fields: [convertedClientId], references: [id], onDelete: SetNull)
   convertedMatter    Matter?             @relation("ConvertedMatter", fields: [convertedMatterId], references: [id], onDelete: SetNull)
   conflictSearchLogs ConflictSearchLog[]
+  relatedParties     RelatedParty[]
 
   @@map("intakes")
 }
@@ -257,6 +264,7 @@ model Matter {
   appealsCase             AppealsCase?
   evictionsCase           EvictionsCase?
   overviewPanels          MatterOverviewPanels?
+  relatedParties          RelatedParty[]
 
   @@index([clientId], name: "idx_matters_client")
   @@index([responsibleAttorneyId], name: "idx_matters_attorney")
@@ -273,6 +281,37 @@ model MatterOverviewPanels {
   matter     Matter   @relation(fields: [matterId], references: [id], onDelete: Cascade)
 
   @@map("matter_overview_panels")
+}
+
+model RelatedParty {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  matterId        String?  @map("matter_id") @db.VarChar(36)
+  clientId        String?  @map("client_id") @db.VarChar(36)
+  intakeId        String?  @map("intake_id") @db.VarChar(36)
+  name            String   @db.VarChar(255)
+  aliases         String?  @db.Text
+  roleId          String   @map("role_id") @db.VarChar(50)
+  roleLabel       String   @map("role_label") @db.VarChar(100)
+  firmName        String?  @map("firm_name") @db.VarChar(255)
+  contactPerson   String?  @map("contact_person") @db.VarChar(255)
+  email           String?  @db.VarChar(255)
+  phone           String?  @db.VarChar(50)
+  address         String?  @db.Text
+  serviceType     String?  @map("service_type") @db.VarChar(150)
+  notes           String?  @db.Text
+  createdByUserId String?  @map("created_by_user_id") @db.VarChar(36)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  matter Matter? @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  intake Intake? @relation(fields: [intakeId], references: [id], onDelete: SetNull)
+
+  @@index([matterId], name: "idx_related_parties_matter")
+  @@index([clientId], name: "idx_related_parties_client")
+  @@index([intakeId], name: "idx_related_parties_intake")
+  @@index([name], name: "idx_related_parties_name")
+  @@map("related_parties")
 }
 
 model MatterStaffAssignment {
@@ -564,7 +603,8 @@ model ChartOfAccount {
   accountType   String  @map("account_type") @db.VarChar(50)
   isActive      Boolean @default(true) @map("is_active")
 
-  entries GeneralLedgerEntry[]
+  entries                  GeneralLedgerEntry[]
+  operatingReconciliations OperatingBankReconciliation[]
 
   @@map("chart_of_accounts")
 }
@@ -574,12 +614,17 @@ model GeneralLedgerJournal {
   journalNumber   String   @unique @map("journal_number") @db.VarChar(50)
   transactionDate DateTime @map("transaction_date") @db.Date
   memo            String   @db.Text
+  sourceType      String?  @map("source_type") @db.VarChar(50)
+  sourceId        String?  @map("source_id") @db.VarChar(36)
+  isLocked        Boolean  @default(false) @map("is_locked")
   createdByUserId String   @map("created_by_user_id") @db.VarChar(36)
   createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
   createdByUser User                 @relation(fields: [createdByUserId], references: [id], onDelete: Restrict)
   entries       GeneralLedgerEntry[]
 
+  @@unique([sourceType, sourceId], name: "uq_journal_source")
+  @@index([transactionDate], name: "idx_journal_transaction_date")
   @@map("general_ledger_journals")
 }
 
@@ -1776,4 +1821,110 @@ model EvictionsCase {
   matter               Matter    @relation(fields: [matterId], references: [id], onDelete: Cascade)
 
   @@map("evictions_cases")
+}
+
+// -----------------------------------------------------------------------------
+// Firm Settings (Branding & Global Firm Profile)
+// -----------------------------------------------------------------------------
+
+model FirmSetting {
+  id              String   @id @default("default") @db.VarChar(36)
+  firmName        String   @default("LegalPro Law Firm") @map("firm_name") @db.VarChar(150)
+  tagline         String?  @db.VarChar(200)
+  primaryPhone    String?  @map("primary_phone") @db.VarChar(50)
+  primaryEmail    String?  @map("primary_email") @db.VarChar(255)
+  address         String?  @db.VarChar(300)
+  logoUrl         String?  @map("logo_url") @db.Text
+  primaryColor    String   @default("#06244B") @map("primary_color") @db.VarChar(20)
+  secondaryColor  String   @default("#F5F0E5") @map("secondary_color") @db.VarChar(20)
+  accentColor     String   @default("#A4432B") @map("accent_color") @db.VarChar(20)
+  updatedByUserId String?  @map("updated_by_user_id") @db.VarChar(36)
+  createdAt       DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  updatedByUser   User?    @relation("FirmBrandingUpdater", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+
+  @@map("firm_settings")
+}
+
+// -----------------------------------------------------------------------------
+// User Notification Preferences
+// -----------------------------------------------------------------------------
+
+model UserNotificationPreference {
+  id                        String   @id @default(uuid()) @db.VarChar(36)
+  userId                    String   @unique @map("user_id") @db.VarChar(36)
+  courtDeadlineEmail        Boolean  @default(true) @map("court_deadline_email")
+  courtDeadlineSms          Boolean  @default(true) @map("court_deadline_sms")
+  courtDeadlineLeadTime     String   @default("48") @map("court_deadline_lead_time") @db.VarChar(10)
+  timeApprovalAlerts        Boolean  @default(true) @map("time_approval_alerts")
+  conflictCheckNotices      Boolean  @default(true) @map("conflict_check_notices")
+  dailyDigestEmail          Boolean  @default(false) @map("daily_digest_email")
+  clientMessageNotification Boolean  @default(true) @map("client_message_notification")
+  createdAt                 DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                 DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_notification_preferences")
+}
+
+// -----------------------------------------------------------------------------
+// Operating Bank Reconciliation Persistence
+// -----------------------------------------------------------------------------
+
+model OperatingBankReconciliation {
+  id                        String    @id @default(uuid()) @db.VarChar(36)
+  accountNumber             Int       @default(1010) @map("account_number")
+  statementDate             DateTime  @map("statement_date") @db.Date
+  statementOpeningBalance   Decimal?  @map("statement_opening_balance") @db.Decimal(14, 2)
+  statementEndingBalance    Decimal?  @map("statement_ending_balance") @db.Decimal(14, 2)
+  glBookBalance             Decimal   @map("gl_book_balance") @db.Decimal(14, 2)
+  clearedDepositsTotal      Decimal   @default(0.00) @map("cleared_deposits_total") @db.Decimal(14, 2)
+  clearedChecksTotal        Decimal   @default(0.00) @map("cleared_checks_total") @db.Decimal(14, 2)
+  clearedTransactionIds     Json      @map("cleared_transaction_ids")
+  depositsInTransit         Decimal   @default(0.00) @map("deposits_in_transit") @db.Decimal(14, 2)
+  outstandingChecks         Decimal   @default(0.00) @map("outstanding_checks") @db.Decimal(14, 2)
+  outstandingTransactionIds Json      @map("outstanding_transaction_ids")
+  bookAdjustments           Decimal   @default(0.00) @map("book_adjustments") @db.Decimal(14, 2)
+  bookAdjustmentsDetail     Json?     @map("book_adjustments_detail")
+  adjustedBankBalance       Decimal?  @map("adjusted_bank_balance") @db.Decimal(14, 2)
+  reconciliationVariance    Decimal?  @map("reconciliation_variance") @db.Decimal(14, 2)
+  status                    String    @default("Draft") @db.VarChar(20)
+  isLocked                  Boolean   @default(false) @map("is_locked")
+  preparedByUserId          String    @map("prepared_by_user_id") @db.VarChar(36)
+  certifiedByUserId         String?   @map("certified_by_user_id") @db.VarChar(36)
+  certifiedAt               DateTime? @map("certified_at") @db.DateTime(3)
+  notes                     String?   @db.Text
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt                 DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  account                   ChartOfAccount @relation(fields: [accountNumber], references: [accountNumber], onDelete: Restrict)
+  preparedByUser            User           @relation("ReconciliationPreparer", fields: [preparedByUserId], references: [id], onDelete: Restrict)
+  certifiedByUser           User?          @relation("ReconciliationCertifier", fields: [certifiedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([accountNumber, statementDate], name: "uq_operating_recon_account_date")
+  @@index([status], name: "idx_operating_recon_status")
+  @@map("operating_bank_reconciliations")
+}
+
+// -----------------------------------------------------------------------------
+// Accounting Period Management & Period Locking
+// -----------------------------------------------------------------------------
+
+model AccountingPeriod {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  periodName     String    @map("period_name") @db.VarChar(50)
+  startDate      DateTime  @map("start_date") @db.Date
+  endDate        DateTime  @map("end_date") @db.Date
+  isClosed       Boolean   @default(false) @map("is_closed")
+  closedAt       DateTime? @map("closed_at") @db.DateTime(3)
+  closedByUserId String?   @map("closed_by_user_id") @db.VarChar(36)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  closedByUser   User?     @relation(fields: [closedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([startDate, endDate], name: "uq_accounting_period_dates")
+  @@map("accounting_periods")
 }

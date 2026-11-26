@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { trustService } from '../../../services/trustService';
 import {
   ShieldCheck,
   Landmark,
@@ -17,7 +18,8 @@ import {
   FileSpreadsheet,
   Building,
   User,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { reconciliationService } from '../../../services/reconciliationService';
 import { PageHeader } from '../../../components/shared/PageHeader';
@@ -36,115 +38,207 @@ export function ThreeWayReconciliation() {
   const [isReconciling, setIsReconciling] = useState(false);
 
   // Pillar 1: Bank Account Figures
-  const bankStatementBalance = 74278.0;
-  const depositsInTransit = 1440.0;
-  const outstandingChecks = 1440.0;
-  const adjustedBankBalance = bankStatementBalance + depositsInTransit - outstandingChecks;
+  const [bankStatementBalance, setBankStatementBalance] = useState(null);
+  const [depositsInTransit, setDepositsInTransit] = useState(null);
+  const [outstandingChecks, setOutstandingChecks] = useState(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [statusError, setStatusError] = useState(null);
+
+  // Uncleared items for Tab 2 (loaded from real backend trust transactions)
+  const [unclearedItems, setUnclearedItems] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [transactionsError, setTransactionsError] = useState(null);
 
   // Pillar 2: General Ledger Trust Balance (Account #2100)
-  const glTrustBalance = 74278.0;
+  const [glTrustBalance, setGlTrustBalance] = useState(null);
+  const [glDataAvailable, setGlDataAvailable] = useState(false);
 
-  // Pillar 3: Client Sub-Ledgers
-  const [clientLedgers, setClientLedgers] = useState([
-    {
-      id: 'TR-1001',
-      clientId: 'CLI-1001',
-      clientName: 'Wasatch Mountain Logistics LLC',
-      matterNumber: '25-CV-0101',
-      matterTitle: 'Wasatch Mountain Logistics v. Interstate Freightlines Inc.',
-      balance: 25000.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1002',
-      clientId: 'CLI-1002',
-      clientName: 'Dr. Evelyn Martinez',
-      matterNumber: '25-DOM-0418',
-      matterTitle: 'In re Marriage of Martinez and Sterling: Domestic Dissolution',
-      balance: 12500.0,
-      verified: true,
-      lastAudit: '2026-11-10',
-    },
-    {
-      id: 'TR-1003',
-      clientId: 'CLI-1008',
-      clientName: 'Elena Rostova',
-      matterNumber: '26-IMM-0012',
-      matterTitle: 'Elena Rostova: Marriage-Based Adjustment of Status (I-130 / I-485)',
-      balance: 1440.0,
-      verified: true,
-      lastAudit: '2026-11-11',
-    },
-    {
-      id: 'TR-1004',
-      clientId: 'CLI-1009',
-      clientName: 'Rachel Lynn Walker',
-      matterNumber: '26-25410-JTM',
-      matterTitle: 'Rachel Lynn Walker: Chapter 7 Consumer Debt Liquidation',
-      balance: 338.0,
-      verified: true,
-      lastAudit: '2026-11-12',
-    },
-    {
-      id: 'TR-1005',
-      clientId: 'CLI-1003',
-      clientName: 'Apex Horizon Real Estate Group',
-      matterNumber: '24-LND-0912',
-      matterTitle: 'Apex Horizon v. Wasatch County Board of Adjustment (Water Rights Appeal)',
-      balance: 35000.0,
-      verified: true,
-      lastAudit: '2026-11-09',
-    },
-  ]);
+  // Pillar 3: Client Sub-Ledgers – loaded from trust service
+  const [clientLedgers, setClientLedgers] = useState([]);
+  const [loadingLedgers, setLoadingLedgers] = useState(false);
+  const [ledgersError, setLedgersError] = useState(null);
+
+  // Audit History
+  const [auditHistory, setAuditHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
+
+  const fetchHistory = () => {
+    setLoadingHistory(true);
+    setHistoryError(null);
+    reconciliationService
+      .getHistory()
+      .then((records) => {
+        if (Array.isArray(records)) {
+          setAuditHistory(records);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load reconciliation history from API:', err?.message);
+        setHistoryError(err?.message || 'Failed to load reconciliation history from database.');
+        setAuditHistory([]);
+      })
+      .finally(() => {
+        setLoadingHistory(false);
+      });
+  };
+
+  const loadClientLedgers = () => {
+    setLoadingLedgers(true);
+    setLedgersError(null);
+    trustService
+      .getLedgers({ limit: 100 })
+      .then((res) => {
+        if (Array.isArray(res?.ledgers)) setClientLedgers(res.ledgers);
+      })
+      .catch((err) => {
+        console.warn('Could not load client ledgers:', err?.message);
+        setLedgersError(err?.message || 'Failed to load client trust ledgers from database.');
+        setClientLedgers([]);
+      })
+      .finally(() => {
+        setLoadingLedgers(false);
+      });
+  };
+
+  const loadUnclearedTransactions = (month = selectedMonth) => {
+    setLoadingTransactions(true);
+    setTransactionsError(null);
+    trustService
+      .getTransactions({ limit: 100, month })
+      .then((res) => {
+        const raw = Array.isArray(res) ? res : (res?.transactions || res?.data || []);
+        if (raw.length > 0) {
+          setUnclearedItems(
+            raw.map((t) => {
+              const savedCleared = localStorage.getItem(`reconciliation_cleared_${month}_${t.id}`);
+              const isCleared = savedCleared !== null ? savedCleared === 'true' : false;
+              return {
+                id: t.id,
+                date: t.createdAt ? t.createdAt.split('T')[0] : '',
+                type: t.transactionType === 'DEPOSIT' ? 'Deposit in Transit' : 'Outstanding Draft',
+                description: t.purpose || t.sourceReference || 'Trust Transaction',
+                matterNumber: t.matterNumber || t.matter?.matterNumber || 'Matter Trust',
+                amount: t.transactionType === 'DEPOSIT' ? Number(t.amount) : -Number(t.amount),
+                cleared: isCleared,
+              };
+            })
+          );
+        } else {
+          setUnclearedItems([]);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load trust transactions:', err?.message);
+        setTransactionsError(err?.message || 'Failed to load trust transactions from database.');
+        setUnclearedItems([]);
+      })
+      .finally(() => {
+        setLoadingTransactions(false);
+      });
+  };
+
+  const loadLiveStatus = (month = selectedMonth) => {
+    setLoadingStatus(true);
+    setStatusError(null);
+    reconciliationService
+      .getLiveStatus({ reconciliationMonth: month })
+      .then((data) => {
+        if (data) {
+          if (data.bankStatementBalance !== undefined && data.bankStatementBalance !== null) {
+            setBankStatementBalance(data.bankStatementBalance);
+          }
+          if (data.depositsInTransit !== undefined && data.depositsInTransit !== null) {
+            setDepositsInTransit(data.depositsInTransit);
+          }
+          if (data.outstandingChecks !== undefined && data.outstandingChecks !== null) {
+            setOutstandingChecks(data.outstandingChecks);
+          }
+          if (data.glDataAvailable) {
+            setGlTrustBalance(data.glTrustLiabilityBalance);
+            setGlDataAvailable(true);
+          } else {
+            setGlTrustBalance(null);
+            setGlDataAvailable(false);
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load live reconciliation status:', err?.message);
+        setStatusError(err?.message || 'Failed to query live reconciliation status.');
+        setGlTrustBalance(null);
+        setGlDataAvailable(false);
+      })
+      .finally(() => {
+        setLoadingStatus(false);
+      });
+  };
+
+  // Load data on component mount and period change
+  useEffect(() => {
+    loadClientLedgers();
+    loadUnclearedTransactions(selectedMonth);
+    loadLiveStatus(selectedMonth);
+    fetchHistory();
+  }, [selectedMonth]);
+
+  // Dynamic clearance updates
+  const computedUnclearedDeposits = unclearedItems
+    .filter((i) => i.amount > 0 && !i.cleared)
+    .reduce((sum, i) => sum + i.amount, 0);
+
+  const computedUnclearedChecks = unclearedItems
+    .filter((i) => i.amount < 0 && !i.cleared)
+    .reduce((sum, i) => sum + Math.abs(i.amount), 0);
+
+  const effectiveDepositsInTransit = depositsInTransit !== null ? depositsInTransit : computedUnclearedDeposits;
+  const effectiveOutstandingChecks = outstandingChecks !== null ? outstandingChecks : computedUnclearedChecks;
+
+  const adjustedBankBalance =
+    bankStatementBalance !== null
+      ? bankStatementBalance + (effectiveDepositsInTransit || 0) - (effectiveOutstandingChecks || 0)
+      : null;
 
   const totalClientLedgersBalance = clientLedgers.reduce((sum, item) => sum + item.balance, 0);
 
-  // Variance Calculation
-  const variance1 = Math.abs(adjustedBankBalance - glTrustBalance);
-  const variance2 = Math.abs(glTrustBalance - totalClientLedgersBalance);
-  const totalVariance = variance1 + variance2;
-  const isReconciled = totalVariance === 0;
-
-  // Uncleared items for Tab 2
-  const [unclearedItems, setUnclearedItems] = useState([
-    {
-      id: 'TX-901',
-      date: '2026-11-08',
-      type: 'Deposit in Transit',
-      description: 'USCIS Statutory Retainer - Wire transfer pending clearance',
-      matterNumber: '26-IMM-0012',
-      amount: 1440.0,
-      cleared: false,
-    },
-    {
-      id: 'TX-902',
-      date: '2026-11-09',
-      type: 'Outstanding Draft',
-      description: 'Check #4812 to U.S. Bankruptcy Court Clerk (Filing Fee)',
-      matterNumber: '26-25410-JTM',
-      amount: -1440.0,
-      cleared: false,
-    },
-  ]);
+  // Safe variance calculations – handle missing data gracefully
+  const variance1 = adjustedBankBalance !== null && glTrustBalance !== null
+    ? Math.abs(adjustedBankBalance - glTrustBalance)
+    : null;
+  const variance2 = glTrustBalance !== null
+    ? Math.abs(glTrustBalance - totalClientLedgersBalance)
+    : null;
+  const totalVariance = (variance1 !== null && variance2 !== null) ? variance1 + variance2 : null;
+  const isReconciled = totalVariance === 0 && variance1 !== null && variance2 !== null;
 
   const handleRunReconcile = async () => {
     setIsReconciling(true);
     try {
-      await reconciliationService.submit({
+      const result = await reconciliationService.submit({
         reconciliationMonth: selectedMonth,
-        bankStatementBalance,
-        depositsInTransit,
-        outstandingChecks,
+        bankStatementBalance: bankStatementBalance ?? 0,
+        depositsInTransit: effectiveDepositsInTransit ?? 0,
+        outstandingChecks: effectiveOutstandingChecks ?? 0,
       });
-      addToast(
-        `Three-Way Reconciliation verified via API: Adjusted Bank = General Ledger = Client Ledgers ($${adjustedBankBalance.toLocaleString()}). Complies with Utah Rule 1.15.`,
-        'success'
-      );
+      // Report actual reconciliation outcome — never claim "balanced" unless API confirms it
+      if (result?.isBalanced) {
+        addToast(
+          `Three-Way Reconciliation confirmed balanced for ${selectedMonth}. All three pillars match (Utah RPC 1.15).`,
+          'success'
+        );
+      } else if (result) {
+        addToast(
+          `Reconciliation submitted for ${selectedMonth}. Status: ${result.isBalanced === false ? 'Variance detected — review required.' : 'Incomplete — GL data may be missing.'}`,
+          'warning'
+        );
+      } else {
+        addToast(`Reconciliation submitted for ${selectedMonth}. Check audit history for results.`, 'info');
+      }
+      fetchHistory();
     } catch (err) {
       addToast(
-        `Three-Way Reconciliation verified (Local audit: $${adjustedBankBalance.toLocaleString()}).`,
-        'info'
+        `Could not submit reconciliation to server. Verify your inputs and try again.`,
+        'error'
       );
     } finally {
       setIsReconciling(false);
@@ -152,10 +246,21 @@ export function ThreeWayReconciliation() {
   };
 
   const handleToggleClear = (id) => {
-    setUnclearedItems(prev =>
-      prev.map(item => (item.id === id ? { ...item, cleared: !item.cleared } : item))
+    setUnclearedItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextCleared = !item.cleared;
+          try {
+            localStorage.setItem(`reconciliation_cleared_${selectedMonth}_${id}`, String(nextCleared));
+          } catch (e) {
+            console.warn('Could not persist clearance to localStorage', e);
+          }
+          return { ...item, cleared: nextCleared };
+        }
+        return item;
+      })
     );
-    addToast('Transaction clearance state updated.', 'info');
+    addToast('Transaction clearance state updated and persisted.', 'info');
   };
 
   // Direct Formal 3-Way Reconciliation Compliance File Generator (Utah RPC 1.15)
@@ -164,25 +269,25 @@ export function ThreeWayReconciliation() {
     const auditTimestamp = new Date().toISOString().split('T')[0];
 
     const csvLines = [
-      `"HEUGLY & BLUDWORTH, LLC - ATTORNEYS AT LAW"`,
-      `"IOLTA CLIENT TRUST ACCOUNT MONTHLY THREE-WAY RECONCILIATION CERTIFICATE"`,
-      `"Statutory Authority:","Utah Supreme Court Rules of Professional Conduct - Rule 1.15(a), (c), & (d)"`,
+      `"Firm Trust Account — Three-Way Reconciliation Worksheet"`,
+      `"IOLTA CLIENT TRUST ACCOUNT MONTHLY THREE-WAY RECONCILIATION WORKSHEET"`,
+      `"Reference Policy:","Trust Account Three-Way Reconciliation Controls"`,
       `"Audit Period:","${periodName}"`,
       `"Audit Verification Date:","${auditTimestamp}"`,
-      `"Supervising Trust Auditor:","Eleanor Heugly, Esq. (Managing Partner, Utah Bar #UT-8819)"`,
-      `"Designated Fiduciary Depository:","Chase Bank Pooled IOLTA Trust Account #****4402"`,
+      `"Supervising Trust Auditor:","Assigned Supervising Partner / Trust Auditor"`,
+      `"Designated Fiduciary Depository:","Pooled IOLTA Client Trust Account"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 1: BANK STATEMENT RECONCILIATION (ADJUSTED CASH BALANCE)"`,
       `"Line Item Description","Accounting Ledger Source","Amount ($)"`,
-      `"Bank Statement Ending Balance","Chase Bank IOLTA #4402 (Period Ending Statement)","${bankStatementBalance.toFixed(2)}"`,
-      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","+${depositsInTransit.toFixed(2)}"`,
-      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","-${outstandingChecks.toFixed(2)}"`,
-      `"ADJUSTED BANK BALANCE (PILLAR 1 TOTAL)","Net Available Liquid Fiduciary Cash","${adjustedBankBalance.toFixed(2)}"`,
+      `"Bank Statement Ending Balance","Chase Bank IOLTA #4402 (Period Ending Statement)","${bankStatementBalance !== null ? bankStatementBalance.toFixed(2) : 'N/A'}"`,
+      `"Add: Deposits in Transit (Uncleared Client Retainers)","Wire & ACH Transfers within Clearance Window","${effectiveDepositsInTransit !== null ? '+' + Number(effectiveDepositsInTransit).toFixed(2) : 'N/A'}"`,
+      `"Less: Outstanding Checks & Disbursals","Uncleared Payee Disbursal Drafts","${effectiveOutstandingChecks !== null ? '-' + Number(effectiveOutstandingChecks).toFixed(2) : 'N/A'}"`,
+      `"ADJUSTED BANK BALANCE (PILLAR 1 TOTAL)","Net Available Liquid Fiduciary Cash","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 2: GENERAL LEDGER FIDUCIARY LIABILITY (CONTROL ACCOUNT)"`,
-      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glTrustBalance.toFixed(2)}"`,
+      `"General Ledger Account #2100 (Client Trust Funds Liability)","Firm Double-Entry Control Ledger","${glDataAvailable && glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `""`,
       `"=========================================================================================="`,
       `"PILLAR 3: ITEMIZATION OF INDIVIDUAL CLIENT TRUST SUB-LEDGERS"`,
@@ -193,17 +298,14 @@ export function ThreeWayReconciliation() {
       `"TOTAL INDIVIDUAL CLIENT SUB-LEDGER BALANCES (PILLAR 3 TOTAL)","","","","","${totalClientLedgersBalance.toFixed(2)}"`,
       `""`,
       `"=========================================================================================="`,
-      `"MANDATORY THREE-WAY AUDIT VARIANCE SUMMARY"`,
-      `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance.toFixed(2)}"`,
-      `"Pillar 2: General Ledger Account #2100 Balance","${glTrustBalance.toFixed(2)}"`,
+      `"THREE-WAY AUDIT VARIANCE SUMMARY (INTERNAL WORKSHEET)"`,
+      `"Pillar 1: Adjusted Bank Balance","${adjustedBankBalance !== null ? adjustedBankBalance.toFixed(2) : 'N/A'}"`,
+      `"Pillar 2: General Ledger Account #2100 Balance","${glDataAvailable && glTrustBalance !== null ? glTrustBalance.toFixed(2) : 'N/A'}"`,
       `"Pillar 3: Sum of Individual Client Sub-Ledgers","${totalClientLedgersBalance.toFixed(2)}"`,
-      `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance.toFixed(2)}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : 'ATTENTION: VARIANCE DETECTED'}"`,
+      `"THREE-WAY RECONCILIATION DISCREPANCY","${totalVariance !== null ? totalVariance.toFixed(2) : 'N/A'}","${isReconciled ? '0.00 (FULLY BALANCED & RECONCILED - ZERO VARIANCE)' : (glDataAvailable ? 'ATTENTION: VARIANCE DETECTED' : 'INCOMPLETE: GL DATA UNAVAILABLE')}"`,
       `""`,
-      `"OFFICIAL CERTIFICATION UNDER PENALTY OF UNSWORN DECLARATION:"`,
-      `"I hereby certify under penalty of perjury under the laws of the State of Utah that I have examined the foregoing"`,
-      `"monthly three-way trust reconciliation and that the adjusted bank balance, general ledger control liability,"`,
-      `"and total client trust sub-ledgers are in exact mathematical reconciliation with $0.00 variance, satisfying Utah RPC 1.15."`,
-      `"Certifying Managing Partner: Eleanor Heugly, Esq. | Utah State Bar License #UT-8819 | Firm: Heugly & Bludworth, LLC"`
+      `"RECONCILIATION WORKSHEET NOTE (UTAH RPC 1.15 REFERENCE):","${glDataAvailable ? (isReconciled ? 'Computed trust figures show $0.00 variance in current system worksheet; subject to supervising attorney and bank statement verification.' : 'Reconciliation worksheet shows a computed variance of $' + (totalVariance !== null ? totalVariance.toFixed(2) : 'N/A') + '; review required.') : 'General Ledger data is unavailable; three-way reconciliation worksheet is incomplete.'}"`,
+      `"Reviewed By (Supervising Attorney / CPA): Pending Sign-off"`
     ];
 
     const blob = new Blob(['\uFEFF' + csvLines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
@@ -263,8 +365,8 @@ export function ThreeWayReconciliation() {
           <div class="header">
             <div class="firm-name">HEUGLY &amp; BLUDWORTH, LLC</div>
             <div class="firm-sub">Attorneys at Law • 222 S. Main Street, Suite 500 • Salt Lake City, Utah 84101</div>
-            <div class="cert-title">Formal Certificate of Three-Way Trust Reconciliation</div>
-            <div class="rule-cite">Mandatory Monthly Verification Pursuant to Utah Supreme Court Rules of Professional Conduct — Rule 1.15(a), (c), &amp; (d)</div>
+            <div class="cert-title">Three-Way Trust Reconciliation Summary (Draft Review Record)</div>
+            <div class="rule-cite">Internal Reconciliation Comparison Worksheet — Subject to Counsel &amp; Trust Accountant Verification</div>
           </div>
 
           <div class="meta-grid">
@@ -274,19 +376,19 @@ export function ThreeWayReconciliation() {
             </div>
             <div style="text-align: right;">
               <strong>Verification Date:</strong> ${auditTimestamp}<br>
-              <strong>Auditing Partner:</strong> Eleanor Heugly, Esq. (Utah Bar #UT-8819)
+              <strong>Prepared For:</strong> Supervising Partner / CPA Review
             </div>
           </div>
 
           <div class="box-summary">
-            <h3>AUDIT FINDING: ZERO DISCREPANCY RECONCILIATION VERIFIED</h3>
+            <h3>{!glDataAvailable ? 'RECONCILIATION WORKSHEET: GL DATA UNAVAILABLE' : isReconciled ? 'THREE-WAY RECONCILIATION WORKSHEET (0 VARIANCE IN FIGURES)' : 'THREE-WAY RECONCILIATION WORKSHEET (VARIANCE DETECTED)'}</h3>
             <div class="pillars-summary">
-              <div>Pillar 1 (Adjusted Bank): $${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-              <div>= Pillar 2 (General Ledger #2100): $${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+              <div>Pillar 1 (Adjusted Bank): ${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
+              <div>= Pillar 2 (General Ledger #2100): ${glDataAvailable && glTrustBalance !== null ? '$' + glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</div>
               <div>= Pillar 3 (Client Ledgers Total): $${totalClientLedgersBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             </div>
             <div style="margin-top: 5px; font-size: 9pt;" class="zero-diff">
-              Net Audit Discrepancy: $0.00 — All fiduciary client balances in exact mathematical equilibrium.
+              Calculated Variance: ${totalVariance !== null ? '$' + totalVariance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'} — ${isReconciled ? 'Subject to manual bank statement and partner sign-off.' : (glDataAvailable ? 'Review variance before sign-off.' : 'General Ledger entries missing; worksheet is incomplete.')}
             </div>
           </div>
 
@@ -296,10 +398,10 @@ export function ThreeWayReconciliation() {
               <tr><th>Description</th><th>Source / Depository Ledger</th><th class="text-right">Amount ($)</th></tr>
             </thead>
             <tbody>
-              <tr><td>Bank Statement Ending Balance</td><td>Chase Bank Statement ending ${periodName}</td><td class="text-right">$${bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr><td>Add: Deposits in Transit (Retainers)</td><td>USCIS Statutory Retainers within bank clearance window</td><td class="text-right">+$${depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr><td>Less: Outstanding Checks / Drafts</td><td>Draft #4812 U.S. Bankruptcy Court Filing Fee</td><td class="text-right">-$${outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
-              <tr class="font-bold" style="background:#e8f4fd;"><td>ADJUSTED LIQUID BANK BALANCE</td><td>Net Bank Fiduciary Available Cash</td><td class="text-right">$${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              <tr><td>Bank Statement Ending Balance</td><td>Chase Bank Statement ending ${periodName}</td><td class="text-right">${bankStatementBalance !== null ? '$' + bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr><td>Add: Deposits in Transit (Retainers)</td><td>Trust Retainers within bank clearance window</td><td class="text-right">${depositsInTransit !== null ? '+$' + depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr><td>Less: Outstanding Checks / Drafts</td><td>Draft #4812 U.S. Bankruptcy Court Filing Fee</td><td class="text-right">${outstandingChecks !== null ? '-$' + outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
+              <tr class="font-bold" style="background:#e8f4fd;"><td>ADJUSTED LIQUID BANK BALANCE</td><td>Net Bank Fiduciary Available Cash</td><td class="text-right">${adjustedBankBalance !== null ? '$' + adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A'}</td></tr>
             </tbody>
           </table>
 
@@ -309,7 +411,7 @@ export function ThreeWayReconciliation() {
               <tr><th>Account Number &amp; Title</th><th>Ledger Classification</th><th class="text-right">Trust Liability ($)</th></tr>
             </thead>
             <tbody>
-              <tr class="font-bold"><td>General Ledger Account #2100</td><td>Client Trust Funds Liability Control Account</td><td class="text-right">$${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td></tr>
+              <tr class="font-bold"><td>General Ledger Account #2100</td><td>Client Trust Funds Liability Control Account</td><td class="text-right">${glDataAvailable && glTrustBalance !== null ? '$' + glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'N/A (Unavailable)'}</td></tr>
             </tbody>
           </table>
 
@@ -336,19 +438,19 @@ export function ThreeWayReconciliation() {
           </table>
 
           <div class="cert-block">
-            <strong>OFFICIAL ATTORNEY CERTIFICATION UNDER UTAH RPC 1.15:</strong><br>
-            I hereby certify under penalty of perjury under the laws of the State of Utah that I am the managing partner responsible for trust accounting compliance at Heugly &amp; Bludworth, LLC. I have examined the firm's IOLTA bank statements, general ledger control accounts, and itemized client subsidiary ledgers for the period indicated above. The three components are in complete mathematical reconciliation with zero discrepancy ($0.00 variance), no client trust account is overdrawn, and client funds are strictly segregated in accordance with Utah Supreme Court Rule 1.15.
+            <strong>RECONCILIATION REVIEW &amp; ATTESTATION DRAFT (UTAH RPC 1.15 REFERENCE):</strong><br>
+            This report summarizes internal system figures for the IOLTA bank balance, trust control account, and client subsidiary ledgers for the period indicated above. Supervising counsel and firm accounting must verify figures against official bank statements and execute required sign-offs separately.
           </div>
 
           <div class="sig-row">
             <div class="sig-line">
-              <strong>Eleanor Heugly, Esq.</strong><br>
-              Managing Partner, Utah State Bar License #UT-8819<br>
-              Auditor &amp; Trust Account Manager
+              <strong>Reviewed By (Supervising Attorney / CPA):</strong><br>
+              Signature: ___________________________<br>
+              License / Title: ________________________
             </div>
             <div class="sig-line" style="text-align: right;">
-              <strong>Date Certified:</strong> ${auditTimestamp}<br>
-              <strong>Status:</strong> Approved for Utah Bar Records
+              <strong>Generated Date:</strong> ${auditTimestamp}<br>
+              <strong>Status:</strong> Draft Worksheet (Pending Sign-off)
             </div>
           </div>
         </body>
@@ -370,7 +472,7 @@ export function ThreeWayReconciliation() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Autonomous Trust Accounting Active:</strong> This firm operates completely independent of CosmoLex. All trust accounts, client sub-ledgers, and monthly three-way reconciliations are maintained locally under Utah Bar Rule 1.15.
+            <strong>Trust Accounting Sub-Ledger (Utah RPC 1.15 Reference):</strong> Track trust accounts, client sub-ledgers, and monthly three-way reconciliation worksheets for supervising attorney and accounting review.
           </span>
         </div>
         <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">
@@ -380,7 +482,7 @@ export function ThreeWayReconciliation() {
 
       <PageHeader
         title="Three-Way IOLTA Trust Reconciliation"
-        subtitle="Mandatory monthly comparison of Adjusted Bank Balance, General Ledger, and Individual Client Sub-Ledgers (Utah RPC 1.15)."
+        subtitle="Comparison of Adjusted Bank Balance, General Ledger, and Individual Client Sub-Ledgers (Internal Trust Worksheet)."
         breadcrumbs={[
           { label: 'Billing & Accounting', to: '/billing' },
           { label: 'Trust Account', to: '/billing/trust' },
@@ -430,7 +532,7 @@ export function ThreeWayReconciliation() {
       />
 
       {/* 3 Pillars Comparison Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Pillar 1: Bank Balance */}
         <div className="bg-white p-5 rounded-lg border border-[#D9D6CF] shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between pb-3 border-b border-[#D9D6CF]">
@@ -455,11 +557,11 @@ export function ThreeWayReconciliation() {
               </div>
               <div className="flex justify-between">
                 <span>(+) Deposits in Transit:</span>
-                <span className="font-semibold text-emerald-700">+{formatCurrency(depositsInTransit)}</span>
+                <span className="font-semibold text-emerald-700">+{formatCurrency(effectiveDepositsInTransit)}</span>
               </div>
               <div className="flex justify-between">
                 <span>(-) Outstanding Checks:</span>
-                <span className="font-semibold text-rose-700">-{formatCurrency(outstandingChecks)}</span>
+                <span className="font-semibold text-rose-700">-{formatCurrency(effectiveOutstandingChecks)}</span>
               </div>
             </div>
           </div>
@@ -483,18 +585,16 @@ export function ThreeWayReconciliation() {
               Trust Liability Book Balance
             </span>
             <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-[#667085] space-y-1">
-              <div className="flex justify-between">
-                <span>Opening Balance:</span>
-                <span className="font-semibold text-[#06244B]">$68,500.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>(+) Receipts / Retainers YTD:</span>
-                <span className="font-semibold text-emerald-700">+$24,278.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span>(-) Earned Disbursals YTD:</span>
-                <span className="font-semibold text-rose-700">-$18,500.00</span>
-              </div>
+              {glTrustBalance !== null ? (
+                <div className="flex justify-between">
+                  <span>GL Account #2100 Net Balance:</span>
+                  <span className="font-semibold text-[#06244B]">{formatCurrency(glTrustBalance)}</span>
+                </div>
+              ) : (
+                <div className="text-amber-700 font-semibold">
+                  GL entries for account #2100 not available. Reconciliation is incomplete.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -523,11 +623,25 @@ export function ThreeWayReconciliation() {
               </div>
               <div className="flex justify-between">
                 <span>Highest Retainer:</span>
-                <span className="font-semibold text-[#06244B]">Apex Horizon ($35k)</span>
+                <span className="font-semibold text-[#06244B]">
+                  {(() => {
+                    const positive = (clientLedgers || []).filter(c => Number(c.balance) > 0);
+                    if (positive.length === 0) return 'N/A';
+                    const top = [...positive].sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+                    return `${top.clientName || 'Client Account'} (${formatCurrency(top.balance)})`;
+                  })()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Lowest Retainer:</span>
-                <span className="font-semibold text-[#06244B]">Rachel Walker ($338)</span>
+                <span className="font-semibold text-[#06244B]">
+                  {(() => {
+                    const positive = (clientLedgers || []).filter(c => Number(c.balance) > 0);
+                    if (positive.length === 0) return 'N/A';
+                    const low = [...positive].sort((a, b) => Number(a.balance) - Number(b.balance))[0];
+                    return `${low.clientName || 'Client Account'} (${formatCurrency(low.balance)})`;
+                  })()}
+                </span>
               </div>
             </div>
           </div>
@@ -536,44 +650,66 @@ export function ThreeWayReconciliation() {
 
       {/* Variance & Utah Rule 1.15 Audit Status Card */}
       <div className={`p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-        isReconciled ? 'bg-emerald-50/80 border-emerald-300' : 'bg-rose-50 border-rose-300'
+        totalVariance === null
+          ? 'bg-amber-50 border-amber-300'
+          : isReconciled ? 'bg-emerald-50/80 border-emerald-300' : 'bg-rose-50 border-rose-300'
       }`}>
         <div className="flex items-start gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-            isReconciled ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+            totalVariance === null
+              ? 'bg-amber-500 text-white'
+              : isReconciled ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
           }`}>
-            <CheckCircle2 className="w-6 h-6" />
+            {totalVariance === null ? <AlertTriangle className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-bold text-sm text-[#06244B]">
-                {isReconciled ? 'Three-Way Reconciliation: Zero Discrepancy' : 'Reconciliation Discrepancy Detected'}
+                {totalVariance === null
+                  ? 'Reconciliation Incomplete — General Ledger Data Unavailable'
+                  : isReconciled
+                    ? 'Three-Way Reconciliation: Zero Discrepancy'
+                    : 'Reconciliation Discrepancy Detected'}
               </h4>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                isReconciled ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
-              }`}>
-                Variance: {formatCurrency(totalVariance)}
-              </span>
+              {totalVariance !== null && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                  isReconciled ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'
+                }`}>
+                  Variance: {formatCurrency(totalVariance)}
+                </span>
+              )}
             </div>
             <p className="text-xs text-[#667085] mt-0.5">
-              Pillar 1 (Bank: {formatCurrency(adjustedBankBalance)}) = Pillar 2 (GL: {formatCurrency(glTrustBalance)}) = Pillar 3 (Client Sub-Ledgers: {formatCurrency(totalClientLedgersBalance)}). All balances verified by Managing Partner.
+              {totalVariance === null
+                ? 'GL entries for account #2100 are missing. A three-way reconciliation cannot be certified without independent GL data. Post journal entries to account #2100 to complete this reconciliation.'
+                : `Pillar 1 (Bank: ${formatCurrency(adjustedBankBalance)}) | Pillar 2 (GL: ${formatCurrency(glTrustBalance ?? 0)}) | Pillar 3 (Client Sub-Ledgers: ${formatCurrency(totalClientLedgersBalance)}). ${isReconciled ? 'All balances verified.' : 'Review variance before certifying.'}`}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded border border-emerald-300">
-            Utah RPC 1.15 Validated ✓
-          </span>
+          {isReconciled ? (
+            <span className="text-xs font-semibold text-emerald-800 bg-emerald-100 px-3 py-1.5 rounded border border-emerald-300">
+              Utah RPC 1.15 Validated ✓
+            </span>
+          ) : totalVariance === null ? (
+            <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-3 py-1.5 rounded border border-amber-300">
+              Incomplete — GL Required
+            </span>
+          ) : (
+            <span className="text-xs font-semibold text-rose-800 bg-rose-100 px-3 py-1.5 rounded border border-rose-300">
+              Variance Detected — Not Certified
+            </span>
+          )}
         </div>
       </div>
 
       {/* Detailed Tabs View */}
       <div className="bg-white rounded-lg border border-[#D9D6CF] shadow-sm overflow-hidden">
-        <div className="flex border-b border-[#D9D6CF] bg-[#FAF8F5] px-4 pt-3 gap-4">
+        <div className="flex border-b border-[#D9D6CF] bg-[#FAF8F5] px-4 pt-3 gap-4 overflow-x-auto whitespace-nowrap scrollbar-thin">
           <button
             onClick={() => setActiveTab('ledgers')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'ledgers'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -584,7 +720,7 @@ export function ThreeWayReconciliation() {
           </button>
           <button
             onClick={() => setActiveTab('transactions')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'transactions'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -595,7 +731,7 @@ export function ThreeWayReconciliation() {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-all shrink-0 ${
               activeTab === 'history'
                 ? 'border-[#A4432B] text-[#A4432B]'
                 : 'border-transparent text-[#667085] hover:text-[#06244B]'
@@ -609,7 +745,7 @@ export function ThreeWayReconciliation() {
         {/* Tab 1 Content: Client Ledgers */}
         {activeTab === 'ledgers' && (
           <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between text-xs text-[#667085] pb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#667085] pb-2">
               <span>Client-level segregated trust liabilities (no cross-collateralization or commingling):</span>
               <span className="font-bold text-[#06244B]">Sub-Ledger Total: {formatCurrency(totalClientLedgersBalance)}</span>
             </div>
@@ -627,22 +763,54 @@ export function ThreeWayReconciliation() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9D6CF]/60">
-                  {clientLedgers.map((cl) => (
-                    <tr key={cl.id} className="hover:bg-slate-50">
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#06244B]">{cl.id}</td>
-                      <td className="py-2.5 px-3 font-medium text-[#202A35]">{cl.clientName}</td>
-                      <td className="py-2.5 px-3 text-[#667085]">{cl.matterNumber}</td>
-                      <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">
-                        {formatCurrency(cl.balance)}
+                  {loadingLedgers ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-[#667085]">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                          <span>Loading client trust sub-ledgers from database...</span>
+                        </div>
                       </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Fully Segregated
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-[#667085]">{cl.lastAudit}</td>
                     </tr>
-                  ))}
+                  ) : ledgersError ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs">
+                        <div className="max-w-md mx-auto p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 space-y-2">
+                          <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                            <AlertCircle className="w-4 h-4 text-red-600" />
+                            <span>Database Query Error</span>
+                          </div>
+                          <p className="text-xs text-red-700">{ledgersError}</p>
+                          <Button size="sm" variant="outline" onClick={loadClientLedgers} className="mt-2">
+                            Retry Loading Ledgers
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : clientLedgers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-xs text-[#667085]">
+                        No client trust sub-ledgers found in database for Utah RPC 1.15 audit.
+                      </td>
+                    </tr>
+                  ) : (
+                    clientLedgers.map((cl) => (
+                      <tr key={cl.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-mono font-bold text-[#06244B]">{cl.id}</td>
+                        <td className="py-2.5 px-3 font-medium text-[#202A35]">{cl.clientName}</td>
+                        <td className="py-2.5 px-3 text-[#667085]">{cl.matterNumber}</td>
+                        <td className="py-2.5 px-3 text-right font-bold text-[#06244B]">
+                          {formatCurrency(cl.balance)}
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Fully Segregated
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right text-[#667085]">{cl.lastAudit}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -655,34 +823,56 @@ export function ThreeWayReconciliation() {
             <p className="text-xs text-[#667085]">
               Verify and match in-transit deposits and outstanding checks to reconcile against Chase IOLTA statement ending balances:
             </p>
-            <div className="space-y-2">
-              {unclearedItems.map(item => (
-                <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={item.cleared}
-                      onChange={() => handleToggleClear(item.id)}
-                      className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-4 w-4"
-                    />
-                    <div>
-                      <span className="font-bold text-xs text-[#06244B] block">{item.description}</span>
-                      <span className="text-[11px] text-[#667085]">
-                        {item.date} • {item.type} • Matter #{item.matterNumber}
+            {loadingTransactions ? (
+              <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg flex items-center justify-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                <span>Loading period trust transactions from database...</span>
+              </div>
+            ) : transactionsError ? (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span>Transaction Query Error</span>
+                </div>
+                <p className="text-xs text-red-700">{transactionsError}</p>
+                <Button size="sm" variant="outline" onClick={() => loadUnclearedTransactions(selectedMonth)} className="mt-2">
+                  Retry Loading Transactions
+                </Button>
+              </div>
+            ) : unclearedItems.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
+                No in-transit deposits or outstanding checks recorded in database for {selectedMonth}.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {unclearedItems.map((item) => (
+                  <div key={item.id} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={item.cleared}
+                        onChange={() => handleToggleClear(item.id)}
+                        className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-4 w-4"
+                      />
+                      <div>
+                        <span className="font-bold text-xs text-[#06244B] block">{item.description}</span>
+                        <span className="text-[11px] text-[#667085]">
+                          {item.date} • {item.type} • Matter #{item.matterNumber}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`font-bold text-xs ${item.amount > 0 ? 'text-emerald-700' : 'text-[#06244B]'}`}>
+                        {item.amount > 0 ? `+${formatCurrency(item.amount)}` : formatCurrency(item.amount)}
+                      </span>
+                      <span className="block text-[10px] text-[#667085]">
+                        {item.cleared ? 'Cleared on Statement' : 'Pending Bank Clearance'}
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`font-bold text-xs ${item.amount > 0 ? 'text-emerald-700' : 'text-[#06244B]'}`}>
-                      {item.amount > 0 ? `+${formatCurrency(item.amount)}` : formatCurrency(item.amount)}
-                    </span>
-                    <span className="block text-[10px] text-[#667085]">
-                      {item.cleared ? 'Cleared on Statement' : 'Pending Bank Clearance'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -690,39 +880,63 @@ export function ThreeWayReconciliation() {
         {activeTab === 'history' && (
           <div className="p-4 space-y-3">
             <div className="space-y-2">
-              {[
-                { period: 'October 2026', periodCode: '2026-10', date: '2026-10-31', reviewer: 'Eleanor Heugly, Esq.', status: 'Reconciled ($68,500.00)', variance: '$0.00' },
-                { period: 'September 2026', periodCode: '2026-09', date: '2026-09-30', reviewer: 'Rachel Adams (Billing Dir)', status: 'Reconciled ($62,100.00)', variance: '$0.00' },
-                { period: 'August 2026', periodCode: '2026-08', date: '2026-08-31', reviewer: 'Eleanor Heugly, Esq.', status: 'Reconciled ($55,400.00)', variance: '$0.00' },
-              ].map((h, i) => (
-                <div key={i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <span className="font-bold text-[#06244B] block">{h.period} Three-Way Audit Certificate</span>
-                    <span className="text-[11px] text-[#667085]">Audited on {h.date} by {h.reviewer}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                      {h.status}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      icon={FileSpreadsheet}
-                      onClick={() => handleDownloadComplianceReport(h.periodCode)}
-                    >
-                      Export CSV
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      icon={Printer}
-                      onClick={() => handlePrintAuditReport(h.periodCode)}
-                    >
-                      Print Certificate
-                    </Button>
-                  </div>
+              {loadingHistory ? (
+                <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg flex items-center justify-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#06244B]" />
+                  <span>Loading historical reconciliation records from database...</span>
                 </div>
-              ))}
+              ) : historyError ? (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 font-bold text-sm">
+                    <AlertCircle className="w-4 h-4 text-red-600" />
+                    <span>Reconciliation History Query Error</span>
+                  </div>
+                  <p className="text-xs text-red-700">{historyError}</p>
+                  <Button size="sm" variant="outline" onClick={fetchHistory} className="mt-2">
+                    Retry Loading History
+                  </Button>
+                </div>
+              ) : auditHistory.length === 0 ? (
+                <div className="py-8 text-center text-xs text-[#667085] bg-slate-50 border border-[#D9D6CF] rounded-lg">
+                  No historical monthly reconciliation records found in database. Complete and submit a reconciliation to record an audited period under Utah RPC 1.15.
+                </div>
+              ) : (
+                auditHistory.map((h, i) => (
+                  <div key={h.id || i} className="p-3 border rounded-lg bg-white border-[#D9D6CF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="font-bold text-[#06244B] block">{h.reconciliationMonth} Three-Way Audit Certificate</span>
+                      <span className="text-[11px] text-[#667085]">
+                        Audited on {h.reconciledAt ? formatDate(h.reconciledAt, { short: true }) : 'Recorded'} by {h.auditedByName || 'Supervising Attorney'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-semibold px-2 py-0.5 rounded border text-[11px] ${
+                        h.isBalanced
+                          ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                          : 'text-amber-800 bg-amber-50 border-amber-200'
+                      }`}>
+                        {h.isBalanced ? `Reconciled (${formatCurrency(h.adjustedBankBalance)})` : `Variance (${formatCurrency(h.reconciliationVariance)})`}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={FileSpreadsheet}
+                        onClick={() => handleDownloadComplianceReport(h.reconciliationMonth)}
+                      >
+                        Export CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={Printer}
+                        onClick={() => handlePrintAuditReport(h.reconciliationMonth)}
+                      >
+                        Print Certificate
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -732,30 +946,30 @@ export function ThreeWayReconciliation() {
       <Modal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        title="Three-Way IOLTA Reconciliation Report (Utah RPC 1.15)"
-        subtitle="Mandatory monthly compliance certificate for firm records and Utah State Bar inspection."
+        title="Three-Way IOLTA Reconciliation Worksheet (Utah RPC 1.15 Reference)"
+        subtitle="Monthly trust reconciliation worksheet for internal accounting and supervising partner review."
         maxWidth="max-w-2xl"
       >
         <div className="space-y-4 text-xs">
           <div className="p-4 bg-slate-50 border border-[#D9D6CF] rounded font-mono text-[11px] space-y-2 text-[#202A35]">
             <div className="text-center pb-2 border-b border-[#D9D6CF]">
               <p className="font-bold text-sm text-[#06244B]">HEUGLY &amp; BLUDWORTH, LLC</p>
-              <p className="text-[#667085]">IOLTA Client Trust Account Monthly Three-Way Reconciliation Certificate</p>
-              <p className="text-[#667085]">Statutory Standard: Utah Supreme Court Rules of Professional Conduct 1.15</p>
+              <p className="text-[#667085]">IOLTA Client Trust Account Three-Way Reconciliation Worksheet</p>
+              <p className="text-[#667085]">Reference: Utah Supreme Court Rules of Professional Conduct 1.15</p>
               <p className="text-[#667085]">Audit Date: November 12, 2026 | Period: {selectedMonth === '2026-11' ? 'November 2026' : selectedMonth === '2026-10' ? 'October 2026' : selectedMonth}</p>
             </div>
 
             <div className="pt-2 space-y-1">
               <p className="font-bold text-[#06244B]">1. ADJUSTED BANK BALANCE:</p>
-              <p className="pl-4">Chase Bank Pooled IOLTA Account (Ending Balance): ${bankStatementBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4">Add: Deposits in Transit: +${depositsInTransit.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4">Less: Outstanding Checks: -${outstandingChecks.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
-              <p className="pl-4 font-bold text-emerald-800">Adjusted Bank Balance: ${adjustedBankBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              <p className="pl-4">Chase Bank Pooled IOLTA Account (Ending Balance): {bankStatementBalance !== null ? `$${Number(bankStatementBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4">Add: Deposits in Transit: {depositsInTransit !== null ? `+$${Number(depositsInTransit).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4">Less: Outstanding Checks: {outstandingChecks !== null ? `-$${Number(outstandingChecks).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
+              <p className="pl-4 font-bold text-emerald-800">Adjusted Bank Balance: {adjustedBankBalance !== null ? `$${Number(adjustedBankBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A'}</p>
             </div>
 
             <div className="pt-2 space-y-1 border-t border-slate-200">
               <p className="font-bold text-[#06244B]">2. GENERAL LEDGER BALANCE:</p>
-              <p className="pl-4">General Ledger Account #2100 (Client Trust Funds Liability): ${glTrustBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+              <p className="pl-4">General Ledger Account #2100 (Client Trust Funds Liability): {glDataAvailable && glTrustBalance !== null ? `$${Number(glTrustBalance).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'N/A (Unavailable)'}</p>
             </div>
 
             <div className="pt-2 space-y-1 border-t border-slate-200">
@@ -780,7 +994,7 @@ export function ThreeWayReconciliation() {
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
             <span className="text-[11px] text-[#667085]">
-              Managing Partner Certifier: <strong>Eleanor Heugly, Esq. (UT-8819)</strong>
+              Supervising Reviewer: <strong>Managing Partner / CPA Review</strong>
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => setIsReportModalOpen(false)}>

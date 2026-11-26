@@ -74,9 +74,6 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
               <span className="text-xs bg-[#A4432B] px-2 py-0.5 rounded font-semibold">
                 {currentCase.category}
               </span>
-              <span className="text-xs text-amber-300 font-medium">
-                [DEMO SIMULATION]
-              </span>
             </div>
             <h2 className="text-base font-bold mt-1 text-white truncate max-w-2xl">
               {currentCase.title}
@@ -168,7 +165,7 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                   </span>
                 </div>
                 <p className="text-emerald-950 text-xs">
-                  Petitioner income ($92,500) and Joint Sponsor Gabriel Alvarez ($114,000) both exceed the statutory 125% Federal Poverty Guideline threshold for household size 2 ($25,550). Public charge ground of inadmissibility overcome.
+                  Evaluate household and any joint sponsor income against current USCIS Form I-864P poverty guidelines prior to filing.
                 </p>
               </div>
             </div>
@@ -217,8 +214,8 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                     <span className="font-bold text-[#06244B] mt-1 block">Tabs A through F Indexed</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded border border-[#D9D6CF]">
-                    <span className="text-[10px] uppercase text-[#667085] font-bold block">Statutory Filing Fee:</span>
-                    <span className="font-bold text-[#A4432B] mt-1 block">$1,975.00 Check Voucher</span>
+                    <span className="text-[10px] uppercase text-[#667085] font-bold block">Reference Filing Fee:</span>
+                    <span className="font-bold text-[#A4432B] mt-1 block">Verify current G-1055 fee</span>
                   </div>
                 </div>
 
@@ -227,7 +224,7 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-emerald-600" />
                       <span>
-                        Certified &amp; Cleared by <strong>{currentCase.filingPackage.clearingAttorney || 'Sarah Jenkins, Esq.'}</strong> on {new Date(currentCase.filingPackage.clearedAt).toLocaleDateString()}.
+                        Reviewed &amp; Ready by <strong>{currentCase.filingPackage.clearingAttorney || 'Assigned Supervising Counsel'}</strong> on {new Date(currentCase.filingPackage.clearedAt).toLocaleDateString()}.
                       </span>
                     </div>
                     <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">

@@ -1,8 +1,20 @@
 import { Response, NextFunction } from 'express';
 import { TemplateService } from './template.service.js';
 import { AuthenticatedRequest } from '../auth/auth.types.js';
+import { FIELD_DICTIONARY } from '../documents/drafts/draft.data-resolver.js';
 
 export class TemplateController {
+  static async getFieldDictionary(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      res.status(200).json({
+        success: true,
+        data: { entities: FIELD_DICTIONARY },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getTemplates(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const result = await TemplateService.getTemplates(req.query as any);
@@ -88,17 +100,44 @@ export class TemplateController {
 
   static async uploadVersion(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const version = await TemplateService.uploadVersion(req.params.id, req.body, {
-        userId: req.user!.id,
-        userRole: req.user!.role,
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
-      });
+      const file = (req as any).file as Express.Multer.File | undefined;
+      const body = req.body || {};
+
+      const version = await TemplateService.uploadVersion(
+        req.params.id,
+        {
+          versionNumber: body.versionNumber,
+          fileName: file?.originalname || body.fileName || `${req.params.id}.docx`,
+          fileContentBase64: body.fileContentBase64,
+          templateBody: body.templateBody,
+          status: body.status || 'Published',
+          changeSummary: body.changeSummary,
+        },
+        {
+          userId: req.user!.id,
+          userRole: req.user!.role,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+        file?.buffer
+      );
 
       res.status(201).json({
         success: true,
         message: `Template version '${version.versionNumber}' uploaded successfully.`,
         data: { version },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async detectVersionPlaceholders(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const placeholders = await TemplateService.detectVersionPlaceholders(req.params.id, req.params.versionId);
+      res.status(200).json({
+        success: true,
+        data: { placeholders },
       });
     } catch (err) {
       next(err);

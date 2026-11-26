@@ -26,6 +26,8 @@ export function TimeReviewFlagsPanel({
   mode = 'idle', // 'idle' | 'overlap'
   flags = [],
   activeSlotId = '',
+  loading = false,
+  metadata = null,
   onUpdateFlagStatus,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -157,11 +159,20 @@ export function TimeReviewFlagsPanel({
       </div>
 
       <div className="p-4">
-        {filteredFlags.length === 0 ? (
+        {loading ? (
+          <div className="p-12 text-center text-xs text-[#667085] flex flex-col items-center justify-center gap-2">
+            <Clock className="w-6 h-6 animate-spin text-[#A4432B]" />
+            <span>Loading {isIdle ? 'idle telemetry' : 'overlap detection'} flags...</span>
+          </div>
+        ) : filteredFlags.length === 0 ? (
           <EmptyState
             icon={CheckCircle2}
-            title={isIdle ? 'No Idle Flags Found' : 'No Overlap Flags Found'}
-            description="No flagged entries match the selected Mountain Time slot or status filter."
+            title={isIdle ? 'No Inactivity Flags Detected' : 'No Overlap Flags Detected'}
+            description={
+              isIdle
+                ? 'Desktop inactivity telemetry is not enabled or no prolonged inactivity was recorded for this review window.'
+                : 'No conflicting time intervals (startA < endB and startB < endA) were detected across matters for this date. Aggregate hours are not classified as overlaps.'
+            }
           />
         ) : (
           <div className="space-y-3">

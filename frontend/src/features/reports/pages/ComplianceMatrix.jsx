@@ -212,11 +212,11 @@ export function ComplianceMatrix() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Client RFP Compliance Matrix &amp; Requirement Verification"
-        subtitle="Formal 8-column statutory response matrix verifying 100% fulfillment of all 9 RFP requirements."
+        title="System Requirements &amp; Module Coverage Matrix"
+        subtitle="Internal architectural mapping of practice modules against firm workflow requirements (subject to supervising counsel and accounting verification)."
         breadcrumbs={[
           { label: 'Reports & Settings', to: '/reports/matters' },
-          { label: 'RFP Compliance Matrix' }
+          { label: 'Module Coverage Matrix' }
         ]}
         actions={
           <div className="flex items-center gap-2">
@@ -245,33 +245,33 @@ export function ComplianceMatrix() {
       />
 
       {/* Executive Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#06244B] text-white p-4 rounded-xl shadow-sm border border-[#0B356D] space-y-1">
           <span className="text-[10px] uppercase font-bold tracking-wider text-amber-300 block">
-            RFP Compliance Score
+            Requirement Modules Mapped
           </span>
-          <div className="text-2xl font-bold font-serif text-white">9 / 9 Requirements</div>
+          <div className="text-2xl font-bold font-serif text-white">9 Practice Modules</div>
           <div className="text-[11px] text-emerald-300 font-semibold flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            100% Native Implementation
+            Internal Application Workflows
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm space-y-1">
           <span className="text-[10px] uppercase font-bold text-[#667085] block">
-            CosmoLex Independence
+            Ledger Architecture
           </span>
-          <div className="text-2xl font-bold text-[#06244B]">Zero Dependency</div>
+          <div className="text-2xl font-bold text-[#06244B]">Standalone Sub-Ledger</div>
           <div className="text-[11px] text-emerald-700 font-medium">
-            Standalone 3-Way Trust &amp; Settlements
+            3-Way Trust &amp; Settlements Tracking
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-[#D9D6CF] shadow-sm space-y-1">
           <span className="text-[10px] uppercase font-bold text-[#667085] block">
-            Ethics &amp; Court Citations
+            Statutory References
           </span>
-          <div className="text-2xl font-bold text-[#A4432B]">8 Primary Statutes</div>
+          <div className="text-2xl font-bold text-[#A4432B]">8 Reference Frameworks</div>
           <div className="text-[11px] text-[#667085]">
             Utah RPC 1.15, 1.5(c), URCP 6, § 521, 8 CFR
           </div>
@@ -281,9 +281,9 @@ export function ComplianceMatrix() {
           <span className="text-[10px] uppercase font-bold text-[#667085] block">
             Platform Architecture
           </span>
-          <div className="text-2xl font-bold text-[#06244B]">100% Client-Side</div>
+          <div className="text-2xl font-bold text-[#06244B]">React + Node/Prisma</div>
           <div className="text-[11px] text-emerald-700 font-medium">
-            React 18 + Tailwind + Lucide + Context
+            Full-Stack Legal Practice Platform
           </div>
         </div>
       </div>
@@ -328,7 +328,7 @@ export function ComplianceMatrix() {
 
       {/* Master 8-Column Compliance Table */}
       <div className="border border-[#D9D6CF] rounded-xl overflow-hidden bg-white shadow-sm">
-        <div className="p-4 bg-[#F5F0E5] border-b border-[#D9D6CF] flex items-center justify-between">
+        <div className="p-4 bg-[#F5F0E5] border-b border-[#D9D6CF] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-[#A4432B]" />
             <h3 className="font-serif font-bold text-sm text-[#06244B]">
@@ -341,7 +341,7 @@ export function ComplianceMatrix() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left divide-y divide-[#D9D6CF]">
+          <table className="w-full min-w-[950px] text-xs text-left divide-y divide-[#D9D6CF]">
             <thead className="bg-[#06244B] text-white font-bold text-[11px]">
               <tr>
                 <th className="p-3 w-16">Req #</th>
@@ -427,22 +427,21 @@ export function ComplianceMatrix() {
               Technical Verification &amp; Software Delivery Attestation • Salt Lake City, Utah
             </div>
           </div>
-          <span className="text-xs font-mono font-bold bg-emerald-800 text-white px-2.5 py-1 rounded">
-            STATUS: 100% READY FOR PRODUCTION EVALUATION
+          <span className="text-xs font-mono font-bold bg-[#06244B] text-white px-2.5 py-1 rounded">
+            INTERNAL WORKFLOW COVERAGE MATRIX
           </span>
         </div>
 
         <p className="leading-relaxed text-[#202A35]">
-          This software package constitutes the comprehensive frontend implementation addressing all technical, operational, and regulatory mandates set forth in the Client Requirements Specification. The application completely satisfies all nine (9) requirements natively without ongoing dependence on CosmoLex, Clio, Docketwise, or Best Case. All legal accounting algorithms strictly reflect Utah Rules of Professional Conduct (RPC 1.15 &amp; 1.5(c)) and Federal Rules of Civil and Bankruptcy Procedure.
+          This reference matrix summarizes the application modules supporting practice operations across client intake, matter management, trust sub-ledgers, and document drafting. Legal, ethical, and trust-accounting compliance under Utah Rules of Professional Conduct (RPC 1.15, 1.5(c)) and applicable court rules depends on firm procedures and independent verification by supervising counsel and accounting personnel.
         </p>
 
         <div className="pt-3 border-t border-slate-200 flex flex-wrap justify-between items-end text-xs font-sans text-[#667085]">
           <div>
-            <div><strong>Deliverable:</strong> Pure Frontend React 18 / Tailwind / Lucide Application</div>
-            <div><strong>Remote Repository:</strong> https://github.com/ashilata62/legal-ui.git (branch main)</div>
+            <div><strong>Architecture:</strong> React + Node.js / Express + PostgreSQL (Prisma)</div>
           </div>
           <div className="text-right">
-            <div className="font-mono font-bold text-[#06244B]">Verified &amp; Certified by Software Architecture Team</div>
+            <div className="font-mono font-bold text-[#06244B]">Draft Technical Documentation — Requires Legal Review</div>
             <div className="text-[11px]">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
           </div>
         </div>

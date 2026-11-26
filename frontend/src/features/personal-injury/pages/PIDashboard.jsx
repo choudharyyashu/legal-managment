@@ -49,42 +49,59 @@ export function PIDashboard() {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
-    matterService.getMatters({ practiceAreaId: 'pa-pi' })
-      .then((res) => {
-        const realMatters = Array.isArray(res) ? res : (res?.matters || []);
-        if (isMounted) {
-          const mapped = realMatters.map((m) => ({
-            id: m.id,
-            matterNumber: m.matterNumber,
-            clientName: m.client?.name || m.clientName || m.title,
-            accidentType: m.description || 'Personal Injury Action',
-            dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
-            status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
-            policyLimit: 'Verified Limits',
-            totalMeds: Number(m.budget) || 0,
-            totalLiens: 0,
-            leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
-            isRealDbMatter: true,
-            matterId: m.id,
-          }));
-          setCases(mapped);
-        }
-      })
-      .catch((err) => {
+
+    Promise.all([
+      matterService.getMatters({ practiceAreaId: 'pa-pi' }).catch((err) => {
         console.warn('Could not load PI matters from API:', err?.message);
-        if (isMounted) setCases([]);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
+        return { matters: [] };
+      }),
+      piService.getDashboardMetrics().catch((err) => {
+        console.warn('Could not load PI metrics:', err?.message);
+        return null;
+      }),
+    ]).then(([res, metricsData]) => {
+      if (!isMounted) return;
+
+      if (metricsData) {
+        setMetrics(metricsData);
+      }
+
+      const realMatters = Array.isArray(res) ? res : (res?.matters || []);
+      const summaries = metricsData?.caseSummaries || [];
+
+      const mapped = realMatters.map((m) => {
+        const summary = summaries.find((s) => s.id === m.id || s.matterNumber === m.matterNumber);
+        const totalMeds = summary?.totalMedicalBills ?? 0;
+        const totalLiens = summary?.totalLiens ?? 0;
+        const solDate = summary?.solDate || (m.statuteOfLimitations ? new Date(m.statuteOfLimitations).toISOString().split('T')[0] : 'Pending Attorney Review');
+        const solApproved = Boolean(summary?.solApproved ?? m.statuteOfLimitations);
+        const hasInsurance = summary ? summary.hasInsurance : (m.insurancePolicies && m.insurancePolicies.length > 0);
+
+        return {
+          id: m.id,
+          matterNumber: m.matterNumber,
+          clientName: m.client?.name || m.clientName || m.title,
+          accidentType: m.description || 'Personal Injury Action',
+          dateOfLoss: m.openDate ? new Date(m.openDate).toISOString().split('T')[0] : '',
+          status: m.status === 'Active' ? 'Treatment Phase' : (m.status === 'Concluded' ? 'Settled' : 'Demand Phase'),
+          policyLimit: hasInsurance ? 'Verified Limits' : 'Pending Insurance',
+          totalMeds,
+          medicalBillsTotal: totalMeds,
+          totalLiens,
+          targetDemand: summary?.targetDemand || null,
+          awaitingInsurance: !hasInsurance,
+          statuteOfLimitations: solDate,
+          solApproved,
+          leadAttorney: m.responsibleAttorney?.name || m.responsibleAttorneyName || 'Assigned Counsel',
+          isRealDbMatter: true,
+          matterId: m.id,
+        };
       });
 
-    piService.getDashboardMetrics()
-      .then((data) => {
-        if (isMounted && data) setMetrics(data);
-      })
-      .catch((err) => {
-        console.warn('Could not load PI metrics:', err?.message);
-      });
+      setCases(mapped);
+    }).finally(() => {
+      if (isMounted) setLoading(false);
+    });
 
     return () => { isMounted = false; };
   }, []);
@@ -93,7 +110,7 @@ export function PIDashboard() {
   const totalCases = metrics?.totalCases !== undefined ? metrics.totalCases : cases.length;
   const activeCases = metrics?.activeCasesCount !== undefined ? metrics.activeCasesCount : cases.filter(c => c.status !== 'Closed').length;
   const pendingRecords = metrics?.pendingRecordsCount !== undefined ? metrics.pendingRecordsCount : cases.filter(c => c.awaitingRecords).length;
-  const pendingInsurance = cases.filter(c => c.awaitingInsurance).length;
+  const pendingInsurance = metrics?.pendingInsuranceCount !== undefined ? metrics.pendingInsuranceCount : cases.filter(c => c.awaitingInsurance).length;
   const demandsInProgress = metrics?.demandsInProgressCount !== undefined ? metrics.demandsInProgressCount : cases.filter(c => c.status === 'Demand In Progress').length;
   const readyForSettlement = metrics?.readyForSettlementCount !== undefined ? metrics.readyForSettlementCount : cases.filter(c => c.status === 'Ready for Settlement').length;
 
@@ -187,11 +204,22 @@ export function PIDashboard() {
     {
       key: 'statuteOfLimitations',
       label: 'SoL Bar Date',
-      render: (val, c) => (
-        <span className="inline-block whitespace-nowrap text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-          {c?.statuteOfLimitations || val || 'N/A'}
-        </span>
-      ),
+      render: (val, c) => {
+        const isApproved = c?.solApproved;
+        const text = c?.statuteOfLimitations || val || 'Pending Attorney Review';
+        const isPending = text === 'Pending Attorney Review' || !isApproved;
+        return (
+          <span
+            className={`inline-block whitespace-nowrap text-xs font-semibold px-2 py-0.5 rounded border ${
+              isPending
+                ? 'text-amber-800 bg-amber-50 border-amber-200'
+                : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+            }`}
+          >
+            {isPending ? 'Pending Attorney Review' : `SoL: ${text}`}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
@@ -266,7 +294,10 @@ export function PIDashboard() {
           value={activeCases}
           subtitle="In Active Treatment"
           icon={Briefcase}
-          trend={{ value: '100% active', isPositive: true }}
+          trend={{
+            value: cases.length > 0 ? `${Math.round((activeCases / cases.length) * 100)}% active` : '0 cases',
+            isPositive: true,
+          }}
         />
         <StatCard
           title="Pending Med Records"
@@ -292,37 +323,46 @@ export function PIDashboard() {
           value={readyForSettlement}
           subtitle="Offers In Review"
           icon={DollarSign}
-          trend={{ value: '2 Ready', isPositive: true }}
+          trend={{ value: `${readyForSettlement} Ready`, isPositive: readyForSettlement > 0 }}
         />
       </div>
 
-      {/* Case Stage Distribution Visual Progress Bar */}
-      <div className="bg-white p-5 rounded border border-[#D9D6CF] shadow-subtle space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <h3 className="font-serif font-bold text-sm text-[#06244B]">
-              Personal Injury Case Pipeline Distribution
-            </h3>
-            <p className="text-xs text-[#667085]">
-              Active progression from incident intake through medical recovery to final settlement disbursement.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs shrink-0">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Intake (20%)</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Treatment (40%)</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Demands (20%)</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Settlement (20%)</span>
-          </div>
-        </div>
+      {/* Case Stage Distribution Visual Progress Bar (Calculated from Live Matters) */}
+      {(() => {
+        const total = cases.length;
+        const intakeCount = cases.filter((c) => c.status === 'Intake' || c.status === 'Pre-Suit').length;
+        const treatmentCount = cases.filter((c) => c.status === 'Treatment Phase').length;
+        const demandCount = cases.filter((c) => c.status === 'Demand Phase').length;
+        const settlementCount = cases.filter((c) => c.status === 'Settled' || c.status === 'Litigation').length;
+        const pct = (n) => (total > 0 ? Math.round((n / total) * 100) : 0);
+        return (
+          <div className="bg-white p-5 rounded border border-[#D9D6CF] shadow-subtle space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 className="font-serif font-bold text-sm text-[#06244B]">
+                  Personal Injury Case Pipeline Distribution
+                </h3>
+                <p className="text-xs text-[#667085]">
+                  Active progression from incident intake through medical recovery to final settlement disbursement.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs shrink-0">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Intake ({pct(intakeCount)}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Treatment ({pct(treatmentCount)}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Demands ({pct(demandCount)}%)</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Settlement ({pct(settlementCount)}%)</span>
+              </div>
+            </div>
 
-        {/* Visual Multi-Segment Bar */}
-        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-          <div style={{ width: '20%' }} className="bg-blue-600" title="Intake & Investigation"></div>
-          <div style={{ width: '40%' }} className="bg-amber-500" title="Medical Care & Records"></div>
-          <div style={{ width: '20%' }} className="bg-indigo-600" title="Demand Preparation"></div>
-          <div style={{ width: '20%' }} className="bg-emerald-600" title="Settlement & Liens"></div>
-        </div>
-      </div>
+            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+              <div style={{ width: `${pct(intakeCount)}%` }} className="bg-blue-600" title="Intake & Investigation"></div>
+              <div style={{ width: `${pct(treatmentCount)}%` }} className="bg-amber-500" title="Medical Care & Records"></div>
+              <div style={{ width: `${pct(demandCount)}%` }} className="bg-indigo-600" title="Demand Preparation"></div>
+              <div style={{ width: `${pct(settlementCount)}%` }} className="bg-emerald-600" title="Settlement & Liens"></div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Two Column Section: Upcoming Deadlines & Medical Follow-ups */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

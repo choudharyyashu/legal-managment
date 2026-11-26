@@ -70,11 +70,11 @@ export function ChapterSelectorModal({ isOpen, onClose, currentChapter = 'Chapte
       maxWidth="max-w-2xl"
     >
       <div className="space-y-4 text-xs text-[#202A35]">
-        <div className="bg-amber-50 border border-amber-200 p-2.5 rounded flex items-center justify-between text-amber-900">
+        <div className="bg-slate-50 border border-slate-200 p-2.5 rounded flex items-center justify-between text-slate-700">
           <span>
-            <strong>[DEMO SIMULATION]:</strong> Bankruptcy relief selector modeled after Best Case Bankruptcy. Evaluates statutory relief under 11 U.S.C. § 109.
+            <strong>Bankruptcy Relief Qualification Assessment:</strong> Evaluates statutory eligibility and filing criteria under 11 U.S.C. § 109.
           </span>
-          <span className="font-bold bg-amber-200 px-2 py-0.5 rounded text-[10px]">PROTOTYPE</span>
+          <span className="font-medium bg-[#06244B] text-white px-2 py-0.5 rounded text-[10px]">11 U.S.C. § 109</span>
         </div>
 
         <div className="space-y-3">

@@ -258,7 +258,7 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-[#06244B] border-r border-[#0B356D] flex flex-col overscroll-contain ${collapsed ? 'w-20' : 'w-64 lg:w-72'
+      className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-[#06244B] border-r border-[#0B356D] flex flex-col overscroll-contain ${collapsed ? 'w-20' : 'w-60 xl:w-64'
         }`}
       style={{ overscrollBehavior: 'contain' }}
       onWheel={(e) => e.stopPropagation()}

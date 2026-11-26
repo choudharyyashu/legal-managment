@@ -1,24 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FileText,
-  Layers,
   Plus,
   Download,
-  Eye,
   Sparkles,
-  Printer,
-  CheckCircle2,
-  Copy,
-  Edit,
   ShieldCheck,
-  ToggleLeft,
-  ToggleRight,
-  User,
-  Scale,
-  FolderOpen,
   UploadCloud,
-  FileUp,
-  Tag
+  Tag,
+  GitBranch,
+  Zap,
+  CheckCircle2,
+  Trash2,
+  Save,
 } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
@@ -26,239 +19,354 @@ import { DataTable } from '../../../components/ui/DataTable';
 import { Modal } from '../../../components/ui/Modal';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { useClients } from '../../../context/ClientContext';
-import { formatCurrency } from '../../../utils/formatCurrency';
+import { templateService } from '../../../services/templateService';
+import { documentService } from '../../../services/documentService';
+
+const PRACTICE_AREAS = [
+  { id: 'pa-pi', name: 'Personal Injury' },
+  { id: 'pa-civ', name: 'Civil/Commercial Litigation' },
+  { id: 'pa-bk', name: 'Bankruptcy' },
+  { id: 'pa-imm', name: 'Immigration' },
+  { id: 'pa-prob', name: 'Probate' },
+  { id: 'pa-fam', name: 'Family Law' },
+  { id: 'pa-crim', name: 'Criminal Defense' },
+  { id: 'pa-app', name: 'Appeals' },
+  { id: 'pa-evict', name: 'Landlord-Tenant/Evictions' },
+];
+
+const FORMATTING_RULES = [
+  'NONE',
+  'UPPERCASE',
+  'LOWERCASE',
+  'TITLECASE',
+  'DATE_LONG',
+  'DATE_SHORT',
+  'DATE_COURT',
+  'CURRENCY_USD',
+  'PHONE_STANDARD',
+];
 
 export function TemplatesSettings() {
   const { addToast } = useToast();
   const { matters } = useMatters();
-  const { clients } = useClients();
 
-  const [templates, setTemplates] = useState([
-    {
-      id: 'TPL-01',
-      name: 'Master Client Engagement & Hourly Retainer Agreement',
-      category: 'Engagement',
-      format: 'DOCX / PDF',
-      practiceArea: 'All Practice Areas',
-      lastUpdated: '2026-10-15',
-      variables: ['{{Client.Name}}', '{{Client.Address}}', '{{Matter.Title}}', '{{Billing.HourlyRate}}', '{{Billing.RetainerDeposit}}'],
-      conditionalClauses: ['Arbitration Clause', 'IOLTA Replenishment Covenant'],
-      templateBody: `LEGAL SERVICES ENGAGEMENT & RETAINER AGREEMENT
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [practiceAreaFilter, setPracticeAreaFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [materializing, setMaterializing] = useState(false);
 
-This Agreement is made by and between HEUGLY & BLUDWORTH, P.C. ("Firm") and {{Client.Name}} ("Client"), having its primary address at {{Client.Address}}, in connection with legal representation in {{Matter.Title}} (Docket No. {{Matter.DocketNumber}}).
+  // Field dictionary
+  const [fieldDictionary, setFieldDictionary] = useState([]);
 
-1. SCOPE OF ENGAGEMENT:
-The Firm agrees to provide legal representation to Client before the {{Court.Name}} and in related negotiations with {{OpposingParty.Name}}, represented by {{OpposingCounsel.Firm}}.
-
-2. HOURLY RATES & EXPENSES:
-Client agrees to pay the Firm at the standard hourly billing rate of {{Billing.HourlyRate}} per hour for partner time and $195.00 per hour for paralegal support services.
-
-3. ADVANCE TRUST RETAINER (UTAH RPC 1.15):
-Client shall deposit an initial retainer of {{Billing.RetainerDeposit}} into the Firm's segregated IOLTA Client Trust Account at Chase Bank. Funds remain the property of Client until earned.
-
-{{CLAUSE_ARBITRATION}}
-
-{{CLAUSE_IOLTA}}
-
-DATED this 12th day of November, 2026.
-
-HEUGLY & BLUDWORTH, P.C.                    CLIENT ACKNOWLEDGMENT:
-______________________________            ______________________________
-Thomas Bludworth, Esq. (Partner)          {{Client.ContactPerson}} (Authorized)`
-    },
-    {
-      id: 'TPL-02',
-      name: 'Utah Third District Notice of Appearance & Electronic Service',
-      category: 'Litigation Pleadings',
-      format: 'DOCX',
-      practiceArea: 'Civil Litigation & Dispute Resolution',
-      lastUpdated: '2026-11-01',
-      variables: ['{{Court.Name}}', '{{Matter.DocketNumber}}', '{{Client.Name}}', '{{OpposingParty.Name}}'],
-      conditionalClauses: ['Electronic Service Consent (URCP Rule 5)'],
-      templateBody: `IN THE THIRD JUDICIAL DISTRICT COURT IN AND FOR SALT LAKE COUNTY, STATE OF UTAH
-
-{{Client.Name}},
-     Plaintiff,
-v.                                                 ENTRY OF APPEARANCE & NOTICE OF ELECTRONIC SERVICE
-{{OpposingParty.Name}},                           Civil No. {{Matter.DocketNumber}}
-     Defendant.                                   Judge: Hon. Coral Del-Valle
-
-COMES NOW Thomas Bludworth, Esq. of HEUGLY & BLUDWORTH, P.C., and enters his formal appearance as counsel of record for Plaintiff {{Client.Name}} in the above-entitled action pursuant to Utah R. Civ. P. 5 and 7.
-
-{{CLAUSE_E_SERVICE}}
-
-RESPECTFULLY SUBMITTED this 12th day of November, 2026.
-
-HEUGLY & BLUDWORTH, P.C.
-/s/ Thomas Bludworth, Esq.
-Counsel for {{Client.Name}}`
-    },
-    {
-      id: 'TPL-03',
-      name: 'Deposition Subpoena Duces Tecum for Corporate Records',
-      category: 'Discovery',
-      format: 'DOCX',
-      practiceArea: 'Civil Litigation & Dispute Resolution',
-      lastUpdated: '2026-09-20',
-      variables: ['{{Court.Name}}', '{{Matter.DocketNumber}}', '{{OpposingParty.Name}}'],
-      conditionalClauses: ['Include 10-Day Records Production Waiver'],
-      templateBody: `SUBPOENA DUCES TECUM PURSUANT TO UTAH R. CIV. P. 45
-
-TO: Custodian of Records, {{OpposingParty.Name}}
-
-YOU ARE HEREBY COMMANDED to appear and produce certified business records in connection with {{Matter.Title}} (Civil No. {{Matter.DocketNumber}}), pending before the {{Court.Name}}...`
-    },
-    {
-      id: 'TPL-04',
-      name: 'Utah Contingency Fee Retainer & Settlement Authority Agreement',
-      category: 'Personal Injury',
-      format: 'DOCX / PDF',
-      practiceArea: 'Personal Injury & Wrongful Death',
-      lastUpdated: '2026-11-04',
-      variables: ['{{Client.Name}}', '{{Matter.Title}}', '{{Billing.ContingencyPct}}'],
-      conditionalClauses: ['Medical Liens Direct Withholding Authorization', 'Appellate Surcharge Notice'],
-      templateBody: `CONTINGENCY FEE RETAINER (UTAH RPC 1.5(c))
-
-Client {{Client.Name}} hereby retains HEUGLY & BLUDWORTH, P.C. to prosecute claims arising out of {{Matter.Title}}.
-Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery prior to trial...`
-    },
-  ]);
-
-  // Merge Studio State
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [selectedMatterId, setSelectedMatterId] = useState(matters[0]?.id || 'MAT-1001');
-  const targetMatter = matters.find(m => m.id === selectedMatterId) || matters[0];
-  const targetClient = clients.find(c => c.id === targetMatter?.clientId) || clients[0];
-
-  // Conditional Clauses Toggle State
-  const [enableArbitration, setEnableArbitration] = useState(true);
-  const [enableIOLTAClause, setEnableIOLTAClause] = useState(true);
-  const [enableEService, setEnableEService] = useState(true);
-
-  // Add Template Modal State
+  // Add Template Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
-    name: '',
-    category: 'Litigation Pleadings',
-    practiceArea: 'Civil Litigation & Dispute Resolution',
-    format: 'DOCX',
+    templateCode: '',
+    templateName: '',
+    category: 'Engagement',
+    practiceAreaId: 'pa-civ',
+    outputFormat: 'BOTH',
+    description: '',
     templateBody: '',
-    uploadedFileName: '',
+    file: null,
   });
 
-  const handleInsertTag = (tag) => {
-    setNewTemplate(prev => ({
-      ...prev,
-      templateBody: (prev.templateBody ? prev.templateBody + ' ' : '') + tag
-    }));
+  // Version & Field Mapping Modal
+  const [mappingTemplate, setMappingTemplate] = useState(null);
+  const [versions, setVersions] = useState([]);
+  const [selectedVersionId, setSelectedVersionId] = useState('');
+  const [mappings, setMappings] = useState([]);
+  const [detectedPlaceholders, setDetectedPlaceholders] = useState([]);
+  const [newVersionFile, setNewVersionFile] = useState(null);
+  const [newVersionSummary, setNewVersionSummary] = useState('');
+  const [savingMappings, setSavingMappings] = useState(false);
+
+  // Live Merge Studio Modal
+  const [studioTemplate, setStudioTemplate] = useState(null);
+  const [selectedMatterId, setSelectedMatterId] = useState('');
+  const [validationResult, setValidationResult] = useState(null);
+  const [generatingDraft, setGeneratingDraft] = useState(false);
+  const [generatedDraft, setGeneratedDraft] = useState(null);
+
+  const loadTemplates = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await templateService.getTemplates({
+        limit: 500,
+        practiceAreaId: practiceAreaFilter || undefined,
+        search: searchTerm || undefined,
+      });
+      setTemplates(Array.isArray(list) ? list : []);
+    } catch (err) {
+      addToast(err?.message || 'Failed to load templates.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [practiceAreaFilter, searchTerm, addToast]);
+
+  useEffect(() => {
+    loadTemplates();
+    templateService.getFieldDictionary().then(setFieldDictionary).catch(() => {});
+  }, [loadTemplates]);
+
+  useEffect(() => {
+    if (matters.length > 0 && !selectedMatterId) {
+      setSelectedMatterId(matters[0].id);
+    }
+  }, [matters, selectedMatterId]);
+
+  const handleMaterialize300 = async () => {
+    setMaterializing(true);
+    try {
+      const res = await documentService.materializeAutomations({});
+      addToast(
+        `300-Document Catalog materialized: ${res.createdCount} created, ${res.existingCount} already registered.`,
+        'success'
+      );
+      await loadTemplates();
+    } catch (err) {
+      addToast(err?.message || 'Failed to materialize 300-document catalog.', 'error');
+    } finally {
+      setMaterializing(false);
+    }
   };
 
-  const handleSaveNewTemplate = (e) => {
-    e?.preventDefault();
-    if (!newTemplate.name.trim()) {
-      addToast('Please enter a template title.', 'error');
+  const handleToggleActive = async (tpl) => {
+    try {
+      await templateService.setTemplateStatus(tpl.id, !tpl.isActive);
+      addToast(`Template ${tpl.templateCode} ${!tpl.isActive ? 'activated' : 'deactivated'}.`, 'success');
+      await loadTemplates();
+    } catch (err) {
+      addToast(err?.message || 'Failed to change template status.', 'error');
+    }
+  };
+
+  const handleCreateTemplate = async (e) => {
+    e.preventDefault();
+    if (!newTemplate.templateCode.trim() || !newTemplate.templateName.trim()) {
+      addToast('Template code and name are required.', 'warning');
       return;
     }
+    try {
+      const created = await templateService.createTemplate({
+        templateCode: newTemplate.templateCode.trim().toUpperCase(),
+        templateName: newTemplate.templateName.trim(),
+        description: newTemplate.description.trim() || undefined,
+        practiceAreaId: newTemplate.practiceAreaId,
+        category: newTemplate.category,
+        outputFormat: newTemplate.outputFormat,
+        isSystemDefault: false,
+      });
 
-    const templateId = `TPL-0${templates.length + 1}`;
-    const detectedTags = newTemplate.templateBody.match(/\{\{[^}]+\}\}/g) || [
-      '{{Client.Name}}',
-      '{{Matter.Title}}',
-      '{{Court.Name}}'
-    ];
-    const uniqueTags = Array.from(new Set(detectedTags));
+      if (newTemplate.file) {
+        const fd = new FormData();
+        fd.append('file', newTemplate.file);
+        fd.append('status', 'Published');
+        fd.append('changeSummary', 'Initial template DOCX upload');
+        await templateService.uploadVersion(created.id, fd);
+      } else {
+        await templateService.uploadVersion(created.id, {
+          templateBody:
+            newTemplate.templateBody.trim() ||
+            `LEGAL INSTRUMENT: ${created.templateName}\n\nClient: {{Client.Name}}\nMatter: {{Matter.Title}} ({{Matter.MatterNumber}})\nAttorney: {{Attorney.Name}}\nDate: {{CurrentDate.Long}}`,
+          status: 'Published',
+          changeSummary: 'Initial inline template version',
+        });
+      }
 
-    const created = {
-      id: templateId,
-      name: newTemplate.name.trim(),
-      category: newTemplate.category,
-      format: newTemplate.uploadedFileName ? `${newTemplate.format} (Uploaded)` : newTemplate.format,
-      practiceArea: newTemplate.practiceArea,
-      lastUpdated: new Date().toISOString().split('T')[0],
-      variables: uniqueTags,
-      conditionalClauses: ['Standard Utah RPC Provisions'],
-      templateBody: newTemplate.templateBody.trim() || `LEGAL INSTRUMENT: ${newTemplate.name.toUpperCase()}\n\nIn the Matter of {{Matter.Title}} (Civil No. {{Matter.DocketNumber}}).\nClient: {{Client.Name}}\nCourt: {{Court.Name}}\n\nCounsel of Record: Heugly & Bludworth, P.C.`
-    };
-
-    setTemplates(prev => [created, ...prev]);
-    addToast(`Template "${created.name}" created and added to firm templates.`, 'success');
-    setIsAddModalOpen(false);
-    setNewTemplate({
-      name: '',
-      category: 'Litigation Pleadings',
-      practiceArea: 'Civil Litigation & Dispute Resolution',
-      format: 'DOCX',
-      templateBody: '',
-      uploadedFileName: '',
-    });
+      addToast(`Template ${created.templateCode} created and published.`, 'success');
+      setIsAddModalOpen(false);
+      setNewTemplate({
+        templateCode: '',
+        templateName: '',
+        category: 'Engagement',
+        practiceAreaId: 'pa-civ',
+        outputFormat: 'BOTH',
+        description: '',
+        templateBody: '',
+        file: null,
+      });
+      await loadTemplates();
+    } catch (err) {
+      addToast(err?.message || 'Failed to create template.', 'error');
+    }
   };
 
-  const handleOpenStudio = (tpl) => {
-    setSelectedTemplate(tpl);
+  const openMappingStudio = async (tpl) => {
+    setMappingTemplate(tpl);
+    setVersions([]);
+    setMappings([]);
+    setDetectedPlaceholders([]);
+    try {
+      const detail = await templateService.getTemplateById(tpl.id);
+      const vList = detail?.versions || [];
+      setVersions(vList);
+      if (vList.length > 0) {
+        const firstId = vList[0].id;
+        setSelectedVersionId(firstId);
+        const [mList, tags] = await Promise.all([
+          templateService.getFieldMappings(tpl.id, firstId),
+          templateService.getVersionPlaceholders(tpl.id, firstId).catch(() => []),
+        ]);
+        setMappings(mList);
+        setDetectedPlaceholders(tags);
+      }
+    } catch (err) {
+      addToast(err?.message || 'Failed to load template versions/mappings.', 'error');
+    }
   };
 
-  // Generate real-time populated document text
-  const getPopulatedText = () => {
-    if (!selectedTemplate) return '';
-
-    let text = selectedTemplate.templateBody;
-
-    // Replace merge tags with real data
-    text = text.replace(/\{\{Client\.Name\}\}/g, targetClient?.name || 'Wasatch Mountain Logistics LLC');
-    text = text.replace(/\{\{Client\.Address\}\}/g, targetClient?.address || '1420 South Foothill Blvd, Salt Lake City, UT 84108');
-    text = text.replace(/\{\{Client\.ContactPerson\}\}/g, targetClient?.primaryContact || 'Robert H. Henderson');
-    text = text.replace(/\{\{Matter\.Title\}\}/g, targetMatter?.title || 'Commercial Contract Breach Litigation');
-    text = text.replace(/\{\{Matter\.DocketNumber\}\}/g, targetMatter?.matterNumber || '25-CV-0101');
-    text = text.replace(/\{\{Court\.Name\}\}/g, 'Utah Third Judicial District Court (Salt Lake County)');
-    text = text.replace(/\{\{OpposingParty\.Name\}\}/g, 'Interstate Freightlines Inc.');
-    text = text.replace(/\{\{OpposingCounsel\.Firm\}\}/g, 'Sterling & Crawford LLP');
-    text = text.replace(/\{\{Billing\.HourlyRate\}\}/g, '$500.00');
-    text = text.replace(/\{\{Billing\.RetainerDeposit\}\}/g, '$15,000.00');
-    text = text.replace(/\{\{Billing\.ContingencyPct\}\}/g, '33.33%');
-
-    // Conditional Clauses
-    if (enableArbitration) {
-      text = text.replace(
-        '{{CLAUSE_ARBITRATION}}',
-        '4. MANDATORY BINDING ARBITRATION:\nAny dispute arising under this Agreement shall be submitted to confidential, binding arbitration in Salt Lake City, Utah under the Utah Uniform Arbitration Act (Utah Code § 78B-11-101 et seq.).'
-      );
-    } else {
-      text = text.replace('{{CLAUSE_ARBITRATION}}', '');
+  const handleSelectVersion = async (versionId) => {
+    setSelectedVersionId(versionId);
+    if (!mappingTemplate || !versionId) return;
+    try {
+      const [mList, tags] = await Promise.all([
+        templateService.getFieldMappings(mappingTemplate.id, versionId),
+        templateService.getVersionPlaceholders(mappingTemplate.id, versionId).catch(() => []),
+      ]);
+      setMappings(mList);
+      setDetectedPlaceholders(tags);
+    } catch (err) {
+      addToast(err?.message || 'Failed to load version mappings.', 'error');
     }
+  };
 
-    if (enableIOLTAClause) {
-      text = text.replace(
-        '{{CLAUSE_IOLTA}}',
-        '5. TRUST REPLENISHMENT COVENANT:\nClient agrees to replenish the IOLTA retainer within ten (10) business days upon notice that the balance has fallen below $5,000.00.'
-      );
-    } else {
-      text = text.replace('{{CLAUSE_IOLTA}}', '');
+  const handleUploadNewTemplateVersion = async (e) => {
+    e.preventDefault();
+    if (!mappingTemplate || !newVersionFile) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', newVersionFile);
+      fd.append('status', 'Published');
+      fd.append('changeSummary', newVersionSummary || 'Uploaded updated DOCX template');
+      const created = await templateService.uploadVersion(mappingTemplate.id, fd);
+      addToast(`Uploaded template version ${created.versionNumber}.`, 'success');
+      setNewVersionFile(null);
+      setNewVersionSummary('');
+      await openMappingStudio(mappingTemplate);
+      await loadTemplates();
+    } catch (err) {
+      addToast(err?.message || 'Failed to upload template version.', 'error');
     }
+  };
 
-    if (enableEService) {
-      text = text.replace(
-        '{{CLAUSE_E_SERVICE}}',
-        'Pursuant to Utah R. Civ. P. 5(b)(3), counsel accepts electronic service of all pleadings, discovery, and notices via Utah GreenFiling / Odyssey Court e-filing system at service@utahslawyers.com.'
-      );
-    } else {
-      text = text.replace('{{CLAUSE_E_SERVICE}}', '');
+  const handleAutoAddDetectedTags = () => {
+    const existingTags = new Set(mappings.map((m) => m.placeholderTag.toLowerCase()));
+    const added = [];
+    for (const tag of detectedPlaceholders) {
+      if (!existingTags.has(tag.toLowerCase())) {
+        const clean = tag.replace(/^\{\{|\}\}$/g, '');
+        const [rawEnt, rawField] = clean.split('.');
+        const matchedEnt =
+          fieldDictionary.find((e) => e.entity.toLowerCase() === (rawEnt || '').toLowerCase())?.entity || 'CustomField';
+        added.push({
+          placeholderTag: tag,
+          sourceEntity: matchedEnt,
+          sourceField: rawField ? rawField.charAt(0).toLowerCase() + rawField.slice(1) : clean,
+          isRequired: true,
+          defaultValue: '',
+          formattingRule: 'NONE',
+        });
+      }
     }
+    if (added.length === 0) {
+      addToast('All detected DOCX tags are already mapped.', 'info');
+    } else {
+      setMappings((prev) => [...prev, ...added]);
+      addToast(`Added ${added.length} detected placeholder(s) to mapping table.`, 'success');
+    }
+  };
 
-    return text;
+  const handleAddBlankMapping = () => {
+    setMappings((prev) => [
+      ...prev,
+      {
+        placeholderTag: '{{Client.Name}}',
+        sourceEntity: 'Client',
+        sourceField: 'name',
+        isRequired: true,
+        defaultValue: '',
+        formattingRule: 'NONE',
+      },
+    ]);
+  };
+
+  const handleSaveMappings = async () => {
+    if (!mappingTemplate || !selectedVersionId || mappings.length === 0) {
+      addToast('Add at least one field mapping before saving.', 'warning');
+      return;
+    }
+    setSavingMappings(true);
+    try {
+      const payload = mappings.map((m) => ({
+        placeholderTag: m.placeholderTag,
+        sourceEntity: m.sourceEntity,
+        sourceField: m.sourceField,
+        isRequired: Boolean(m.isRequired),
+        defaultValue: m.defaultValue || undefined,
+        formattingRule: m.formattingRule || 'NONE',
+        conditionalExpression: m.conditionalExpression || undefined,
+      }));
+      const saved = await templateService.saveFieldMappings(mappingTemplate.id, selectedVersionId, payload);
+      setMappings(saved);
+      addToast(`Saved ${saved.length} field mapping(s) for version.`, 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to save field mappings.', 'error');
+    } finally {
+      setSavingMappings(false);
+    }
+  };
+
+  const openMergeStudio = async (tpl) => {
+    setStudioTemplate(tpl);
+    setGeneratedDraft(null);
+    setValidationResult(null);
+    const targetMId = selectedMatterId || matters[0]?.id;
+    if (targetMId) {
+      try {
+        const val = await documentService.validateDraftPrerequisites({
+          matterId: targetMId,
+          templateId: tpl.id,
+        });
+        setValidationResult(val);
+      } catch (err) {
+        addToast(err?.message || 'Validation check failed.', 'warning');
+      }
+    }
+  };
+
+  const handleStudioGenerate = async () => {
+    if (!studioTemplate || !selectedMatterId) return;
+    setGeneratingDraft(true);
+    try {
+      const res = await documentService.generateDraft({
+        matterId: selectedMatterId,
+        templateId: studioTemplate.id,
+        allowIncomplete: true,
+      });
+      setGeneratedDraft(res?.draft);
+      addToast(`Generated Word draft ${res?.draft?.draftCode}! Ready for DOCX or PDF download.`, 'success');
+    } catch (err) {
+      addToast(err?.message || 'Failed to generate draft from template.', 'error');
+    } finally {
+      setGeneratingDraft(false);
+    }
   };
 
   const columns = [
     {
-      key: 'name',
-      label: 'Template Title & Scope',
+      key: 'templateName',
+      label: 'Template Code & Title',
       sortable: true,
       render: (val, row) => (
-        <div className="flex items-start gap-2 min-w-[220px]">
+        <div className="flex items-start gap-2 min-w-[240px]">
           <FileText className="w-4 h-4 text-[#A4432B] shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold text-xs text-[#06244B] block leading-snug">{val}</span>
-            <span className="text-[10px] text-[#667085] whitespace-nowrap">{row.id} • {row.format}</span>
+            <span className="text-[10px] text-[#667085] font-mono">
+              {row.templateCode} • {row.currentVersion} • {row.outputFormat}
+            </span>
           </div>
         </div>
       ),
@@ -274,18 +382,26 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
       ),
     },
     {
-      key: 'practiceArea',
-      label: 'Applicable Practice Area',
+      key: 'practiceAreaName',
+      label: 'Practice Area',
       sortable: true,
-      render: (val) => <span className="text-xs text-[#202A35] font-medium block min-w-[140px]">{val}</span>,
+      render: (val, row) => (
+        <span className="text-xs text-[#202A35] font-medium">{val || row.practiceAreaId}</span>
+      ),
     },
     {
-      key: 'variables',
-      label: 'Dynamic Tags',
-      render: (val) => (
-        <span className="inline-block whitespace-nowrap text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono">
-          {val?.length || 4} merge tags
-        </span>
+      key: 'isActive',
+      label: 'Status',
+      render: (val, row) => (
+        <button
+          type="button"
+          onClick={() => handleToggleActive(row)}
+          className={`text-[10px] font-bold px-2 py-0.5 rounded border cursor-pointer ${
+            val ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'
+          }`}
+        >
+          {val ? 'Active' : 'Inactive'}
+        </button>
       ),
     },
     {
@@ -293,22 +409,12 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
       label: 'Actions',
       align: 'right',
       render: (_, row) => (
-        <div className="flex items-center justify-end gap-2 whitespace-nowrap">
-          <Button
-            size="xs"
-            variant="outline"
-            icon={Eye}
-            onClick={() => handleOpenStudio(row)}
-          >
-            Live Merge
+        <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+          <Button size="xs" variant="outline" icon={Tag} onClick={() => openMappingStudio(row)}>
+            Versions &amp; Mappings
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            icon={Download}
-            onClick={() => addToast(`Template "${row.name}" downloaded for offline editing.`, 'info')}
-          >
-            Download
+          <Button size="xs" variant="primary" icon={Sparkles} onClick={() => openMergeStudio(row)}>
+            Live Merge
           </Button>
         </div>
       ),
@@ -317,35 +423,35 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
 
   return (
     <div className="space-y-6">
-      {/* Filevine Template Architecture Banner */}
-      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-emerald-950">
-        <div className="flex items-start sm:items-center gap-2 min-w-0">
-          <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5 sm:mt-0" />
+      <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-emerald-950">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Smart Document Template Engine (Filevine Model):</strong> Dynamic document generation populated from matter data, repeating adversaries, and conditional clauses. Firm administrators can customize merge tags and clauses without code changes.
+            <strong>Template Management, Versioning &amp; Document Field Mapping:</strong> Administrator-maintainable DOCX templates, dynamic placeholder detection, field mappings, and Word/PDF generation.
           </span>
         </div>
-        <span className="bg-emerald-200 text-emerald-900 font-bold px-2.5 py-0.5 rounded text-[10px] whitespace-nowrap shrink-0 self-start sm:self-auto">
-          SMART MERGE ACTIVE
+        <span className="bg-emerald-200 text-emerald-900 font-bold px-2.5 py-0.5 rounded text-[10px]">
+          {templates.length} TEMPLATES REGISTERED
         </span>
       </div>
 
       <PageHeader
-        title="Document Templates &amp; Merge Studio"
-        subtitle="Standardized legal pleadings, agreements, engagement instruments, and statutory notices with live data merging."
+        title="Document Templates &amp; Field Mapping Studio"
+        subtitle="Manage DOCX templates, upload new versions, configure entity field mappings, and run live Word/PDF merges."
         breadcrumbs={[
           { label: 'Reports & Settings', to: '/settings/users' },
-          { label: 'Templates & Workflows' }
+          { label: 'Templates & Field Mapping' },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              icon={Sparkles}
-              onClick={() => handleOpenStudio(templates[0])}
+              icon={Zap}
+              loading={materializing}
+              onClick={handleMaterialize300}
             >
-              Open Live Merge Studio
+              Sync 300-Automation Templates
             </Button>
             <Button
               variant="primary"
@@ -359,297 +465,413 @@ Attorney contingency fee shall be {{Billing.ContingencyPct}} of gross recovery p
         }
       />
 
-      <DataTable
-        columns={columns}
-        data={templates}
-        pageSize={8}
-      />
-
-      {/* Smart Template Merge Studio Modal */}
-      {selectedTemplate && (
-        <Modal
-          isOpen={!!selectedTemplate}
-          onClose={() => setSelectedTemplate(null)}
-          title={`Smart Document Merge Studio: ${selectedTemplate.name}`}
-          subtitle="Preview dynamic merge variables, toggle conditional paragraphs, and export populated legal instruments."
-          maxWidth="max-w-4xl"
+      {/* Filter Bar */}
+      <div className="bg-white p-3.5 rounded-xl border border-[#EAECF0] flex flex-wrap items-center gap-3 text-xs">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search templates by code, title, or description..."
+          className="flex-1 min-w-[220px] px-3 py-2 rounded-lg border border-[#D0D5DD] bg-[#F9FAFB]"
+        />
+        <select
+          value={practiceAreaFilter}
+          onChange={(e) => setPracticeAreaFilter(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-[#D0D5DD] bg-white font-medium"
         >
-          <div className="space-y-4 text-xs">
-            {/* Top Config Row: Responsive 2-Column Grid */}
-            <div className="bg-slate-50 p-3.5 rounded-lg border border-[#D9D6CF] grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-              <div>
-                <label className="text-[10px] uppercase font-bold text-[#667085] block mb-1">
-                  1. Target Matter (Auto-Fills Client &amp; Court Data)
-                </label>
-                <select
-                  value={selectedMatterId}
-                  onChange={(e) => setSelectedMatterId(e.target.value)}
-                  className="w-full text-xs font-semibold p-2 rounded border border-[#D9D6CF] bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
-                >
-                  {matters.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.matterNumber} — {m.title} ({m.clientName})
-                    </option>
-                  ))}
-                </select>
-              </div>
+          <option value="">All Practice Areas</option>
+          {PRACTICE_AREAS.map((pa) => (
+            <option key={pa.id} value={pa.id}>
+              {pa.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              {/* Conditional Clauses Toggles */}
-              <div>
-                <label className="text-[10px] uppercase font-bold text-[#667085] block mb-1">
-                  2. Conditional Paragraph Toggles
-                </label>
-                <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-[#D9D6CF] rounded cursor-pointer hover:bg-slate-100 transition-colors shadow-xs">
-                    <input
-                      type="checkbox"
-                      checked={enableArbitration}
-                      onChange={(e) => setEnableArbitration(e.target.checked)}
-                      className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-3.5 w-3.5"
-                    />
-                    <span className="text-[11px] font-medium text-[#202A35]">Arbitration Clause</span>
-                  </label>
-                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-[#D9D6CF] rounded cursor-pointer hover:bg-slate-100 transition-colors shadow-xs">
-                    <input
-                      type="checkbox"
-                      checked={enableIOLTAClause}
-                      onChange={(e) => setEnableIOLTAClause(e.target.checked)}
-                      className="rounded border-[#D9D6CF] text-[#06244B] focus:ring-[#06244B] h-3.5 w-3.5"
-                    />
-                    <span className="text-[11px] font-medium text-[#202A35]">IOLTA Replenishment</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Document Preview Area (Styled with comfortable max-height and clean scroll) */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#06244B] flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-[#A4432B]" />
-                  Live Populated Document Output:
-                </span>
-                <span className="text-[10px] text-emerald-800 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Data merged from Matter #{targetMatter?.matterNumber} ✓
-                </span>
-              </div>
-
-              <div className="p-4 sm:p-5 bg-white border border-[#D9D6CF] rounded-lg shadow-inner max-h-60 sm:max-h-72 overflow-y-auto font-mono text-[11px] sm:text-xs whitespace-pre-line leading-relaxed text-[#202A35]">
-                {getPopulatedText()}
-              </div>
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#D9D6CF]">
-              <span className="text-[11px] text-[#667085]">
-                Variables auto-mapped: <strong>{"{{Client}}, {{Court}}, {{OpposingParty}}, {{Rates}}"}</strong>
-              </span>
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <Button size="sm" variant="outline" onClick={() => setSelectedTemplate(null)}>
-                  Close
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  icon={Download}
-                  onClick={() => addToast('Populated Word document (.docx) downloaded.', 'success')}
-                >
-                  Download .DOCX
-                </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  icon={Printer}
-                  onClick={() => {
-                    window.print();
-                    addToast('Print dialog launched for legal instrument.', 'info');
-                  }}
-                >
-                  Print Instrument
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <DataTable columns={columns} data={templates} pageSize={10} loading={loading} />
 
       {/* Add New Template Modal */}
       {isAddModalOpen && (
         <Modal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
-          title="Add New Document Template"
-          subtitle="Configure a standard firm pleading, retainer, or discovery instrument with live merge tags."
+          title="Create New Document Template"
+          subtitle="Register a template and publish its initial DOCX version."
           maxWidth="max-w-2xl"
         >
-          <form onSubmit={handleSaveNewTemplate} className="space-y-4 text-xs">
+          <form onSubmit={handleCreateTemplate} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
-                  Template Title <span className="text-red-500">*</span>
-                </label>
+                <label className="font-bold text-[#06244B] block mb-1">Template Code *</label>
                 <input
                   type="text"
                   required
-                  value={newTemplate.name}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                  placeholder="e.g. Motion for Summary Judgment"
-                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
+                  value={newTemplate.templateCode}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, templateCode: e.target.value })}
+                  placeholder="e.g. UT-CIV-041"
+                  className="w-full p-2 border border-[#D9D6CF] rounded"
                 />
               </div>
-
               <div>
-                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
-                  Category <span className="text-red-500">*</span>
-                </label>
+                <label className="font-bold text-[#06244B] block mb-1">Template Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newTemplate.templateName}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, templateName: e.target.value })}
+                  placeholder="e.g. Motion for Summary Judgment"
+                  className="w-full p-2 border border-[#D9D6CF] rounded"
+                />
+              </div>
+              <div>
+                <label className="font-bold text-[#06244B] block mb-1">Practice Area *</label>
                 <select
+                  value={newTemplate.practiceAreaId}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, practiceAreaId: e.target.value })}
+                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white"
+                >
+                  {PRACTICE_AREAS.map((pa) => (
+                    <option key={pa.id} value={pa.id}>{pa.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="font-bold text-[#06244B] block mb-1">Category *</label>
+                <input
+                  type="text"
+                  required
                   value={newTemplate.category}
                   onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value })}
-                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
-                >
-                  <option value="Litigation Pleadings">Litigation Pleadings</option>
-                  <option value="Engagement">Engagement & Retainer</option>
-                  <option value="Discovery">Discovery & Subpoena</option>
-                  <option value="Personal Injury">Personal Injury</option>
-                  <option value="Settlement">Settlement & Release</option>
-                  <option value="Court Motions">Court Motions</option>
-                  <option value="Notices">Statutory Notices</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
-                  Practice Area
-                </label>
-                <select
-                  value={newTemplate.practiceArea}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, practiceArea: e.target.value })}
-                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
-                >
-                  <option value="All Practice Areas">All Practice Areas</option>
-                  <option value="Civil Litigation & Dispute Resolution">Civil Litigation & Dispute Resolution</option>
-                  <option value="Personal Injury & Wrongful Death">Personal Injury & Wrongful Death</option>
-                  <option value="Family Law & Domestic Relations">Family Law & Domestic Relations</option>
-                  <option value="Immigration & Nationality Law">Immigration & Nationality Law</option>
-                  <option value="Bankruptcy & Debtor Relief">Bankruptcy & Debtor Relief</option>
-                  <option value="Criminal Defense">Criminal Defense</option>
-                  <option value="Real Estate & Land Use">Real Estate & Land Use</option>
-                  <option value="Estate Planning & Probate">Estate Planning & Probate</option>
-                  <option value="Corporate & Commercial Transactions">Corporate & Commercial Transactions</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-[#06244B] block mb-1">
-                  File Format
-                </label>
-                <select
-                  value={newTemplate.format}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, format: e.target.value })}
-                  className="w-full p-2 border border-[#D9D6CF] rounded bg-white text-[#06244B] focus:outline-none focus:border-[#06244B]"
-                >
-                  <option value="DOCX">Microsoft Word (.DOCX)</option>
-                  <option value="DOCX / PDF">DOCX / PDF Dual Export</option>
-                  <option value="PDF">Adobe PDF (.PDF)</option>
-                </select>
+                  className="w-full p-2 border border-[#D9D6CF] rounded"
+                />
               </div>
             </div>
 
-            {/* File Upload Zone */}
-            <div className="border-2 border-dashed border-[#D9D6CF] rounded-lg p-3.5 bg-slate-50/50 text-center hover:bg-slate-50 transition-colors">
+            <div className="border-2 border-dashed border-[#D9D6CF] rounded-lg p-3 bg-slate-50 text-center">
               <UploadCloud className="w-6 h-6 text-[#A4432B] mx-auto mb-1" />
-              <p className="text-xs font-semibold text-[#06244B]">
-                {newTemplate.uploadedFileName ? (
-                  <span className="text-emerald-700 font-bold">Selected: {newTemplate.uploadedFileName}</span>
-                ) : (
-                  'Upload Word (.docx) or PDF Master Template (Optional)'
-                )}
-              </p>
-              <p className="text-[10px] text-[#667085] mt-0.5">
-                Merge tags within your uploaded document will be automatically recognized upon upload.
+              <p className="font-semibold text-[#06244B]">
+                {newTemplate.file ? `Selected DOCX: ${newTemplate.file.name}` : 'Upload Word (.docx) Template (Optional)'}
               </p>
               <input
                 type="file"
-                id="template-file-upload"
-                accept=".docx,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setNewTemplate({ ...newTemplate, uploadedFileName: file.name });
-                    addToast(`Template file attached: ${file.name}`, 'info');
-                  }
-                }}
+                accept=".docx"
+                onChange={(e) => setNewTemplate({ ...newTemplate, file: e.target.files?.[0] || null })}
+                className="mt-2 text-xs"
               />
-              <label
-                htmlFor="template-file-upload"
-                className="inline-block mt-2 px-3 py-1 bg-white border border-[#D9D6CF] rounded text-[11px] font-medium text-[#06244B] cursor-pointer hover:bg-slate-100 transition-colors shadow-xs"
-              >
-                Browse Document...
-              </label>
             </div>
 
-            {/* Template Body & Merge Tags Picker */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-bold text-[#06244B]">
-                  Template Body / Pleading Text (with Merge Tags)
+            {!newTemplate.file && (
+              <div>
+                <label className="font-bold text-[#06244B] block mb-1">
+                  Or Author Template Text (Compiled Automatically to .DOCX)
                 </label>
-                <span className="text-[10px] text-[#667085]">Click any tag below to insert:</span>
+                <textarea
+                  rows={5}
+                  value={newTemplate.templateBody}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, templateBody: e.target.value })}
+                  placeholder="Enter legal text with {{Client.Name}}, {{Matter.Title}}, {{Attorney.Name}} merge tags..."
+                  className="w-full p-2 border border-[#D9D6CF] rounded font-mono text-[11px]"
+                />
               </div>
+            )}
 
-              {/* Tag Quick Buttons */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                {[
-                  '{{Client.Name}}',
-                  '{{Matter.Title}}',
-                  '{{Matter.DocketNumber}}',
-                  '{{Court.Name}}',
-                  '{{OpposingParty.Name}}',
-                  '{{Billing.HourlyRate}}',
-                  '{{Billing.RetainerDeposit}}'
-                ].map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleInsertTag(tag)}
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#F5F0E5] border border-[#D9D6CF] text-[#06244B] hover:bg-[#A4432B] hover:text-white transition-colors text-[10px] font-mono"
-                  >
-                    <Tag className="w-2.5 h-2.5" />
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              <textarea
-                rows={6}
-                value={newTemplate.templateBody}
-                onChange={(e) => setNewTemplate({ ...newTemplate, templateBody: e.target.value })}
-                placeholder="Paste standardized instrument text or type pleading body here with {{Merge.Tags}}..."
-                className="w-full p-2.5 border border-[#D9D6CF] rounded font-mono text-[11px] text-[#202A35] bg-white focus:outline-none focus:border-[#06244B] resize-y"
-              />
-            </div>
-
-            {/* Footer buttons */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#D9D6CF]">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAddModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                size="sm"
-                icon={Plus}
-              >
-                Save &amp; Add Template
-              </Button>
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+              <Button type="submit" variant="primary" size="sm" icon={Plus}>Create &amp; Publish</Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Template Versions & Field Mapping Studio Modal */}
+      {mappingTemplate && (
+        <Modal
+          isOpen={!!mappingTemplate}
+          onClose={() => setMappingTemplate(null)}
+          title={`Versions & Field Mapping: ${mappingTemplate.templateName}`}
+          subtitle={`Code: ${mappingTemplate.templateCode}`}
+          maxWidth="max-w-4xl"
+        >
+          <div className="space-y-4 text-xs">
+            {/* Version Selector & Upload New Version */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div>
+                <label className="font-bold text-[#06244B] block mb-1">Select Template Version</label>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedVersionId}
+                    onChange={(e) => handleSelectVersion(e.target.value)}
+                    className="flex-1 p-2 border border-[#D9D6CF] rounded bg-white font-mono"
+                  >
+                    {versions.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.versionNumber} ({v.status}) — {v.fieldMappingsCount ?? 0} mappings
+                      </option>
+                    ))}
+                  </select>
+                  {selectedVersionId && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      icon={Download}
+                      onClick={() =>
+                        templateService.downloadVersion(
+                          mappingTemplate.id,
+                          selectedVersionId,
+                          `${mappingTemplate.templateCode}.docx`
+                        )
+                      }
+                    >
+                      .DOCX
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <form onSubmit={handleUploadNewTemplateVersion} className="space-y-1.5">
+                <label className="font-bold text-[#06244B] block">Upload New .DOCX Version</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept=".docx"
+                    onChange={(e) => setNewVersionFile(e.target.files?.[0] || null)}
+                    className="flex-1 text-[11px] bg-white p-1 border rounded"
+                  />
+                  <Button size="xs" variant="primary" icon={GitBranch} type="submit" disabled={!newVersionFile}>
+                    Publish
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Detected Placeholders */}
+            {detectedPlaceholders.length > 0 && (
+              <div className="p-2.5 bg-blue-50 border border-blue-200 rounded flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-bold text-blue-900">Detected in DOCX:</span>
+                  {detectedPlaceholders.map((t) => (
+                    <span key={t} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-white border border-blue-200 text-blue-900">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <Button size="xs" variant="outline" onClick={handleAutoAddDetectedTags}>
+                  Auto-Map Detected Tags
+                </Button>
+              </div>
+            )}
+
+            {/* Field Mappings Editor */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#06244B]">Configured Document Field Mappings ({mappings.length})</span>
+                <Button size="xs" variant="outline" icon={Plus} onClick={handleAddBlankMapping}>
+                  Add Mapping Row
+                </Button>
+              </div>
+
+              <div className="border border-slate-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                <table className="w-full text-left text-[11px]">
+                  <thead className="bg-slate-50 border-b font-semibold">
+                    <tr>
+                      <th className="p-2">Placeholder Tag</th>
+                      <th className="p-2">Source Entity</th>
+                      <th className="p-2">Source Field</th>
+                      <th className="p-2">Format Rule</th>
+                      <th className="p-2 text-center">Required</th>
+                      <th className="p-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {mappings.map((m, idx) => {
+                      const entityFields =
+                        fieldDictionary.find((e) => e.entity === m.sourceEntity)?.fields || [];
+                      return (
+                        <tr key={m.id || idx}>
+                          <td className="p-1.5">
+                            <input
+                              type="text"
+                              value={m.placeholderTag}
+                              onChange={(e) => {
+                                const next = [...mappings];
+                                next[idx] = { ...next[idx], placeholderTag: e.target.value };
+                                setMappings(next);
+                              }}
+                              className="w-full p-1 border rounded font-mono"
+                            />
+                          </td>
+                          <td className="p-1.5">
+                            <select
+                              value={m.sourceEntity}
+                              onChange={(e) => {
+                                const next = [...mappings];
+                                next[idx] = { ...next[idx], sourceEntity: e.target.value };
+                                setMappings(next);
+                              }}
+                              className="w-full p-1 border rounded bg-white"
+                            >
+                              {fieldDictionary.map((ent) => (
+                                <option key={ent.entity} value={ent.entity}>{ent.entity}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-1.5">
+                            <input
+                              type="text"
+                              list={`fields-${idx}`}
+                              value={m.sourceField}
+                              onChange={(e) => {
+                                const next = [...mappings];
+                                next[idx] = { ...next[idx], sourceField: e.target.value };
+                                setMappings(next);
+                              }}
+                              className="w-full p-1 border rounded"
+                            />
+                            <datalist id={`fields-${idx}`}>
+                              {entityFields.map((f) => (
+                                <option key={f.field} value={f.field}>{f.label}</option>
+                              ))}
+                            </datalist>
+                          </td>
+                          <td className="p-1.5">
+                            <select
+                              value={m.formattingRule || 'NONE'}
+                              onChange={(e) => {
+                                const next = [...mappings];
+                                next[idx] = { ...next[idx], formattingRule: e.target.value };
+                                setMappings(next);
+                              }}
+                              className="w-full p-1 border rounded bg-white"
+                            >
+                              {FORMATTING_RULES.map((r) => (
+                                <option key={r} value={r}>{r}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-1.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(m.isRequired)}
+                              onChange={(e) => {
+                                const next = [...mappings];
+                                next[idx] = { ...next[idx], isRequired: e.target.checked };
+                                setMappings(next);
+                              }}
+                            />
+                          </td>
+                          <td className="p-1.5 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setMappings((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-rose-600 hover:text-rose-800 p-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button size="sm" variant="outline" onClick={() => setMappingTemplate(null)}>Close</Button>
+              <Button size="sm" variant="primary" icon={Save} loading={savingMappings} onClick={handleSaveMappings}>
+                Save Field Mappings
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Live Merge Studio Modal */}
+      {studioTemplate && (
+        <Modal
+          isOpen={!!studioTemplate}
+          onClose={() => setStudioTemplate(null)}
+          title={`Live Merge Studio: ${studioTemplate.templateName}`}
+          subtitle="Validate matter fields and generate Word (.DOCX) and PDF outputs directly from backend engine."
+          maxWidth="max-w-3xl"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <label className="font-bold text-[#06244B] block mb-1">Target Matter</label>
+              <select
+                value={selectedMatterId}
+                onChange={async (e) => {
+                  const id = e.target.value;
+                  setSelectedMatterId(id);
+                  setGeneratedDraft(null);
+                  try {
+                    const val = await documentService.validateDraftPrerequisites({
+                      matterId: id,
+                      templateId: studioTemplate.id,
+                    });
+                    setValidationResult(val);
+                  } catch {
+                    setValidationResult(null);
+                  }
+                }}
+                className="w-full p-2 border border-[#D9D6CF] rounded bg-white font-semibold"
+              >
+                {matters.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.matterNumber} — {m.title} ({m.clientName})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {validationResult && (
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#06244B]">Resolved Merge Preview</span>
+                  <span className="text-[11px] font-semibold text-emerald-700">
+                    {validationResult.totalFieldsCount} mapped fields • {validationResult.missingRequiredCount} required missing
+                  </span>
+                </div>
+                <pre className="p-2.5 bg-slate-50 border rounded font-mono text-[11px] max-h-48 overflow-y-auto">
+                  {JSON.stringify(validationResult.resolvedPreview || {}, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {generatedDraft && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-emerald-900 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Draft {generatedDraft.draftCode} Ready
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    icon={Download}
+                    onClick={() => documentService.downloadDraft(generatedDraft.id, 'docx', generatedDraft)}
+                  >
+                    Download .DOCX
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="primary"
+                    icon={Download}
+                    onClick={() => documentService.downloadDraft(generatedDraft.id, 'pdf', generatedDraft)}
+                  >
+                    Download .PDF
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button size="sm" variant="outline" onClick={() => setStudioTemplate(null)}>Close</Button>
+              <Button size="sm" variant="primary" icon={Sparkles} loading={generatingDraft} onClick={handleStudioGenerate}>
+                Generate Word &amp; PDF Draft
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

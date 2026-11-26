@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-15",
+  "status": "Synthetic proposed inputs; application tests not executed",
+  "cases": [
+    {
+      "id": "A",
+      "date": "2011-01-01",
+      "court": "Court1",
+      "relevance": 90,
+      "set_cites": 2,
+      "corpus_cites": 20
+    },
+    {
+      "id": "B",
+      "date": "2010-06-01",
+      "court": "Court2",
+      "relevance": 80,
+      "set_cites": 1,
+      "corpus_cites": 40
+    },
+    {
+      "id": "C",
+      "date": "2012-02-01",
+      "court": "Court1",
+      "relevance": 70,
+      "set_cites": 0,
+      "corpus_cites": 10
+    },
+    {
+      "id": "D",
+      "date": "2009-01-01",
+      "court": "Court3",
+      "relevance": null,
+      "lexical_match": false,
+      "set_cites": 3,
+      "corpus_cites": 50
+    }
+  ],
+  "tests": [
+    {
+      "id": "QUEUE-01",
+      "select": [
+        "A",
+        "B"
+      ],
+      "sort": "set_cites",
+      "add": "D",
+      "expected_selected": [
+        "A",
+        "B",
+        "D"
+      ]
+    },
+    {
+      "id": "SNIPPET-01",
+      "modes": [
+        "first_paragraph",
+        "most_relevant_paragraph"
+      ],
+      "expected": "Same authority/version; distinct source offsets with full-paragraph navigation"
+    },
+    {
+      "id": "TIMELINE-01",
+      "contexts": [
+        "results",
+        "citing_cases"
+      ],
+      "expected": "Date/relevance and date/court axes explicitly distinct; counts/scopes and top-N disclosed"
+    },
+    {
+      "id": "HIGHLIGHT-01",
+      "query_terms": [
+        "Fourth Amendment",
+        "trash",
+        "garbage"
+      ],
+      "highlight": "all",
+      "navigate_term": "trash",
+      "expected": "Next occurrence follows visibly selected trash term; no silent first-term fallback"
+    }
+  ]
+}

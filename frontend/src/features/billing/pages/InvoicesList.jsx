@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, 
   Plus, 
@@ -20,6 +20,7 @@ import {
 import { useTime } from '../../../context/TimeContext';
 import { useClients } from '../../../context/ClientContext';
 import { useMatters } from '../../../context/MatterContext';
+import { useBranding } from '../../../context/BrandingContext';
 import { useToast } from '../../../components/ui/Toast';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
@@ -32,9 +33,10 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 import { SettlementStatementModal } from '../components/SettlementStatementModal';
 
 export function InvoicesList() {
-  const { invoices, addInvoice, recordPayment, refreshInvoices } = useTime();
+  const { invoices, addInvoice, recordPayment, refreshInvoices, timeEntries = [], expenses = [] } = useTime();
   const { clients } = useClients();
   const { matters } = useMatters();
+  const { branding } = useBranding();
   const { addToast } = useToast();
 
   useEffect(() => {
@@ -57,38 +59,98 @@ export function InvoicesList() {
   const [newIssueDate, setNewIssueDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [newDueDate, setNewDueDate] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]);
   const [newNotes, setNewNotes] = useState('Professional legal services rendered pursuant to legal representation agreement.');
-  const [newLineItems, setNewLineItems] = useState([
-    { id: 'item-1', itemType: 'Time', description: 'Legal counsel, pleadings drafting, and court filings', quantity: 10, unitRate: 450 },
-    { id: 'item-2', itemType: 'Expense', description: 'Court filing fees & service of process statutory costs', quantity: 1, unitRate: 350 },
-  ]);
+  const [newLineItems, setNewLineItems] = useState([]);
   const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
 
-  // Set default selected matter when opening modal
+  // Unbilled activities available for currently selected matter
+  const unbilledTimeForMatter = useMemo(() => {
+    if (!newMatterId) return [];
+    return (timeEntries || []).filter(
+      (t) => t.matterId === newMatterId && t.status !== 'Billed' && t.status !== 'Invoiced' && t.isBillable !== false
+    );
+  }, [timeEntries, newMatterId]);
+
+  const unbilledExpensesForMatter = useMemo(() => {
+    if (!newMatterId) return [];
+    return (expenses || []).filter(
+      (e) => e.matterId === newMatterId && e.status !== 'Billed' && e.status !== 'Invoiced' && e.isBillable !== false
+    );
+  }, [expenses, newMatterId]);
+
+  // Reset modal state cleanly to prevent stale data retention
+  const resetCreateModalState = (targetMatterId) => {
+    const selectedMatter = matters.find(m => m.id === targetMatterId) || matters[0];
+    const defaultMatterId = selectedMatter?.id || '';
+    setNewMatterId(defaultMatterId);
+    setNewIssueDate(new Date().toISOString().split('T')[0]);
+    setNewDueDate(new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]);
+    setNewNotes('Professional legal services rendered pursuant to legal representation agreement.');
+    setNewLineItems([]);
+  };
+
+  // Open modal with fresh state
   const handleOpenCreateInvoice = () => {
-    if (matters.length > 0 && !newMatterId) {
-      setNewMatterId(matters[0].id);
-    }
+    const initialMatterId = matters.length > 0 ? (newMatterId || matters[0].id) : '';
+    resetCreateModalState(initialMatterId);
     setIsCreateModalOpen(true);
   };
 
+  // Close modal and clear state
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetCreateModalState('');
+  };
+
+  // Add a blank manual line item
   const handleAddLineItem = () => {
+    const selectedMatter = matters.find(m => m.id === newMatterId);
+    const defaultRate = selectedMatter && selectedMatter.hourlyRate ? Number(selectedMatter.hourlyRate) : 0;
     setNewLineItems(prev => [
       ...prev,
       {
-        id: `item-${Date.now()}`,
+        id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         itemType: 'Time',
-        description: 'Case analysis and litigation discovery review',
+        description: '',
         quantity: 1,
-        unitRate: 350
+        unitRate: defaultRate,
       }
     ]);
   };
 
-  const handleRemoveLineItem = (id) => {
-    if (newLineItems.length <= 1) {
-      addToast('An invoice must contain at least one line item.', 'warning');
+  // Import unbilled time & disbursements for current matter
+  const handleImportUnbilledActivities = () => {
+    const items = [];
+    unbilledTimeForMatter.forEach((t, idx) => {
+      items.push({
+        id: `time-${t.id || idx}-${Date.now()}`,
+        itemType: 'Time',
+        timeEntryId: t.id,
+        description: t.description?.trim() || `${t.activityType || 'Legal Services'} (${t.userName || 'Staff'})`,
+        quantity: Number(t.hours) || 1,
+        unitRate: Number(t.rate) || 350,
+      });
+    });
+    unbilledExpensesForMatter.forEach((e, idx) => {
+      items.push({
+        id: `exp-${e.id || idx}-${Date.now()}`,
+        itemType: 'Expense',
+        expenseId: e.id,
+        description: e.description?.trim() || e.vendorName || `${e.category || 'Disbursement'} Expense`,
+        quantity: 1,
+        unitRate: Number(e.amount) || 0,
+      });
+    });
+
+    if (items.length === 0) {
+      addToast('No unbilled time entries or expenses found for this matter.', 'info');
       return;
     }
+
+    setNewLineItems(items);
+    addToast(`Loaded ${items.length} unbilled item${items.length === 1 ? '' : 's'} into invoice draft.`, 'success');
+  };
+
+  const handleRemoveLineItem = (id) => {
     setNewLineItems(prev => prev.filter(item => item.id !== id));
   };
 
@@ -104,14 +166,26 @@ export function InvoicesList() {
     }));
   };
 
-  // Calculate invoice live total
-  const calculatedInvoiceTotal = newLineItems.reduce((sum, item) => {
-    return sum + (Number(item.quantity || 0) * Number(item.unitRate || 0));
-  }, 0);
+  // Calculate invoice subtotal, adjustments, and final total dynamically
+  const invoiceSubtotal = useMemo(() => {
+    return newLineItems
+      .filter(item => item.itemType !== 'Adjustment')
+      .reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unitRate || 0)), 0);
+  }, [newLineItems]);
 
-  // Submit and create invoice with backend validation
+  const invoiceAdjustments = useMemo(() => {
+    return newLineItems
+      .filter(item => item.itemType === 'Adjustment')
+      .reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unitRate || 0)), 0);
+  }, [newLineItems]);
+
+  const calculatedInvoiceTotal = useMemo(() => {
+    return Math.max(0, invoiceSubtotal - invoiceAdjustments);
+  }, [invoiceSubtotal, invoiceAdjustments]);
+
+  // Submit and create invoice with strict validation
   const handleCreateInvoiceSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const selectedMatter = matters.find(m => m.id === newMatterId) || matters[0];
 
     if (!selectedMatter) {
@@ -120,7 +194,30 @@ export function InvoicesList() {
     }
 
     if (newLineItems.length === 0) {
-      addToast('Please include at least one billing line item.', 'error');
+      addToast('Please include at least one billing line item before generating an invoice.', 'error');
+      return;
+    }
+
+    const emptyDescItem = newLineItems.find(item => !item.description || !item.description.trim());
+    if (emptyDescItem) {
+      addToast('Please provide a valid description for all invoice line items.', 'error');
+      return;
+    }
+
+    const invalidQtyItem = newLineItems.find(item => Number(item.quantity) <= 0);
+    if (invalidQtyItem) {
+      addToast('Line item quantities must be greater than zero.', 'error');
+      return;
+    }
+
+    const invalidRateItem = newLineItems.find(item => Number(item.unitRate) < 0);
+    if (invalidRateItem) {
+      addToast('Line item rates cannot be negative.', 'error');
+      return;
+    }
+
+    if (calculatedInvoiceTotal <= 0) {
+      addToast('Invoice total must be greater than $0.00.', 'error');
       return;
     }
 
@@ -134,19 +231,16 @@ export function InvoicesList() {
         notes: newNotes,
         lineItems: newLineItems.map(item => ({
           itemType: item.itemType,
-          description: item.description,
+          description: item.description.trim(),
           quantity: Number(item.quantity) || 1,
           unitRate: Number(item.unitRate) || 0,
+          timeEntryId: item.timeEntryId || undefined,
+          expenseId: item.expenseId || undefined,
         })),
       });
 
       addToast(`Invoice generated successfully for ${selectedMatter.title}!`, 'success');
-      setIsCreateModalOpen(false);
-      // Reset line items for next invoice
-      setNewLineItems([
-        { id: 'item-1', itemType: 'Time', description: 'Legal counsel, pleadings drafting, and court filings', quantity: 10, unitRate: 450 },
-        { id: 'item-2', itemType: 'Expense', description: 'Court filing fees & service of process statutory costs', quantity: 1, unitRate: 350 },
-      ]);
+      handleCloseCreateModal();
     } catch (err) {
       console.error('Invoice creation error:', err);
       addToast(err?.response?.data?.message || err?.message || 'Failed to create invoice.', 'error');
@@ -318,20 +412,30 @@ export function InvoicesList() {
       {/* GENERATE NEW INVOICE MODAL */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={handleCloseCreateModal}
         title="Generate Client Invoice &amp; Statement"
         subtitle="Create an official billing statement and record accounts receivable on firm general ledger."
         maxWidth="max-w-3xl"
         footer={
           <div className="flex items-center justify-between w-full">
-            <div className="text-xs text-[#667085]">
-              Total Invoiced: <strong className="text-sm font-serif font-bold text-[#06244B]">{formatCurrency(calculatedInvoiceTotal)}</strong>
+            <div className="flex flex-col text-xs text-[#667085]">
+              <div className="flex items-center gap-3">
+                <span>Subtotal: <strong className="font-mono text-[#202A35]">{formatCurrency(invoiceSubtotal)}</strong></span>
+                {invoiceAdjustments > 0 && (
+                  <span className="text-emerald-700 font-semibold">
+                    Discounts: -{formatCurrency(invoiceAdjustments)}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm font-serif font-bold text-[#06244B]">
+                Total Invoiced: {formatCurrency(calculatedInvoiceTotal)}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={handleCloseCreateModal}
                 disabled={isSubmittingInvoice}
               >
                 Cancel
@@ -409,29 +513,47 @@ export function InvoicesList() {
 
             {/* Row 3: Billing Line Items Table */}
             <div className="space-y-2 pt-2 border-t border-[#D9D6CF]/60">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#06244B]">
                   Billing Line Items ({newLineItems.length})
                 </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddLineItem}
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Add Line Item
-                </Button>
+                <div className="flex items-center gap-2">
+                  {(unbilledTimeForMatter.length > 0 || unbilledExpensesForMatter.length > 0) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleImportUnbilledActivities}
+                      title="Load unbilled time entries and disbursements for this matter"
+                    >
+                      <Clock className="w-3.5 h-3.5 mr-1 text-[#A4432B]" />
+                      Import Unbilled ({unbilledTimeForMatter.length + unbilledExpensesForMatter.length})
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddLineItem}
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Add Line Item
+                  </Button>
+                </div>
               </div>
 
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {newLineItems.map((item, idx) => (
-                  <div key={item.id} className="p-3 bg-[#F5F0E5]/40 border border-[#D9D6CF] rounded-lg space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[11px] font-bold text-[#A4432B]">
-                        Item #{idx + 1}
-                      </span>
-                      {newLineItems.length > 1 && (
+              {newLineItems.length === 0 ? (
+                <div className="p-4 bg-slate-50 border border-dashed border-[#D9D6CF] rounded-lg text-center text-xs text-[#667085]">
+                  No line items on this invoice yet. Click <strong className="text-[#06244B]">"Add Line Item"</strong> to manually add charges, or <strong className="text-[#06244B]">"Import Unbilled"</strong> to populate from logged matter hours and expenses.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {newLineItems.map((item, idx) => (
+                    <div key={item.id} className="p-3 bg-[#F5F0E5]/40 border border-[#D9D6CF] rounded-lg space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-[#A4432B]">
+                          Item #{idx + 1}
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveLineItem(item.id)}
@@ -440,67 +562,67 @@ export function InvoicesList() {
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <div className="sm:col-span-3">
+                          <select
+                            value={item.itemType}
+                            onChange={(e) => handleLineItemChange(item.id, 'itemType', e.target.value)}
+                            className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
+                          >
+                            <option value="Time">Time (Hourly)</option>
+                            <option value="Expense">Expense (Disbursement)</option>
+                            <option value="FlatFee">Flat Fee / Retainer</option>
+                            <option value="Adjustment">Adjustment / Discount</option>
+                          </select>
+                        </div>
+
+                        <div className="sm:col-span-5">
+                          <input
+                            type="text"
+                            required
+                            value={item.description}
+                            onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)}
+                            placeholder="Description of legal services, flat fee, or disbursement..."
+                            className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            required
+                            value={item.quantity}
+                            onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)}
+                            placeholder="Qty / Hrs"
+                            className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            required
+                            value={item.unitRate}
+                            onChange={(e) => handleLineItemChange(item.id, 'unitRate', e.target.value)}
+                            placeholder="Rate ($)"
+                            className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end text-[11px] text-[#667085] pt-1">
+                        Line Total: <strong className="text-[#06244B] ml-1 font-mono">{formatCurrency(Number(item.quantity || 0) * Number(item.unitRate || 0))}</strong>
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                      <div className="sm:col-span-3">
-                        <select
-                          value={item.itemType}
-                          onChange={(e) => handleLineItemChange(item.id, 'itemType', e.target.value)}
-                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
-                        >
-                          <option value="Time">Time (Hourly)</option>
-                          <option value="Expense">Expense (Disbursement)</option>
-                          <option value="FlatFee">Flat Fee / Retainer</option>
-                          <option value="Adjustment">Adjustment / Discount</option>
-                        </select>
-                      </div>
-
-                      <div className="sm:col-span-5">
-                        <input
-                          type="text"
-                          required
-                          value={item.description}
-                          onChange={(e) => handleLineItemChange(item.id, 'description', e.target.value)}
-                          placeholder="Description of legal services..."
-                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35]"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0.1"
-                          required
-                          value={item.quantity}
-                          onChange={(e) => handleLineItemChange(item.id, 'quantity', e.target.value)}
-                          placeholder="Qty / Hrs"
-                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <input
-                          type="number"
-                          step="1"
-                          min="0"
-                          required
-                          value={item.unitRate}
-                          onChange={(e) => handleLineItemChange(item.id, 'unitRate', e.target.value)}
-                          placeholder="Rate ($)"
-                          className="w-full text-xs rounded border border-[#D9D6CF] bg-white py-1.5 px-2 text-[#202A35] text-right font-mono"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end text-[11px] text-[#667085] pt-1">
-                      Line Total: <strong className="text-[#06244B] ml-1 font-mono">{formatCurrency(Number(item.quantity || 0) * Number(item.unitRate || 0))}</strong>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Row 4: Notes */}
@@ -524,8 +646,8 @@ export function InvoicesList() {
       <Modal
         isOpen={isPrintPreviewOpen}
         onClose={() => setIsPrintPreviewOpen(false)}
-        title={`Invoice: ${selectedInvoice?.invoiceNumber}`}
-        subtitle={`Client: ${selectedInvoice?.clientName}`}
+        title={selectedInvoice ? `Invoice: ${selectedInvoice.invoiceNumber}` : 'Invoice Preview'}
+        subtitle={selectedInvoice ? `Client: ${selectedInvoice.clientName || 'Client'}` : ''}
         maxWidth="max-w-3xl"
       >
         {selectedInvoice && (
@@ -535,15 +657,22 @@ export function InvoicesList() {
               {/* Firm Letterhead Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 border-b-2 border-[#06244B] pb-4">
                 <div>
+                  {branding?.logoUrl && (
+                    <img
+                      src={branding.logoUrl}
+                      alt={branding?.firmName || 'Firm Logo'}
+                      className="max-h-12 max-w-[180px] object-contain mb-2"
+                    />
+                  )}
                   <h2 className="font-serif font-bold text-2xl text-[#06244B]">
-                    HEUGLY &amp; BLUDWORTH
+                    {branding?.firmName || 'HEUGLY & BLUDWORTH'}
                   </h2>
                   <p className="text-[11px] font-semibold text-[#A4432B] uppercase tracking-widest">
-                    ATTORNEYS AT LAW
+                    {branding?.tagline || 'ATTORNEYS AT LAW'}
                   </p>
                   <p className="text-[10px] text-[#667085] mt-1">
-                    250 State Street, Suite 800, Salt Lake City, UT 84111<br />
-                    Tel: (801) 555-0100 • contact@utahslawyers.com
+                    {branding?.address || '250 State Street, Suite 800, Salt Lake City, UT 84111'}<br />
+                    Tel: {branding?.primaryPhone || '(801) 555-0100'} • {branding?.primaryEmail || 'contact@utahslawyers.com'}
                   </p>
                 </div>
 
@@ -697,6 +826,8 @@ export function InvoicesList() {
       <SettlementStatementModal
         isOpen={isSettlementOpen}
         onClose={() => setIsSettlementOpen(false)}
+        matterId={selectedInvoice?.matterId || matters[0]?.id}
+        matterTitle={selectedInvoice?.matterName || matters[0]?.title}
       />
     </div>
   );

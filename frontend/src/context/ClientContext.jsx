@@ -7,14 +7,7 @@ const ClientContext = createContext();
 
 export function ClientProvider({ children }) {
   const { isAuthenticated } = useAuth();
-  const [clients, setClients] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_clients');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [clients, setClients] = useState([]);
   const [intakes, setIntakes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -24,11 +17,11 @@ export function ClientProvider({ children }) {
     ...c,
     id: c.id,
     clientNumber: c.clientNumber || c.id,
-    type: c.clientType || c.type || 'Organization',
+    type: c.clientType || c.type || 'Individual',
     assignedAttorneyName: c.assignedAttorney?.name || c.assignedAttorneyName || 'Unassigned',
     totalMatters: c._count?.matters !== undefined ? c._count.matters : (c.totalMatters || 0),
     outstandingBalance: c.outstandingBalance || 0,
-    createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    createdAt: c.createdAt ? new Date(c.createdAt).toISOString().split('T')[0] : '',
   });
 
   // Normalizes an intake object
@@ -36,11 +29,26 @@ export function ClientProvider({ children }) {
     ...i,
     id: i.id,
     intakeNumber: i.intakeNumber || i.id,
+    clientName:
+      i.prospectiveClient ||
+      i.client?.name ||
+      i.clientName ||
+      i.contactPerson ||
+      i.contactName ||
+      'Prospective Client',
+    contactName:
+      i.contactPerson ||
+      i.contactName ||
+      i.prospectiveClient ||
+      'Prospective Client',
     practiceAreaName: i.practiceArea?.name || i.practiceAreaName || 'General',
-    conflictStatus: i.conflictStatus || 'In Review',
+    conflictStatus: i.conflictStatus || 'Not Started',
     reviewedBy: i.reviewedByName || i.reviewedBy || null,
     reviewedAt: i.reviewedAt || null,
-    createdAt: i.createdAt ? new Date(i.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    convertedToClient: Boolean(i.convertedToClient),
+    convertedClientId: i.convertedClientId || null,
+    convertedMatterId: i.convertedMatterId || null,
+    createdAt: i.createdAt ? new Date(i.createdAt).toISOString().split('T')[0] : '',
   });
 
   const refreshClients = useCallback(async (params = {}) => {
@@ -137,31 +145,29 @@ export function ClientProvider({ children }) {
   };
 
   const updateConflictCheck = async (id, status, reviewerName, notes) => {
-    try {
-      const payload = {
-        status: status || 'Cleared',
-        notes: notes || `Utah RPC 1.7 Conflict review completed by ${reviewerName || 'Counsel'}.`,
-      };
-      await intakeService.clearConflict(id, payload);
-      await refreshIntakes();
-    } catch (err) {
-      console.warn('Failed to clear conflict on API:', err?.message);
-      // Optimistic UI fallback
-      setIntakes((prev) =>
-        prev.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                conflictStatus: status,
-                reviewedBy: reviewerName,
-                reviewedByName: reviewerName,
-                conflictNotes: notes,
-                reviewedAt: new Date().toISOString().split('T')[0],
-              }
-            : item
-        )
-      );
+    const payload = {
+      status: status || 'Review Completed',
+      notes: notes || `Utah RPC 1.7 Conflict review completed by ${reviewerName || 'Counsel'}.`,
+    };
+    const result = await intakeService.clearConflict(id, payload);
+    await refreshIntakes();
+    return result;
+  };
+
+  const convertIntakeToClient = async (intakeId, data = {}) => {
+    const result = await intakeService.convertToClient(intakeId, data);
+    if (result?.client) {
+      const normalized = normalizeClient(result.client);
+      setClients((prev) => [normalized, ...prev.filter((c) => c.id !== normalized.id)]);
     }
+    await Promise.all([refreshClients(), refreshIntakes()]);
+    return result;
+  };
+
+  const convertIntakeToMatter = async (intakeId, data = {}) => {
+    const result = await intakeService.convertToMatter(intakeId, data);
+    await Promise.all([refreshClients(), refreshIntakes()]);
+    return result;
   };
 
   return (
@@ -178,6 +184,8 @@ export function ClientProvider({ children }) {
         refreshIntakes,
         addIntake,
         updateConflictCheck,
+        convertIntakeToClient,
+        convertIntakeToMatter,
       }}
     >
       {children}

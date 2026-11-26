@@ -3,18 +3,17 @@ import { useMatters } from '../../../context/MatterContext';
 import { useClients } from '../../../context/ClientContext';
 import { useAuth } from '../../../hooks/useAuth';
 import { useToast } from '../../../components/ui/Toast';
-import { PRACTICE_AREAS } from '../../../data/practiceAreas';
+import { PRACTICE_AREAS, normalizePracticeAreaId } from '../../../data/practiceAreas';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { DatePicker } from '../../../components/ui/DatePicker';
 import { parsePIIntakeData, getCleanMatterSummary } from '../../intake/utils/piIntakeHelper';
 import { piService } from '../../../services/piService';
-import { AlertCircle } from 'lucide-react';
 
 export function MatterForm({ initialData = null, defaultClientId = null, initialIntake = null, onSuccess, onCancel }) {
-  const { addMatter, updateMatter } = useMatters();
-  const { clients, refreshClients } = useClients();
+  const { addMatter, convertIntakeToMatter, updateMatter } = useMatters();
+  const { clients, refreshClients, refreshIntakes } = useClients();
   const { allUsers } = useAuth();
   const { addToast } = useToast();
 
@@ -33,16 +32,20 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
   const defaultStaff = staff.find(s => validUuidPattern.test(s.id)) || staff[0];
 
   // Resolve practice area and intake-carried data
-  const intakePaId = initialIntake?.practiceAreaId;
-  const isIntakePI = intakePaId === 'pa-pi' || intakePaId === 'pa-7' || initialIntake?.practiceAreaName?.toLowerCase().includes('personal injury');
-  const initialPracticeAreaId = initialData?.practiceAreaId || (isIntakePI ? 'pa-pi' : (intakePaId || PRACTICE_AREAS[0]?.id || 'pa-civ'));
+  const intakePaId = normalizePracticeAreaId(initialIntake?.practiceAreaId);
+  const isIntakePI = intakePaId === 'pa-pi' || initialIntake?.practiceAreaName?.toLowerCase().includes('personal injury');
+  const initialPracticeAreaId =
+    normalizePracticeAreaId(initialData?.practiceAreaId) ||
+    (isIntakePI ? 'pa-pi' : (intakePaId || PRACTICE_AREAS[0]?.id || 'pa-civ'));
 
   const intakePiData = initialIntake ? parsePIIntakeData(initialIntake.matterSummary) : {};
 
   let initialTitle = initialData?.title || '';
   if (!initialTitle && initialIntake) {
-    const adverse = initialIntake.adverseParties || intakePiData.opposingParties || 'Adverse Parties';
-    initialTitle = `${initialIntake.prospectiveClient} v. ${adverse}`;
+    const adverse = initialIntake.adverseParties || intakePiData.opposingParties;
+    initialTitle = adverse && adverse.toLowerCase() !== 'none'
+      ? `${initialIntake.prospectiveClient} v. ${adverse}`
+      : `${initialIntake.prospectiveClient} - Legal Matter`;
   }
 
   const initialDescription = initialData?.description || getCleanMatterSummary(initialIntake?.matterSummary) || '';
@@ -59,7 +62,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
     } catch {}
   }
 
-  const isPI = initialPracticeAreaId === 'pa-pi' || initialPracticeAreaId === 'pa-7';
+  const isPI = initialPracticeAreaId === 'pa-pi';
   const initialBillingType = initialData?.billingType || (isPI ? 'Contingency' : (
     initialPracticeAreaId === 'pa-bk' || initialPracticeAreaId === 'pa-imm' || initialPracticeAreaId === 'pa-crim' || initialPracticeAreaId === 'pa-evict'
       ? 'Flat Fee'
@@ -68,7 +71,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
 
   const [formData, setFormData] = useState({
     title: initialTitle,
-    clientId: initialData?.clientId || defaultClientId || clients[0]?.id || '',
+    clientId: initialData?.clientId || defaultClientId || initialIntake?.convertedClientId || '',
     practiceAreaId: initialPracticeAreaId,
     responsibleAttorneyId: initialData?.responsibleAttorneyId || defaultAttorney?.id || '',
     assignedStaffId: initialData?.assignedStaffIds?.[0] || defaultStaff?.id || '',
@@ -77,8 +80,8 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
     hourlyRate: initialData?.hourlyRate || '',
     flatFeeAmount: initialData?.flatFeeAmount || '',
     contingencyPercentage: initialData?.contingencyPercentage || (isPI ? '33.33' : ''),
-    budget: initialData?.budget || '',
-    courtName: initialData?.courtName || '',
+    budget: initialData?.budget || (initialIntake?.disputeAmount ? String(initialIntake.disputeAmount) : ''),
+    courtName: initialData?.courtName || (isPI ? '' : (initialIntake?.jurisdictionVenue || '')),
     judge: initialData?.judge || '',
     nextCourtDate: initialData?.nextCourtDate || '',
     statuteOfLimitations: calculatedSOL,
@@ -87,15 +90,27 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
     ethicalWallExcludedRole: initialData?.ethicalWallExcludedRole || 'Paralegal Staff',
   });
 
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      responsibleAttorneyId: prev.responsibleAttorneyId || defaultAttorney?.id || '',
+      assignedStaffId: prev.assignedStaffId || defaultStaff?.id || '',
+    }));
+  }, [defaultAttorney?.id, defaultStaff?.id]);
+
   // Re-synchronize when initialIntake loads or arrives asynchronously
   useEffect(() => {
     if (initialIntake) {
-      const intakePaId = initialIntake.practiceAreaId;
-      const isIntakePIResolved = intakePaId === 'pa-pi' || intakePaId === 'pa-7' || initialIntake.practiceAreaName?.toLowerCase().includes('personal injury');
-      const resolvedPaId = isIntakePIResolved ? 'pa-pi' : (intakePaId || 'pa-civ');
+      const normalizedPa = normalizePracticeAreaId(initialIntake.practiceAreaId);
+      const isIntakePIResolved = normalizedPa === 'pa-pi' || initialIntake.practiceAreaName?.toLowerCase().includes('personal injury');
+      const resolvedPaId = isIntakePIResolved ? 'pa-pi' : (normalizedPa || 'pa-civ');
       const piData = parsePIIntakeData(initialIntake.matterSummary);
-      const adverse = initialIntake.adverseParties || piData.opposingParties || 'Adverse Parties';
-      const resolvedTitle = initialData?.title || `${initialIntake.prospectiveClient} v. ${adverse}`;
+      const adverse = initialIntake.adverseParties || piData.opposingParties;
+      const resolvedTitle = initialData?.title || (
+        adverse && adverse.toLowerCase() !== 'none'
+          ? `${initialIntake.prospectiveClient} v. ${adverse}`
+          : `${initialIntake.prospectiveClient} - Legal Matter`
+      );
       const resolvedDesc = initialData?.description || getCleanMatterSummary(initialIntake.matterSummary) || '';
 
       let calculatedIntakeSOL = initialData?.statuteOfLimitations || '';
@@ -123,10 +138,11 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
         billingType: defaultBilling,
         contingencyPercentage: isIntakePIResolved ? (prev.contingencyPercentage || '33.33') : '',
         hourlyRate: isIntakePIResolved ? '' : prev.hourlyRate,
-        courtName: isIntakePIResolved ? '' : prev.courtName,
+        courtName: isIntakePIResolved ? '' : (prev.courtName || initialIntake.jurisdictionVenue || ''),
         judge: isIntakePIResolved ? '' : prev.judge,
+        budget: prev.budget || (initialIntake.disputeAmount ? String(initialIntake.disputeAmount) : ''),
         statuteOfLimitations: calculatedIntakeSOL || prev.statuteOfLimitations,
-        clientId: prev.clientId || defaultClientId || '',
+        clientId: prev.clientId || defaultClientId || initialIntake.convertedClientId || '',
       }));
     } else if (defaultClientId) {
       setFormData(prev => ({
@@ -229,13 +245,23 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
         const updated = await updateMatter(initialData.id, payload);
         addToast(`Matter "${formData.title}" successfully updated.`, 'success');
         if (onSuccess) onSuccess(updated || initialData);
+      } else if (initialIntake?.id) {
+        if (initialIntake.convertedMatterId) {
+          addToast('This intake has already been converted to a matter.', 'warning');
+          setSubmitting(false);
+          return;
+        }
+        const result = await convertIntakeToMatter(initialIntake.id, payload);
+        const created = result?.matter;
+        await refreshIntakes();
+        addToast(`Intake converted to Matter "${formData.title}" (${created?.matterNumber || ''}).`, 'success');
+        if (onSuccess) onSuccess(created);
       } else {
         const created = await addMatter(payload);
         addToast(`Matter "${formData.title}" created (${created.matterNumber || created.id}).`, 'success');
 
-        // Requirement 7: First Document Automation - Template 096 Letter of Representation
         const createdIsPI = selectedPracticeArea?.id === 'pa-pi' || selectedPracticeArea?.code === 'PI';
-        if (createdIsPI && (intakePiData.accidentDate || intakePiData.insuranceCompany || initialIntake?.adverseParties)) {
+        if (createdIsPI && (intakePiData.accidentDate || intakePiData.insuranceCompany)) {
           try {
             await piService.saveIncident(created.id, {
               incidentDate: intakePiData.accidentDate || undefined,
@@ -279,7 +305,7 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             required
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="e.g. Wasatch Mountain Logistics v. Interstate Freightlines Inc."
+            placeholder="e.g. Client v. Opposing Party"
             error={errors.title}
           />
         </div>
@@ -511,8 +537,19 @@ export function MatterForm({ initialData = null, defaultClientId = null, initial
             Cancel
           </Button>
         )}
-        <Button type="submit" variant="primary" size="sm">
-          {initialData?.id ? 'Save Matter Changes' : 'Open Matter Record'}
+        <Button
+          type="submit"
+          variant="primary"
+          size="sm"
+          disabled={submitting || Boolean(!initialData?.id && initialIntake?.convertedMatterId)}
+        >
+          {submitting
+            ? 'Saving...'
+            : initialData?.id
+            ? 'Save Matter Changes'
+            : initialIntake?.id
+            ? 'Convert Intake & Open Matter'
+            : 'Open Matter Record'}
         </Button>
       </div>
     </form>

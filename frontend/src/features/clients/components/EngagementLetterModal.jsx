@@ -17,12 +17,12 @@ import { useToast } from '../../../components/ui/Toast';
 export function EngagementLetterModal({
   isOpen,
   onClose,
-  clientName = 'Wasatch Mountain Logistics LLC',
-  contactPerson = 'Robert H. Henderson',
-  email = 'rhenderson@wasatchlogistics.com',
-  matterTitle = 'Commercial Contract Enforcement & Carrier Defense',
-  practiceAreaName = 'Civil Litigation & Dispute Resolution',
-  attorneyName = 'Thomas Bludworth, Esq.',
+  clientName = 'Client',
+  contactPerson = 'Primary Contact',
+  email = '',
+  matterTitle = 'Legal Representation Matter',
+  practiceAreaName = 'General Practice',
+  attorneyName = 'Assigned Counsel',
   onDispatchSignature = null
 }) {
   const { addToast } = useToast();
@@ -157,7 +157,7 @@ export function EngagementLetterModal({
                 Legal services rendered under this agreement shall be billed at <strong>${hourlyRate}.00 per hour</strong> for lead counsel ({attorneyName}) and customary associate and paralegal rates.
               </p>
               <p className="text-[11px] mt-1.5">
-                Client agrees to deposit an initial retainer of <strong>${retainerDeposit.toLocaleString()}.00</strong> into the firm's dedicated IOLTA Client Trust Account, compliant with Utah State Bar Rule 14-1001. Earned fees will be drawn monthly against detailed, itemized invoices.
+                Client agrees to deposit an initial retainer of <strong>${retainerDeposit.toLocaleString()}.00</strong> into the firm's dedicated IOLTA Client Trust Account, subject to applicable jurisdiction trust-accounting rules. Earned fees will be drawn monthly against detailed, itemized invoices.
               </p>
             </div>
 
@@ -168,7 +168,7 @@ export function EngagementLetterModal({
             <div className="pt-4 border-t border-[#D9D6CF] flex justify-between items-end">
               <div>
                 <p className="font-serif font-bold text-[#06244B]">{attorneyName}</p>
-                <p className="text-[10px] text-[#667085]">Managing Litigation Partner, Utah State Bar</p>
+                <p className="text-[10px] text-[#667085]">Supervising Attorney (Draft Template — Counsel Review Required)</p>
               </div>
               <div className="text-right">
                 <div className="w-48 border-b border-dashed border-[#667085] pb-1 mb-1 text-[11px] text-amber-700 italic">

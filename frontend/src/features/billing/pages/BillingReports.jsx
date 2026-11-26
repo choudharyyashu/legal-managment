@@ -66,7 +66,7 @@ export function BillingReports() {
       const practiceArea = matterMap.get(entry.matterId) || 'Civil Litigation & Dispute Resolution';
       const existing = groupMap.get(practiceArea) || { hoursBilled: 0, totalFees: 0, collected: 0 };
       const hours = Number(entry.hours) || 0;
-      const rate = Number(entry.rate) || 500;
+      const rate = Number(entry.rate) || 0;
       const amount = Number(entry.amount) || hours * rate;
 
       existing.hoursBilled += hours;
@@ -80,7 +80,7 @@ export function BillingReports() {
     return Array.from(groupMap.entries()).map(([practiceArea, data]) => {
       const realization = data.totalFees > 0
         ? ((data.collected / data.totalFees) * 100).toFixed(1) + '%'
-        : '100.0%';
+        : '0.0%';
       return {
         practiceArea,
         hoursBilled: Number(data.hoursBilled.toFixed(1)),
@@ -95,7 +95,7 @@ export function BillingReports() {
   const totalCollected = Number(financials.totalCollected) || 0;
   const realizationRate = totalBilled > 0
     ? ((totalCollected / totalBilled) * 100).toFixed(1) + '%'
-    : '100.0%';
+    : '0.0%';
 
   const columns = [
     {
@@ -154,7 +154,7 @@ export function BillingReports() {
       const totalHours = reportRows.reduce((sum, r) => sum + r.hoursBilled, 0).toFixed(1);
       const totalFees = reportRows.reduce((sum, r) => sum + r.totalFees, 0).toFixed(2);
       const totalCollected = reportRows.reduce((sum, r) => sum + r.collected, 0).toFixed(2);
-      const overallRealization = '90.3%';
+      const overallRealization = realizationRate;
 
       rows.push([
         '"Total Firm Summary (YTD)"',

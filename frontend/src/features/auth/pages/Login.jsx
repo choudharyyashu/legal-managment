@@ -126,7 +126,7 @@ export function Login() {
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>Official CosmoLex Accounting Bridge</span>
+              <span>Native Double-Entry General Ledger &amp; Trust</span>
             </div>
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
@@ -295,7 +295,7 @@ export function Login() {
 
         {/* Static Bottom Security Watermark */}
         <div className="w-full text-center py-1 text-[10px] text-[#667085] flex-shrink-0">
-          <span>Protected by 256-Bit SSL Encryption • Utah Third Judicial District Court &amp; Bar Approved Standards</span>
+          <span>Protected by 256-Bit SSL Encryption • Role-Based Practice Access Controls</span>
         </div>
       </div>
 

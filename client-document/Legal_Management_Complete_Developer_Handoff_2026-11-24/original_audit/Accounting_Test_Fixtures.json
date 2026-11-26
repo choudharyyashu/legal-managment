@@ -1,0 +1,160 @@
+{
+  "review_date": "2026-11-17",
+  "status": "Synthetic proposed fixtures; not application tests; not executed",
+  "fixtures": [
+    {
+      "id": "FIX-ACCT-01",
+      "currency": "USD",
+      "units": "integer cents",
+      "gross_payments": [
+        1500,
+        1500
+      ],
+      "processor_fee": 30,
+      "net_bank_deposit": 2970,
+      "expected": "One2970 bank match, gross3000, fee30; no second client payment."
+    },
+    {
+      "id": "FIX-ACCT-02",
+      "bank_debit": 65200,
+      "split_categories": {
+        "equipment": 23500,
+        "supplies": 41700
+      },
+      "expected": "Sum65200; no duplicate on retry."
+    },
+    {
+      "id": "FIX-ACCT-03",
+      "bank": 100000,
+      "trust_control": 100000,
+      "client_ledgers": {
+        "A": 40000,
+        "B": 60000
+      },
+      "expected": "Three-way balances align; further policy review still required."
+    },
+    {
+      "id": "FIX-ACCT-04",
+      "bank": 100000,
+      "trust_control": 100000,
+      "client_ledgers": {
+        "A": 40000,
+        "B": 55000
+      },
+      "expected": "5000 discrepancy; fail three-way completion."
+    },
+    {
+      "id": "FIX-ACCT-05",
+      "bank_debit": 65200,
+      "exact_amount_rule_predicates": [
+        23500,
+        41700
+      ],
+      "expected": "Neither rule equals65200. Do not infer automatic splitting from this example."
+    },
+    {
+      "id": "FIX-ACCT-06",
+      "periods": [
+        "2026-01",
+        "2026-02"
+      ],
+      "status": "Both completed",
+      "correction_target": "2026-01",
+      "expected": "Later-period dependency blocks silent edit; authorized correction retains prior evidence."
+    }
+  ],
+  "R71": {
+    "status": "Synthetic proposed inputs; no application tests executed",
+    "csv_artifacts": [
+      {
+        "file": "accounting_import_fixtures/journal_balanced.csv",
+        "sha256": "cc7df583c7a382c1c1c6c57d081ea914d4367d0dd0ab694976d364f911459ef1"
+      },
+      {
+        "file": "accounting_import_fixtures/journal_unbalanced.csv",
+        "sha256": "1d7d474fdd4827fa7225907a5d2a067e40bc5c07fd074ed78c4a39aa67b63979"
+      }
+    ],
+    "fixture_integrity_check": "Balanced sample differs from unbalanced sample by exactly one cent; this is input integrity, not application validation.",
+    "cases": [
+      {
+        "test_id": "AT-0573",
+        "requirement_id": "F-0573",
+        "expected": "Use J-OK and J-BAD CSV files with adjacent grouping, positive single-sided amounts and exact decimal balance. Add nonadjacent repeated IDs, conflicting dates, duplicate/missing headers, both-sided amounts and unresolved account references; show per-entry errors. Treat conflicting client/matter/memo values as explicit review decisions rather than silently trusting the first row. Commit only selected ready entries, record created/skipped identities and safely reconcile timeout retries. A warning-only trust entry without client allocation must still follow the user program’s stricter reconciliation policy.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0574",
+        "requirement_id": "F-0574",
+        "expected": "Create two identically named operating accounts and two trust accounts with distinct IDs. Offer only eligible unlinked destinations for the required type, reject an already-linked or wrong-type destination, and revalidate concurrent changes before saving. Historical transactions and client allocations retain their source IDs. Verify mapping separately from bank-feed connection, successful sync and reconciliation; choosing an account cannot prove those later operations.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0575",
+        "requirement_id": "F-0575",
+        "expected": "Use a synthetic shared clearing and liability pair containing records for two trust banks plus one unsupported legacy record. Preview target ledger IDs and replacement entries, then require review of both paired scopes. Preserve balanced totals and per-client allocation, record exceptions and prevent duplicate effects on retry. Reversal retains original and corrective evidence. A zero-dollar reconciliation artifact must never be presented as actual bank movement; locked periods require an explicit correction plan.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0576",
+        "requirement_id": "F-0576",
+        "expected": "Use transactions before and after October 8, 2026 and events spanning a simulated two-year retention boundary. Display coverage start, retention rule, timezone and missing intervals beside event results. Verify actor, changed fields, prior/new values and ledger impact where available. Export only authorized evidence with explicit gaps. Preserve older audit evidence under the approved retention policy rather than copying a vendor display window as the user program’s deletion rule.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0577",
+        "requirement_id": "F-0577",
+        "expected": "Use synthetic collected tax 5650 cents and recoverable input 2500 cents with independent model output 3150 cents before adjustments. Trace each report line to exact transactions and effective rate/authority versions. Represent a manual adjustment as unresolved until entered and reviewed; do not default missing required adjustments to a verified zero. Test basis/date boundaries and produce real CSV/PDF outputs in the eventual test environment. The vendor’s Canadian line104/107 and accrual narration is evidence to verify, not current legal advice or a universal tax rule.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0051-R71-1",
+        "requirement_id": "F-0051",
+        "expected": "Test reordered headers, missing company, repeated header, malformed CSV, invalid email, region-specific tax field and file/row boundary cases. Reconcile every input row with actual created/skipped/error IDs. Simulate interruption after two creations with a zero-count UI; report unknown/partial outcome and inspect stable records before retry. Preserve an error report before expiry; never infer zero writes from zero counters.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0052-R71-2",
+        "requirement_id": "F-0052",
+        "expected": "Use active Acme LLC, inactive ACME Inc., punctuation variants, two genuinely distinct similarly named vendors and an earlier same-file row. Show candidate IDs and reason; skip potential duplicates by default under a declared policy. Explicit import-as-new creates a separate identity without overwriting old data. Retry uses actual batch/source IDs, not name similarity alone.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0054-R71-3",
+        "requirement_id": "F-0054",
+        "expected": "Discard a preview with zero writes; replace its source file without committing old rows. After a partial confirmed import, preview undo against actual posted IDs and any dependent or locked records. Retain original source hash, review version and balanced correction history. A generic Undo button cannot prove complete rollback.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0225-R71-4",
+        "requirement_id": "F-0225",
+        "expected": "Test fresh versus completed setup, 200/201-character names, 32/33-character codes, invalid detail/type pairs, missing parent, cycles and a second nesting level. Display imported, generated-system, deselected and failed identities separately. System dependencies cannot be silently unchecked; current allowed detail types and regional tax authorities require a versioned source, not guessed values.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0224-R71-5",
+        "requirement_id": "F-0224",
+        "expected": "Compare a manually created journal and a Manage-origin transaction with the same description. Permit only supported authorized journal edits; route source-owned changes to the source adapter and require re-sync evidence. No downstream edit claims to update Manage through a one-way sync. Reject an unexplained balancing plug and preserve balanced lines and prior evidence.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0214-R71-6",
+        "requirement_id": "F-0214",
+        "expected": "Import a synthetic balanced trust-related entry with no client and another with conflicting matter/client identities. Require explicit resolution and preserve the source values; do not silently prefer the matter client without review in the user program. Keep three-way reconciliation incomplete while required allocation remains unresolved.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0226-R71-7",
+        "requirement_id": "F-0226",
+        "expected": "Generate fixture reports with one account, two accounts and an empty selection. Disclose whether empty means all accounts before generation and apply authorization filtering. Compare opening balances and entry IDs to the oracle. Created, matched and reconciled must have separate evidence; a printed report does not prove reconciliation.",
+        "status": "Not executed"
+      },
+      {
+        "test_id": "AT-0225-R71-8",
+        "requirement_id": "F-0225",
+        "expected": "Use Canada/CAD and another synthetic locale. Verify explicit country/currency settings, effective tax-authority versions and protected system-ledger IDs. Test allowed rename versus denied removal while preserving linked records. Recoverable versus nonrecoverable structures must follow an approved versioned model. The 00:37 frame shows country only; it cannot prove currency or tax-law correctness.",
+        "status": "Not executed"
+      }
+    ]
+  }
+}

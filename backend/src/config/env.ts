@@ -12,7 +12,7 @@ try {
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CLIENT_ORIGIN: z.string().default('http://localhost:3000,http://localhost:5173,https://legal-managment.netlify.app'),
+  CLIENT_ORIGIN: z.string().default('http://localhost:3000,http://localhost:5173,https://legall-managment.netlify.app'),
   DATABASE_URL: z.string().default('mysql://root:@localhost:3306/legal-db'),
   DB_HOST: z.string().default('localhost'),
   DB_PORT: z.coerce.number().default(3306),

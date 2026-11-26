@@ -41,6 +41,6 @@ export interface DocumentListQuery {
   clientId?: string;
   category?: string;
   isPrivileged?: boolean;
+  ocrSearch?: boolean;
   search?: string;
 }
-

@@ -1,0 +1,182 @@
+{
+  "date": "2026-11-17",
+  "tests": [
+    {
+      "requirement_id": "F-0387",
+      "id": "AT-0387-R81-1",
+      "title": "Attribute manual activity to actual staff, date and matter",
+      "developer_story_extension": "As the attorney, I need outside work added with explicit source and actual work date, without silently inheriting an unrelated matter.",
+      "scenario_and_expected_result": "Create from matterA and global view: matterA prefills only in the first path. Change staff/date deliberately, enter00:30 in the configured hours:minutes control and compare with0.30 decimal hours; preserve unit semantics rather than treating both as equal. Reject impossible or ambiguous input with an actionable explanation. A manually asserted call/text retains its own identity, evidence and unresolved mapping; it cannot become verified measured time solely because Save succeeds. Test a closed matter and denied staff/matter access. Preserve each event in the12:00,16:00,18:00,21:00 America/Denver review.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-gb/articles/22384417274263-Add-an-Activity",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Attribute manual activity to actual staff, date and matter",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0071",
+      "id": "AT-0071-R81-2",
+      "title": "Version source corrections before repeat conversion",
+      "developer_story_extension": "As the reviewer, I need corrections to manual activity reflected through reviewed derived-time revisions.",
+      "scenario_and_expected_result": "Create a synthetic prior-day manual activity, convert, then amend staff, matter, duration and details. Re-run the same conversion twice: maintain source identity and explicit revision lineage, with no duplicate fee or hidden rewrite of approved time. Preview how details become a proposed subject; redact confidential internal notes before any client-facing use. A failed conversion leaves activity visible. Invoice-linked corrections use the approved adjustment workflow instead of rewriting issued content.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-gb/articles/22384417274263-Add-an-Activity",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Version source corrections before repeat conversion",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0041",
+      "id": "AT-0041-R81-3",
+      "title": "Separate task assignees from completion ownership",
+      "developer_story_extension": "As the administrator, I need tasks assigned to multiple staff without multiplying work or losing who actually completed it.",
+      "scenario_and_expected_result": "Assign one synthetic task toA/B, then let permitted userC complete it. Preserve assignees, responsible owner, actual completer and event time separately; completion does not create three activities. Reassign while another user completes: resolve against the current task version and retain both events. Bulk complete two eligible tasks and one denied task with per-item outcomes; retry cannot duplicate completion. Required fields, due date and priority are validated consistently in matter/global and desktop/web paths. No real tasks are changed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5859270337815-Tasks",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Separate task assignees from completion ownership",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0384",
+      "id": "AT-0384-R81-4",
+      "title": "Keep estimated task duration distinct from verified work",
+      "developer_story_extension": "As the attorney, I need task estimates and completion events separated from worked time before approval.",
+      "scenario_and_expected_result": "Use a45-minute estimated task completed by a different staff member after20 minutes of supported work. Preserve estimate, actual evidence, completer and proposed time distinctly; the estimate cannot silently become a verified45-minute charge. An empty duration remains unresolved rather than zero work. Reopen/recomplete without double billing. Confirm proposed attribution follows the approved completer policy and is not mistaken for proof of all assignees’ work.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5859270337815-Tasks",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Keep estimated task duration distinct from verified work",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0041",
+      "id": "AT-0041-R81-5",
+      "title": "Keep task templates, attachments and history independent",
+      "developer_story_extension": "As the attorney, I need a task checklist linked to exact documents/templates and attributable history without equating document generation with legal completion.",
+      "scenario_and_expected_result": "Link an existing file and an approved template version to a synthetic task, add two subtasks and a note. Generate one document: preserve template/version/field provenance and permissions, but do not mark the parent task or both subtasks complete. Stale/deleted/restricted links are explicit failures, not silently substituted files. Date/assignee/subtask/comment changes retain actor/time and old/new values. A hyperlink opens only through a deliberate action; embedded URL text cannot command automation. Workflow-column support for tasks created before8.5 stays unknown/legacy, not falsely blank meaning no workflow.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5859270337815-Tasks",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Keep task templates, attachments and history independent",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0418",
+      "id": "AT-0418-R81-6",
+      "title": "Reconcile filtered task exports and priorities",
+      "developer_story_extension": "As the reviewer, I need exported tasks to match the authorized filtered population and preserve field meaning.",
+      "scenario_and_expected_result": "Filter synthetic tasks by assignee, category, due and completion dates, including undated, deleted, workflow-generated and multiple-assignee tasks across pages. Export to a safe spreadsheet: reconcile stable task IDs and row count, explicitly declare one-row-per-task versus per-assignee semantics, and preserve priority/due/completed meaning. Escape spreadsheet-formula payloads in task text and links. A printable Excel list is not proof reminders were sent, deadlines calculated correctly or work completed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5859270337815-Tasks",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Reconcile filtered task exports and priorities",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0483",
+      "id": "AT-0483-R81-7",
+      "title": "Retain expense and activity evidence for a fee-review packet",
+      "developer_story_extension": "As the attorney, I need an auditable work-and-cost packet with source limits visible before any legal fee request.",
+      "scenario_and_expected_result": "Use synthetic medical-records, witness and filing costs with receipt hashes, quantities, prices, payer and payment state. Duplicate import preserves evidence without doubling totals; credits adjust net costs and recoverability remains independently reviewed. Export a custom multi-month, all-authorized-staff activity set and reconcile row IDs, totals, dates, exclusions and capture gaps. Do not label a packet court-ready or legally sufficient from a CSV alone; approved current forms, jurisdiction, dates and exact field mappings remain required. No petition is filed or client money moved.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5863152110103-Tracking-Expenses-and-Time-Tracking-Basics-for-Workers-Compensation",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Retain expense and activity evidence for a fee-review packet",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0386",
+      "id": "AT-0386-R81-8",
+      "title": "Make billability defaults depend on entry method explicitly",
+      "developer_story_extension": "As billing staff, I need automatic, Time Finder and manual-entry defaults distinguished and reviewed before charging a client.",
+      "scenario_and_expected_result": "Build a synthetic seven-row matrix: unset, fixed, appearance-fixed, hourly, contingency-percent, contingency-amount and nonbillable. Test each through automatic, finder and manual paths. Preserve captured effort regardless of proposed charge; fixed-fee manual entries and automatic entries may have different source-described defaults. Missing classification requires review in this program rather than inheriting a billable value. Version the applicable policy, contract/region and user approval; contingency activity cannot become an invoice solely through time capture.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5863152110103-Tracking-Expenses-and-Time-Tracking-Basics-for-Workers-Compensation",
+      "review_date": "2026-11-17",
+      "workflow": {
+        "input": "Synthetic tasks, activity/expense evidence and versioned permissions/settings",
+        "initial_state": "Proposed fixture; no running app or client data",
+        "user_action": "Make billability defaults depend on entry method explicitly",
+        "output": "Attributable reviewed ledger/packet or explicit unresolved exception",
+        "exceptions_and_dependencies": "Exact current Smokeball plan, platform, permissions and AutoTime rollout require verification. GB hh:mm/units and regional labels are separate from US2024 Prosper+ wording and US2026 Tasks guide. Historical UI examples do not establish current deployment, valid billing or fee-petition compliance."
+      }
+    },
+    {
+      "requirement_id": "F-0603",
+      "developer_story_extension": "As the attorney, I need estimated fees-minus-staff-cost displayed with its exact basis and limitations, separately from collections, trust balances and fully reconciled profit.",
+      "id": "AT-0603",
+      "scenario_and_expected_result": "Seed5000.00billed fees,245.28staff cost,2000.00collected cash,300.00unreimbursed disbursements and unknown overhead. Show4754.72only as the declared fees-minus-staff-cost estimate; it is neither collected cash nor reconciled net profit. Display gross/net/tax/currency basis, cost-rate version, time coverage and exclusions. Zero or missing staff cost is distinct from genuinely no cost. A refund, time correction or rate change creates a versioned recalculation, not a silent rewrite of an approved report. Reconcile source rows and round once under explicit policy; permissioned export shows the same basis and gaps. No actual accounting or payment executed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://support.smokeball.com/hc/en-us/articles/5863152110103-Tracking-Expenses-and-Time-Tracking-Basics-for-Workers-Compensation"
+    }
+  ],
+  "status": "Nine original synthetic proposed acceptance cases, all Not executed",
+  "unit_semantics_fixture": {
+    "hh_mm_00_30_minutes": 30,
+    "decimal_0_30_hours_minutes": 18,
+    "limits": "No actual input field or billing policy tested"
+  },
+  "estimate_fixture": {
+    "fees": 5000,
+    "staff_cost": 245.28,
+    "estimate": 4754.72,
+    "collections": 2000,
+    "disbursements": 300,
+    "overhead": null,
+    "limits": "Illustrative arithmetic only; no real financial reconciliation"
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "date": "2026-11-17",
+  "status": "Synthetic test design; application tests Not executed",
+  "packet": "P-A",
+  "matter": "M-A",
+  "users": [
+    "U-A",
+    "U-B"
+  ],
+  "media_ids": [
+    "PHOTO-1",
+    "NOTE-1",
+    "DOC-1"
+  ],
+  "case_states": [
+    "draft",
+    "submitted",
+    "returned",
+    "reviewed",
+    "processed",
+    "retained",
+    "cancelled"
+  ],
+  "tests": [
+    {
+      "requirement_id": "F-0578",
+      "id": "AT-0578",
+      "scenario_and_expected_result": "Test all combinations of tenant enabled/disabled, portal permission present/absent and Investigator eligibility present/absent for synthetic users U-A/U-B. A visible menu or emailed link cannot grant server access. Assign P-A/M-A only to U-A, attempt direct access as U-B, then revoke U-A while its session remains open. Revalidate reads, uploads and submit on the server. Feature disable must preserve existing packet evidence and show an explicit unavailable state. Verify activation privileges separately from staff use.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0579",
+      "id": "AT-0579",
+      "scenario_and_expected_result": "Create P-A with client/defendant roles, insurance and treatment entries, one note, photo and document. Save draft, submit twice with the same request identity, and inject a timeout after persistence. Reconcile one submitted version and one review notification obligation. Show its source fields and hashes; subsequent investigator changes require return/new version rather than silent mutation. Pending, submitted, reviewed, processed and retained are separate states. Queue filters cannot mark unseen records reviewed; processed packets remain eligible for follow-up until actual retention evidence is recorded.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0580",
+      "id": "AT-0580",
+      "scenario_and_expected_result": "Use case M-A with existing insurer, treatment date and defendant; submit conflicting values plus a new note/photo/document. Preview old/new values, source and destination IDs with accept/reject choices. Return records a correction reason and version, with email delivery separate. Processing commits only the reviewed changes and attributable automatic notes. If another user edits the case after preview, block or rebase explicitly. Retry must not duplicate case entries, media or notes. Preserve the packet snapshot, rejected values and previous case facts under recovery policy. The source warns of overwriting existing data but does not demonstrate conflict resolution.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0581",
+      "id": "AT-0581",
+      "scenario_and_expected_result": "Reassign P-A from U-A to U-B while U-A has an open edit. Record old/new owner, actor, reason and packet version. U-B sees the preserved draft once; stale U-A save/submit/upload is rejected or held for authorized reconciliation. Retry sends at most one notification per reassignment event and records dispatch separately from delivery. Disabled or unauthorized users cannot be selected. Verify failed email delivery does not revert persisted ownership or leave an unowned packet.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0582",
+      "id": "AT-0582",
+      "scenario_and_expected_result": "Cancel synthetic P-A with notes, photos and documents. Present packet/matter identity, consequences and retention policy. Ordinary cancellation stops work and revokes active sessions/links but preserves permitted recovery/audit evidence. A separately approved purge is unavailable while policy or hold forbids it and never follows a generic Cancel click. Race a submission against cancellation: one ordered state wins with recoverable competing evidence. Test restore in a disposable environment with attachment hashes and case relationships. Do not claim the vendor irreversible delete implements this safer firm policy.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    }
+  ],
+  "limit": "Approved templates, editions, field schema and exact all300-document mappings remain pending. No real packet created/deleted.",
+  "R74": {
+    "status": "Synthetic proposed tests; Not executed",
+    "case_types": [
+      "PI",
+      "Immigration"
+    ],
+    "link_policies_days": [
+      1,
+      7
+    ],
+    "language_cases": [
+      "approved Spanish",
+      "browser machine translation",
+      "unavailable translation"
+    ],
+    "tests": [
+      {
+        "id": "AT-0583",
+        "scenario_and_expected_result": "Create synthetic PI and Immigration schema versions with distinct field IDs, a choice and a date. Reorder/rename without changing saved identities; deleting a referenced field preserves old responses and flags affected document mappings. Open a client-facing link and internal investigator route: show which schema/version each supports. Unsupported custom fields remain explicit rather than being silently omitted. Publish v2 while v1 response is open; pin its response/mapping version and require a deliberate migration preview. Test one-active-template-per-type policy and historical versions separately; no limit on the firm’s full300-document catalog is inferred.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      {
+        "requirement_id": "F-0578",
+        "id": "AT-0578-R74-1",
+        "title": "Initial assignment, filter terminology and notification are separate",
+        "developer_story_extension": "As intake staff, I need initial packet assignment verified independently from user eligibility and email delivery.",
+        "scenario_and_expected_result": "With eligible U-A and ineligible U-B, preview a new packet’s destination case and assignee. Resolve the guide’s intake-worker versus Investigator filter wording against the actual role model before approval. Double-submit creates one assignment and one message obligation; a failed notification remains actionable without duplicating packet creation. Confirm queue/status from persisted state rather than an email link.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://supportcenter.casepeer.com/en/articles/9344392-assign-an-intake-packet-to-an-investigator",
+        "review_date": "2026-11-17"
+      },
+      {
+        "requirement_id": "F-0200",
+        "id": "AT-0200-R74-2",
+        "title": "Keep three intake feature entitlements independent",
+        "developer_story_extension": "As the administrator, I need independent capability flags and current contract evidence for internal custom intake, client forms and investigator portal.",
+        "scenario_and_expected_result": "Test each feature on/off independently using synthetic entitlements. Unauthorized activation fails server-side. Changing a toggle cannot grant a user a packet role or validate an old screenshot’s Basic/Pro/Advanced plan. Record entitlement source/effective date; retain unavailable paid capabilities in inventory and preserve existing packet evidence.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://supportcenter.casepeer.com/en/articles/9343574-activate-client-intake-forms",
+        "review_date": "2026-11-17"
+      },
+      {
+        "requirement_id": "F-0580",
+        "id": "AT-0580-R74-3",
+        "title": "Client submission review preserves overwritten facts",
+        "developer_story_extension": "As the attorney, I need client-origin changes reviewed with exact previous values and an attributable case update.",
+        "scenario_and_expected_result": "Submit first-name and birth-date conflicts while another worker edits the case. Notify only currently authorized assigned workers, not every historical assignee. Message Center and case-note links resolve the same response ID/version. Highlighted fields must have before/after/source values. Apply one reviewed change set, preserve overwritten values and automatic-note evidence, and reject or rebase a stale preview; the client Submit action cannot itself overwrite verified case data.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://supportcenter.casepeer.com/en/articles/9344029-review-client-intake-forms",
+        "review_date": "2026-11-17"
+      },
+      {
+        "requirement_id": "F-0068",
+        "id": "AT-0068-R74-4",
+        "title": "Distinguish translated display from approved Spanish intake",
+        "developer_story_extension": "As intake staff, I need the client’s chosen language, approved question version and original responses preserved independently of browser translation.",
+        "scenario_and_expected_result": "Open a Spanish-preferred synthetic client form in Chrome with translation on/off and another supported browser. Browser translation being unavailable must not produce an unlabeled English-only success. For the firm’s Spanish intake requirement, use an approved Spanish question/validation set mapped to the same stable fields, preserve original answers and label any machine translation with provenance. Test date/number locale, names, roles and notices. A Google Translate screenshot does not prove semantic accuracy, native support or approval.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://supportcenter.casepeer.com/en/articles/9344028-generate-a-client-intake-form-link-in-the-client-s-preferred-language",
+        "review_date": "2026-11-17"
+      },
+      {
+        "requirement_id": "F-0067",
+        "id": "AT-0067-R74-5",
+        "title": "Test intake link lifetime and submission without assuming autosave",
+        "developer_story_extension": "As the attorney, I need an explicit lifetime and recovery policy for client-intake links across all access routes.",
+        "scenario_and_expected_result": "Generate link L-A for M-A with synthetic one-day and seven-day policies, then test exact expiry boundary and revoked direct URLs. Regeneration must declare whether L-A remains valid; do not guess. Keep ordinary share-link expiration distinct from client-intake expiration. The static form warns progress is not saved: present the actual save/resume behavior and a protected recovery policy before collection. Copying a link is not delivery; pending is not submission; submitted is not approved case update.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null,
+        "source_url": "https://supportcenter.casepeer.com/en/articles/9344030-generate-client-intake-form-link",
+        "review_date": "2026-11-17"
+      }
+    ]
+  }
+}

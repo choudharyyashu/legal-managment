@@ -1,0 +1,182 @@
+{
+  "date": "2026-11-16",
+  "status": "Original synthetic fixtures; all application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0508",
+      "workflow": {
+        "input": "Versioned PDF and reviewed terms, regions and pattern matches",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Review candidates, apply redactions, save and inspect release bytes",
+        "output": "Redacted derivative with selection manifest and controlled original",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0508",
+        "scenario_and_expected_result": "Use a synthetic PDF with repeated names, email/phone/card patterns, scanned-image text, form values, comments and an attachment. Review each match, exclude one false positive, add multiple terms and confirm the final selection. A drawn black rectangle alone fails redaction. After apply/save, verify exported text, search, copy/paste, rendering, object streams and intended metadata/attachment policy. Earlier unredacted versions remain separately protected; a share link must not expose them accidentally. Test failed apply/save and preserve original evidence under access control. Pattern detection is candidate discovery, not proof of complete detection or privilege review.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0509",
+      "workflow": {
+        "input": "Known reference length, page version, measurement objects and units",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Calibrate and measure geometry or count marks",
+        "output": "Traceable measurement values with scale and uncertainty",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0509",
+        "scenario_and_expected_result": "Use a synthetic diagram with a known ten-unit edge, rectangle and three count marks. Calibrate, measure distance/perimeter/area and verify units, precision and count. Test a per-object scale override and whether later objects inherit the intended scale. Resize or replace the page: flag stale calibration instead of silently reusing it. Distinguish photo-plane estimates from verified physical measurements; perspective/distortion and unknown reference length require an explicit limitation. Save/reopen/export without losing calibration metadata or changing evidence bytes unnoticed.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0510",
+      "workflow": {
+        "input": "Approved PDF edition, typed field schema and chosen completion route",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Place/edit fields, apply, fill and validate supported output",
+        "output": "Versioned fillable PDF or explicit incompatible-route result",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0510",
+        "scenario_and_expected_result": "Create text, signature, checkbox, radio, list and combo fields using synthetic values. Verify unique names, default values, multiline/read-only/required flags, ordered options and list multiselect. Apply fields, fill, save/reopen and test external PDF/share-link behavior. Separate field-application from document save. A list/combo used in Doc Generation must show its documented incompatibility and require an approved alternative rather than silently dropping values. Test duplicate names, missing required values, fields moved across pages and locked form edits. Preserve approved form edition and exact field map; these synthetic fields do not approve any of the300 templates.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0511",
+      "workflow": {
+        "input": "Source PDFs/converted inputs, page IDs and reviewed range/order plan",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Insert, delete, extract, rotate or reorder then save/copy",
+        "output": "Verified derivative or local extract with page provenance",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0511",
+        "scenario_and_expected_result": "Use two synthetic PDFs with uniquely labeled pages. Insert all pages and a comma/range subset after a specified destination page; validate duplicates, out-of-range input and invalid ranges. Delete/extract a selected range and verify resulting order/count/hashes. Extracted pages downloaded locally are not automatically filed or sent. Rotate pages through thumbnail controls and verify saved orientation, separately from view-only rotation. Multi-select, move-to-top/bottom and drag reorder must affect only selected pages. On failure, retain an intact original and a recoverable pending operation; reconcile bookmarks/forms after page removal. The source literal .docs insertion extension needs clarification, not silent correction.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0512",
+      "workflow": {
+        "input": "PDF page identities and desired bookmark hierarchy",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Create, rename, nest, reorder and navigate bookmarks",
+        "output": "Saved navigable outline or explicit unresolved targets",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0512",
+        "scenario_and_expected_result": "Create parent/child bookmarks with similar names, insert below the selected bookmark, rename and reorder across nesting levels. Verify click navigation after page insertion/reordering, deletion of a target page and extraction. Broken targets must be reported or resolved under an explicit policy, never silently point to unrelated text. Save/reopen/download and verify outline hierarchy and destinations. Distinguish editor outline behavior from guaranteed support in every external viewer.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0513",
+      "workflow": {
+        "input": "PDF text structure, selected block and available fonts",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Edit supported block or crop under an approved derivative policy",
+        "output": "Reviewed revised PDF with recoverable prior version",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0513",
+        "scenario_and_expected_result": "Test a generated-text PDF, image-only scan and OCRed-image PDF separately. Only supported text blocks enter in-line editing; selectable OCR text does not establish editable source text. Change, move and delete a block, deny unsupported cross-page movement and inspect bold/underline/italic styling. Remove the original font and show the substituted block/font for review. Preserve an original version before irreversible operations and verify saved bytes/pagination. Test crop separately: source says it adds the cropped region as first page and cannot undo; verify exact output rather than assuming conventional destructive cropping. Letter edits retain I/me/my and four-digit years.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0514",
+      "workflow": {
+        "input": "PDF version, annotation objects, presets and permitted attachments",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Annotate, comment, style, attach and review output",
+        "output": "Attributable annotation layer and verified output policy",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0514",
+        "scenario_and_expected_result": "Add highlight, underline, strikeout, comment, text, shapes and freehand marks to a synthetic PDF; move/resize/edit/erase and test undo/redo only where supported. Configure four style presets and verify opacity/thickness/text size after reopening. Add a callout, stamp and embedded attachment; verify link/download permissions and file hashes. Search comments and older-version annotations without merging them into current source text. A rectangle cannot count as applied redaction and a stamp/drawn signature cannot count as an e-signature certificate. Test exports/prints with annotations included and excluded, preserving review intent.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    },
+    {
+      "feature_id": "F-0515",
+      "workflow": {
+        "input": "Saved PDF version, user display preferences and search terms",
+        "initial_state": "Proposed synthetic test fixture; no live matter files edited",
+        "user_action": "Adjust view settings and search/navigate results",
+        "output": "Accurate current-version view/search with unchanged document bytes",
+        "exceptions_and_dependencies": "Static source evidence only. Version, save, permissions, downstream PDF support and negative paths require runnable application tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0515",
+        "scenario_and_expected_result": "Set theme/language and edit a keyboard shortcut; verify accessibility and collision handling under a documented persistence policy. Switch hand/text selection, page layout, zoom and view rotation, confirming source bytes stay unchanged. Search synthetic mixed-case whole-word/subword text and navigate all matching pages. OCR failure and zero results must not imply the term is absent from page images. Compare the selected saved version, not an unexplained stale preview. A view preference or opened search hit does not establish reading, approval or billable time.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      }
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0149",
+      "title": "Optimization and derivative identity",
+      "test": "Optimize a synthetic text/image/form PDF and verify size, visual/text fidelity, form fields, bookmarks and attachment policy. Preserve original hash and record output hash/version. A smaller file is not proof of no evidentiary loss. Browser Save As creates a matter copy; non-PDF conversion must save PDF in the original folder under a reviewed naming/collision policy.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360050326512",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0134",
+      "title": "PDF saves, restore and old annotation history",
+      "test": "Save two versions with distinguishable content/annotations. Preview/download each by exact version ID; restore an older one without deleting intervening history. Verify the effective current version and old-version access, especially before redacted release. Failed saving before editor close must remain recoverable and unconfirmed.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360042336791",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0125",
+      "title": "Side-by-side comparison is not conceptual legal comparison",
+      "test": "Compare a saved synthetic PDF with a local uploaded file, including inserted pages and font-only changes. Verify identities, highlight coverage and missing-page handling. Difference highlights are comparison candidates, not proof of legal equivalence, complete semantic change analysis or merger into either source. No direct comparison-result screenshot or execution observed.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360042336791",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0462",
+      "title": "Drawn signature versus verified signing workflow",
+      "test": "Test drawn, typed and uploaded signature appearances and a signature form field as separate artifact types. Record who applied the appearance, exact bytes and whether any validated signing event/certificate exists. Do not label an inserted image or filled field as verified execution, identity proof or legal consent.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360050325352",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0404",
+      "title": "Browser-editor Save As versus native-utility tracked path",
+      "test": "Test browser PDF-editor Save As creating a new document in Docs, original version intact, and native utility Save As breaking its tracked save path. The same button label has different route semantics. Verify destination/IDs/format and remote receipt; neither local download nor copy creation implies external transmission.",
+      "source_url": "https://support.filevine.com/hc/en-us/articles/360050326512",
+      "status": "Not executed"
+    }
+  ]
+}

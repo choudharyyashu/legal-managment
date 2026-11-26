@@ -127,28 +127,28 @@ export function CriminalWorkspace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085]">
+      <div className="flex items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085] overflow-x-auto whitespace-nowrap scrollbar-thin">
         <button
           onClick={() => setActiveTab('charges')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'charges' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'charges' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Charges & Penalties Matrix ({activeCase.counts.length})
         </button>
         <button
           onClick={() => setActiveTab('discovery')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'discovery' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'discovery' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Utah Rule 16 Discovery & Evidence ({activeCase.rule16Discovery.length})
         </button>
         <button
           onClick={() => setActiveTab('plea')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'plea' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'plea' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Plea Offer & Mitigation Strategy
         </button>
         <button
           onClick={() => setActiveTab('expungement')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'expungement' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'expungement' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Expungement / Clean Slate Calculator
         </button>
@@ -157,22 +157,22 @@ export function CriminalWorkspace() {
       {/* Tab 1: Charges & Penalties Matrix */}
       {activeTab === 'charges' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">State Information / Indictment Counts</h2>
               <p className="text-xs text-[#667085]">Statutory classification under Title 76 of the Utah Code Annotated.</p>
             </div>
             <button
               onClick={() => addToast('Added count to criminal indictment matrix', 'info')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shrink-0"
             >
               <Plus className="w-4 h-4 text-[#A4432B]" />
               Add Indictment Count
             </button>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs text-[#344054]">
+          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs text-[#344054]">
               <thead className="bg-[#F8F9FC] text-[#475467] font-semibold border-b border-[#EAECF0] uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Count #</th>
@@ -214,22 +214,22 @@ export function CriminalWorkspace() {
       {/* Tab 2: Discovery */}
       {activeTab === 'discovery' && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">Utah Rule 16 Mandatory Criminal Discovery Log</h2>
               <p className="text-xs text-[#667085]">Tracking Axon bodycam videos, police narratives, crime lab tests, and Brady exculpatory material.</p>
             </div>
             <button
               onClick={() => addToast('Filed formal Motion to Compel Brady/Giglio Material with District Court', 'success')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shrink-0"
             >
               <Download className="w-4 h-4 text-[#A4432B]" />
               File Motion to Compel
             </button>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-left text-xs text-[#344054]">
+          <div className="bg-white border border-[#E4E7EC] rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-xs text-[#344054]">
               <thead className="bg-[#F8F9FC] text-[#475467] font-semibold border-b border-[#EAECF0] uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Evidence Item</th>

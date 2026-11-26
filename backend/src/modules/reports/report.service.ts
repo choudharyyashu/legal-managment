@@ -35,7 +35,10 @@ export class ReportService {
           startTime: { gte: new Date() },
         },
       }),
-      prisma.invoice.findMany({ select: { totalAmount: true, paidAmount: true, balanceDue: true } }),
+      prisma.invoice.findMany({
+        where: { status: { notIn: ['Void', 'Cancelled', 'Draft'] } },
+        select: { totalAmount: true, paidAmount: true, balanceDue: true },
+      }),
       prisma.trustSubLedger.findMany({ select: { balance: true } }),
       prisma.practiceArea.findMany({
         select: {
@@ -88,7 +91,10 @@ export class ReportService {
 
   static async getArAging(): Promise<ArAgingResponse> {
     const unpaidInvoices = await prisma.invoice.findMany({
-      where: { balanceDue: { gt: 0 } },
+      where: {
+        balanceDue: { gt: 0 },
+        status: { notIn: ['Void', 'Cancelled', 'Draft'] },
+      },
       select: { balanceDue: true, issueDate: true },
     });
 

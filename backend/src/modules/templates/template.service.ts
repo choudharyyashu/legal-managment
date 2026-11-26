@@ -19,6 +19,8 @@ import {
   DocumentFieldMappingResponse,
   TemplateListQuery,
 } from './template.types.js';
+import { DraftEngine } from '../documents/drafts/draft.engine.js';
+import { StorageService } from '../documents/storage/storage.service.js';
 
 const MAX_TEMPLATE_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -151,7 +153,7 @@ export class TemplateService {
     pagination: { total: number; page: number; limit: number; totalPages: number };
   }> {
     const page = Math.max(1, query.page || 1);
-    const limit = Math.min(100, Math.max(1, query.limit || 20));
+    const limit = Math.min(500, Math.max(1, query.limit || 20));
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -347,8 +349,9 @@ export class TemplateService {
   static async uploadVersion(
     templateIdOrCode: string,
     input: UploadTemplateVersionInput,
-    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string }
-  ): Promise<TemplateVersionResponse> {
+    context: { userId: string; userRole: string; ipAddress?: string; userAgent?: string },
+    rawFileBuffer?: Buffer
+  ): Promise<TemplateVersionResponse & { detectedPlaceholders?: string[] }> {
     const template = await prisma.documentTemplate.findFirst({
       where: {
         OR: [{ id: templateIdOrCode }, { templateCode: templateIdOrCode }],
@@ -363,12 +366,23 @@ export class TemplateService {
       );
     }
 
-    // Decode and validate binary
+    // Resolve binary from multipart upload, base64 DOCX, or inline templateBody text
     let buffer: Buffer;
-    try {
-      buffer = Buffer.from(input.fileContentBase64, 'base64');
-    } catch {
-      throw AppError.badRequest('Invalid base64 file encoding.', 'INVALID_FILE_ENCODING');
+    if (rawFileBuffer && rawFileBuffer.length > 0) {
+      buffer = rawFileBuffer;
+    } else if (input.fileContentBase64) {
+      try {
+        const cleaned = input.fileContentBase64.includes(',')
+          ? input.fileContentBase64.split(',')[1]
+          : input.fileContentBase64;
+        buffer = Buffer.from(cleaned, 'base64');
+      } catch {
+        throw AppError.badRequest('Invalid base64 file encoding.', 'INVALID_FILE_ENCODING');
+      }
+    } else if (input.templateBody) {
+      buffer = DraftEngine.buildDocxFromText(template.templateName, input.templateBody);
+    } else {
+      throw AppError.badRequest('Either a .docx file or templateBody text is required.', 'EMPTY_FILE');
     }
 
     if (buffer.length === 0) {
@@ -418,14 +432,16 @@ export class TemplateService {
       );
     }
 
-    const sha256Checksum = crypto.createHash('sha256').update(buffer).digest('hex');
-    const safeFileName = this.sanitizeFileName(input.fileName);
-    const storageDir = path.resolve('storage', 'templates', template.templateCode);
-    const storageKey = `templates/${template.templateCode}/${versionNumber}_${safeFileName}`;
-    const absoluteFilePath = path.join(storageDir, `${versionNumber}_${safeFileName}`);
+    const safeFileName = this.sanitizeFileName(input.fileName || `${template.templateCode}.docx`);
+    const relativeKey = `templates/${template.templateCode}/${versionNumber}_${safeFileName}`;
+    const stored = await StorageService.writeFile(relativeKey, buffer);
 
-    await fs.mkdir(storageDir, { recursive: true });
-    await fs.writeFile(absoluteFilePath, buffer);
+    let detectedPlaceholders: string[] = [];
+    try {
+      detectedPlaceholders = DraftEngine.extractPlaceholdersFromDocx(buffer);
+    } catch {
+      detectedPlaceholders = [];
+    }
 
     // Atomically create version and update template currentVersion
     const [createdVersion] = await prisma.$transaction([
@@ -433,9 +449,9 @@ export class TemplateService {
         data: {
           templateId: template.id,
           versionNumber,
-          docxStorageKey: storageKey,
-          sha256Checksum,
-          status: input.status,
+          docxStorageKey: stored.storageKey,
+          sha256Checksum: stored.sha256Checksum,
+          status: input.status || 'Published',
           changeSummary: input.changeSummary?.trim(),
           createdById: context.userId,
         },
@@ -459,13 +475,25 @@ export class TemplateService {
         templateCode: template.templateCode,
         versionNumber,
         fileName: safeFileName,
-        sha256Checksum,
+        sha256Checksum: stored.sha256Checksum,
+        detectedPlaceholdersCount: detectedPlaceholders.length,
       },
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
 
-    return this.formatVersion(createdVersion);
+    return {
+      ...this.formatVersion(createdVersion),
+      detectedPlaceholders,
+    };
+  }
+
+  static async detectVersionPlaceholders(
+    templateIdOrCode: string,
+    versionId: string
+  ): Promise<string[]> {
+    const { buffer } = await this.downloadTemplateVersion(templateIdOrCode, versionId);
+    return DraftEngine.extractPlaceholdersFromDocx(buffer);
   }
 
   static async getTemplateVersions(templateIdOrCode: string): Promise<TemplateVersionResponse[]> {

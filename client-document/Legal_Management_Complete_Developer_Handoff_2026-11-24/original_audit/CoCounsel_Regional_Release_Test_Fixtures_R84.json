@@ -1,0 +1,381 @@
+{
+  "date": "2026-11-17",
+  "status": "Eighteen proposed cases, all Not executed; source Not inspected",
+  "tests": [
+    {
+      "requirement_id": "F-0605",
+      "developer_story_extension": "As the attorney, I need an imported Word playbook to preserve preferred and fallback language, triggers, negotiation guidance and escalation rules so I can approve what the contract reviewer will apply.",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "id": "AT-0605",
+      "scenario_and_expected_result": "Import a synthetic DOCX containing a preferred clause, two conditional fallbacks, a table, a merged cell, an escalation instruction and an ambiguous cross-reference. Produce a rule-by-rule preview linked to original paragraph/table coordinates and file hash. Reconcile every input rule as mapped, unsupported or unresolved; do not silently discard guidance or claim perfect as-is fidelity. Test conflicting clauses, unrecognized tables and revised uploads. Require an authorized reviewer to approve a version before use; later edits create a new version and invalidate stale approvals. Preserve June US release and August UK/Canada/Australia expansion as distinct availability records for the same behavior. No production contract modified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0606",
+      "developer_story_extension": "As the attorney, I need the inferred agreement type, represented party and playbook displayed for confirmation before I review or apply contract changes.",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "id": "AT-0606",
+      "scenario_and_expected_result": "Use a synthetic agreement naming two affiliates with ambiguous defined roles and a conflicting playbook. Show inferred agreement/party/playbook, evidence and uncertainty; require correction/confirmation before redline approval. Present issue-specific original/proposed clause and reason, with each accept/reject action attributable. Bulk acceptance must preview exactly which unresolved issues and document version it affects; exclude unreviewed conflicts under the approved policy. Converse to revise a redline, preserve earlier proposals and detect intervening document edits. Cancel, permission denial or partial apply must leave an explicit result, never an assumed executed agreement or legal approval.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0607",
+      "developer_story_extension": "As the attorney, I need intake allegations linked to email, chat and document evidence in an editable preliminary investigation report while disputed facts remain visible.",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "id": "AT-0607",
+      "scenario_and_expected_result": "Create an authorized synthetic investigation with two allegations, contradicting messages, a duplicate attachment, redacted evidence and inaccessible HR material. Preserve immutable input hashes, source permissions, chronology/timezones and citations for each proposed fact; distinguish allegation, supported observation, contradiction and missing evidence. A suggested policy violation must name the selected policy/version and remain preliminary pending reviewer judgment. Editing a report retains generated and reviewer versions. Export must exclude unauthorized evidence and show unresolved gaps; no automatic final disciplinary/legal decision or notification. Apply all prior matter isolation and attorney-letter I/me/my and four-digit-year requirements.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0608",
+      "developer_story_extension": "As the attorney, I need each eligibility observation tied to the exact patent claim and legal source so qualified review can distinguish an AI report from a final legal conclusion.",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "id": "AT-0608",
+      "scenario_and_expected_result": "Submit synthetic numbered claims with dependent references, a missing parent claim and two file revisions. Preserve claim numbering, input hash, requested jurisdiction and selected legal-source edition/date. For each output identify claim, cited source and qualified conclusion versus unresolved issue; do not invent missing dependencies or authorities. A denied source, unsupported jurisdiction or incomplete input blocks final reviewer approval, not necessarily a labeled partial draft. Require a qualified reviewer decision and preserve edits. Run asynchronous timeout/retry using one request identity; the marketed3–4minutes is not an acceptance deadline or guaranteed outcome.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0609",
+      "developer_story_extension": "As the attorney, I need a document analyzer to separate the source summary, a party’s arguments, proposed counterarguments and supporting authorities for individual review.",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "id": "AT-0609",
+      "scenario_and_expected_result": "Use synthetic Canadian pleading and response files with opposite positions, one stale case and one inaccessible citation. Associate every summarized assertion with document/page/party and every suggested counterargument with a labeled inference and supporting source. Preserve contradictory statements, missing pages and permission failures. A cited case must resolve to exact court/date/edition before reliance; an AI suggestion cannot be presented as an adopted legal position. Refuse to silently convert a Canadian release capability into Utah authority or current US availability. Review and export preserve source links, qualifications and version history.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null
+    },
+    {
+      "requirement_id": "F-0200",
+      "id": "AT-0200-R84-1",
+      "title": "Version beta, host and regional capabilities separately",
+      "developer_story_extension": "As the administrator, I need agentic beta capabilities distinguished from generally available and legacy hosts.",
+      "scenario_and_expected_result": "Store June8,2026 next-generation beta with announced Anthropic Agent SDK basis separately from classic CoCounsel. Test a tenant with no beta access, expired trial, different region and changed module entitlement: prevent unsupported action or explain access failure without changing accounts or claiming availability. Firmware/SDK/marketing verifiability claims cannot prove source grounding or deployed implementation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0248",
+      "id": "AT-0248-R84-2",
+      "title": "Keep web search provenance and curated rankings attributable",
+      "developer_story_extension": "As the attorney, I need @web results identified by their original public sources and retrieval dates.",
+      "scenario_and_expected_result": "Use a synthetic query returning a US curated result and conflicting UK/Australia/Canada links. Preserve source URL/title/date, query, region and any ranking/curation label separately from generated prose. Label missing full text and stale authority; a curated source or clickable attribution cannot prove accuracy, jurisdictional relevance or comprehensive coverage. Do not silently treat web retrieval as licensed legal-database authority.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0320",
+      "id": "AT-0320-R84-3",
+      "title": "Distinguish Practical Law Deep Research from linked native functions",
+      "developer_story_extension": "As the attorney, I need research planning, guidance, templates and reports attributed to the host where each function actually ran.",
+      "scenario_and_expected_result": "In synthetic US CoCounsel web capability data, enable Practical Law Deep Research with the proper license while retaining Search&Summarize as a Practical Law-native function. A deep link alone cannot mark native execution successful. Preserve task plan, selected sources and report versions, unavailable linked functions and host/license transitions; no automatic upload or unsupported parity claim.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0245",
+      "id": "AT-0245-R84-4",
+      "title": "Gate Supio embedded Westlaw research on both subscriptions",
+      "developer_story_extension": "As the attorney, I need an embedded Supio research request to show which joint subscription and destination are required.",
+      "scenario_and_expected_result": "Test Supio-only, WestlawAdvantage-only, joint eligible US, denied user and wrong-region fixtures. Permit a synthetic request only under a current verified capability matrix; show destination, included matter data and source identity for review. A successful Supio subscription or generic integration listing cannot prove Westlaw research entitlement, returned authority or successful document transfer.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0144",
+      "id": "AT-0144-R84-5",
+      "title": "Preserve ethical walls across DeepJudge knowledge searches",
+      "developer_story_extension": "As the attorney, I need native DeepJudge search in CoCounsel/Westlaw/PracticalLaw to enforce source access and revocation.",
+      "scenario_and_expected_result": "Seed matterA/matterB documents and a restricted ethical wall. Query from three host adapters with the same authorized identity, then revoke one document and change the user. Deny unauthorized snippets, titles, counts, citations and derived answers including cache hits. Persist source ACL/retrieval/version and permission-check evidence; a joint subscription and vendor assurance cannot prove effective authorization. No live firm index queried.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0121",
+      "id": "AT-0121-R84-6",
+      "title": "Record UK research response depth without native parity assumptions",
+      "developer_story_extension": "As the attorney, I need concise versus expanded research options tied to provider, region and subscribed module.",
+      "scenario_and_expected_result": "Configure UK WestlawAdvantage/PracticalLawPremium concise and expanded requests with the same synthetic question. Preserve selected depth and actual returned source/version; missing options or timeout cannot silently change depth or imply broader authority coverage. Check region/license separately from jurisdiction and keep report estimate versus measured duration distinct.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0210",
+      "id": "AT-0210-R84-7",
+      "title": "Reconcile bulk user-permission changes across pages",
+      "developer_story_extension": "As the administrator, I need an all-users permission change to identify every intended user across paginated views and every failed update.",
+      "scenario_and_expected_result": "Seed53users over three pages with one stale role, one disabled account and one permission-denied update. Preview stable IDs and intended scope; confirm only under authorized admin role. Reconcile successes/failures per user and retry only failed mutations under idempotent keys. Do not report53successes because one visible page saved or a select-all control was checked; preserve the pre/post values and actor.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0311",
+      "id": "AT-0311-R84-8",
+      "title": "Keep account-menu navigation separate from authorization",
+      "developer_story_extension": "As the user, I need RegionSettings/Admin/Support/Plugins moved under the account menu without losing role or organization boundaries.",
+      "scenario_and_expected_result": "Navigate synthetic account menus for staff and admin in two organizations. Preserve region/currentorganization state, keyboard focus and deep links after the navigation change. Hidden admin options cannot be the only access control; direct routes enforce permissions. Switching region or organization invalidates stale capability context before any research/document action.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0245",
+      "id": "AT-0245-R84-9",
+      "title": "Reconcile Litify and Smokeball bulk matter-document imports",
+      "developer_story_extension": "As the attorney, I need bulk matter imports to retain exact file identity, version and access results.",
+      "scenario_and_expected_result": "Import synthetic Litify and Smokeball matters with duplicate names, two revisions, a denied document and a changed source during transfer. Reconcile each selected sourceID/version/hash/destination acknowledgement. Failed or skipped files remain visible; matter enumeration cannot prove document ingestion. Retry cannot create untracked copies. Review destination and audience before data transfer; a claimed connector cannot mean automatic continuous sync or unrestricted analysis.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0245",
+      "id": "AT-0245-R84-10",
+      "title": "Keep Canadian NetDocuments ndConnect availability explicit",
+      "developer_story_extension": "As the attorney, I need a NetDocuments source connector capability tied to Canadian rollout, repository identity and current access.",
+      "scenario_and_expected_result": "Test Canadian eligible and noneligible region/module fixtures plus revoked repository permissions. Retain ndConnect sourceID/version/hash and partial failure states. A connector badge cannot prove ingestion, source freshness or availability outside the announced region. Do not silently replace bulk import or existing connector behavior with an assumed universal Canadian feature.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0247",
+      "id": "AT-0247-R84-11",
+      "title": "Keep Smokeball Knowledge Search distinct from full-corpus import",
+      "developer_story_extension": "As the attorney, I need selected relevant files for a question shown before analysis so the matter and exact source versions remain reviewable.",
+      "scenario_and_expected_result": "Use a US/Australia synthetic KnowledgeSearch adapter with two same-name matters and mixed-permission files. Return sourceIDs, versions, selection rationale and explicit unknown coverage; require unambiguous matter resolution. A relevant subset must not be described as the complete corpus or a successful bulk upload. Changed or revoked files invalidate stale answers; a no-result response cannot prove no responsive evidence exists.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0140",
+      "id": "AT-0140-R84-12",
+      "title": "Unify upload/source selection without losing provenance",
+      "developer_story_extension": "As the attorney, I need device/CoCounsel/iManage/SharePoint sources in one selection flow while keeping every source’s origin and permissions.",
+      "scenario_and_expected_result": "Select a local file and a connected repository revision with the same name and bytes, then a different same-name version. Display source host, stable ID, version/hash and destination. Apply an explicit reviewed duplicate policy without silent replacement; resolve inaccessible, interrupted and partially acknowledged uploads individually. A unified modal cannot confer permission, prove ingestion or make all repositories equally available.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    },
+    {
+      "requirement_id": "F-0121",
+      "id": "AT-0121-R84-13",
+      "title": "Keep UK quantum research content qualified by edition and jurisdiction",
+      "developer_story_extension": "As the attorney, I need UK PI quantum sources and edition-specific citations separated from Utah claim valuation.",
+      "scenario_and_expected_result": "Select synthetic UK LawtelQuantum/KempQuantum/JudicialCollegeGuidelines18thEdition sources. Preserve publisher, edition, case/report identity, date and accessible passages in the report. Test an inaccessible source, superseded edition and Utah matter: label limitations and prohibit automatic adoption as Utah valuation law or guaranteed settlement value. A release article names content; it does not prove exhaustive corpus, entitlement or a correct injury valuation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "review_date": "2026-11-17",
+      "dependencies": "Commercial paid modules, partner subscriptions, jurisdiction, region, client host and staged beta/rollout conditions must be verified against current tenant entitlement. June8/August7,2026 articles describe May/July releases and do not prove November availability or execution. No account, terms, external query, client upload, contract change or legal conclusion executed."
+    }
+  ],
+  "release_observations": [
+    {
+      "observation": "Next-generation agentic beta",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0200",
+      "acceptance_test_id": "AT-0200-R84-1",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "@web and region-specific source treatment",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0248",
+      "acceptance_test_id": "AT-0248-R84-2",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Patent Claim Eligibility Analyzer",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0608",
+      "acceptance_test_id": "AT-0608",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "US Internal Investigations",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0607",
+      "acceptance_test_id": "AT-0607",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Practical Law Deep Research inside CoCounsel",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0320",
+      "acceptance_test_id": "AT-0320-R84-3",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Canadian Litigation Document Analyzer",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0609",
+      "acceptance_test_id": "AT-0609",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Supio plus WestlawAdvantage",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0245",
+      "acceptance_test_id": "AT-0245-R84-4",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "US complex playbook import",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0605",
+      "acceptance_test_id": "AT-0605",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "DeepJudge joint subscriptions and ethical walls",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0144",
+      "acceptance_test_id": "AT-0144-R84-5",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "UK concise versus expanded",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0121",
+      "acceptance_test_id": "AT-0121-R84-6",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "All-user bulk permissions across pages",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0210",
+      "acceptance_test_id": "AT-0210-R84-7",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Account-menu navigation",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0311",
+      "acceptance_test_id": "AT-0311-R84-8",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Litify and Smokeball bulk matter-document connectors",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/mays-cocounsel-legal-releases/",
+      "source_published": "2026-06-08",
+      "feature_id": "F-0245",
+      "acceptance_test_id": "AT-0245-R84-9",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Canadian NetDocuments ndConnect",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0245",
+      "acceptance_test_id": "AT-0245-R84-10",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "US/Australia Smokeball Knowledge Search",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0247",
+      "acceptance_test_id": "AT-0247-R84-11",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Unified source/upload modal",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0140",
+      "acceptance_test_id": "AT-0140-R84-12",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "Playbook expansion UK/Canada/Australia",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0605",
+      "acceptance_test_id": "AT-0605",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "US agentic contract review",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0606",
+      "acceptance_test_id": "AT-0606",
+      "status": "Vendor release claim; current tenant unverified"
+    },
+    {
+      "observation": "UK PI quantum sources and18thEdition",
+      "source_url": "https://www.thomsonreuters.com/en-us/posts/innovation/cocounsel-legal-july-2026-releases/",
+      "source_published": "2026-08-07",
+      "feature_id": "F-0121",
+      "acceptance_test_id": "AT-0121-R84-13",
+      "status": "Vendor release claim; current tenant unverified"
+    }
+  ],
+  "source_visual_limits": "New release-feature screenshots missing. VR458–467 are separate already-reviewed Westlaw guide positions, not CoCounsel release feature demonstrations.",
+  "letter_rules": "I/me/my and my clients, preserve quotations/proper plurals, four-digit year in every date; exceptions only explicit Dusten approval in Codex."
+}

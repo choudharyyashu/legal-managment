@@ -24,22 +24,20 @@ import { Button } from '../../../components/ui/Button';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { useToast } from '../../../components/ui/Toast';
 import { useMatters } from '../../../context/MatterContext';
-import { MOCK_PI_CASES } from '../../../data/mockPersonalInjury';
+import { matchesPracticeArea } from '../../../data/practiceAreas';
 import { piService } from '../../../services/piService';
 
 export function ClientDamages() {
   const { addToast } = useToast();
   const { matters, activeMatter, setActiveMatter } = useMatters();
   const cases = React.useMemo(() => {
-    const filtered = (matters || []).filter(
+    return (matters || []).filter(
       (m) =>
-        m.practiceAreaId === 'pa-pi' ||
-        m.practiceAreaId === 'pa-7' ||
+        matchesPracticeArea(m.practiceAreaId, 'pa-pi') ||
         m.practiceArea?.code === 'PI' ||
         m.practiceAreaName?.toLowerCase().includes('personal injury') ||
-        m.matterNumber?.toUpperCase().includes('PI')
+        m.matterNumber?.toUpperCase().includes('-PI-')
     );
-    return filtered.length > 0 ? filtered : MOCK_PI_CASES;
   }, [matters]);
   const [damagesList, setDamagesList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -243,7 +241,7 @@ export function ClientDamages() {
               {totalInjuries} Anatomical Sites
             </span>
             <span className="text-[11px] text-blue-600 font-medium">
-              100% Objective MRI/CT findings
+              Documented in treatment records
             </span>
           </div>
           <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold">

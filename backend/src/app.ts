@@ -33,6 +33,11 @@ import { criminalRouter } from './modules/criminal/criminal.routes.js';
 import { appealsRouter } from './modules/appeals/appeals.routes.js';
 import { evictionsRouter } from './modules/evictions/evictions.routes.js';
 import { backupRouter } from './modules/backup/backup.routes.js';
+import { relatedPartyRouter } from './modules/related-parties/related-party.routes.js';
+import { integrationsRouter } from './modules/integrations/integrations.routes.js';
+import { brandingRouter } from './modules/settings/branding.routes.js';
+import { notificationRouter } from './modules/notifications/notification.routes.js';
+import { workflowRouter } from './modules/workflows/workflow.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -58,7 +63,7 @@ app.use(
       const isAllowed =
         config.allowedOrigins.includes(normalizedOrigin) ||
         config.allowedOrigins.includes(origin) ||
-        normalizedOrigin === 'https://legal-managment.netlify.app' ||
+        normalizedOrigin === 'https://legall-managment.netlify.app' ||
         (config.nodeEnv === 'development' &&
           (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')));
       if (isAllowed) {
@@ -191,6 +196,14 @@ app.use('/api/v1/criminal', criminalRouter);
 app.use('/api/v1/appeals', appealsRouter);
 app.use('/api/v1/evictions', evictionsRouter);
 app.use('/api/v1/backups', backupRouter);
+app.use('/api/v1/related-parties', relatedPartyRouter);
+app.use('/api/v1/integrations', integrationsRouter);
+app.use('/api/v1/settings', brandingRouter);
+app.use('/settings', brandingRouter);
+app.use('/api/v1/notifications', notificationRouter);
+app.use('/notifications', notificationRouter);
+app.use('/api/v1/workflows', workflowRouter);
+app.use('/workflows', workflowRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

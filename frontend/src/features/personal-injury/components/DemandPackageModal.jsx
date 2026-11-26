@@ -354,8 +354,8 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
                 <p className="font-bold text-[#06244B]">{formData.carrierRecipient}</p>
                 <div className="bg-slate-50 p-2.5 rounded border border-slate-200 my-2 space-y-0.5 text-[11px]">
                   <p><strong>RE:</strong> CONFIDENTIAL DEMAND FOR POLICY COMPROMISE UNDER UTAH LAW</p>
-                  <p><strong>CLAIMANT:</strong> {formData.matterTitle || 'Sarah Jenkins'}</p>
-                  <p><strong>FIRM FILE NO.:</strong> {cases.find(c => c.id === formData.matterId)?.matterNumber || '26-PI-0101'}</p>
+                  <p><strong>CLAIMANT:</strong> {cases.find(c => c.id === formData.matterId)?.clientName || formData.matterTitle || 'Client'}</p>
+                  <p><strong>FIRM FILE NO.:</strong> {cases.find(c => c.id === formData.matterId)?.matterNumber || 'Pending'}</p>
                   <p><strong>RESPONSE DEADLINE:</strong> <span className="text-[#B42318] font-bold">{formData.responseDeadline}</span></p>
                 </div>
               </div>
@@ -383,7 +383,9 @@ export function DemandPackageModal({ isOpen, onClose, onSave, demandPackage, cas
               {/* Signature Block */}
               <div className="pt-4 font-sans text-xs space-y-1">
                 <p>Respectfully submitted,</p>
-                <p className="font-serif font-bold text-base text-[#06244B] pt-3">Thomas Bludworth, Esq.</p>
+                <p className="font-serif font-bold text-base text-[#06244B] pt-3">
+                  {cases.find(c => c.id === formData.matterId)?.responsibleAttorneyName || 'Assigned Counsel'}
+                </p>
                 <p className="text-slate-600 text-[11px]">HEUGLY &amp; BLUDWORTH, P.C.</p>
               </div>
             </div>

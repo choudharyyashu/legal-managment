@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Landmark, ArrowUpRight, ArrowDownLeft, ShieldCheck, Database, Plus, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Landmark, ArrowUpRight, ArrowDownLeft, ShieldCheck, Database, Plus, CheckCircle2, RefreshCw } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { DataTable } from '../../../components/ui/DataTable';
 import { Button } from '../../../components/ui/Button';
@@ -8,42 +8,137 @@ import { Input } from '../../../components/ui/Input';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { BankReconciliationModal } from '../components/BankReconciliationModal';
 import { useToast } from '../../../components/ui/Toast';
+import { ledgerService } from '../../../services/ledgerService';
 
 export function OperatingAccount() {
   const { addToast } = useToast();
   const [isReconOpen, setIsReconOpen] = useState(false);
   const [isDisbursementOpen, setIsDisbursementOpen] = useState(false);
-
-  const [transactions, setTransactions] = useState([
-    { id: 'TX-101', date: '2026-10-28', description: 'Client Wire Deposit - Wasatch Mountain Logistics', type: 'Credit', amount: 15390.00, balance: 148200.00 },
-    { id: 'TX-102', date: '2026-10-24', description: 'Advanced Court Filing Fees - Utah Third District Court', type: 'Debit', amount: 385.00, balance: 132810.00 },
-    { id: 'TX-103', date: '2026-10-22', description: 'Trust Retainer Earned Fee Transfer - Apex Horizon Matter', type: 'Credit', amount: 10000.00, balance: 133195.00 },
-    { id: 'TX-104', date: '2026-10-18', description: 'Certified Court Reporter Appearance Fee Disbursement', type: 'Debit', amount: 890.00, balance: 123195.00 },
-  ]);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [disbDesc, setDisbDesc] = useState('');
-  const [disbAmount, setDisbAmount] = useState(450);
+  const [disbAmount, setDisbAmount] = useState('');
 
-  const handleCreateDisbursement = (e) => {
-    e.preventDefault();
-    if (!disbDesc.trim() || disbAmount <= 0) return;
+  // Load live operating account transactions from General Ledger
+  const loadOperatingLedger = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await ledgerService.getJournals();
+      const rawJournals = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : (res?.journals || []);
 
-    const currentBalance = transactions[0]?.balance || 148200;
-    const newTx = {
-      id: `TX-${Date.now().toString().slice(-4)}`,
-      date: new Date().toISOString().split('T')[0],
-      description: disbDesc.trim(),
-      type: 'Debit',
-      amount: Number(disbAmount),
-      balance: currentBalance - Number(disbAmount),
-    };
+      const opTransactions = [];
+      rawJournals.forEach((j) => {
+        if (Array.isArray(j.entries)) {
+          j.entries.forEach((e) => {
+            const accNum = String(e.accountNumber || e.account?.accountNumber || '');
+            const accName = e.accountName || e.account?.accountName || '';
+            if (accNum === '1010' || accNum === '1000' || accName.toLowerCase().includes('operating')) {
+              const debitVal = Number(e.debit || (e.entryType === 'DEBIT' ? e.amount : 0) || 0);
+              const creditVal = Number(e.credit || (e.entryType === 'CREDIT' ? e.amount : 0) || 0);
+              const isDeposit = debitVal > 0;
+              const amt = isDeposit ? debitVal : creditVal;
+              opTransactions.push({
+                id: `${j.journalNumber || j.id}-${e.id || Math.random().toString(36).slice(2, 6)}`,
+                date: j.transactionDate ? new Date(j.transactionDate).toISOString().split('T')[0] : '',
+                description: j.memo || j.description || `${accName} Entry`,
+                type: isDeposit ? 'Credit' : 'Debit', // UI display: Credit = deposit into account, Debit = payout
+                amount: amt,
+                journalId: j.id,
+              });
+            }
+          });
+        } else if (j.accountDebit?.includes('1010') || j.accountCredit?.includes('1010')) {
+          const isDeposit = j.accountDebit?.includes('1010');
+          opTransactions.push({
+            id: j.id,
+            date: j.date || (j.transactionDate ? j.transactionDate.split('T')[0] : ''),
+            description: j.memo || j.description || 'Operating Transaction',
+            type: isDeposit ? 'Credit' : 'Debit',
+            amount: Number(isDeposit ? j.debit : j.credit),
+            journalId: j.id,
+          });
+        }
+      });
 
-    setTransactions(prev => [newTx, ...prev]);
-    addToast(`Operating check disbursement of ${formatCurrency(disbAmount)} recorded.`, 'success');
-    setIsDisbursementOpen(false);
-    setDisbDesc('');
-    setDisbAmount(450);
+      // Sort chronologically ascending to compute exact running balance from General Ledger entries
+      opTransactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      let running = 0;
+      const withChronologicalBalances = opTransactions.map((tx) => {
+        if (tx.type === 'Credit') {
+          running += tx.amount;
+        } else {
+          running -= tx.amount;
+        }
+        return { ...tx, balance: Number(running.toFixed(2)) };
+      });
+
+      // Reverse for table display (newest first)
+      const tableData = [...withChronologicalBalances].reverse();
+      setTransactions(tableData);
+      setError(null);
+    } catch (err) {
+      console.warn('Could not load operating ledger from API:', err?.message);
+      setError(err?.message || 'Failed to retrieve General Ledger records.');
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    loadOperatingLedger();
+  }, []);
+
+  const handleCreateDisbursement = async (e) => {
+    e.preventDefault();
+    const amt = Number(disbAmount);
+    if (!disbDesc.trim() || !Number.isFinite(amt) || amt <= 0) return;
+
+    try {
+      await ledgerService.createJournal({
+        transactionDate: new Date().toISOString().split('T')[0],
+        memo: disbDesc.trim(),
+        entries: [
+          {
+            accountNumber: 5000, // Operating Expenses (Chart of Accounts #5000)
+            debit: amt,
+            credit: 0,
+          },
+          {
+            accountNumber: 1010, // Operating Cash Account (Chart of Accounts #1010)
+            debit: 0,
+            credit: amt,
+          },
+        ],
+      });
+
+      addToast(`Operating check disbursement of ${formatCurrency(amt)} posted to General Ledger (Account #1010 / #5000).`, 'success');
+      setIsDisbursementOpen(false);
+      setDisbDesc('');
+      setDisbAmount('');
+      loadOperatingLedger();
+    } catch (err) {
+      console.error('Failed to post disbursement:', err);
+      addToast(err?.response?.data?.message || err?.message || 'Failed to post disbursement.', 'error');
+    }
+  };
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const currentOperatingBalance = transactions.length > 0 ? (transactions[0]?.balance ?? 0) : 0;
+  const thirtyDayInflow = transactions
+    .filter((t) => t.type === 'Credit' && t.date && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const thirtyDayDisbursements = transactions
+    .filter((t) => t.type === 'Debit' && t.date && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const columns = [
     { key: 'date', label: 'Transaction Date', sortable: true },
@@ -83,21 +178,21 @@ export function OperatingAccount() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-[#FAF8F5] border border-[#D9D6CF] p-3 rounded-lg flex items-center justify-between text-xs text-[#202A35]">
         <div className="flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
+          <Landmark className="w-4 h-4 text-[#06244B] shrink-0" />
           <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] Operating Bank Ledger:</strong> Operating cash receipts and firm expenditures. Supports monthly bank reconciliation matching.
+            <strong>General Ledger Account #1010 (Operating Cash) | Account #5000 (Operating Expenses):</strong> Operational cash receipts and firm expenditures strictly segregated from fiduciary client trust funds (#1020 / #2100).
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#EAE7E0] text-[#06244B] font-bold px-2 py-0.5 rounded text-[10px]">
+          OPERATING LEDGER
         </span>
       </div>
 
       <PageHeader
         title="Operating Account Overview"
-        subtitle="Operational cash receipts and firm expense disbursements. Real-time bank reconciliation is managed via CosmoLex."
+        subtitle="Operational cash receipts and firm expense disbursements tracked in the firm General Ledger."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'Operating Account' }]}
         actions={
           <div className="flex items-center gap-2">
@@ -121,23 +216,36 @@ export function OperatingAccount() {
         }
       />
 
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded text-red-900 text-xs flex items-center justify-between">
+          <span>Failed to load General Ledger records: {error}</span>
+          <Button size="xs" variant="outline" onClick={loadOperatingLedger}>
+            Retry
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">Current Operating Balance</span>
           <p className="text-2xl font-serif font-bold text-[#06244B] mt-1">
-            {formatCurrency(transactions[0]?.balance || 148200)}
+            {loading ? 'Loading...' : error ? 'Unavailable' : formatCurrency(currentOperatingBalance)}
           </p>
-          <span className="text-[11px] text-[#287A55] font-semibold">Zions Bank Main Commercial Account</span>
+          <span className="text-[11px] text-[#667085] font-semibold">General Ledger Account #1010 (Book Balance)</span>
         </div>
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">30-Day Inflow</span>
-          <p className="text-2xl font-serif font-bold text-[#287A55] mt-1">+$47,890.00</p>
-          <span className="text-[11px] text-[#667085]">Earned fees transferred</span>
+          <p className="text-2xl font-serif font-bold text-[#287A55] mt-1">
+            {loading ? 'Loading...' : error ? 'Unavailable' : `+${formatCurrency(thirtyDayInflow)}`}
+          </p>
+          <span className="text-[11px] text-[#667085]">Earned fees & operating receipts</span>
         </div>
         <div className="p-4 bg-white rounded border border-[#D9D6CF] shadow-subtle">
           <span className="text-xs font-semibold text-[#667085] uppercase">30-Day Disbursements</span>
-          <p className="text-2xl font-serif font-bold text-[#B42318] mt-1">-$12,450.00</p>
-          <span className="text-[11px] text-[#667085]">Litigation &amp; expert expenses</span>
+          <p className="text-2xl font-serif font-bold text-[#B42318] mt-1">
+            {loading ? 'Loading...' : error ? 'Unavailable' : `-${formatCurrency(thirtyDayDisbursements)}`}
+          </p>
+          <span className="text-[11px] text-[#667085]">Operating expenses & firm disbursements</span>
         </div>
       </div>
 
@@ -151,6 +259,7 @@ export function OperatingAccount() {
       <BankReconciliationModal
         isOpen={isReconOpen}
         onClose={() => setIsReconOpen(false)}
+        onReconciliationComplete={() => loadOperatingLedger()}
       />
 
       {/* Record Operating Disbursement Modal */}

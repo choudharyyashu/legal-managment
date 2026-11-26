@@ -1,0 +1,158 @@
+{
+  "date": "2026-11-17",
+  "status": "Synthetic test design only; no application execution",
+  "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+  "matter_ids": [
+    "M-A",
+    "M-B"
+  ],
+  "recipient_ids": [
+    "R-1",
+    "R-2"
+  ],
+  "cases": [
+    {
+      "id": "C-A",
+      "court": "Court A",
+      "party": "Alex Sample"
+    },
+    {
+      "id": "C-B",
+      "court": "Court B",
+      "party": "Alex Sample"
+    },
+    {
+      "id": "C-C",
+      "court": "Court A",
+      "party": "Alias of Alex Sample"
+    }
+  ],
+  "creation_time_utc": "2026-11-17T16:00:00Z",
+  "historical_boundary_inputs": [
+    {
+      "id": "H-1",
+      "filed": "2026-11-17T15:59:59Z",
+      "indexed": "2026-11-17T15:59:59Z"
+    },
+    {
+      "id": "B-1",
+      "filed": "2026-11-17T16:00:00Z",
+      "indexed": "2026-11-17T16:00:00Z"
+    },
+    {
+      "id": "N-1",
+      "filed": "2026-11-17T16:00:01Z",
+      "indexed": "2026-11-17T16:00:01Z"
+    },
+    {
+      "id": "L-1",
+      "filed": "2026-11-16T16:00:00Z",
+      "indexed": "2026-11-18T16:00:00Z"
+    }
+  ],
+  "output_selection_matrix": [
+    {
+      "filings": false,
+      "excel": false
+    },
+    {
+      "filings": false,
+      "excel": true
+    },
+    {
+      "filings": true,
+      "excel": false
+    },
+    {
+      "filings": true,
+      "excel": true
+    }
+  ],
+  "cases_to_execute": [
+    {
+      "requirement_id": "F-0195",
+      "id": "AT-0195-R72-1",
+      "title": "Keep three alert scopes and party identity distinct",
+      "developer_story_extension": "As an attorney, I need each alert to retain its own court/case, query or party scope, so similar names cannot silently bind the wrong matter.",
+      "scenario_and_expected_result": "Seed case C-A with existing event E-1, new event E-2, same-name case C-B in another court and new party case C-C. Evaluate docket, search and party rules against explicit expected IDs. Preserve role, aliases and disambiguation status. Display which rule produced each match; party name alone cannot auto-link client matter M-A. A created-alert toast is configuration evidence only.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "00:02–00:31;01:34–01:58",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    },
+    {
+      "requirement_id": "F-0196",
+      "id": "AT-0196-R72-2",
+      "title": "Separate check schedule from successful check and delivery",
+      "developer_story_extension": "As staff, I need scheduled checks, successful checks and outbound delivery to retain separate timestamps and outcomes.",
+      "scenario_and_expected_result": "Configure America/Denver daily weekdays-only alerts across Friday November 20, 2026 through Monday November 23, 2026, then a fixture spanning November 1, 2026 daylight-saving change. Show explicit local schedule and declared missed-check policy. Fail Monday’s court check: retain the previous successful watermark and show failure, never no-new-filings success. A completed check with an email failure records two distinct outcomes. Timezone/DST handling is a proposed program rule; this video does not establish the vendor policy.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "00:39–01:07",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    },
+    {
+      "requirement_id": "F-0197",
+      "id": "AT-0197-R72-3",
+      "title": "Make historical inclusion and first-run boundary reviewable",
+      "developer_story_extension": "As an attorney, I need historical inclusion to be an explicit search-alert setting, with filing time distinguished from first discovery time.",
+      "scenario_and_expected_result": "At creation T0=2026-11-17T16:00:00Z, seed H-1 filed before T0, B-1 filed exactly at T0, N-1 filed after T0 and L-1 filed earlier but indexed after the first check. Run backfill on/off under an explicit boundary and late-arrival policy. Replay one provider batch and verify stable result/event identities, distinguish historical versus newly discovered results, and retain changes when the query is edited. Do not use email receipt time as filing time.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "01:07–01:26",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    },
+    {
+      "requirement_id": "F-0198",
+      "id": "AT-0198-R72-4",
+      "title": "Verify each filing and Excel output independently",
+      "developer_story_extension": "As staff, I need independent filing and report delivery selections, exact output provenance and attributable matter costs.",
+      "scenario_and_expected_result": "Exercise all four combinations of filings on/off and Excel on/off against one synthetic alert. Produce the expected manifest/report only for selected outputs. Fail retrieval of one filing: mark that item unresolved and keep the report from representing it as downloaded. Revoke recipient R-2 before dispatch and exclude it server-side. Test M-A versus a same-named M-B: association alone proves neither permission, client filing nor an incurred charge. Reconcile unknown provider acceptance before retry.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "00:49–01:34",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    },
+    {
+      "requirement_id": "F-0199",
+      "id": "AT-0199-R72-5",
+      "title": "Preserve configuration version and lifecycle history",
+      "developer_story_extension": "As staff, I need pause, edit and delete to affect the intended alert without erasing already acquired evidence.",
+      "scenario_and_expected_result": "Create version A-v1, pause before a due job, then process an already queued job under the declared cancellation policy. Resume as A-v2 without duplicate historical delivery. Edit recipient/cadence without accidentally changing source scope. Delete the configuration in a disposable test environment while retaining court documents and audit history. Verify each transition from persisted state; switches and icons in the 01:58 frame establish available controls only.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "01:51–02:15",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    },
+    {
+      "requirement_id": "F-0198",
+      "id": "AT-0198-R72-6",
+      "title": "Creation acknowledgement cannot close ingestion or notification tests",
+      "developer_story_extension": "As an attorney, I need alert creation, court retrieval, message delivery and matter filing tested as separate milestones.",
+      "scenario_and_expected_result": "Return a synthetic create-success response and list the new alert with Updates=0. Assert only configured=true; checked, matched, delivered and filed remain unverified. Then supply one court retrieval receipt, one message receipt and one attachment hash in separate steps; require each appropriate evidence record before advancing its milestone. A provider success toast or mail flag cannot substitute for attachment ingestion.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://player.vimeo.com/video/1214379070?app_id=58479&autopause=0&badge=0&h=dc4fc84c7b&player_id=0",
+      "timestamp_or_section": "01:19–01:58",
+      "review_date": "2026-11-17",
+      "evidence_limit": "Original proposed user-application test; no source inspection or runtime execution. Vendor behavior not established beyond the cited text or selected frame."
+    }
+  ],
+  "policy_limits": "Fixtures require approved boundary, late-arrival, missed-job and authorization policies. No vendor behavior, actual emailed attachment or approved form template claimed."
+}

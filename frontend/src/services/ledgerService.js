@@ -1,8 +1,8 @@
 import { apiClient } from './apiClient';
 
 export const ledgerService = {
-  async getAccounts() {
-    const res = await apiClient.get('/ledger/accounts');
+  async getAccounts(params = {}) {
+    const res = await apiClient.get('/ledger/accounts', params);
     if (Array.isArray(res?.data)) return res.data;
     if (Array.isArray(res?.data?.accounts)) return res.data.accounts;
     return [];
@@ -26,5 +26,10 @@ export const ledgerService = {
   async createJournal(data) {
     const res = await apiClient.post('/ledger/journals', data);
     return res?.data?.journal || res?.data;
+  },
+
+  async getTrialBalance(params = {}) {
+    const res = await apiClient.get('/ledger/trial-balance', params);
+    return res?.data;
   },
 };

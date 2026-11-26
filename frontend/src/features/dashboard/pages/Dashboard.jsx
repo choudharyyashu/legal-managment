@@ -39,6 +39,7 @@ import { TimeEntryForm } from '../../time-tracking/forms/TimeEntryForm';
 import { calendarService } from '../../../services/calendarService';
 import { reportService } from '../../../services/reportService';
 import { documentService } from '../../../services/documentService';
+import { communicationService } from '../../../services/communicationService';
 import { formatDate } from '../../../utils/formatDate';
 import { EndToEndDemoWizard } from '../../intake/components/EndToEndDemoWizard';
 
@@ -52,23 +53,10 @@ export function Dashboard() {
   const { timeEntries, approveTimeEntry, rejectTimeEntry } = useTime();
   const { addToast } = useToast();
 
-  const [dashboardMetrics, setDashboardMetrics] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_dashboard_metrics');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [dashboardMetrics, setDashboardMetrics] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [recentDocumentsCount, setRecentDocumentsCount] = useState(() => {
-    try {
-      const raw = localStorage.getItem('hb_cached_recent_docs_count');
-      return raw ? Number(raw) : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [recentDocumentsCount, setRecentDocumentsCount] = useState(0);
 
   // Local modal states for quick actions
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
@@ -83,14 +71,20 @@ export function Dashboard() {
       .then((data) => {
         if (isMounted && data) {
           setDashboardMetrics(data);
-          try {
-            localStorage.setItem('hb_cached_dashboard_metrics', JSON.stringify(data));
-          } catch {}
         }
       })
       .catch((err) => {
         console.warn('Could not fetch aggregated report metrics:', err?.message);
       });
+
+    communicationService.getCommunications({ limit: 4 })
+      .then((data) => {
+        if (isMounted) {
+          const rows = Array.isArray(data) ? data : (data?.communications || []);
+          setRecentMessages(rows.slice(0, 4));
+        }
+      })
+      .catch(() => {});
 
     calendarService.getEvents({ limit: 4 })
       .then((events) => {
@@ -157,12 +151,14 @@ export function Dashboard() {
       });
     });
     (intakes || []).slice(0, 2).forEach(i => {
+      const intakeClientLabel =
+        i.prospectiveClient || i.clientName || i.contactName || 'Prospective Client';
       activities.push({
         id: `intake-${i.id}`,
         title: `Intake: ${i.conflictStatus || 'In Review'}`,
-        description: `Client ${i.clientName || i.contactName} - Practice Area: ${i.practiceAreaName || 'General'}`,
+        description: `Client ${intakeClientLabel} - Practice Area: ${i.practiceAreaName || 'General'}`,
         date: i.createdAt || 'Recently',
-        color: i.conflictStatus === 'Cleared' ? 'bg-[#287A55]' : 'bg-[#A4432B]',
+        color: ['Cleared', 'Review Completed', 'Waiver Obtained'].includes(i.conflictStatus) ? 'bg-[#287A55]' : 'bg-[#A4432B]',
       });
     });
     return activities;
@@ -190,13 +186,13 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Top Welcome Banner */}
-      <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="space-y-1">
+      <div className="bg-white p-4 sm:p-6 rounded-xl border border-[#EAECF0] shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="space-y-1 min-w-0">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-[#A4432B]/10 text-[#A4432B] border border-[#A4432B]/20 text-[10px] font-mono font-bold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 text-[#A4432B]" />
             <span>Utah Law Practice Management</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#06244B] tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-serif font-bold text-[#06244B] tracking-tight break-words">
             Welcome back, {currentUser.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#475467] pt-0.5">
@@ -246,7 +242,7 @@ export function Dashboard() {
       </div>
 
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           title="Total Clients"
           value={totalClientsCount}
@@ -570,9 +566,24 @@ export function Dashboard() {
               </button>
             </div>
 
-            <div className="p-4 text-center text-xs text-[#667085]">
-              No unread client communications.
-            </div>
+            {recentMessages.length === 0 ? (
+              <div className="p-4 text-center text-xs text-[#667085]">
+                No logged client communications yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#D9D6CF]/50 text-xs">
+                {recentMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    onClick={() => navigate('/communications')}
+                    className="py-2.5 cursor-pointer hover:bg-[#FAF8F5] rounded px-1"
+                  >
+                    <p className="font-semibold text-[#06244B] truncate">{msg.subject}</p>
+                    <p className="text-[11px] text-[#667085] truncate">{msg.sender} &bull; {msg.type}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Recent Activity Log */}
@@ -650,7 +661,7 @@ export function Dashboard() {
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
         title="Client Onboarding: Conflict Check Required"
-        subtitle="Utah RPC 1.7 Mandatory Compliance Notice"
+        subtitle="Conflict Screening Notice (Requires Supervising Counsel Review)"
         maxWidth="max-w-lg"
       >
         <div className="space-y-4 py-1">

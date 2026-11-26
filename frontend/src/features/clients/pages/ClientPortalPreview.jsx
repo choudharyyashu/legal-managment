@@ -60,10 +60,10 @@ export function ClientPortalPreview() {
 
   const tabs = [
     { id: 'matters', label: 'My Matters', count: clientMatters.length, icon: Briefcase },
-    { id: 'documents', label: 'Documents & Uploads', count: 2 + uploadedFiles.length, icon: FileText },
+    { id: 'documents', label: 'Documents & Uploads', count: uploadedFiles.length, icon: FileText },
     { id: 'messages', label: 'Counsel Messages', count: messages.length, icon: MessageSquare },
     { id: 'billing', label: 'Invoices & Payments', icon: CreditCard },
-    { id: 'appointments', label: 'Hearings & Calendar', count: 1, icon: Calendar },
+    { id: 'appointments', label: 'Hearings & Calendar', count: 0, icon: Calendar },
   ];
 
   const handleSimulateUpload = (e) => {

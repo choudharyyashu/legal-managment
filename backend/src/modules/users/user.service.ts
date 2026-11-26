@@ -38,6 +38,27 @@ export class UserService {
   }
 
   /**
+   * Returns active staff directory (safe public firm fields only) for dropdowns like Responsible Attorney / Assigned Staff
+   */
+  static async getDirectory() {
+    const users = await prisma.user.findMany({
+      where: { status: 'Active' },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        userCode: true,
+        name: true,
+        role: true,
+        title: true,
+        initials: true,
+        department: true,
+        status: true,
+      },
+    });
+    return users;
+  }
+
+  /**
    * Retrieves paginated list of users with filtering and search
    */
   static async getUsers(query: UserQueryInput): Promise<{
@@ -249,6 +270,23 @@ export class UserService {
 
     const rateVal = input.billingRate !== undefined ? input.billingRate : ((input as any).rate !== undefined ? (input as any).rate : undefined);
 
+    if (input.status === 'Inactive') {
+      if (user.id === updaterContext.userId) {
+        throw AppError.badRequest('Administrators cannot deactivate their own user account.', 'SELF_DEACTIVATION_BLOCKED');
+      }
+      if (user.role === 'super_admin') {
+        const activeAdminCount = await prisma.user.count({
+          where: { role: 'super_admin', status: 'Active' },
+        });
+        if (activeAdminCount <= 1) {
+          throw AppError.badRequest(
+            'Cannot deactivate the last active Super Admin account. At least one active administrator must remain.',
+            'LAST_ADMIN_DEACTIVATION_BLOCKED'
+          );
+        }
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
@@ -298,6 +336,22 @@ export class UserService {
     // Prevent self-deactivation
     if (user.id === updaterContext.userId && status === 'Inactive') {
       throw AppError.badRequest('Administrators cannot deactivate their own user account.', 'SELF_DEACTIVATION_BLOCKED');
+    }
+
+    // Prevent deactivation of the last active super_admin
+    if (user.role === 'super_admin' && status === 'Inactive') {
+      const activeAdminCount = await prisma.user.count({
+        where: {
+          role: 'super_admin',
+          status: 'Active',
+        },
+      });
+      if (activeAdminCount <= 1) {
+        throw AppError.badRequest(
+          'Cannot deactivate the last active Super Admin account. At least one active administrator must remain.',
+          'LAST_ADMIN_DEACTIVATION_BLOCKED'
+        );
+      }
     }
 
     const updatedUser = await prisma.user.update({

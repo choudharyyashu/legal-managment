@@ -74,15 +74,15 @@ export function SecuritySettings() {
 
     setTimeout(() => {
       setDrillProgress(75);
-      setDrillStep('Validating IOLTA three-way ledger balances & document file signatures ($0 variance)...');
-    }, 1800);
+      setDrillStep('Simulating schema & checksum check against staging backup...');
+    }, 800 + 1000);
 
     setTimeout(() => {
       setDrillProgress(100);
-      setDrillStep('Dry-run complete: 100% data fidelity verified. Sandbox destroyed.');
+      setDrillStep('Simulation complete. Verify actual database backups & logs on your host environment.');
       setIsDrillRunning(false);
       setDrillCompleted(true);
-      addToast('Disaster Recovery Dry-Run Drill passed with 0 errors! RTO: 18 minutes.', 'success');
+      addToast('Disaster recovery simulation completed.', 'info');
     }, 2800);
   };
 
@@ -300,29 +300,29 @@ export function SecuritySettings() {
           </div>
         </div>
 
-        {/* AI & Cloud Provider Compliance Disclosure Card (SBO-12) */}
+        {/* AI & Cloud Provider Policy Guidance Card (SBO-12) */}
         <div className="p-4 bg-slate-50 rounded-lg border border-[#D9D6CF] space-y-2">
           <div className="flex items-center gap-2 text-[#06244B] font-bold text-sm">
             <Sparkles className="w-4 h-4 text-[#A4432B]" />
-            <span>External AI &amp; Cloud Provider Compliance Disclosure (SBO-12)</span>
+            <span>External AI &amp; Cloud Provider Policy Guidance (SBO-12)</span>
           </div>
           <p className="text-xs text-[#202A35] leading-relaxed">
-            In compliance with <strong>Utah Rule of Professional Conduct 1.6 (Confidentiality)</strong> and <strong>ABA Formal Opinion 512 (Generative AI Tools)</strong>:
+            Before connecting external AI tools, supervising counsel should confirm written vendor terms aligned with <strong>Utah RPC 1.6 (Confidentiality)</strong> and <strong>ABA Formal Opinion 512</strong>:
           </p>
           <ul className="text-xs text-[#667085] space-y-1 list-disc list-inside">
-            <li><strong>Zero Public Model Training:</strong> Client communications, bio-data, and case files are strictly excluded from public AI training corpuses.</li>
-            <li><strong>Data Retention Zero-Day:</strong> External LLM inference pipelines enforce zero persistent logging on third-party servers.</li>
-            <li><strong>100% Firm Intellectual Property:</strong> All pleadings, work product, notes, and templates remain the sole exclusive property of Heugly &amp; Bludworth.</li>
+            <li><strong>No Public Model Training:</strong> Confirm enterprise opt-out so client communications and case files are not used to train public models.</li>
+            <li><strong>Zero/Controlled Retention:</strong> Verify API data-retention and logging terms directly with your configured AI vendor.</li>
+            <li><strong>Firm Ownership:</strong> Confirm intellectual property and client confidentiality provisions in third-party service agreements.</li>
           </ul>
         </div>
 
-        {/* Compliance Certification */}
-        <div className="p-4 bg-emerald-950 text-emerald-100 rounded-lg border border-emerald-800 text-xs flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+        {/* Compliance Scope Notice */}
+        <div className="p-4 bg-[#06244B] text-slate-100 rounded-lg border border-[#0B356D] text-xs flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-white">Utah RPC 1.6 &amp; ABA Formal Opinion 477R Compliance</p>
-            <p className="text-emerald-200 mt-0.5 leading-relaxed">
-              Software parameters adhere to standard legal industry cybersecurity guidance for transmitting and storing client confidential and proprietary commercial matter data.
+            <p className="font-bold text-white">Utah RPC 1.6 &amp; ABA Formal Opinion 477R Reference</p>
+            <p className="text-slate-200 mt-0.5 leading-relaxed">
+              These controls support firm security governance; actual ethical and regulatory compliance depends on your hosting environment, access administration, and executed vendor agreements.
             </p>
           </div>
         </div>

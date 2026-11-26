@@ -145,28 +145,28 @@ export function EvictionsWorkspace() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085]">
+      <div className="flex items-center border-b border-[#E4E7EC] gap-x-6 gap-y-2 text-sm font-semibold text-[#667085] overflow-x-auto whitespace-nowrap scrollbar-thin">
         <button
           onClick={() => setActiveTab('notices')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'notices' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'notices' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Utah Statutory Notice & Service
         </button>
         <button
           onClick={() => setActiveTab('court')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'court' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'court' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Unlawful Detainer Court Action
         </button>
         <button
           onClick={() => setActiveTab('treble')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'treble' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'treble' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Treble Damages Calculator (§ 78B-6-811)
         </button>
         <button
           onClick={() => setActiveTab('sheriff')}
-          className={`pb-3 whitespace-nowrap transition-colors ${activeTab === 'sheriff' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
+          className={`pb-3 whitespace-nowrap transition-colors shrink-0 ${activeTab === 'sheriff' ? 'border-b-2 border-[#A4432B] text-[#06244B]' : 'hover:text-[#101828]'}`}
         >
           Sheriff Restitution & Storage
         </button>
@@ -213,14 +213,14 @@ export function EvictionsWorkspace() {
       {/* Tab 3: Treble Damages */}
       {activeTab === 'treble' && (
         <div className="bg-white border border-[#E4E7EC] rounded-xl p-6 shadow-sm space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-[#06244B]">Statutory Treble Damages Calculator (Utah Code § 78B-6-811)</h2>
               <p className="text-xs text-[#667085]">Utah law mandates treble (3x) rent damages for every day the tenant remains in unlawful possession after notice expiration.</p>
             </div>
             <button
               onClick={() => addToast('Treble damages calculation verified and prepared for judgment entry', 'success')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#06244B] text-white rounded-lg text-xs font-semibold hover:bg-[#083366] transition-colors shrink-0"
             >
               <Download className="w-4 h-4 text-[#A4432B]" />
               Generate Judgment Worksheet
@@ -244,7 +244,7 @@ export function EvictionsWorkspace() {
               <input
                 type="text"
                 disabled
-                value="3x (Mandatory per Utah Code § 78B-6-811)"
+                value="Up to 3x (Statutory claim subject to court determination)"
                 className="w-full mt-1 p-2.5 border border-[#D0D5DD] rounded-lg text-sm font-mono bg-slate-100 text-[#475467]"
               />
               <span className="text-[11px] text-[#667085] mt-1 block">Non-discretionary under Utah law</span>

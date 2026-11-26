@@ -1,0 +1,985 @@
+{
+  "date": "2026-11-16",
+  "status": "Original proposed synthetic fixtures;all application tests Not executed",
+  "commit": null,
+  "build": null,
+  "environment": null,
+  "new_requirements": [
+    {
+      "feature_id": "F-0519",
+      "workflow": {
+        "input": "Filed packet version, eligible generated forms, stored PDF attachments and selected order",
+        "initial_state": "Original proposed synthetic fixture; no live case changed",
+        "user_action": "Select Amended Forms, choose constituents, review their labels/order and generate a new packet",
+        "output": "New version with component manifest, generated-form marking and unchanged attachment provenance",
+        "exceptions_and_dependencies": "Proposed robustness safeguards are original tests, not observed vendor results. Court rules/form content, entitlement and live submission/service remain unverified."
+      },
+      "acceptance_test": {
+        "id": "AT-0519",
+        "scenario_and_expected_result": "Seed an original filed packet V1, generated forms G1/G2 and stored attachment A1 with a known source hash. Select Amended Forms, add G2 and A1, and generate V2. Verify the amendment label only on the eligible generated form, A1 appended at the end without a new amendment label, the original attachment asset/hash retained, and V1 unchanged. Inspect page content and component mapping, not equality of the merged PDF hash to the source attachment. Test reordering, duplicate filenames, attachment-only input, an encrypted/unreadable attachment and retry after generation failure. An unsupported constituent blocks readiness with an explicit reason; it is not silently omitted.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-155"
+      ]
+    },
+    {
+      "feature_id": "F-0520",
+      "workflow": {
+        "input": "Filed status, case number, creditor IDs, addresses and selection revision",
+        "initial_state": "Original proposed synthetic fixture; no live case changed",
+        "user_action": "Choose amended creditors and generate a synchronized schedules/PDF/TXT set",
+        "output": "Three traceable representations of the same chosen identities with complete underlying matter data",
+        "exceptions_and_dependencies": "Proposed robustness safeguards are original tests, not observed vendor results. Court rules/form content, entitlement and live submission/service remain unverified."
+      },
+      "acceptance_test": {
+        "id": "AT-0520",
+        "scenario_and_expected_result": "Create creditors C1/C2/C3 across secured and unsecured sections. Before filed status or case number, disable the amendment-selection route and explain the missing prerequisite. After both are present, select C1/C3. Generate schedules, matrix PDF and matrix TXT from the same immutable selection revision; verify C1/C3 present and C2 absent in each, while all three remain in matter data. Test a selection changed during generation, no selected creditors, duplicate addresses, Unicode, missing address and repeated generation. Reject or explicitly resolve an empty/invalid selection; do not quietly revert to all creditors. Reconcile identity/counts rather than filenames alone. No generated/exported artifact may mark a court submission or notice as delivered.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-157",
+        "VR-158"
+      ]
+    },
+    {
+      "feature_id": "F-0521",
+      "workflow": {
+        "input": "District, case chapter/status, vendor capability record, legal-data edition and verified court/template dependencies",
+        "initial_state": "Original proposed synthetic fixture; no live case changed",
+        "user_action": "Review support and rule/form versions, select an amendment route and release only after dependency review",
+        "output": "Versioned route decision and separate generation/submission/service evidence",
+        "exceptions_and_dependencies": "Proposed robustness safeguards are original tests, not observed vendor results. Court rules/form content, entitlement and live submission/service remain unverified."
+      },
+      "acceptance_test": {
+        "id": "AT-0521",
+        "scenario_and_expected_result": "Configure district A as documented to support supplemental filings and district B as unsupported; mark the source date and vendor-claim status. Route A to a reviewable in-app submission workflow and B to local-save/manual-upload steps. Independently choose current/prior legal-data editions with explicit effective ranges and a reviewer rationale; the choice must not overwrite the previous filed packet or silently migrate other cases. Add a Utah proposal notice and the court rules index as separate dependency records: expiry of a comment deadline cannot activate a rule or form. Unknown adoption, missing approved template edition, unverified event code or stale entitlement remains unresolved for attorney review. Verify generation, saved bytes, upload request, court acceptance/rejection and service evidence as distinct states. Vendor documentation alone cannot set accepted or served.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-154",
+        "VR-156"
+      ]
+    },
+    {
+      "feature_id": "F-0522",
+      "workflow": {
+        "input": "Synthetic matter/chapter/form,line metadata,canonical source revision,authorized input andoverride mode",
+        "initial_state": "Review line showing source-backed input orcalculated value;no live case changed",
+        "user_action": "Open supported line,review provenance,edit orselect override,thenSave/Cancel",
+        "output": "Synchronized canonical/review value withaudit history;derived results remain protected",
+        "exceptions_and_dependencies": "Proposed failure/concurrency/permission/backend controls are original acceptance tests;not observed competitor behavior. Approved calculation/form/data editions andruntime access remain pending."
+      },
+      "acceptance_test": {
+        "id": "AT-0522",
+        "scenario_and_expected_result": "For separate synthetic Chapter7 andChapter13 matters,exercise each applicable form122A-1,122A-2,122C-1,122C-2. Open a supported line withits edit icon;show the exact canonical source path andcurrent revision. Change a permitted input,save once,andverify the review line andorigin section agree after refresh/reopen. Retain audit actor/time,old/new value andmatter ID. Cancel leaves both unchanged. Test validation failure,revoked permission,stale concurrent edit andsave interruption;do not show success ifonly one representation updates. Keep chapter/form applicability explicit;do not invent editability for every line.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "acceptance_test_variants": [
+        {
+          "id": "AT-0522-OVERRIDE",
+          "title": "Calculated-input override is explicit andreversible",
+          "scenario_and_expected_result": "For applicable Taxes,Life Insurance andAdditional Health Care Expense fields,show automatic value,manual override value andwhich mode drives the result. Enable override,save a synthetic permitted amount,andverify Review andsource section match. Change an underlying input while override isactive;retain the explicit override policy andshow that automatic andmanual values differ. Disable override andrecompute under the pinned approved calculation/data edition. Preserve override history/rationale rather than replacing it witha plausible default. Cancel orfailed save changes neither mode norvalue. The published screenshot demonstrates only astatic checked toggle,not successful recalculation.",
+          "status": "Not executed",
+          "build": null,
+          "environment": null,
+          "source_url": "https://help.nextchapterbk.com/en/articles/16944261-editing-directly-in-means-test-review"
+        },
+        {
+          "id": "AT-0522-DERIVED",
+          "title": "Derived totals cannot be edited through either UI orwrite endpoint",
+          "scenario_and_expected_result": "Verify subtotals,totals andpresumption determination expose no direct input action. Attempt an unauthorized direct write through the application interface/API andrequire rejection without changing canonical data. Change a legitimate upstream input andrecompute using independently approved fixtures;trace each resulting figure toits inputs andlegal-data edition. A read-only screen alone doesnot prove backend protection orcorrect legal math. No expected substantive bankruptcy outcome is inferred from the sample amounts.",
+          "status": "Not executed",
+          "build": null,
+          "environment": null,
+          "source_url": "https://help.nextchapterbk.com/en/articles/16944261-editing-directly-in-means-test-review"
+        }
+      ],
+      "visual_reference_ids": [
+        "VR-159",
+        "VR-160",
+        "VR-161"
+      ]
+    },
+    {
+      "feature_id": "F-0523",
+      "workflow": {
+        "input": "Computed line,source contributions,calculation policy andinput revision",
+        "initial_state": "Original synthetic proposed fixture;no live matter changed",
+        "user_action": "Open/compare/close explanations;follow canonical source link",
+        "output": "Read-only reconciled explanation andtraceable edit route",
+        "exceptions_and_dependencies": "Approved calculation/form policies,scope/permissions andruntime still needed;robustness safeguards are original proposed tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0523",
+        "scenario_and_expected_result": "Load an original synthetic calculation fixture withthree source contributions100,200,0 andexpected sum300. Expand two different line breakdowns at once;opening/closing one doesnot collapse orchange the other. Show source IDs,debtor/spouse ownership,look-back range,method,rounding andinput revision. Verify contributions reconcile to the displayed result andrefresh after an authorized source edit. Directly answered fields must be distinguished fromcalculated fields;test the documented marital-status mismatch rather than assuming the image orprose wins. Breakdowns remain read-only;edit actions route toauthorized inputs. Test stale data,missing source,zero contribution andform/chapter change. A rendered explanation alone doesnot prove correct legal calculation.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-165",
+        "VR-168"
+      ]
+    },
+    {
+      "feature_id": "F-0524",
+      "workflow": {
+        "input": "Pay-advice deductions,separate averaging flags andmeans-test-only overrides",
+        "initial_state": "Original synthetic proposed fixture;no live matter changed",
+        "user_action": "Choose averaging scope oroverride a specific target",
+        "output": "Targeted means-test value withunchanged non-target source/results",
+        "exceptions_and_dependencies": "Approved calculation/form policies,scope/permissions andruntime still needed;robustness safeguards are original proposed tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0524",
+        "scenario_and_expected_result": "Use original synthetic pay-advice deductions100 and200 withan explicitly approved averaging fixture. Toggle the Means Test six-month-average setting independently fromthe separate Schedule I averaging setting. Verify the intended downstream calculation changes only underits selected policy. Set a means-test-only deduction override150;retain source pay-advice values andSchedule I/J results,record override actor/reason/scope,andshow which value drives the means test. Remove the override andrestore computed behavior under the pinned policy. Test concurrent source edits,cancel,failed save andcross-matter access. Distinguish changing a canonical source through Review froma scoped override;they must not share an indiscriminate write-back path. The2020 guide is historical;verify current tenancy anddistrict requirements before use.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-169",
+        "VR-170",
+        "VR-171"
+      ]
+    },
+    {
+      "feature_id": "F-0525",
+      "workflow": {
+        "input": "Typed field role,approved form policy,input amount andderived arithmetic",
+        "initial_state": "Original synthetic proposed fixture;no live matter changed",
+        "user_action": "Validate direct input;retain sign onauthorized computed result",
+        "output": "Explicit input exception orfaithful signed calculated output",
+        "exceptions_and_dependencies": "Approved calculation/form policies,scope/permissions andruntime still needed;robustness safeguards are original proposed tests."
+      },
+      "acceptance_test": {
+        "id": "AT-0525",
+        "scenario_and_expected_result": "Prepare a field-policy matrix identifying direct income inputs,expense inputs andcalculated net results withapproved form/edition references. Until exact official requirements are verified,mark the income sign restriction as a vendor claim requiring review. Where the approved policy disallows direct negative income,test -1,0 and1 withclear correction/supplement workflow;never silently convert -1 to0 orabsolute1. Independently use a synthetic net fixture income1000 minusexpenses1200 andpreserve -200 in the authorized calculated output. Test export/preview round-trip,locale sign parsing andnegative-zero rounding. Proposed supplemental documents require approved content,review andseparate filing evidence;vendor advice doesnot approve a form orlegal conclusion.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": []
+    },
+    {
+      "feature_id": "F-0526",
+      "workflow": {
+        "input": "Court/matter matrix orcustom CSV,case number andrecipient decisions",
+        "initial_state": "Original synthetic proposed fixture;no external account,charge orjob created",
+        "user_action": "Choose source,review differences andfreeze approved recipient revision",
+        "output": "Provenance-linked recipient snapshot andexplicit exclusions",
+        "exceptions_and_dependencies": "Current contract,exact entitlement,provider event semantics andcourt/service requirements pending. Proposed robustness controls are original tests,not observed vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0526",
+        "scenario_and_expected_result": "Seed court listC1/C2/C3,matter listC1/C4 andcustom CSV C2/C5. Choosing a source mustnever silently union allthree. Record source,time,case number,recipient IDs,addresses andadd/omit decisions in a frozen job revision. For courtmatrix C1/C2/C3,omitC2 andaddC6;verify exactlyC1/C3/C6. Require case number before court lookup. For mattermatrix changes,route tothe canonical creditor records andreturn withan explicit refresh/diff;do not silently alter a previously approved job. Custom CSV uses an identified template/version androw errors;test Unicode,duplicates,missing address,wrong case andempty list. Record explicit US Trustee inclusion decision whereapplicable withoutdeciding legal service requirements automatically. Reconcile finalrecipient counts before charge authorization.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-174",
+        "VR-176"
+      ]
+    },
+    {
+      "feature_id": "F-0527",
+      "workflow": {
+        "input": "Provider account/defaults,document hashes,recipient snapshot,mail options andapproval",
+        "initial_state": "Original synthetic proposed fixture;no external account,charge orjob created",
+        "user_action": "Preview andauthorize frozen job;reconcile provider response andreturned artifacts",
+        "output": "Auditable paid job,provider receipts andseparate filing/service tasks",
+        "exceptions_and_dependencies": "Current contract,exact entitlement,provider event semantics andcourt/service requirements pending. Proposed robustness controls are original tests,not observed vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0527",
+        "scenario_and_expected_result": "Build a synthetic job withtwo selected documents inreviewed order,job title,recipient snapshot andsingle/double-sided plusfirst-class/certified/rush settings. Freeze hashes,page counts,options andprovider rate/quote version atapproval. Clearly label estimate versusprovider-determined final charge;historical screenshot rates orambiguous rush wording cannotserve as a guaranteed quote. Require explicit approved terms/payment-provider setup andconfirmation before submission. Retry aftertimeout uses a stable job key andprovider reconciliation,not a second paid job. Track submitted,provider-accepted,processing,completed,failed/returned andunknown as evidence-backed states. Ifcertificate generation isselected,validate required title/description andoptions,thenlink returned certificate/order summary tothe exact matter/job. Test certificaterequestoff,missing certificate,email-only receipt,duplicate callback andstorage failure. Completion orcertificate availability mustnot set court-filed,legally served orrecipient-delivered withoutseparate evidence. No real account,mailing,payment orcourt filing isperformed inthis audit.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-172",
+        "VR-173",
+        "VR-174",
+        "VR-175",
+        "VR-177",
+        "VR-178",
+        "VR-179",
+        "VR-180",
+        "VR-181"
+      ]
+    },
+    {
+      "feature_id": "F-0528",
+      "workflow": {
+        "input": "Two tenants,external IDs,record candidates andeligibility policy",
+        "initial_state": "Original proposed synthetic fixture;no live tenant records changed",
+        "user_action": "Review preflight,verify/link identities,thenreconcile initial creation",
+        "output": "Stable mapping andidempotent counterpart records",
+        "exceptions_and_dependencies": "Requires authorized runnableadapter,verified identifiers andoperation policies. Original failure/approval safeguards areproposed tests,notobserved vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0528",
+        "scenario_and_expected_result": "Create synthetic Clio matterA andNextChapter caseA forone client,plus same-name unrelated clientB andunmatched eligible matterC. Preflight eligible open bankruptcy records inboth directions;linkA only afterverifying tenant,matter/case IDs andclient identity. Do notuse a display/reference number as a stableAPI ID withoutverification:the guide calls forURL matterID whilethe modal saysreference number. Reject wrong-tenant,nonexistent,already-linked andambiguous IDs. UnmatchedC maycreate exactlyone intended counterpart afterapproval;rerun/manual fullsync andconcurrentfirstsync cannotduplicate it. Closed/non-bankruptcy matterD isexcluded withreason. Preserve mapping/unlink audit andshow lastsuccessful attempt separately fromscheduled nightly timing. The statedaround2am EST isdocumented timing,not a current SLA;timezone/DST andpartialfailure semantics requireverification.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-185",
+        "VR-186",
+        "VR-187",
+        "VR-188",
+        "VR-189"
+      ]
+    },
+    {
+      "feature_id": "F-0529",
+      "workflow": {
+        "input": "Raw imported values,firm configuration andmapping/default rules",
+        "initial_state": "Original proposed synthetic fixture;no live tenant records changed",
+        "user_action": "Review source/default provenance andconfirm/correct legal context",
+        "output": "Confirmed mattercontext withassumptions andcorrections retained",
+        "exceptions_and_dependencies": "Requires authorized runnableadapter,verified identifiers andoperation policies. Original failure/approval safeguards areproposed tests,notobserved vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0529",
+        "scenario_and_expected_result": "Import synthetic open Bankruptcy matterwithmissing district/chapter. Record rawsource nulls,firm-default district,Chapter7 default,rule/version andimporttime separately. Do notpresent fallback values asclient-confirmed facts. Require review before generating finalapproved orcourt-filed content. For an intendedChapter13 case,correct to13 andverify downstream workspace/forms withoutsilently altering othermatters oroverwriting explicit source values. Test custom practiceareas containingBankruptcy,case/spacing variants,closed/pending status,unknown customfields andnewfirmdefault afterimport. Surface naming/mapping mismatch forreview;do notinvent matching semantics beyondverified adapter rules. Exact vendor defaults aredocumented,notverified current tenancy.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": []
+    },
+    {
+      "feature_id": "F-0530",
+      "workflow": {
+        "input": "Mapped records,operation,direction,prior state andauthorized policy",
+        "initial_state": "Original proposed synthetic fixture;no live tenant records changed",
+        "user_action": "Preview/apply permitted lifecycle action;reconcile bothsides",
+        "output": "Action-specific outcome withimmutable audit andunresolved failures",
+        "exceptions_and_dependencies": "Requires authorized runnableadapter,verified identifiers andoperation policies. Original failure/approval safeguards areproposed tests,notobserved vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0530",
+        "scenario_and_expected_result": "Use an explicitly versioned operation matrix. Test Clio rename:initial-only namepolicy leavesremote name unchanged andexposes difference forreview. Closing stopsdocumented syncing withoutautomatically archiving or deletingthe counterpart. Test contact-type change:the documentednew-case/old-archive behavior mustbe previewed asan identity-changing operation,retaining old/new links andhistory. Test NextChapter deletion,which theguide says deletesClio matter:the proposedprogram requires approved cross-system deletepolicy,impact preview andcorrelated authorization;unapproved deleteisheld,not silently propagated. Test replayed/out-of-order deleteevents,reopen/recovery,partialfailure andwrongmatter IDs. Mark absent reverse-direction semantics unknown;neverinfer symmetry fromtwo-way branding.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": []
+    },
+    {
+      "feature_id": "F-0531",
+      "workflow": {
+        "input": "Mapped records,event/task IDs,calendar selection,toggles andstate",
+        "initial_state": "Original proposed synthetic fixture;no live tenant records changed",
+        "user_action": "Evaluate routing gates andsynchronize eligible operations",
+        "output": "One correlated record ortraceable skip/conflict",
+        "exceptions_and_dependencies": "Requires authorized runnableadapter,verified identifiers andoperation policies. Original failure/approval safeguards areproposed tests,notobserved vendor results."
+      },
+      "acceptance_test": {
+        "id": "AT-0531",
+        "scenario_and_expected_result": "Build synthetic mapped open/closed Clio matters andactive/archived NextChapter cases. Enableevent/task toggles independently. Exercise create/update/delete inboth directions withstable source/target IDs. Clio-to-NextChapter events aredocumented excluded forclosed matters orwhen calendar matchesselected calendar;retain thiscounterintuitive rule asadapter behavior toverify,not silently invert it. Tasks excludeclosed matters;reverse events/tasks excludearchived cases. Record eachskip reason,destination calendar andpolicy version. Prevent echo-creation onreplayed callbacks;handle edits whileblocked,timezone/all-day/recurrence andpermission revocation without claimingunsupported vendor semantics. Deletion requires authorized policy andevidence. Calendar/task completion cannotprove attendance,duration orbillable work.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-184",
+        "VR-188"
+      ]
+    },
+    {
+      "feature_id": "F-0532",
+      "workflow": {
+        "input": "CRM contact IDs,tags,approved snapshot andattachment manifest",
+        "initial_state": "Originalproposed syntheticfixture;no realclientorprovider action",
+        "user_action": "Authorize adapter,filter/review tagged contacts,importandreconcile once",
+        "output": "Onecase perapproved identity withimmutable importprovenance",
+        "exceptions_and_dependencies": "Actualadapter/providercontract,source IDs,approvedlegal/formrequirements andrunnablebuild stillneeded. Originalrobustness tests arenotvendor runtime results."
+      },
+      "acceptance_test": {
+        "id": "AT-0532",
+        "scenario_and_expected_result": "Under a versioned legacyadapter fixture,accept the five configured tag names case-insensitively; body wording says exact while settings screens clarify case-insensitive. Configured tags: NextChapter 7,NextChapter 11,NextChapter 13,NextChapter Business 7 andNextChapter Business 11. Untagged,misspelled andconflicting-multiple-tag contacts remainexcluded orreviewable;do notguess type/chapter. Import a reviewed contact snapshot containingname,address,phones,emails,notes anddocumentmanifest. Reconcile each row/file andrecord externalID,sourceversion,time,permissions andfieldmapping. Replaying manual/automatic jobs createsone case perapproved identity;concurrent attempts cannotduplicate it. Afterinitialimport,sourcechanges mustnot silently overwrite the destination orpush changesback underthis one-time,one-way policy. Reimport requires explicit reviewed migration policy. An emptyattempt getsits own jobresult andmustnot hidehistorical importedrows orreport themasnew. Test revokedauthorization,partialattachment failure andsame-name contacts. Currentadapter/plan validity remainsunverified;2019/2020 guides arehistorical.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-190",
+        "VR-191",
+        "VR-192",
+        "VR-198",
+        "VR-199",
+        "VR-200",
+        "VR-201",
+        "VR-202",
+        "VR-203",
+        "VR-204",
+        "VR-205"
+      ]
+    },
+    {
+      "feature_id": "F-0533",
+      "workflow": {
+        "input": "Provider course/account IDs,completion evidence,certificate andcandidate matters",
+        "initial_state": "Originalproposed syntheticfixture;no realclientorprovider action",
+        "user_action": "Poll/reconcile completion,review identity andassign certificate",
+        "output": "Correct matter-linked artifact/date withunmatched failures retained",
+        "exceptions_and_dependencies": "Actualadapter/providercontract,source IDs,approvedlegal/formrequirements andrunnablebuild stillneeded. Originalrobustness tests arenotvendor runtime results."
+      },
+      "acceptance_test": {
+        "id": "AT-0533",
+        "scenario_and_expected_result": "Use synthetic debtorA andsame-name debtorB,separate matterIDs andprovider accountIDs. Invitation alone cannotmark accountcreated,coursecomplete,certificateavailable orstored. Keep providerpoll attempt,lastsuccessful update andfreshness visible;documented twice-daily checks arenot proof ofcurrentuptodate status. Afterverified completion,match providerrecord/certificate againstauthorized identity evidence andspecificmatter;typos/conflicts enter anunmatched queue. Manual Assign requiresreview ofcandidate identity andcourse type,notname-only association. NewCase option mustcheck duplicates beforecreation. Save certificate bytes/hash andupdate theappropriate counselingdate onlyafterverified correctassignment;test storagefailure,duplicate certificate,wrongdebtor/course anddatecorrection. Stored certificate isnotcourt-filed orproof oflegal eligibility. Providercredentials mustbe protected andnot exposed inlogs;exactcurrent authentication/form/court requirements needverification.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-194",
+        "VR-195",
+        "VR-206",
+        "VR-207",
+        "VR-212",
+        "VR-213",
+        "VR-214",
+        "VR-215"
+      ]
+    },
+    {
+      "feature_id": "F-0534",
+      "workflow": {
+        "input": "Reviewed invitationtemplate,clientlanguage,provider URL,recipient andfirmnotification settings",
+        "initial_state": "Originalproposed syntheticfixture;no realclientorprovider action",
+        "user_action": "Prepare/authorize invitation;reconcile deliveryorresend andlanguage handoff",
+        "output": "Traceable clientcommunication andcorrectprovider/language route",
+        "exceptions_and_dependencies": "Actualadapter/providercontract,source IDs,approvedlegal/formrequirements andrunnablebuild stillneeded. Originalrobustness tests arenotvendor runtime results."
+      },
+      "acceptance_test": {
+        "id": "AT-0534",
+        "scenario_and_expected_result": "Use a synthetic invitation template withfirmcontact details,approvedrecipient andnotification/CC setting. Validate exact DebtorCC.org partnerdestination;do notsubstitute similarly named services. Record invitation requested,sent,failed andresend asdistinct evidence-backed attempts. Resend isanother communication andcannotimply firstdelivery,account creation orcoursecompletion. Test typoinrecipient,changedemail,expiredlink,blockedprovider andduplicateclick;retain explicitauthorized retry history withoutuncontrolled mail storms. ForSpanish-preferring client,test thepublished providerlanguage option andround-trip identity/course choice. Spanishprovider UI doesnot proveSpanish invitationtext orcompleteSpanishfirmintake;those existingrequirements requireapprovedtranslations andseparate tests. Preserve first/secondcourse distinction andaccessreturnlink withoutassumingcurrentcourseapproval/rates. No realinvitation oraccount creation occurs inthis audit.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-193",
+        "VR-196",
+        "VR-197",
+        "VR-208",
+        "VR-209",
+        "VR-210",
+        "VR-211",
+        "VR-212"
+      ]
+    },
+    {
+      "feature_id": "F-0538",
+      "workflow": {
+        "input": "Synthetic residence state, household size, dated income records, filing date and approved table edition",
+        "initial_state": "Synthetic proposed fixture; no actual tenant or client matter changed",
+        "user_action": "Review source provenance, correct a canonical input and recompute the screening decision",
+        "output": "Versioned screening result with required-form decision and explicit unresolved inputs",
+        "exceptions_and_dependencies": "Approved calculation/form editions, field mapping and runtime access required. No automatic filing, legal conclusion or reviewed-template approval inferred."
+      },
+      "acceptance_test": {
+        "id": "AT-0538",
+        "scenario_and_expected_result": "Seed a synthetic matter with an independently approved test table having a median of 100000.00 and annualized incomes 99999.99, 100000.00 and 100000.01. Verify each outcome against the separately approved comparison policy, including exact equality; the vendor guide does not specify equality. Show table identifier/effective dates, residence source, household source, monthly-to-annual conversion and review state. Change each dependency individually and require recalculation and a new packet-readiness review. Missing state, conflicting current residences, zero/unknown household, stale table or incomplete income must remain unresolved rather than defaulting to green. An above-median screen is not, by itself, a completed presumption analysis. Compare preview and final packet manifests for the same revision without claiming the legacy generic term means-test form identifies a particular official form.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-225",
+        "VR-226",
+        "VR-227",
+        "VR-228",
+        "VR-229",
+        "VR-232",
+        "VR-233",
+        "VR-241",
+        "VR-242",
+        "VR-245"
+      ]
+    },
+    {
+      "feature_id": "F-0539",
+      "workflow": {
+        "input": "Synthetic debtor identities, debt classification, veteran/service answers, chapter and approved form edition",
+        "initial_state": "Synthetic proposed fixture; no actual tenant or client matter changed",
+        "user_action": "Answer each applicable branch, inspect the mapping and review the packet manifest",
+        "output": "Per-debtor branch explanation, consistent mapped answers and versioned packet constituents",
+        "exceptions_and_dependencies": "Approved calculation/form editions, field mapping and runtime access required. No automatic filing, legal conclusion or reviewed-template approval inferred."
+      },
+      "acceptance_test": {
+        "id": "AT-0539",
+        "scenario_and_expected_result": "Construct a decision table from an independently approved form edition and exercise every yes/no/unanswered branch with two synthetic debtors. Match the supplement's consumer-debt answer to the petition's corresponding field; block conflicting or unknown canonical classifications. For each branch inspect generated field values, checkbox identity, debtor identity and manifest, rather than the UI's color alone. Supplement inclusion must be justified by the complete branch and must not remove its required companion form. Change an upstream answer after preview: invalidate approval, regenerate from the new revision, retain an audit of inactive answers and exclude them from active calculation/output. Test a failed save and concurrent edit without silently mixing old and new answers. This is a proposed application test; current legal applicability and approved template/field editions remain open.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-230",
+        "VR-231",
+        "VR-234",
+        "VR-235",
+        "VR-236",
+        "VR-237",
+        "VR-238",
+        "VR-239",
+        "VR-240"
+      ]
+    },
+    {
+      "feature_id": "F-0540",
+      "workflow": {
+        "input": "Synthetic service category, start/end/release dates, filing date, debtor and case closure state",
+        "initial_state": "Synthetic proposed fixture; no actual tenant or client matter changed",
+        "user_action": "Select a service branch, validate its dates and review a policy-derived follow-up task",
+        "output": "Explained temporal state and a review task linked to the correct debtor and matter",
+        "exceptions_and_dependencies": "Approved calculation/form editions, field mapping and runtime access required. No automatic filing, legal conclusion or reviewed-template approval inferred."
+      },
+      "acceptance_test": {
+        "id": "AT-0540",
+        "scenario_and_expected_result": "Under a pinned, independently approved synthetic policy, test service lengths of 89, 90 and 91 days and release-to-filing intervals of 539, 540 and 541 days. Show exact calendar-date arithmetic and which rule was applied; do not use a generic six-month approximation or a global exemption boolean. Exercise all four categories, an unknown release date, a future date, corrected filing date, reopened case and two debtors with different histories. Changing a date must version the decision and associated review task; it must not silently change an already filed artifact or file an amendment. The attorney reviews whether further filing is required. Product screenshots establish the category selector only; expiry/task behavior is an original proposed requirement with its actual feature visual missing.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-238",
+        "VR-239",
+        "VR-240"
+      ]
+    },
+    {
+      "feature_id": "F-0541",
+      "workflow": {
+        "input": "Synthetic circumstance descriptions, amounts, units/period, supporting material and approved form mapping",
+        "initial_state": "Synthetic proposed fixture; no actual tenant or client matter changed",
+        "user_action": "Add or edit a row, review its calculation treatment, then remove or cancel an entry",
+        "output": "Versioned itemized rows and an explained form/calculation difference for attorney review",
+        "exceptions_and_dependencies": "Approved calculation/form editions, field mapping and runtime access required. No automatic filing, legal conclusion or reviewed-template approval inferred."
+      },
+      "acceptance_test": {
+        "id": "AT-0541",
+        "scenario_and_expected_result": "Create two synthetic entries with distinct stable IDs and amounts 125.50 and 210.25, including identical display descriptions. Verify each row's amount, unit/period and target form field against an approved mapping. Edit one row and cancel; neither row changes. Save a change and verify only its intended result and audit record. Delete by ID rather than matching description or amount; require deliberate confirmation/recovery according to the approved deletion policy. Test zero, negative, missing and oversized amounts without inventing whether the legal form permits them. Inspect the generated page and calculation provenance; an entered expense does not itself establish special circumstances, satisfy supporting-document requirements or automatically reverse the presumption. The screenshot does not establish whether either displayed amount is monthly, total or applied in its visible summary.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-246"
+      ]
+    },
+    {
+      "feature_id": "F-0542",
+      "workflow": {
+        "input": "Synthetic marital status, individual/joint filing type, spouse identity and approved form mapping",
+        "initial_state": "Original proposed synthetic fixture; no tenant/client matter changed",
+        "user_action": "Change each canonical intake field, review the branch and regenerate a draft",
+        "output": "Consistent form answer with provenance and unresolved contradictions flagged",
+        "exceptions_and_dependencies": "Commit/build/environment,approved form mapping/calculation policies and current entitlements unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0542",
+        "scenario_and_expected_result": "Exercise Single, Divorced, Widowed, Married and Separated crossed with Individual, Joint and unknown filing type. Define the permitted combinations in an independently approved policy; do not silently coerce contradictory combinations. For each permitted combination compare the canonical values and exact output form/line/checkbox, including the follow-up household/separation question. Change Married/Joint to Married/Individual and then Separated/Individual: invalidate prior readiness, preserve history and recompute only the applicable spouse branch. Reject concurrent stale edits and failed saves without mixed answers. The source names both122A-1 and122A-2; implementation readiness requires a verified target for each edition rather than matching a prose label. Distinct screenshot matters do not prove this transition.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-255",
+        "VR-256"
+      ]
+    },
+    {
+      "feature_id": "F-0543",
+      "workflow": {
+        "input": "Synthetic non-filing spouse income, purposes, adjustment amounts and eligibility branch",
+        "initial_state": "Original proposed synthetic fixture; no tenant/client matter changed",
+        "user_action": "Review source income and add, edit or remove an adjustment item",
+        "output": "Explained adjustment total mapped to an approved form field, with original income retained",
+        "exceptions_and_dependencies": "Commit/build/environment,approved form mapping/calculation policies and current entitlements unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0543",
+        "scenario_and_expected_result": "Seed non-filing spouse income3500.00 and proposed exclusions125.25 and210.50 under an independently approved fixture. Verify each stable item ID, purpose, amount, period and linkage to spouse income; require the proposed total335.75 to appear only in the approved adjustment target. Preserve source income and show the adjusted calculation separately. Exercise blank purpose, missing amount, zero/negative amount, adjustments exceeding the relevant income and duplicate-looking items according to explicit validation policy; do not invent legal permission. Change to a joint filing or remove spouse income, then require branch review and exclude stale inactive items from current output while retaining audit history. Inspect save/reload and generated bytes; a static testing screen cannot establish eligibility or legal sufficiency.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-249"
+      ]
+    },
+    {
+      "feature_id": "F-0544",
+      "workflow": {
+        "input": "Synthetic principal, rate basis, interest rate, term, debt ID, target calculation and rounding policy",
+        "initial_state": "Original proposed synthetic fixture; no tenant/client matter changed",
+        "user_action": "Open calculator, supply terms, calculate, inspect the schedule and deliberately apply or cancel",
+        "output": "Previewed payment schedule and an audited update to the chosen target only",
+        "exceptions_and_dependencies": "Commit/build/environment,approved form mapping/calculation policies and current entitlements unavailable."
+      },
+      "acceptance_test": {
+        "id": "AT-0544",
+        "scenario_and_expected_result": "With a separately approved monthly-compounding, annual nominal rate fixture, calculate principal12000.00 at0% for12months: payment1000.00 and total12000.00, no division-by-zero failure. Then test a nonzero rate against an independent reference including each row's interest, principal, balance and final rounding adjustment. Calculation alone and closing/canceling must not update the case. Apply to debt A and verify only its intended field changes; debt B and the original creditor balance remain unchanged unless an explicitly approved mapping says otherwise. Exercise both documented entry points, stale terms, concurrent edits, retry/double-click, failed apply, zero/negative/noninteger months, unknown rate basis and unsupported balloon/daily-interest terms. Label unsupported contracts explicitly. A calculator total, a legal plan amount and an allowed means-test deduction are distinct; never automatically substitute one for another.",
+        "status": "Not executed",
+        "build": null,
+        "environment": null
+      },
+      "visual_reference_ids": [
+        "VR-250",
+        "VR-251",
+        "VR-252",
+        "VR-253",
+        "VR-254"
+      ]
+    }
+  ],
+  "extensions": [
+    {
+      "feature_id": "F-0102",
+      "title": "Preserve prior filed packets and label only eligible forms",
+      "test": "Change one synthetic matter fact after filing. Generate an amendment while retaining original filed version/hash, original data snapshot, author and date. Confirm generated constituents and stored attachments follow different marking rules. An amended filename or packet label alone cannot prove every constituent was properly handled.",
+      "status": "Not executed",
+      "source_url": "https://help.nextchapterbk.com/en/articles/1090002-amendments"
+    },
+    {
+      "feature_id": "F-0400",
+      "title": "Matrix-only export and notice boundaries",
+      "test": "Request matrix TXT alone. Explicitly exclude SSN form and keep petition-form column empty. Verify a real saved TXT with declared encoding, required address layout, selection revision and creditor-ID manifest. Missing/invalid addresses require correction. The export must not create a sent-notice state; any label/mail-merge/printing/service path has its own approval and evidence.",
+      "status": "Not executed",
+      "source_url": "https://help.nextchapterbk.com/en/articles/1070539-creditor-matrix-amended-creditors"
+    },
+    {
+      "feature_id": "F-0404",
+      "title": "Prepared output, open, local save and filing are separate",
+      "test": "Click Download, then test exiting with Complete before opening the prepared orange-bar link. The UI must not claim local bytes were saved. Open the link and save; verify the local file before manual court upload is offered. Test blocked pop-up, expired prepared output and interrupted save with a recoverable retry. Neither generation nor local save can mark a court accepted filing or notice delivered.",
+      "status": "Not executed",
+      "source_url": "https://help.nextchapterbk.com/en/articles/1090002-amendments"
+    },
+    {
+      "feature_id": "F-0522",
+      "title": "Versioned form/help/source navigation",
+      "test": "Open Chapter7 andChapter13 synthetic matters;select their proper form tabs andline ranges. Use Revisit andhelp routes withoutchanging matter/form/line identity. Return fromsource editing tothe relevant review line. Compare the2021 help-icon description (source-population information) against2026 guidance (related article);record current behavior instead ofsilently conflating them. Cancel navigation leaves values unchanged.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0400",
+      "title": "Mailing recipient importmanifest",
+      "test": "Validate the referenced CSV template/schema beforeimport. Report row-level errors andrecipient count/source provenance;reject wrong matter/case IDs. A downloaded/imported list isnot proof ofmail processing orservice.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0404",
+      "title": "Returned certificate isnot court-filed",
+      "test": "Correlate a synthetic provider certificate andorder summary byjob/matter IDs;verify stored bytes/hash andseparate notification receipt. Failure tostore thecertificate mustremain actionable evenifemail arrived. A storage item orprovider completed state cannotmark a court filing accepted;require a separate docket/receipt andauthorized filing workflow.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0520",
+      "title": "Matrix generation versuspaid mailing integration",
+      "test": "Retain the creditor-matrix guide’s negative mailing statement as a dated source claim whiledisplaying separate Key Dynamics module support anddependencies. Generated matrix,signed approval,provider submission,mail processing,delivery,certificate returned andcourt filing are distinct. Test absent provider entitlement withoutdeclaring thewhole product lacks mailing.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0498",
+      "title": "Consent andcategory scope",
+      "test": "Using synthetic authorization responses,deny consent andverify no job isenabled. Afterauthorized consent,enablecontacts/matters,events andtasks independently;disabled categories mustnot propagate. Verify exacttenant andgranted scopes,revocation behavior andactionable credential errors. A displayedAllow Access button ora selectedtoggle isnot evidence ofgranted permissions orsuccessful sync.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0498",
+      "title": "Once-only name andnon-symmetric operation policy",
+      "test": "Compare thepublished per-operation/direction matrix withconfigured field rules. A renamedClio mattermustnot silently overwrite aninitial-only counterpartname. Missing reverse-direction update/delete rules remainunknown untilverified;configure them explicitly rather thanassuming bidirectionalsymmetry.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0384",
+      "title": "Synced task/event doesnot establishworked time",
+      "test": "Create a synced synthetic event andcompleted task withoutattendance/workduration evidence. Include them asunresolved dailyreview candidates withoutinventing time. Preserveindividual calls/texts andallprevious time-review requirements;calendar duration neveroverwrites approved billing evidence.",
+      "status": "Not executed"
+    },
+    {
+      "feature_id": "F-0532",
+      "id": "AT-0532-V53-01",
+      "title": "Tag case and conflicting-tag preflight",
+      "scenario_and_expected_result": "Use synthetic contacts tagged NextChapter 7, nextchapter 7 and NEXTCHAPTER 7; all must resolve to the same eligible mapping under this source-specific case-insensitive policy. Test a misspelling, extra suffix and conflicting chapter/business tags: retain for review instead of guessing or silently creating multiple cases. Category labels do not change the tag mapping. The article body says exact tag text while three legacy settings screens explicitly say case-insensitive; preserve both evidence statements and verify current adapter behavior before activation.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/2958133-infusionsoft-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-198",
+        "VR-199",
+        "VR-200",
+        "VR-201",
+        "VR-202",
+        "VR-203",
+        "VR-204",
+        "VR-205"
+      ]
+    },
+    {
+      "feature_id": "F-0532",
+      "id": "AT-0532-V53-02",
+      "title": "Connection consent does not mean imported",
+      "scenario_and_expected_result": "In a synthetic adapter harness choose Deny: remain disconnected and perform no import. Choose Allow against the approved provider application and account: verify the callback and show a separate connected state before import. Wrong tenant, expired/revoked token and callback failure remain errors, with no invented success or exposed token. Preserve application identity and scopes when available; the NextChapter-Test illustration does not establish production identity or granular scopes.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/2958133-infusionsoft-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-198",
+        "VR-199",
+        "VR-200",
+        "VR-201",
+        "VR-202",
+        "VR-203",
+        "VR-204",
+        "VR-205"
+      ]
+    },
+    {
+      "feature_id": "F-0532",
+      "id": "AT-0532-V53-03",
+      "title": "Job results, scheduling and row provenance",
+      "scenario_and_expected_result": "Create job A with four imported rows and job B with zero. Show each job ID, start/end time, count and row outcomes independently; job B must not relabel job A rows as newly imported. Verify type/chapter/district against approved mappings. A historical next-import-in-16-hours display is not a fixed 16-hour polling contract. Scheduled and manual overlap must deduplicate by external identity and account.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/2958133-infusionsoft-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-198",
+        "VR-199",
+        "VR-200",
+        "VR-201",
+        "VR-202",
+        "VR-203",
+        "VR-204",
+        "VR-205"
+      ]
+    },
+    {
+      "feature_id": "F-0532",
+      "id": "AT-0532-V53-04",
+      "title": "Notes and attachment snapshot reconciliation",
+      "scenario_and_expected_result": "Import a synthetic note with author, source ID, updated time and body plus a 15 KB fixture PDF. Reconcile note metadata and exact PDF bytes/hash into the approved destination; filename, size, source file-list row or Download control alone cannot pass. If either transfer fails, retain explicit partial failure and retry without duplicate notes/files. Empty source task/appointment panels cannot prove tasks are supported by this adapter.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/2958083-infusionsoft-integration-importing-cases",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-198",
+        "VR-199",
+        "VR-200",
+        "VR-201",
+        "VR-202",
+        "VR-203",
+        "VR-204",
+        "VR-205"
+      ]
+    },
+    {
+      "feature_id": "F-0534",
+      "id": "AT-0534-V53-05",
+      "title": "Notification recipient policy and reply route",
+      "scenario_and_expected_result": "Configure a firm user and custom notification email; require an explicit approved precedence policy or conflict resolution before sending. Snapshot the message, client recipient, firm notification recipient, course and provider destination per attempt. Test an invalid custom address, changed firm default and resend after client address correction. A no-reply template must visibly give the monitored attorney contact route and must not promise that replies are ingested into the matter. Verify client and authorized firm copies independently with transport evidence; a displayed message is not delivery proof. Preserve I/me/my and four-digit letter dates in user-authored templates.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/4057830-debtorcc-org-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-208",
+        "VR-209",
+        "VR-210",
+        "VR-211",
+        "VR-212"
+      ]
+    },
+    {
+      "feature_id": "F-0533",
+      "id": "AT-0533-V53-06",
+      "title": "Provider status does not establish artifact or filing",
+      "scenario_and_expected_result": "Use synthetic rows at 10, 80 and 100 percent and a completed row with blank Certificate, Form B423 and Filing fields. Keep provider progress, file availability, assignment and court receipt separate. Reassign requires confirmed old/new matter IDs, identity/course review and an audit trail; prevent a stale assignment from writing to a changed case. The Goldie Locks source row and Perd Hapley profile screenshot are different matters and cannot serve as before/after evidence for a single successful assignment. Form B423 is a legacy visible column, not verification of a currently required form or filing integration.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/4057830-debtorcc-org-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-206",
+        "VR-207",
+        "VR-212",
+        "VR-213",
+        "VR-214",
+        "VR-215"
+      ]
+    },
+    {
+      "feature_id": "F-0082",
+      "id": "AT-0082-V53-07",
+      "title": "Counseling condition choices and reviewed date calculation",
+      "scenario_and_expected_result": "For each debtor independently preserve the five legacy observed choices: certificate not received; completed with certificate; completed without certificate; exigent circumstances; and exemption reason. Treat them as source-observed UI options, not current legal authority. Bind the enabled choices, document requirements and date computation to an attorney-approved current court/form/rule version. Under an explicitly synthetic 180-calendar-day policy fixture, January 28, 2020 computes July 26, 2020; test leap day, boundaries, changed completion date and absent certificate. Do not mark a missing artifact attached, overwrite the other debtor, infer court filing, or infer legal eligibility from the selected radio button. Current substantive rule validation remains pending.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/4057830-debtorcc-org-integration-getting-started",
+      "review_date": "2026-11-16",
+      "visual_reference_ids": [
+        "VR-215"
+      ]
+    },
+    {
+      "feature_id": "F-0538",
+      "id": "AT-0538-M54-SIXMONTH",
+      "title": "Use full calendar months and avoid double counting recurring pay advice",
+      "scenario_and_expected_result": "For synthetic filing November 16, 2026, a policy using the previous six full calendar months selects May 1, 2026 through October 31, 2026; November income is outside that window. Compare six complete monthly records with a separately approved recurring-income expansion from one pay advice. Do not add both representations. Record entry method and assumptions; a single advice is not evidence of constant six-month income. Change filing month and show the new input window before regeneration. Monetary rounding and income inclusions require independent approved fixtures.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/258539-means-test-qualifier",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0538",
+      "id": "AT-0538-M54-EQUALITY",
+      "title": "Keep exact-boundary and incomplete-data cases explicit",
+      "scenario_and_expected_result": "Exercise values on both sides of, and exactly at, the synthetic approved median. Compare full-precision canonical amounts and the approved rounding policy before display. An unspecified equality rule must block automated readiness pending policy selection. Keep below-median screening, military exclusion and completed presumption calculation as distinct states.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/258539-means-test-qualifier",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0538",
+      "id": "AT-0538-M54-HOUSEHOLD",
+      "title": "Household shortcut returns to the right canonical matter",
+      "scenario_and_expected_result": "From a qualifier in synthetic matter A open the household link, verify A's profile and debtor context, change size from 3 to 4, save and return. The qualifier, table selection and packet-readiness revision must update together after reload. Matter B remains unchanged. Cancel, rejected save, stale tab and revoked access cannot produce a success state. Household size is an attorney-reviewed fact; a profile integer does not establish the legally correct counting method.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/10040392-means-test-number-of-people-in-household",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0539",
+      "id": "AT-0539-M54-NATURE",
+      "title": "Keep petition and supplement debt classification consistent",
+      "scenario_and_expected_result": "Round-trip Consumer, Business, Other and unanswered inputs through canonical Filing Information and the generated petition/supplement fields. Preserve the distinction between Business and Other even if an approved rule maps both to one yes/no answer. If classification changes, review previously hidden business details rather than erasing them or carrying them into an inapplicable output. Compare debtor and matter identity on every generated constituent.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/8944515-statement-of-exemption-from-presumption-122a-1supp-line-1-are-your-debts-primarily-consumer-debts",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0539",
+      "id": "AT-0539-M54-VETERAN",
+      "title": "First veteran answer cannot bypass the debt-incurrence follow-up",
+      "scenario_and_expected_result": "Set the veteran answer Yes with follow-up unanswered, then No, then Yes. Only a complete approved qualifying branch can drive the related exemption output. Switch the first answer back to No: preserve history while deactivating the follow-up in current calculations. Exercise these states independently for each debtor and verify exact checkbox/form mapping; no current legal entitlement is inferred from the product label.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/8944541-statement-of-exemption-from-presumption-122a-1supp-line-2-are-you-a-disabled-veteran",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0539",
+      "id": "AT-0539-M54-JOINT",
+      "title": "Do not collapse joint debtors into one exemption decision",
+      "scenario_and_expected_result": "Use a synthetic joint matter where only debtor 1 satisfies an approved exemption branch. Verify each required companion/individual calculation and debtor-specific identity using an independently approved joint-case mapping. Reverse which debtor qualifies, then make neither qualify. Preserve prior artifacts and invalidate stale readiness; one spouse's branch must not suppress the other's required work.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/8944500-statement-of-exemption-from-presumption-122a-1supp-full-form-instructions",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0540",
+      "id": "AT-0540-M54-SERVICE",
+      "title": "Category selection requires actual dates and versioned policy",
+      "scenario_and_expected_result": "Select each service category and inspect the required inputs and resulting output mapping. Literal MM/DD/YYYY text in a dropdown is not a completed date. Test unanswered category, Yes/Yes with no category, duplicate service periods and a category change that makes old date fields inactive. Retain provenance and require attorney review when date history conflicts; do not infer that the static product demonstrates validation or expiry scheduling.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/8944573-statement-of-exemption-from-presumption-122a-1supp-line-3-are-you-or-have-you-been-a-reservist-or-member-of-the-national-guard",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0521",
+      "id": "AT-0521-M54-LOCK",
+      "title": "Pin filed matters to their actual legal-data edition",
+      "scenario_and_expected_result": "Simulate confirmed in-app filing under approved table edition A, then publish edition B. Reopen the matter and verify the filed snapshot continues to identify A and its effective range. A failed submission, download or manually entered filing date is not the same trigger as confirmed filing. An authorized switch to Current or Prior must preview the impact, record actor/reason and preserve the filed artifact. Flag the documented screenshot's January 11, 2024 filing date beside a June 22, 2024–November 1, 2024 prior-data range as separate selectable states, not proof that this range matches that filing. Missing edition or unsupported historical data blocks readiness.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/10338816-ability-to-lock-in-filing-date-upon-filing-through-app",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0521",
+      "id": "AT-0521-M54-NJB",
+      "title": "Include an authorized extra calculation form without changing district identity",
+      "scenario_and_expected_result": "In synthetic below-median Chapter 7 and Chapter 13 matters, test the approved optional inclusion of the correct calculation form, new input requirements and preview/final manifest. Preserve the real district, court header, local rules, recipients and filing endpoint throughout; a permission to include a form must not mutate jurisdiction. Record trustee/local-authority request and approval separately. Cancel, failed save and chapter changes invalidate incompatible form choices. The vendor documents an NJB-only checkbox and a temporary-district workaround; this test proposes a safer direct override. Its screenshot shows only an unchecked Chapter 7 control; Chapter 13 behavior and New Jersey legal requirements remain unverified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/13621314-include-form-122a-c-2-with-no-presumption-of-abuse-njb",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0524",
+      "id": "AT-0524-M54-SCOPES",
+      "title": "Do not confuse Schedule I averaging with means-test averaging",
+      "scenario_and_expected_result": "The 2020 qualifier image highlights Use 6 Month Average for Schedule I while the text describes means-test averaging; treat that as a source mismatch. In a synthetic fixture toggle Schedule I and means-test/deduction averaging independently, inspecting each target, canonical source, period and form field. A visible checked option cannot prove the other target uses the same method. Retain source-specific labels and verify current adapter behavior rather than copying the highlighted control blindly.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/258539-means-test-qualifier",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Original proposed fixture; complete containing guide and static images reviewed only. No live application test."
+    },
+    {
+      "feature_id": "F-0164",
+      "id": "AT-0164-M54-TRAINING",
+      "title": "Keep live webinar registration separate from recorded training access",
+      "scenario_and_expected_result": "From a synthetic bankruptcy workspace open Help and distinguish live-event registration from recorded training. Verify each route opens the intended authorized resource without implying that viewing a list, registering or opening a recording completed training or changed a case. Preserve the current matter context on return, report inaccessible resources explicitly, and show any current entitlement or expiry restriction. The2018 closing narration supports only the two described navigation routes; their current UI and actual registration/playback remain unverified.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.youtube.com/watch?v=rETMgZ-hDWo",
+      "timestamp": "1:33–1:57",
+      "review_date": "2026-11-16",
+      "evidence_limit": "Complete available transcript only; full visuals blocked."
+    },
+    {
+      "feature_id": "F-0523",
+      "id": "AT-0523-M56-PRESUMPTION",
+      "title": "Version the complete presumption decision rather than reuse a qualifier badge",
+      "scenario_and_expected_result": "Trace adjusted income, deductions, monthly disposable income and60-month amount to canonical inputs and the approved form edition. Under an independently approved April2025 fixture, test line39d at10274.99,10275.00,17150.00 and17150.01. Intermediate endpoints must follow the additional comparison rather than an unconditional red/green shortcut. Test amounts below, equal to and above a synthetic quarter-of-debt comparator; incomplete underlying debt remains unresolved. Never use the2022 screenshot thresholds for a new-edition calculation merely because the screen appears complete. Keep existing filed snapshots reproducible under their applicable historical policy; exact legal applicability remains subject to review.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/6110610-chapter-7-means-test-calculation-presumption-of-abuse",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Two images are vendor-provided generated-form crops, not product interaction screens. Historical line40 thresholds9075/15150 differ from the April2025 official form. Arithmetic39a–39d is illustrated, not a full decision-tree execution."
+    },
+    {
+      "feature_id": "F-0541",
+      "id": "AT-0541-M56-SPECIALFORM",
+      "title": "Require average-monthly units and supporting-material review for special circumstances",
+      "scenario_and_expected_result": "The April2025 form page9 describes average-monthly figures, explanation and supporting documentation. For each synthetic special-circumstance entry distinguish the entered unit from its normalized monthly amount and preserve both. Do not infer from the vendor screenshot's bare amount that it was already monthly. Require attorney review of explanation and supporting-material status before marking the draft ready; entry alone does not establish sufficiency, trustee delivery or an automatic changed presumption. Include a missing-attachment case and confirm no delivery/filing status is fabricated.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/6110610-chapter-7-means-test-calculation-presumption-of-abuse",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Two images are vendor-provided generated-form crops, not product interaction screens. Historical line40 thresholds9075/15150 differ from the April2025 official form. Arithmetic39a–39d is illustrated, not a full decision-tree execution."
+    },
+    {
+      "feature_id": "F-0544",
+      "id": "AT-0544-M56-ROUNDING",
+      "title": "Reconcile displayed cents without mistaking them for the calculation policy",
+      "scenario_and_expected_result": "The legacy screenshot displays119180.86 total and1986.35 monthly for60months: multiplying displayed cents does not reproduce the displayed total. It also displays first-row payment1986.35 versus displayed interest293.33 plus principal1693.01. Treat these as rounding questions, not proof the engine is incorrect. Expose underlying precision, period rounding and final-payment policy; reconcile totals and ending balance under an independent fixture. Changing a loan term must mark the preview stale and disable applying an old result until recalculated. No full60-row schedule or saved result was observed.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/2362277-interest-rate-calculators",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Two static images show debt-list navigation and one calculated schedule crop with explicit Use Amortized Amount. Only first8 rows and part9 visible; no complete schedule, apply transition or persistence observed. Display rounding independently reconciles under stated assumptions."
+    },
+    {
+      "feature_id": "F-0544",
+      "id": "AT-0544-M56-TARGET",
+      "title": "Keep cure amount, future payments and plan treatment distinct",
+      "scenario_and_expected_result": "Select one of several same-creditor rows by stable debt/asset ID, not display name. Show the target field and current value before applying. Distinguish principal, future amount due,60-month average, cure amount,1/60 cure, secured amount, amortized balance and monthly plan payment. Verify only the authorized mapping changes and show a before/after diff. An Amortize control near a cure column does not establish which value is overwritten. Chapter13 claim-treatment options, secured overrides and current-prime-rate link are visible dependencies, not verified legal eligibility or a current interest quote.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://help.nextchapterbk.com/en/articles/1959284-amortizing-balances",
+      "timestamp": null,
+      "review_date": "2026-11-16",
+      "evidence_limit": "Three static examples show a debt row, calculator inputs and separate Chapter13 treatment. Same creditor labels and different asset names do not establish a continuous workflow. The2020 body describes an online-tool link."
+    },
+    {
+      "feature_id": "F-0543",
+      "id": "AT-0543-M56-FIELDMAP",
+      "title": "Correct the dated spouse-adjustment line mapping",
+      "scenario_and_expected_result": "Against the April2025 form fixture, verify line2 contains the applicability answers, itemized purposes/amounts and total populate line3, and line4 subtracts that total from line1. With total3500.00 and approved adjustment335.75, expected adjusted income is3164.25. Do not write the amount into line2 just because the vendor guide says line2. No ColumnB income or a filing spouse must follow the approved zero-adjustment branch. Trace expense deductions to prevent counting the same adjustment twice. Current legal applicability and exact template mapping still require approval.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.uscourts.gov/sites/default/files/2025-04/b_122a-2_0425-form.pdf",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Partial official-form text review: pages1,2,8,9 only; no application execution"
+    },
+    {
+      "feature_id": "F-0538",
+      "id": "AT-0538-M56-HEADCOUNT",
+      "title": "Keep household size separate from deduction and age headcounts",
+      "scenario_and_expected_result": "Use a synthetic approved fixture with household size4 but deduction headcount3. Preserve both named inputs and their sources; changing one must not silently overwrite the other. Verify the form target for each and show why the difference is allowed under the approved policy. Exercise age64/65 boundary, missing ages, split counts that do not reconcile and a dependent-status correction. Do not infer deduction headcount from the median-income household selector alone. The primary form distinguishes these counts; application behavior remains unexecuted.",
+      "status": "Not executed",
+      "build": null,
+      "environment": null,
+      "source_url": "https://www.uscourts.gov/sites/default/files/2025-04/b_122a-2_0425-form.pdf",
+      "review_date": "2026-11-16",
+      "timestamp": null,
+      "evidence_limit": "Partial official-form text review: pages1,2,8,9 only; no application execution"
+    }
+  ],
+  "reference_arithmetic_only": [
+    {
+      "scope": "Isolated arithmetic only; neither vendor nor application execution",
+      "assumptions": "Annual nominal3.2%,monthly compounding,equal full-precision monthly payments,round display half-up",
+      "payment_full_precision": "1986.347603942641945108239704272187270430",
+      "total_full_precision": "119180.8562365585167064943822563312362258",
+      "display_payment": "1986.35",
+      "display_total": "119180.86",
+      "display_first_interest": "293.33",
+      "display_first_principal": "1693.01"
+    }
+  ]
+}

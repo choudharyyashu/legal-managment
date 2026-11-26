@@ -12,6 +12,7 @@ export function TimeProvider({ children }) {
   const [timeEntries, setTimeEntries] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [cosmoLexExports, setCosmoLexExports] = useState([]);
   const [reviewSlots, setReviewSlots] = useState(INITIAL_REVIEW_SLOTS);
   const [loading, setLoading] = useState(false);
@@ -76,6 +77,21 @@ export function TimeProvider({ children }) {
     dueDate: i.dueDate ? new Date(i.dueDate).toISOString().split('T')[0] : '',
   });
 
+  const normalizePayment = (p) => ({
+    id: p.id,
+    paymentReference: p.paymentReference,
+    invoiceId: p.invoiceId,
+    invoiceNumber: p.invoiceNumber,
+    clientId: p.clientId,
+    clientName: p.clientName,
+    amount: Number(p.amount) || 0,
+    paymentMethod: p.paymentMethod,
+    destinationAccount: p.destinationAccount,
+    transactionReference: p.transactionReference,
+    receivedDate: p.receivedDate ? new Date(p.receivedDate).toISOString().split('T')[0] : '',
+    createdAt: p.createdAt,
+  });
+
   const refreshTimeEntries = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
@@ -109,15 +125,48 @@ export function TimeProvider({ children }) {
     }
   }, [isAuthenticated, canViewInvoices]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setTimeEntries([]);
-      setExpenses([]);
-      setInvoices([]);
+  const refreshPayments = useCallback(async () => {
+    if (!isAuthenticated || !canViewInvoices) return;
+    try {
+      const data = await billingService.getPayments({ limit: 100 });
+      const raw = Array.isArray(data?.payments) ? data.payments : (Array.isArray(data) ? data : []);
+      setPayments(raw.map(normalizePayment));
+    } catch (err) {
+      console.warn('Failed to load payments from API:', err?.message);
+    }
+  }, [isAuthenticated, canViewInvoices]);
+
+  const refreshReviewSlots = useCallback(async (dateStr) => {
+    if (!isAuthenticated) return;
+    try {
+      const data = await timeService.getReviewSlots(dateStr ? { date: dateStr } : {});
+      if (Array.isArray(data) && data.length > 0) {
+        setReviewSlots(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load review slots from API:', err?.message);
     }
   }, [isAuthenticated]);
 
-  const markSlotReviewed = (slotId) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshTimeEntries();
+      refreshReviewSlots();
+      if (canViewInvoices) {
+        refreshInvoices();
+        refreshPayments();
+      }
+    } else {
+      setTimeEntries([]);
+      setExpenses([]);
+      setInvoices([]);
+      setPayments([]);
+      setReviewSlots(INITIAL_REVIEW_SLOTS);
+    }
+  }, [isAuthenticated, canViewInvoices, refreshTimeEntries, refreshReviewSlots, refreshInvoices, refreshPayments]);
+
+  const markSlotReviewed = async (slotId, dateStr) => {
+    // Optimistic UI update
     setReviewSlots((prev) =>
       prev.map((slot) =>
         slot.id === slotId
@@ -129,6 +178,18 @@ export function TimeProvider({ children }) {
           : slot
       )
     );
+
+    try {
+      const result = await timeService.markReviewSlotCompleted(slotId, dateStr ? { date: dateStr } : {});
+      if (result) {
+        setReviewSlots((prev) =>
+          prev.map((slot) => (slot.id === slotId ? { ...slot, ...result } : slot))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to persist review slot completion:', err?.message);
+      refreshReviewSlots(dateStr);
+    }
   };
 
   const addTimeEntry = async (entryData) => {
@@ -235,6 +296,19 @@ export function TimeProvider({ children }) {
       const created = await billingService.createInvoice(payload);
       const normalized = normalizeInvoice(created);
       setInvoices((prev) => [normalized, ...prev]);
+
+      // Immediately mark invoiced time entries and expenses as 'Billed' in local state
+      if (Array.isArray(payload.lineItems)) {
+        const billedTimeIds = new Set(payload.lineItems.map(li => li.timeEntryId).filter(Boolean));
+        const billedExpIds = new Set(payload.lineItems.map(li => li.expenseId).filter(Boolean));
+        if (billedTimeIds.size > 0) {
+          setTimeEntries(prev => prev.map(t => billedTimeIds.has(t.id) ? { ...t, status: 'Billed' } : t));
+        }
+        if (billedExpIds.size > 0) {
+          setExpenses(prev => prev.map(e => billedExpIds.has(e.id) ? { ...e, status: 'Billed' } : e));
+        }
+      }
+
       return normalized;
     } catch (err) {
       throw err;
@@ -253,7 +327,7 @@ export function TimeProvider({ children }) {
       };
 
       await billingService.recordPayment(payload);
-      await refreshInvoices();
+      await Promise.all([refreshInvoices(), refreshPayments()]);
     } catch (err) {
       console.warn('Failed to record payment on API:', err?.message);
       // Optimistic fallback
@@ -277,7 +351,7 @@ export function TimeProvider({ children }) {
     }
   };
 
-  const exportApprovedToCosmoLex = (entryIds, userName = 'Rachel Adams') => {
+  const exportApprovedToCosmoLex = (entryIds, userName = 'Billing Staff') => {
     const selectedEntries = timeEntries.filter((t) => entryIds.includes(t.id) && t.status === 'Approved');
     if (selectedEntries.length === 0) return null;
 
@@ -332,10 +406,13 @@ export function TimeProvider({ children }) {
         addExpense,
         invoices,
         addInvoice,
+        payments,
         recordPayment,
+        refreshPayments,
         cosmoLexExports,
         exportApprovedToCosmoLex,
         reviewSlots,
+        refreshReviewSlots,
         markSlotReviewed,
         loading,
         refreshTimeEntries,

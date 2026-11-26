@@ -9,6 +9,7 @@ import {
 import { ClientResponse, ClientStatus } from './client.types.js';
 import { MatterService } from '../matters/matter.service.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { isMissingTableError } from '../related-parties/related-party.service.js';
 
 export class ClientService {
   /**
@@ -465,5 +466,286 @@ export class ClientService {
     });
 
     return this.formatClient(updated);
+  }
+
+  /**
+   * Returns strictly isolated Client 360 summary scoped solely by resolved `client.id`
+   * (never by client name) and respecting Ethical Wall restrictions on individual matters.
+   */
+  static async getClient360(clientIdOrNumber: string, currentUser?: AuthenticatedUser) {
+    const client = await this.getClientByIdOrNumber(clientIdOrNumber);
+
+    const allMatters = await prisma.matter.findMany({
+      where: { clientId: client.id },
+      include: {
+        practiceArea: { select: { id: true, name: true, code: true, brandColor: true } },
+        responsibleAttorney: { select: { id: true, name: true, title: true } },
+        staffAssignments: { select: { userId: true, assignmentRole: true } },
+        _count: { select: { tasks: true, timeEntries: true, documents: true } },
+      },
+      orderBy: { openDate: 'desc' },
+    });
+
+    const visibleMatters = currentUser
+      ? allMatters.filter((m) => MatterService.isUserAuthorizedForMatter(m, currentUser))
+      : allMatters;
+
+    const visibleMatterIds = visibleMatters.map((m) => m.id);
+    const screenedMatterIds = allMatters
+      .filter((m) => !visibleMatterIds.includes(m.id))
+      .map((m) => m.id);
+
+    const nullableMatterExclusion = screenedMatterIds.length
+      ? { OR: [{ matterId: null }, { matterId: { notIn: screenedMatterIds } }] }
+      : {};
+    const requiredMatterExclusion = screenedMatterIds.length
+      ? { matterId: { notIn: screenedMatterIds } }
+      : {};
+
+    const [communications, documents, invoices, trustLedgers, intakes, auditLogs] = await Promise.all([
+      prisma.communication.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { clientId: client.id },
+                ...(visibleMatterIds.length ? [{ matterId: { in: visibleMatterIds } }] : []),
+              ],
+            },
+            nullableMatterExclusion,
+          ],
+        },
+        include: {
+          matter: { select: { id: true, matterNumber: true, title: true } },
+        },
+        orderBy: { date: 'desc' },
+        take: 100,
+      }),
+      prisma.document.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { clientId: client.id },
+                ...(visibleMatterIds.length ? [{ matterId: { in: visibleMatterIds } }] : []),
+              ],
+            },
+            requiredMatterExclusion,
+          ],
+        },
+        include: {
+          matter: { select: { id: true, matterNumber: true, title: true } },
+          versions: {
+            orderBy: { uploadedAt: 'desc' },
+            take: 1,
+            include: { uploadedByUser: { select: { id: true, name: true } } },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+      }),
+      prisma.invoice.findMany({
+        where: {
+          clientId: client.id,
+          ...requiredMatterExclusion,
+        },
+        include: {
+          matter: { select: { id: true, matterNumber: true, title: true } },
+        },
+        orderBy: { issueDate: 'desc' },
+      }),
+      prisma.trustSubLedger.findMany({
+        where: {
+          clientId: client.id,
+          ...requiredMatterExclusion,
+        },
+        include: {
+          matter: { select: { id: true, matterNumber: true, title: true } },
+          transactions: {
+            orderBy: { createdAt: 'desc' },
+            include: { authorizedByUser: { select: { id: true, name: true } } },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.intake.findMany({
+        where: { convertedClientId: client.id },
+        include: {
+          practiceArea: { select: { id: true, name: true, code: true } },
+          reviewedByUser: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.auditLog.findMany({
+        where: {
+          OR: [
+            { resourceType: 'CLIENT', resourceId: client.id },
+            ...(visibleMatterIds.length
+              ? [{ resourceType: 'MATTER', resourceId: { in: visibleMatterIds } }]
+              : []),
+          ],
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 50,
+      }),
+    ]);
+
+    let relatedParties: any[] = [];
+    let relatedPartiesMigrationPending = false;
+    const rpDelegate = (prisma as any).relatedParty;
+    if (rpDelegate?.findMany) {
+      try {
+        relatedParties = await rpDelegate.findMany({
+          where: {
+            AND: [
+              {
+                OR: [
+                  { clientId: client.id },
+                  ...(visibleMatterIds.length ? [{ matterId: { in: visibleMatterIds } }] : []),
+                ],
+              },
+              nullableMatterExclusion,
+            ],
+          },
+          include: {
+            matter: { select: { id: true, matterNumber: true, title: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+      } catch (err) {
+        if (isMissingTableError(err, 'related_parties')) {
+          relatedPartiesMigrationPending = true;
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      relatedPartiesMigrationPending = true;
+    }
+
+    const totalBilled = invoices.reduce((sum, inv) => sum + Number(inv.totalAmount || 0), 0);
+    const totalPaid = invoices.reduce((sum, inv) => sum + Number(inv.paidAmount || 0), 0);
+    const totalOutstanding = invoices.reduce(
+      (sum, inv) => sum + Number(inv.balanceDue ?? Math.max(0, Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0))),
+      0
+    );
+    const trustBalance = trustLedgers.reduce((sum, ledger) => sum + Number(ledger.balance || 0), 0);
+
+    const trustTransactions = trustLedgers
+      .flatMap((ledger: any) =>
+        (ledger.transactions || []).map((tx: any) => ({
+          id: tx.id,
+          trustSubLedgerId: ledger.id,
+          ledgerCode: ledger.ledgerCode,
+          matterId: ledger.matterId,
+          matterNumber: ledger.matter?.matterNumber || null,
+          matterTitle: ledger.matter?.title || null,
+          transactionType: tx.transactionType,
+          amount: Number(tx.amount || 0),
+          runningBalance: Number(tx.runningBalance || 0),
+          sourceReference: tx.sourceReference || null,
+          purpose: tx.purpose,
+          authorizedByName: tx.authorizedByUser?.name || null,
+          createdAt: tx.createdAt instanceof Date ? tx.createdAt.toISOString() : tx.createdAt,
+        }))
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return {
+      client,
+      matters: visibleMatters.map((m) => MatterService.formatMatter(m)),
+      communications: communications.map((c: any) => ({
+        id: c.id,
+        clientId: c.clientId,
+        matterId: c.matterId,
+        matterNumber: c.matter?.matterNumber || null,
+        matterTitle: c.matter?.title || null,
+        type: c.type,
+        subject: c.subject,
+        sender: c.sender,
+        recipient: c.recipient,
+        summary: c.summary,
+        direction: c.direction,
+        date: c.date instanceof Date ? c.date.toISOString() : c.date,
+        status: c.status,
+      })),
+      documents: documents.map((d: any) => {
+        const latestVer = d.versions?.[0];
+        return {
+          id: d.id,
+          documentCode: d.documentCode,
+          clientId: d.clientId,
+          matterId: d.matterId,
+          matterNumber: d.matter?.matterNumber || null,
+          title: d.title,
+          category: d.category,
+          currentVersion: d.currentVersion,
+          isPrivileged: d.isPrivileged,
+          fileSizeBytes: latestVer ? Number(latestVer.fileSizeBytes || 0) : 0,
+          fileType: latestVer?.fileType || null,
+          uploadedByName: latestVer?.uploadedByUser?.name || null,
+          createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : d.createdAt,
+        };
+      }),
+      invoices: invoices.map((inv) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        clientId: inv.clientId,
+        matterId: inv.matterId,
+        matterNumber: inv.matter?.matterNumber || null,
+        matterTitle: inv.matter?.title || null,
+        issueDate: inv.issueDate instanceof Date ? inv.issueDate.toISOString().split('T')[0] : inv.issueDate,
+        dueDate: inv.dueDate instanceof Date ? inv.dueDate.toISOString().split('T')[0] : inv.dueDate,
+        totalAmount: Number(inv.totalAmount || 0),
+        paidAmount: Number(inv.paidAmount || 0),
+        balanceDue: Number(inv.balanceDue || 0),
+        status: inv.status,
+      })),
+      trustLedgers: trustLedgers.map((l) => ({
+        id: l.id,
+        ledgerCode: l.ledgerCode,
+        clientId: l.clientId,
+        matterId: l.matterId,
+        matterNumber: l.matter?.matterNumber || null,
+        matterTitle: l.matter?.title || null,
+        balance: Number(l.balance || 0),
+        lastAuditDate: l.lastAuditDate,
+      })),
+      trustTransactions,
+      relatedParties: relatedParties.map((rp) => ({
+        ...rp,
+        matterNumber: rp.matter?.matterNumber || null,
+        matterTitle: rp.matter?.title || null,
+      })),
+      relatedPartiesMigrationPending,
+      originatingIntakes: intakes.map((i) => ({
+        id: i.id,
+        intakeNumber: i.intakeNumber,
+        practiceAreaId: i.practiceAreaId,
+        practiceAreaName: i.practiceArea?.name || null,
+        conflictStatus: i.conflictStatus,
+        reviewedByName: i.reviewedByUser?.name || null,
+        reviewedAt: i.reviewedAt instanceof Date ? i.reviewedAt.toISOString() : i.reviewedAt,
+        convertedMatterId: i.convertedMatterId || null,
+        createdAt: i.createdAt instanceof Date ? i.createdAt.toISOString() : i.createdAt,
+      })),
+      auditLogs: auditLogs.map((a) => ({
+        id: a.id,
+        action: a.action,
+        resourceType: a.resourceType,
+        resourceId: a.resourceId,
+        userName: a.userName,
+        userRole: a.userRole,
+        details: a.details,
+        timestamp: a.timestamp instanceof Date ? a.timestamp.toISOString() : a.timestamp,
+      })),
+      financialSummary: {
+        totalBilled,
+        totalPaid,
+        totalOutstanding,
+        trustBalance,
+        activeMattersCount: visibleMatters.filter((m) => m.status !== 'Concluded').length,
+      },
+    };
   }
 }
