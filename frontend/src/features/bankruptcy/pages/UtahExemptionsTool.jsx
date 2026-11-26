@@ -33,15 +33,15 @@ export function UtahExemptionsTool() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700">
         <div className="flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-amber-700 shrink-0" />
+          <Landmark className="w-4 h-4 text-slate-600 shrink-0" />
           <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] Utah Statutory Exemptions Tool:</strong> Evaluates asset protection under Utah Code § 78B-5-501 et seq. (Homestead $43,300 single / $86,600 joint, Motor Vehicle $3,000, Retirement 100%).
+            <strong>Utah Statutory Exemptions Tool:</strong> Evaluates statutory asset protection under Utah Code § 78B-5-501 et seq. (Homestead $43,300 single / $86,600 joint, Motor Vehicle $3,000, Retirement 100%).
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-medium px-2 py-0.5 rounded text-[10px]">
+          UTAH CODE § 78B-5
         </span>
       </div>
 

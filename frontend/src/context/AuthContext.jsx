@@ -177,21 +177,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Delete user via backend /users/:id
+  // Deactivate user via backend soft deactivation
   const deleteUser = async (userId) => {
     if (userId === currentUser?.id) {
       return {
         success: false,
-        message: 'Security Violation: You cannot delete your own logged-in account.',
+        message: 'Security Violation: You cannot deactivate your own logged-in account.',
       };
     }
 
     try {
-      await userService.deleteUser(userId);
+      const updated = await userService.deleteUser(userId);
       await refreshUsers();
-      return { success: true };
+      return { success: true, user: updated };
     } catch (err) {
-      return { success: false, message: err?.message || 'Failed to delete user' };
+      return { success: false, message: err?.message || 'Failed to deactivate user' };
     }
   };
 

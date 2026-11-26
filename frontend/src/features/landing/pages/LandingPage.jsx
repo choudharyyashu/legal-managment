@@ -597,7 +597,7 @@ export function LandingPage() {
                 </div>
               </div>
               <p className="text-[#667085] max-w-md text-xs leading-relaxed">
-                Confidential legal practice management software engineered for litigation attorneys, court docket tracking, client conflict clearance, and CosmoLex financial synchronization.
+                Confidential legal practice management software engineered for litigation attorneys, court docket tracking, client conflict clearance, and Utah State Bar Rule 1.15 trust accounting compliance.
               </p>
             </div>
 

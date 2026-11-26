@@ -67,7 +67,7 @@ export function BillingOverview() {
     <div className="space-y-6">
       <PageHeader
         title="Billing &amp; Financial Overview"
-        subtitle="Operational legal billing, time realization rates, expense disbursements, and CosmoLex accounting synchronization."
+        subtitle="Operational legal billing, time realization rates, expense disbursements, and independent double-entry accounting."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'Overview' }]}
         actions={
           <div className="flex gap-2">
@@ -91,14 +91,14 @@ export function BillingOverview() {
         }
       />
 
-      {/* CosmoLex Notice */}
+      {/* Accounting Engine Notice */}
       <div className="p-3 bg-[#06244B] text-[#F5F0E5] rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs shadow-subtle">
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4 text-[#A4432B]" />
-          <span><strong>CosmoLex Official System Boundary:</strong> CosmoLex remains the authoritative general ledger. Approved time and expenses synchronize via the export bridge.</span>
+          <span><strong>Standalone General Ledger &amp; Accounting Engine:</strong> Native double-entry general ledger and trust account sub-ledgers operate independently under Utah State Bar Rule 1.15 compliance standards.</span>
         </div>
         <span className="text-[10px] text-[#A4432B] font-bold uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded">
-          Sync Active
+          Independent GL
         </span>
       </div>
 

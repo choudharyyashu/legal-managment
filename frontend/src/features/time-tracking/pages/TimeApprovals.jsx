@@ -164,7 +164,7 @@ export function TimeApprovals() {
     <div className="space-y-6">
       <PageHeader
         title="Time &amp; Billing Supervisory Approvals"
-        subtitle="Review, approve, or reject logged hours before invoicing or exporting to CosmoLex accounting."
+        subtitle="Review, approve, or reject logged hours before invoicing or posting to the general ledger."
         breadcrumbs={[{ label: 'Tasks & Activities', to: '/tasks' }, { label: 'Time Approvals' }]}
       />
 

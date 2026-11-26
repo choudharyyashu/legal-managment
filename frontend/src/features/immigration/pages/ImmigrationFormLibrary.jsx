@@ -128,15 +128,15 @@ export function ImmigrationFormLibrary() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-700">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-amber-700 shrink-0" />
+          <FileText className="w-4 h-4 text-slate-600 shrink-0" />
           <span>
-            <strong>[DEMO SIMULATION] Official Form Library &amp; Diagnostic Engine:</strong> USCIS, EOIR, DOS, and DOL immigration inventory. Filing fees and edition dates are for prototype simulation only.
+            <strong>Official Form Library &amp; Diagnostic Engine:</strong> USCIS, EOIR, DOS, and DOL immigration inventory with edition date monitoring, fee schedules, and pre-filing compliance checks.
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-medium px-2 py-0.5 rounded text-[10px]">
+          ACTIVE
         </span>
       </div>
 

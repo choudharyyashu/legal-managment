@@ -33,7 +33,8 @@ export const userService = {
   },
 
   async deleteUser(id) {
-    const res = await apiClient.delete(`/users/${id}`);
-    return res?.data;
+    // BUG-01 Fix: Soft-deactivate user via supported PATCH /users/:id/status
+    const res = await apiClient.patch(`/users/${id}/status`, { status: 'Inactive' });
+    return res?.data?.user;
   },
 };

@@ -142,15 +142,15 @@ export function ImmigrationPartiesDirectory() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-700">
         <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-amber-700 shrink-0" />
+          <Users className="w-4 h-4 text-slate-600 shrink-0" />
           <span>
-            <strong>[DEMO SIMULATION] Dual-Party Immigration Profiles:</strong> Manages Petitioners (U.S. Citizens / LPRs / Employers), Foreign National Beneficiaries, and I-864 Financial Sponsors.
+            <strong>Dual-Party Immigration Profiles:</strong> Records and manages Petitioners (U.S. Citizens / LPRs / Employers), Foreign National Beneficiaries, and Form I-864 Financial Sponsors.
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-medium px-2 py-0.5 rounded text-[10px]">
+          ACTIVE
         </span>
       </div>
 

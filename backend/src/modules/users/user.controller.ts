@@ -99,5 +99,25 @@ export class UserController {
       next(err);
     }
   }
+
+  static async deleteUser(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = await UserService.setUserStatus(req.params.id, 'Inactive', {
+        userId: req.user!.id,
+        userName: req.user!.email,
+        userRole: req.user!.role,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'User account deactivated successfully.',
+        data: { user },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

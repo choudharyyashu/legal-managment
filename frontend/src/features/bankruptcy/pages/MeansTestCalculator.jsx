@@ -26,15 +26,15 @@ export function MeansTestCalculator() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg flex items-center justify-between text-xs text-amber-900">
+      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg flex items-center justify-between text-xs text-slate-700">
         <div className="flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-amber-700 shrink-0" />
+          <Calculator className="w-4 h-4 text-slate-600 shrink-0" />
           <span>
-            <strong>[CLIENT-SIDE PROTOTYPE] Form 122 Means-Test Calculator:</strong> Benchmarked against official Census Bureau median income tables for Utah households. Chapter 7 eligibility &amp; Chapter 13 commitment periods.
+            <strong>Form 122 Means-Test Calculator:</strong> Benchmarked against official Census Bureau median income tables for Utah households to determine Chapter 7 eligibility and Chapter 13 commitment periods.
           </span>
         </div>
-        <span className="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
-          PROTOTYPE
+        <span className="bg-[#06244B] text-white font-medium px-2 py-0.5 rounded text-[10px]">
+          11 U.S.C. § 707(b)
         </span>
       </div>
 

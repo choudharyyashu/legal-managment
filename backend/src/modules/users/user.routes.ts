@@ -53,3 +53,9 @@ userRouter.patch(
   UserController.updateStatus
 );
 
+userRouter.delete(
+  '/:id',
+  requirePermission('users:manage'),
+  UserController.deleteUser
+);
+

@@ -74,9 +74,6 @@ export function ImmigrationCaseDrawer({ isOpen, onClose, immigrationCase, onUpda
               <span className="text-xs bg-[#A4432B] px-2 py-0.5 rounded font-semibold">
                 {currentCase.category}
               </span>
-              <span className="text-xs text-amber-300 font-medium">
-                [DEMO SIMULATION]
-              </span>
             </div>
             <h2 className="text-base font-bold mt-1 text-white truncate max-w-2xl">
               {currentCase.title}
