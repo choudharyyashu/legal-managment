@@ -1844,19 +1844,31 @@ export class AutoDraftService {
           orderBy: { createdAt: 'asc' },
         });
 
-        const newMatter = await prisma.matter.create({
-          data: {
-            matterNumber: intakeMatterNumber,
-            title: `${intake.prospectiveClient} - Intake Inquiry`,
-            clientId: client.id,
-            practiceAreaId: intake.practiceAreaId || 'pa-civ',
-            responsibleAttorneyId: activeAttorney?.id || user.id,
-            billingType: 'Hourly',
-            openDate: new Date(),
-            status: 'Intake',
-          },
-          include: { client: true, responsibleAttorney: true },
-        });
+        let newMatter: any;
+        try {
+          newMatter = await prisma.matter.create({
+            data: {
+              matterNumber: intakeMatterNumber,
+              title: `${intake.prospectiveClient} - Intake Inquiry`,
+              clientId: client.id,
+              practiceAreaId: intake.practiceAreaId || 'pa-civ',
+              responsibleAttorneyId: activeAttorney?.id || user.id,
+              billingType: 'Hourly',
+              openDate: new Date(),
+              status: 'Intake',
+            },
+            include: { client: true, responsibleAttorney: true },
+          });
+        } catch (mErr: any) {
+          if (mErr.code === 'P2002') {
+            newMatter = await prisma.matter.findFirst({
+              where: { matterNumber: intakeMatterNumber },
+              include: { client: true, responsibleAttorney: true },
+            });
+          } else {
+            throw mErr;
+          }
+        }
 
         return newMatter;
       }

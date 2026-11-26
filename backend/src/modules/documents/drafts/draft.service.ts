@@ -399,30 +399,45 @@ export class DraftService {
     const title = input.title || `${template.templateName} - ${matter.title}`;
     const status = resolved.isValid ? 'Draft' : 'Under Review';
 
-    const draft = await prisma.documentDraft.create({
-      data: {
-        draftCode,
-        matterId: matter.id,
-        clientId: matter.clientId,
-        templateId: template.id,
-        templateVersionId: version.id,
-        title,
-        status,
-        docxStorageKey: draftStorageKey,
-        pdfStorageKey: null,
-        missingFieldsFlags: resolved.missingFields as any,
-        generatedByUserId: currentUser.id,
-        hasManualEdits: false,
-        isStale: false,
-      },
-      include: {
-        matter: { select: { id: true, matterNumber: true, title: true } },
-        client: { select: { id: true, clientNumber: true, name: true } },
-        template: { select: { id: true, templateCode: true, templateName: true } },
-        templateVersion: { select: { id: true, versionNumber: true } },
-        generatedByUser: { select: { id: true, name: true } },
-      },
-    });
+    let draft: any;
+    let createAttempts = 0;
+    let currentDraftCode = draftCode;
+    while (createAttempts < 5) {
+      try {
+        draft = await prisma.documentDraft.create({
+          data: {
+            draftCode: currentDraftCode,
+            matterId: matter.id,
+            clientId: matter.clientId,
+            templateId: template.id,
+            templateVersionId: version.id,
+            title,
+            status,
+            docxStorageKey: draftStorageKey,
+            pdfStorageKey: null,
+            missingFieldsFlags: resolved.missingFields as any,
+            generatedByUserId: currentUser.id,
+            hasManualEdits: false,
+            isStale: false,
+          },
+          include: {
+            matter: { select: { id: true, matterNumber: true, title: true } },
+            client: { select: { id: true, clientNumber: true, name: true } },
+            template: { select: { id: true, templateCode: true, templateName: true } },
+            templateVersion: { select: { id: true, versionNumber: true } },
+            generatedByUser: { select: { id: true, name: true } },
+          },
+        });
+        break;
+      } catch (err: any) {
+        if (err.code === 'P2002' && createAttempts < 4) {
+          createAttempts++;
+          currentDraftCode = `DFT-${new Date().getFullYear().toString().slice(-2)}-${Date.now().toString().slice(-4)}${Math.floor(Math.random() * 10)}`;
+          continue;
+        }
+        throw err;
+      }
+    }
 
     await createAuditLog({
       userId: currentUser.id,

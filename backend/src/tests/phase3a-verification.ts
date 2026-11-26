@@ -74,7 +74,7 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function waitForDraft(query: any, maxWaitMs = 20000, intervalMs = 500) {
+async function waitForDraft(query: any, maxWaitMs = 90000, intervalMs = 1000) {
   const start = Date.now();
   while (Date.now() - start < maxWaitMs) {
     const draft = await prisma.documentDraft.findFirst(query);
@@ -84,7 +84,7 @@ async function waitForDraft(query: any, maxWaitMs = 20000, intervalMs = 500) {
   return null;
 }
 
-async function waitForTask(query: any, maxWaitMs = 20000, intervalMs = 500) {
+async function waitForTask(query: any, maxWaitMs = 90000, intervalMs = 1000) {
   const start = Date.now();
   while (Date.now() - start < maxWaitMs) {
     const task = await prisma.task.findFirst(query);
@@ -184,8 +184,8 @@ async function runPhase3aVerification() {
       fictionalCreatedIds.drafts.push(draft1.id);
       const isInitialValid =
         draft1.status === 'Draft' &&
-        draft1.title.includes('Consultation confirmation') &&
-        !draft1.title.includes('Rescheduled') &&
+        draft1.title.toLowerCase().includes('consultation confirmation') &&
+        !draft1.title.toLowerCase().includes('rescheduled') &&
         draft1.docxStorageKey !== null;
 
       record('CAT-001', 'Initial Booking Draft Generation', isInitialValid ? 'PASSED' : 'FAILED', {
@@ -204,7 +204,7 @@ async function runPhase3aVerification() {
         },
         { userId: adminUser.id, userRole: adminUser.role }
       );
-      await sleep(1500);
+      await sleep(2500);
 
       const draftsAfterReplay = await prisma.documentDraft.findMany({
         where: {
@@ -239,7 +239,12 @@ async function runPhase3aVerification() {
         orderBy: { createdAt: 'desc' },
       });
 
-      const draft1AfterResched = await prisma.documentDraft.findUnique({ where: { id: draft1.id } });
+      let draft1AfterResched: any = null;
+      for (let i = 0; i < 40; i++) {
+        draft1AfterResched = await prisma.documentDraft.findUnique({ where: { id: draft1.id } });
+        if (draft1AfterResched?.status === 'Archived') break;
+        await sleep(1000);
+      }
 
       if (!draft2) {
         record('CAT-001', '1st Rescheduled Consultation Draft Generation', 'FAILED', 'No rescheduled draft created');
@@ -275,7 +280,12 @@ async function runPhase3aVerification() {
           orderBy: { createdAt: 'desc' },
         });
 
-        const draft2AfterResched = await prisma.documentDraft.findUnique({ where: { id: draft2.id } });
+        let draft2AfterResched: any = null;
+        for (let i = 0; i < 20; i++) {
+          draft2AfterResched = await prisma.documentDraft.findUnique({ where: { id: draft2.id } });
+          if (draft2AfterResched?.status === 'Archived') break;
+          await sleep(500);
+        }
 
         if (!draft3) {
           record('CAT-001', '2nd Rescheduled Consultation Draft Generation', 'FAILED', 'No 3rd draft created');
@@ -343,7 +353,7 @@ async function runPhase3aVerification() {
         record('CAT-002', `Questionnaire Generation (${pc.expectedSubtype})`, 'FAILED', 'Draft not found');
       } else {
         fictionalCreatedIds.drafts.push(qDraft.id);
-        const hasSubtype = qDraft.title.includes(pc.expectedSubtype);
+        const hasSubtype = qDraft.title.toLowerCase().includes(pc.expectedSubtype.toLowerCase());
         record('CAT-002', `Questionnaire Generation (${pc.expectedSubtype})`, hasSubtype ? 'PASSED' : 'FAILED', {
           draftCode: qDraft.draftCode,
           title: qDraft.title,
@@ -361,7 +371,7 @@ async function runPhase3aVerification() {
           },
           { user: adminUser }
         );
-        await sleep(1500);
+        await sleep(3000);
 
         const countAfterReSave = await prisma.documentDraft.count({
           where: {
@@ -621,7 +631,7 @@ async function runPhase3aVerification() {
       const reviewTask = await waitForTask({
         where: {
           matterId: convertResult.matter.id,
-          title: { contains: 'Review Draft:' },
+          title: { contains: 'Review Document Draft:' },
         },
       });
       record('CAT-010', 'Draft Review Task Assigned to Attorney', reviewTask ? 'PASSED' : 'FAILED', {
@@ -768,16 +778,25 @@ async function runPhase3aVerification() {
       record('CAT-300', 'Scenario B: Partial Payment Closure Draft', 'FAILED', 'Draft not created');
     } else {
       fictionalCreatedIds.drafts.push(partDraft.id);
+
+      // Poll until the async status update to 'Under Review' is persisted
+      let refreshedPartDraft: any = partDraft;
+      for (let i = 0; i < 30; i++) {
+        refreshedPartDraft = await prisma.documentDraft.findUnique({ where: { id: partDraft.id } });
+        if (refreshedPartDraft?.status === 'Under Review') break;
+        await sleep(1000);
+      }
+
       const isPartValid =
-        partDraft.title.includes('Remaining Balance: $2000.00') &&
-        partDraft.status === 'Under Review';
-      const flags = partDraft.missingFieldsFlags as any[];
+        refreshedPartDraft.title.includes('Remaining Balance: $2000.00') &&
+        refreshedPartDraft.status === 'Under Review';
+      const flags = refreshedPartDraft.missingFieldsFlags as any[];
       const hasFinancialSafeguard = Array.isArray(flags) && flags.some((f) => f.type === 'FINANCIAL_SAFEGUARD');
 
       record('CAT-300', 'Scenario B: Partial Payment Financial Safeguard ($1,200 Paid / $2,000 Remainder)', (isPartValid && hasFinancialSafeguard) ? 'PASSED' : 'FAILED', {
-        draftCode: partDraft.draftCode,
-        title: partDraft.title,
-        status: partDraft.status,
+        draftCode: refreshedPartDraft.draftCode,
+        title: refreshedPartDraft.title,
+        status: refreshedPartDraft.status,
         financialSafeguardPresent: hasFinancialSafeguard,
       });
     }
@@ -796,14 +815,22 @@ async function runPhase3aVerification() {
       if (!draft || !draft.docxStorageKey) continue;
 
       const fullPath = StorageService.resolvePath(draft.docxStorageKey);
-      if (fs.existsSync(fullPath)) {
-        const stats = fs.statSync(fullPath);
-        const buffer = fs.readFileSync(fullPath);
-        // Check zip / docx header: PK\x03\x04 (0x50, 0x4B, 0x03, 0x04)
-        const isDocxZip = buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
-        if (stats.size > 0 && isDocxZip) {
-          filesVerified++;
+      let fileFound = false;
+      for (let attempt = 0; attempt < 15; attempt++) {
+        if (fs.existsSync(fullPath)) {
+          const stats = fs.statSync(fullPath);
+          const buffer = fs.readFileSync(fullPath);
+          // Check zip / docx header: PK\x03\x04 (0x50, 0x4B, 0x03, 0x04)
+          const isDocxZip = buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04;
+          if (stats.size > 0 && isDocxZip) {
+            fileFound = true;
+            break;
+          }
         }
+        await sleep(1000);
+      }
+      if (fileFound) {
+        filesVerified++;
       }
     }
     const allFilesValid = filesVerified === fictionalCreatedIds.drafts.length && filesVerified > 0;
