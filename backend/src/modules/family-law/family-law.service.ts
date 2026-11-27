@@ -7,6 +7,7 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
 
 export class FamilyLawService {
   static async getFamilyLawCase(matterId: string) {
@@ -98,6 +99,8 @@ export class FamilyLawService {
       resourceId: updated.id,
       details: { matterId, caseType: updated.caseType, status: updated.status },
     });
+
+    DocumentEventBus.emitAsync('catalog.family_matter_opened', { matterId }, { user: currentUser });
 
     return updated;
   }

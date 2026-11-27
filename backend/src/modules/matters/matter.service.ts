@@ -12,6 +12,7 @@ import { MatterResponse, MatterStaffResponse } from './matter.types.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
 import { normalizePracticeAreaId } from '../../utils/practiceAreaCanonical.js';
 import { isMissingTableError } from '../related-parties/related-party.service.js';
+import { DocumentEventBus, buildDomainEventContext } from '../documents/events/event-bus.js';
 
 export class MatterService {
   /**
@@ -547,6 +548,28 @@ export class MatterService {
       userAgent: creatorContext.userAgent,
     });
 
+    const eventContext = buildDomainEventContext({
+      userId: creatorContext.userId,
+      userRole: creatorContext.userRole,
+      ipAddress: creatorContext.ipAddress,
+      userAgent: creatorContext.userAgent,
+    });
+
+    // Emit universal catalog matter-opened event (triggers CAT-010 + practice-specific opened docs)
+    DocumentEventBus.emitAsync('catalog.matter_opened', { matterId: newMatter.id }, eventContext);
+
+    const practiceOpenedEvents: Record<string, string> = {
+      'pa-civ': 'catalog.litigation_matter_opened',
+      'pa-bk': 'catalog.bankruptcy_matter_opened',
+      'pa-fam': 'catalog.family_matter_opened',
+      'pa-crim': 'catalog.criminal_matter_opened',
+      'pa-app': 'catalog.appeal_matter_opened',
+    };
+    const paEvent = practiceOpenedEvents[newMatter.practiceAreaId];
+    if (paEvent) {
+      DocumentEventBus.emitAsync(paEvent, { matterId: newMatter.id }, eventContext);
+    }
+
     return this.formatMatter(newMatter);
   }
 
@@ -681,6 +704,14 @@ export class MatterService {
       userAgent: updaterContext.userAgent,
     });
 
+    if (input.status === 'Concluded') {
+      DocumentEventBus.emitAsync(
+        'catalog.closing_checklist_reaches_review',
+        { matterId: updated.id },
+        { user: updaterUser, ipAddress: updaterContext.ipAddress, userAgent: updaterContext.userAgent }
+      );
+    }
+
     return this.formatMatter(updated);
   }
 
@@ -731,6 +762,14 @@ export class MatterService {
       ipAddress: updaterContext.ipAddress,
       userAgent: updaterContext.userAgent,
     });
+
+    if (input.status === 'Concluded') {
+      DocumentEventBus.emitAsync(
+        'catalog.closing_checklist_reaches_review',
+        { matterId: updated.id },
+        { user: updaterUser, ipAddress: updaterContext.ipAddress, userAgent: updaterContext.userAgent }
+      );
+    }
 
     return this.formatMatter(updated);
   }

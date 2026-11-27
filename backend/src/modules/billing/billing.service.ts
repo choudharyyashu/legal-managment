@@ -5,6 +5,7 @@ import { createAuditLog } from '../../utils/auditLogger.js';
 import { LedgerService } from '../ledger/ledger.service.js';
 import { CreateInvoiceInput, UpdateInvoiceStatusInput, RecordPaymentInput } from './billing.validation.js';
 import { InvoiceResponse, InvoiceListQuery, PaymentRecordResponse } from './billing.types.js';
+import { DocumentEventBus, buildDomainEventContext } from '../documents/events/event-bus.js';
 
 export class BillingService {
   private static async generateInvoiceNumber(client: any = prisma): Promise<string> {
@@ -407,6 +408,12 @@ export class BillingService {
       userAgent: context.userAgent,
     });
 
+    DocumentEventBus.emitAsync(
+      'catalog.approved_work_enters_billing_run',
+      { matterId: invoice.matterId, customOverrides: { invoiceNumber: invoice.invoiceNumber } },
+      buildDomainEventContext(context)
+    );
+
     return this.formatResponse(invoice);
   }
 
@@ -561,6 +568,14 @@ export class BillingService {
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
+
+    if (input.status === 'Issued') {
+      DocumentEventBus.emitAsync(
+        'catalog.eligible_invoice_approved',
+        { matterId: updated.matterId, customOverrides: { invoiceNumber: updated.invoiceNumber } },
+        buildDomainEventContext(context)
+      );
+    }
 
     return this.formatResponse(updated);
   }
@@ -837,6 +852,19 @@ export class BillingService {
         userAgent: context.userAgent,
       });
     }
+
+    DocumentEventBus.emitAsync(
+      'catalog.payment_confirmed',
+      {
+        matterId: updatedInvoice.matterId,
+        customOverrides: {
+          paymentReference,
+          invoiceNumber: updatedInvoice.invoiceNumber,
+          paymentAmount: paymentAmount.toNumber(),
+        },
+      },
+      buildDomainEventContext(context)
+    );
 
     const paymentFormatted: PaymentRecordResponse = {
       id: payment.id,

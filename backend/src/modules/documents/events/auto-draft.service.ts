@@ -10,6 +10,8 @@ import { MatterService } from '../../matters/matter.service.js';
 import { AuthenticatedUser } from '../../auth/auth.types.js';
 import { TaskService } from '../../tasks/task.service.js';
 import { DraftService } from '../drafts/draft.service.js';
+import { AutomationCatalogService } from '../catalog/automation-catalog.service.js';
+import { CatalogEventRegistry } from './catalog-event-registry.js';
 import { PIWorkflowAutomationService } from '../../personal-injury/pi.workflow.js';
 import {
   DOCUMENT_EVENT,
@@ -201,6 +203,36 @@ export class AutoDraftService {
         }
       }
     );
+
+    // Universal Catalog Subscriptions: Wire all 300 Document Automation Catalog triggers
+    const catalogDefinitions = CatalogEventRegistry.getAllCatalogEventDefinitions();
+    for (const def of catalogDefinitions) {
+      DocumentEventBus.subscribe<{ matterId: string; customOverrides?: Record<string, any>; [key: string]: any }>(
+        def.eventKey,
+        async (payload, context) => {
+          try {
+            if (!payload?.matterId) return;
+            const res = await AutoDraftService.handleCatalogEvent(
+              def.eventKey,
+              payload,
+              context.user,
+              { ipAddress: context.ipAddress, userAgent: context.userAgent }
+            );
+            if (res.errors.length) {
+              console.error(`[AutoDraftService] ${def.eventKey} errors:`, res.errors);
+            }
+            if (res.draftsCreated.length) {
+              console.log(
+                `[AutoDraftService] ${def.eventKey} drafts:`,
+                res.draftsCreated.map((d) => d.draftCode)
+              );
+            }
+          } catch (e: any) {
+            console.error(`[AutoDraftService] ${def.eventKey} exception:`, e);
+          }
+        }
+      );
+    }
   }
 
   /**
@@ -2026,5 +2058,112 @@ export class AutoDraftService {
     }
 
     return null;
+  }
+
+  /**
+   * Universal Catalog Event Dispatcher:
+   * Resolves any catalog trigger (`catalog.<snake_case>`, exact trigger label, or CAT-xxx)
+   * against the target matter's practice area and generates idempotent drafts + review tasks.
+   */
+  static async handleCatalogEvent(
+    eventOrTrigger: string,
+    payload: { matterId: string; customOverrides?: Record<string, any>; [key: string]: any },
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string } = {}
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: eventOrTrigger as DocumentEventType,
+      matterId: payload.matterId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    try {
+      const matter = await MatterService.getMatterByIdOrNumber(payload.matterId, user);
+      const matchingItems = CatalogEventRegistry.findMatchingCatalogItems(
+        eventOrTrigger,
+        matter.practiceAreaId
+      );
+
+      if (matchingItems.length === 0) {
+        result.success = false;
+        result.errors.push(`No catalog automation matched event '${eventOrTrigger}'.`);
+        return result;
+      }
+
+      const customOverrides = payload.customOverrides || {};
+
+      for (const item of matchingItems.slice(0, 10)) {
+        const mutexKey = `${matter.id}::${item.catalogId}`;
+        if (this.inFlightOperations.has(mutexKey)) {
+          const existingPromise = this.inFlightOperations.get(mutexKey)!;
+          const inFlightRes = await existingPromise;
+          result.skipped.push(...inFlightRes.skipped);
+          result.draftsCreated.push(...inFlightRes.draftsCreated);
+          continue;
+        }
+
+        const runPromise = (async (): Promise<AutoDraftTriggerResult> => {
+          const itemResult: AutoDraftTriggerResult = {
+            success: true,
+            event: eventOrTrigger as DocumentEventType,
+            matterId: matter.id,
+            draftsCreated: [],
+            skipped: [],
+            errors: [],
+          };
+
+          try {
+            const triggered = await AutomationCatalogService.triggerAutomation(
+              item.catalogId,
+              matter.id,
+              user,
+              customOverrides,
+              context
+            );
+
+            if (triggered.isDuplicate) {
+              itemResult.skipped.push({
+                templateCode: item.templateCode,
+                reason: `Draft '${triggered.draft.draftCode}' already active for ${item.catalogId}.`,
+              });
+            } else {
+              itemResult.draftsCreated.push({
+                id: triggered.draft.id,
+                draftCode: triggered.draft.draftCode,
+                templateCode: item.templateCode,
+                templateName: item.title,
+                title: triggered.draft.title,
+                missingFieldsCount: triggered.draft.missingFieldsFlags?.length || 0,
+                filePath: triggered.draft.docxStorageKey || '',
+              });
+            }
+          } catch (err: any) {
+            itemResult.success = false;
+            itemResult.errors.push(`${item.catalogId}: ${err?.message || 'Catalog trigger failed'}`);
+          }
+
+          return itemResult;
+        })();
+
+        this.inFlightOperations.set(mutexKey, runPromise);
+        try {
+          const itemRes = await runPromise;
+          result.draftsCreated.push(...itemRes.draftsCreated);
+          result.skipped.push(...itemRes.skipped);
+          result.errors.push(...itemRes.errors);
+          if (!itemRes.success) result.success = false;
+        } finally {
+          this.inFlightOperations.delete(mutexKey);
+        }
+      }
+    } catch (err: any) {
+      result.success = false;
+      result.errors.push(err?.message || 'Failed to dispatch catalog event');
+    }
+
+    return result;
   }
 }
