@@ -14,6 +14,8 @@ export const generateDraftInputSchema = z.object({
   title: z.string().min(2).max(255).optional(),
   allowIncomplete: z.boolean().default(false),
   customOverrides: z.record(z.string(), z.any()).optional(),
+  initialStatus: z.enum(['Draft', 'Under Review', 'Approved', 'Rejected', 'Sent', 'Finalized', 'Stale', 'Candidate', 'Superseded']).optional(),
+  missingFieldsFlags: z.any().optional(),
 });
 
 export const createFollowUpTaskSchema = z.object({

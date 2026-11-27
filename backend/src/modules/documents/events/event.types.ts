@@ -9,6 +9,7 @@ export const DOCUMENT_EVENT = {
   PI_PROVIDER_ADDED: 'pi.provider.added',
   PI_MISSING_RECORDS: 'pi.missing.records',
   PI_DEMAND_READY: 'pi.demand.ready',
+  PI_LIEN_PAYOFF_RECORDED: 'pi.lien_payoff.recorded',
   // Phase 3.A Approved Events
   INTAKE_CONSULTATION_BOOKED: 'intake.consultation.booked',
   INTAKE_CONSULTATION_RESCHEDULED: 'intake.consultation.rescheduled',
@@ -164,6 +165,18 @@ export interface EvictionClosureReviewedPayload {
   totalCollected: number;
   outstandingBalance: number;
   closureReviewNotes?: string;
+  customOverrides?: Record<string, any>;
+}
+
+export interface LienPayoffPayload {
+  matterId: string;
+  lienId?: string;
+  lienholderName: string;
+  category?: string;
+  assertedAmount?: number;
+  agreedAmount: number;
+  paymentInstructions?: string;
+  releaseTerms?: string;
   customOverrides?: Record<string, any>;
 }
 

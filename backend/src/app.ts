@@ -63,7 +63,7 @@ app.use(
       const isAllowed =
         config.allowedOrigins.includes(normalizedOrigin) ||
         config.allowedOrigins.includes(origin) ||
-        normalizedOrigin === 'https://legall-managment.netlify.app' ||
+        normalizedOrigin === 'https://legal-managment.netlify.app' ||
         (config.nodeEnv === 'development' &&
           (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')));
       if (isAllowed) {

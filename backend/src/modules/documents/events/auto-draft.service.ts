@@ -25,6 +25,7 @@ import {
   ConflictSearchCompletedPayload,
   MatterCreatedFromIntakePayload,
   EvictionClosureReviewedPayload,
+  LienPayoffPayload,
 } from './event.types.js';
 import { DocumentEventBus, DomainEventContext } from './event-bus.js';
 
@@ -179,6 +180,24 @@ export class AutoDraftService {
           if (res.draftsCreated.length) console.log('[AutoDraftService] EvictionClosureReviewed drafts:', res.draftsCreated.map((d) => d.draftCode));
         } catch (e: any) {
           console.error('[AutoDraftService] EvictionClosureReviewed exception:', e);
+        }
+      }
+    );
+
+    // Personal Injury: Genuine CAT-140 Lien Payoff Confirmation Request
+    DocumentEventBus.subscribe<LienPayoffPayload>(
+      DOCUMENT_EVENT.PI_LIEN_PAYOFF_RECORDED,
+      async (payload, context) => {
+        try {
+          const res = await AutoDraftService.handleLienPayoffRecorded(payload, context.user, {
+            ipAddress: context.ipAddress,
+            userAgent: context.userAgent,
+          });
+          if (res.errors.length) console.error('[AutoDraftService] LienPayoffRecorded errors:', res.errors);
+          if (res.skipped.length) console.log('[AutoDraftService] LienPayoffRecorded skipped:', res.skipped);
+          if (res.draftsCreated.length) console.log('[AutoDraftService] LienPayoffRecorded drafts:', res.draftsCreated.map((d) => d.draftCode));
+        } catch (e: any) {
+          console.error('[AutoDraftService] LienPayoffRecorded exception:', e);
         }
       }
     );
@@ -799,16 +818,16 @@ export class AutoDraftService {
         return result;
       }
 
-      // Find template for Document 140 (Personal Injury Settlement Demand Letter)
+      // Find template for Settlement Demand Package (CAT-130 / CAT-131, backward compatible with UT-PI-DEM-140)
       const template140 = await this.findTemplate(
-        ['UT-PI-DEM-140', 'PI-DOC-005', 'TPL-PI-140', 'UT-PI-140', '140'],
+        ['CAT-130', 'CAT-131', 'UT-PI-DEM-140', 'PI-DOC-005', 'TPL-PI-140', 'UT-PI-140', '130', '140'],
         'Demand'
       );
 
       if (!template140) {
         result.skipped.push({
-          templateCode: '140',
-          reason: 'Template for Personal Injury Settlement Demand Letter (140) is unavailable or has no active version.',
+          templateCode: 'CAT-130',
+          reason: 'Template for Settlement Demand Package (CAT-130 / CAT-131) is unavailable or has no active version.',
         });
         return result;
       }
@@ -950,6 +969,136 @@ export class AutoDraftService {
           draftCode: draft140.draftCode,
           templateCode: template140.templateCode,
           demandPackageId: payload.demandPackageId,
+        },
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent,
+      });
+    } catch (err: any) {
+      result.success = false;
+      result.errors.push(err.message || String(err));
+    }
+
+    return result;
+  }
+
+  /**
+   * EVENT: Proposed Lien Payoff Agreement Recorded (CAT-140)
+   * Catalog ID: CAT-140 | Lien payoff confirmation request
+   * Trigger: Proposed payoff agreement recorded
+   * Fields: Lienholder, agreed amount, release terms, payment instructions
+   */
+  static async handleLienPayoffRecorded(
+    payload: LienPayoffPayload,
+    user: AuthenticatedUser,
+    context: { ipAddress?: string; userAgent?: string }
+  ): Promise<AutoDraftTriggerResult> {
+    const result: AutoDraftTriggerResult = {
+      success: true,
+      event: DOCUMENT_EVENT.PI_LIEN_PAYOFF_RECORDED,
+      matterId: payload.matterId,
+      draftsCreated: [],
+      skipped: [],
+      errors: [],
+    };
+
+    try {
+      const matter = await this.verifyPIMatter(payload.matterId, user);
+      if (!matter) {
+        result.skipped.push({ reason: `Matter '${payload.matterId}' not found or access restricted.` });
+        return result;
+      }
+
+      // Find template for CAT-140 (Lien payoff confirmation request)
+      const template140 = await this.findTemplate(
+        ['CAT-140', '140', 'UT-PI-LIEN-140', 'TPL-PI-140-LIEN'],
+        'Lien'
+      );
+
+      if (!template140) {
+        result.skipped.push({
+          templateCode: 'CAT-140',
+          reason: 'Template for Lien payoff confirmation request (CAT-140) is unavailable or has no active version.',
+        });
+        return result;
+      }
+
+      // Idempotency: Prevent duplicate payoff confirmation letter for same lienholder
+      const existingDraft = await prisma.documentDraft.findFirst({
+        where: {
+          matterId: matter.id,
+          templateId: template140.id,
+          title: { contains: payload.lienholderName },
+          status: { in: ['Draft', 'Under Review'] },
+        },
+      });
+
+      if (existingDraft) {
+        result.skipped.push({
+          templateCode: 'CAT-140',
+          reason: `Payoff request draft already exists for lienholder '${payload.lienholderName}'.`,
+        });
+        return result;
+      }
+
+      const agreedFormatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(payload.agreedAmount);
+      const draft = await DraftService.generateDraft(
+        {
+          matterId: matter.id,
+          templateId: template140.id,
+          allowIncomplete: true,
+          title: `Lien Payoff Confirmation Request — ${payload.lienholderName}`,
+          customOverrides: {
+            Lienholder: payload.lienholderName,
+            AgreedAmount: agreedFormatted,
+            PaymentInstructions: payload.paymentInstructions || 'Direct disbursement from firm client trust account upon receipt of executed release.',
+            ReleaseTerms: payload.releaseTerms || 'Full, final, and unconditional release of all claims, statutory liens, and subrogation rights.',
+            ...payload.customOverrides,
+          },
+        },
+        user,
+        context
+      );
+
+      result.draftsCreated.push({
+        id: draft.id,
+        draftCode: draft.draftCode,
+        templateCode: 'CAT-140',
+        templateName: template140.templateName,
+        title: draft.title,
+        missingFieldsCount: (draft as any).missingFieldsCount || 0,
+        filePath: draft.docxStorageKey || '',
+      });
+
+      // Create an Attorney Review Task for the Payoff Confirmation Request
+      await TaskService.createTask(
+        {
+          matterId: matter.id,
+          assignedToUserId: matter.responsibleAttorneyId || user.id,
+          title: `Review Lien Payoff Confirmation: ${payload.lienholderName} (${agreedFormatted})`,
+          description: `Verify agreed settlement terms and payment instructions before sending to ${payload.lienholderName}.`,
+          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          priority: 'High',
+          reminderSetting: '1 day prior',
+        },
+        {
+          userId: user.id,
+          userRole: user.role,
+          ipAddress: context.ipAddress,
+          userAgent: context.userAgent,
+        }
+      );
+
+      await createAuditLog({
+        userId: user.id,
+        userRole: user.role,
+        action: 'DOCUMENT_AUTO_DRAFT_TRIGGERED',
+        resourceType: 'DOCUMENT_DRAFT',
+        resourceId: draft.id,
+        details: {
+          event: DOCUMENT_EVENT.PI_LIEN_PAYOFF_RECORDED,
+          templateCode: 'CAT-140',
+          lienholder: payload.lienholderName,
+          agreedAmount: payload.agreedAmount,
         },
         ipAddress: context.ipAddress,
         userAgent: context.userAgent,
@@ -1455,6 +1604,8 @@ export class AutoDraftService {
             templateId: template.id,
             title: draftTitle,
             allowIncomplete: true,
+            initialStatus: hasUnresolved ? 'Under Review' : 'Draft',
+            missingFieldsFlags: hasUnresolved ? missingFieldsFlags : undefined,
             customOverrides,
           },
           user,

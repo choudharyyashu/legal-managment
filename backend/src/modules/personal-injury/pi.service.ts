@@ -142,6 +142,28 @@ export class PersonalInjuryService {
     }
 
     // Trigger Document 096 Auto-Draft (Liability Insurer Representation Letter)
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.PI_ACCIDENT_SAVED,
+      {
+        matterId: matter.id,
+        incidentDate: input.incidentDate || undefined,
+        incidentTime: input.incidentTime || undefined,
+        incidentLocation: input.incidentLocation || undefined,
+        accidentType: input.accidentType || undefined,
+        description: input.description || undefined,
+        policeAgency: input.policeAgency || undefined,
+        reportNumber: input.reportNumber || undefined,
+        investigatingOfficer: input.investigatingOfficer || undefined,
+        insuranceCompany: input.insurancePolicy?.insuranceCompany || undefined,
+        claimNumber: input.insurancePolicy?.claimNumber || undefined,
+        adjusterName: input.insurancePolicy?.adjusterName || undefined,
+        adjusterPhone: input.insurancePolicy?.adjusterPhone || undefined,
+        adjusterEmail: input.insurancePolicy?.adjusterEmail || undefined,
+        liabilityAssessment: input.liabilityAssessment || undefined,
+      },
+      { user: currentUser, ipAddress: context.ipAddress, userAgent: context.userAgent }
+    );
+
     const autoDraftResult = await AutoDraftService.handleAccidentSaved(
       {
         matterId: matter.id,
@@ -250,6 +272,25 @@ export class PersonalInjuryService {
     }
 
     // Trigger Document 113 & 112 Auto-Drafts
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.PI_PROVIDER_ADDED,
+      {
+        matterId: matter.id,
+        providerName: provider.providerName,
+        providerType: provider.providerType || undefined,
+        facilityAddress: provider.facilityAddress || undefined,
+        phone: provider.phone || undefined,
+        fax: provider.fax || undefined,
+        email: provider.email || undefined,
+        treatmentDates: input.treatmentStartDate && input.treatmentEndDate
+          ? `${input.treatmentStartDate} to ${input.treatmentEndDate}`
+          : input.treatmentStartDate || undefined,
+        requestAuthorization: input.requestAuthorization !== false,
+        requestRecords: input.requestRecords !== false,
+      },
+      { user: currentUser, ipAddress: context.ipAddress, userAgent: context.userAgent }
+    );
+
     const autoDraftResult = await AutoDraftService.handleProviderAdded(
       {
         matterId: matter.id,
@@ -312,6 +353,18 @@ export class PersonalInjuryService {
     });
 
     // Trigger Document 116 Auto-Draft (Incomplete medical records follow-up)
+    DocumentEventBus.emitAsync(
+      DOCUMENT_EVENT.PI_MISSING_RECORDS,
+      {
+        matterId: recordRequest.matterId,
+        providerName: recordRequest.provider.providerName,
+        daysOverdue: input.daysOverdue || 30,
+        outstandingRecords: input.outstandingRecords || [],
+        followUpNotes: input.deficiencyNotes,
+      },
+      { user: currentUser, ipAddress: context.ipAddress, userAgent: context.userAgent }
+    );
+
     const autoDraftResult = await AutoDraftService.handleMissingRecords(
       {
         matterId: recordRequest.matterId,
@@ -1070,6 +1123,25 @@ export class PersonalInjuryService {
       resourceId: updated.id,
       details: { matterId: matter.id, status: updated.status, finalPayoff: updated.finalPayoffAmount },
     });
+
+    // Trigger Genuine CAT-140 Auto-Draft when payoff agreement is recorded
+    const agreedPayoff = Number(updated.negotiatedAmount || updated.finalPayoffAmount || 0);
+    if (agreedPayoff > 0 && (updated.status === 'AGREED' || updated.status === 'RESOLVED' || input.finalPayoffAmount || input.negotiatedAmount)) {
+      DocumentEventBus.emitAsync(
+        DOCUMENT_EVENT.PI_LIEN_PAYOFF_RECORDED,
+        {
+          matterId: matter.id,
+          lienId: updated.id,
+          lienholderName: updated.lienholderName,
+          category: updated.category,
+          assertedAmount: Number(updated.assertedAmount || 0),
+          agreedAmount: agreedPayoff,
+          paymentInstructions: input.paymentInstructions || 'Direct trust account disbursement upon execution of lien satisfaction',
+          releaseTerms: input.releaseTerms || 'Full, final, and unconditional release of all healthcare provider lien claims',
+        },
+        { user: currentUser }
+      );
+    }
 
     return updated;
   }

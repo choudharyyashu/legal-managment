@@ -12,6 +12,10 @@
  * Mode: Isolated In-Engine Simulation (Zero Railway / Live DB Access)
  */
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'mysql://test:test@localhost:3306/test_mock';
+}
+
 import { prisma } from '../config/database.js';
 import { AppError } from '../errors/AppError.js';
 import { MatterService } from '../modules/matters/matter.service.js';
@@ -129,6 +133,7 @@ async function runFivePIWorkflowsTestSuite() {
       id: 'tpl-096',
       templateCode: 'UT-PI-REP-096',
       templateName: 'Liability Insurer Letter of Representation (096)',
+      practiceAreaId: 'pa-pi',
       category: 'Correspondence',
       isActive: true,
       versions: [{ id: 'ver-096', versionNumber: '1.0', docxStorageKey: 'storage/templates/test-fixtures/UT-PI-DEM-140.docx', fieldMappings: [] }],
@@ -137,6 +142,7 @@ async function runFivePIWorkflowsTestSuite() {
       id: 'tpl-112',
       templateCode: 'UT-PI-MED-112',
       templateName: 'Medical Authorization (112)',
+      practiceAreaId: 'pa-pi',
       category: 'Authorizations',
       isActive: true,
       versions: [{ id: 'ver-112', versionNumber: '1.0', docxStorageKey: 'storage/templates/test-fixtures/UT-PI-DEM-140.docx', fieldMappings: [] }],
@@ -145,6 +151,7 @@ async function runFivePIWorkflowsTestSuite() {
       id: 'tpl-113',
       templateCode: 'UT-PI-MED-113',
       templateName: 'Medical Records Request (113)',
+      practiceAreaId: 'pa-pi',
       category: 'Medical',
       isActive: true,
       versions: [{ id: 'ver-113', versionNumber: '1.0', docxStorageKey: 'storage/templates/test-fixtures/UT-PI-DEM-140.docx', fieldMappings: [] }],
@@ -153,6 +160,7 @@ async function runFivePIWorkflowsTestSuite() {
       id: 'tpl-116',
       templateCode: 'UT-PI-DEF-116',
       templateName: 'Incomplete Medical Records Follow-up (116)',
+      practiceAreaId: 'pa-pi',
       category: 'Medical',
       isActive: true,
       versions: [{ id: 'ver-116', versionNumber: '1.0', docxStorageKey: 'storage/templates/test-fixtures/UT-PI-DEM-140.docx', fieldMappings: [] }],
@@ -161,6 +169,7 @@ async function runFivePIWorkflowsTestSuite() {
       id: 'tpl-140',
       templateCode: 'UT-PI-DEM-140',
       templateName: 'Personal Injury Settlement Demand Letter (140)',
+      practiceAreaId: 'pa-pi',
       category: 'Demand',
       isActive: true,
       versions: [{ id: 'ver-140', versionNumber: '1.0', docxStorageKey: 'storage/templates/test-fixtures/UT-PI-DEM-140.docx', fieldMappings: [] }],

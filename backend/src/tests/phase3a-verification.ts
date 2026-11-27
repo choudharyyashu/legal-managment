@@ -446,15 +446,24 @@ async function runPhase3aVerification() {
       record('CAT-003', 'Scenario A: Known Conflict Report Generation', 'FAILED', 'Draft not created');
     } else {
       fictionalCreatedIds.drafts.push(flaggedReport.id);
-      const isUnderReview = flaggedReport.status === 'Under Review';
-      const hasConflictTitle = flaggedReport.title.includes('(FLAGGED)');
-      const flags = flaggedReport.missingFieldsFlags as any[];
-      const hasAlert = Array.isArray(flags) && flags.some((f) => f.type === 'CONFLICT_ALERT');
+      let refreshedFlagged: any = flaggedReport;
+      for (let i = 0; i < 30; i++) {
+        if (refreshedFlagged?.status === 'Under Review' && refreshedFlagged?.missingFieldsFlags) break;
+        await sleep(500);
+        refreshedFlagged = await prisma.documentDraft.findUnique({ where: { id: flaggedReport.id } });
+      }
+      const isUnderReview = refreshedFlagged?.status === 'Under Review';
+      const hasConflictTitle = refreshedFlagged?.title.includes('(FLAGGED)');
+      let flags = refreshedFlagged?.missingFieldsFlags;
+      if (typeof flags === 'string') {
+        try { flags = JSON.parse(flags); } catch {}
+      }
+      const hasAlert = Array.isArray(flags) && flags.some((f: any) => f.type === 'CONFLICT_ALERT');
 
       record('CAT-003', 'Scenario A: Known Conflict Report (FLAGGED / Under Review)', (isUnderReview && hasConflictTitle && hasAlert) ? 'PASSED' : 'FAILED', {
-        draftCode: flaggedReport.draftCode,
-        status: flaggedReport.status,
-        title: flaggedReport.title,
+        draftCode: refreshedFlagged?.draftCode,
+        status: refreshedFlagged?.status,
+        title: refreshedFlagged?.title,
         alertPresent: hasAlert,
       });
     }
@@ -550,10 +559,16 @@ async function runPhase3aVerification() {
       record('CAT-003', 'Scenario C: Pending Review Report Generation', 'FAILED', 'Draft not created');
     } else {
       fictionalCreatedIds.drafts.push(pendingReport.id);
-      const isPendingUnderReview = pendingReport.status === 'Under Review';
+      let refreshedPending: any = pendingReport;
+      for (let i = 0; i < 30; i++) {
+        if (refreshedPending?.status === 'Under Review') break;
+        await sleep(500);
+        refreshedPending = await prisma.documentDraft.findUnique({ where: { id: pendingReport.id } });
+      }
+      const isPendingUnderReview = refreshedPending?.status === 'Under Review';
       record('CAT-003', 'Scenario C: Pending Review Remains Under Review (Never Auto-Cleared)', isPendingUnderReview ? 'PASSED' : 'FAILED', {
-        draftCode: pendingReport.draftCode,
-        status: pendingReport.status,
+        draftCode: refreshedPending?.draftCode,
+        status: refreshedPending?.status,
       });
     }
 

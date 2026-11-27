@@ -193,10 +193,12 @@ export class DraftService {
       template.isSystemDefault ||
       template.templateCode === '001' ||
       template.templateCode === 'UT-ENG-RET-001' ||
+      ['CAT-001', 'CAT-002', 'CAT-003', 'CAT-010'].includes(template.templateCode) ||
       template.category === 'Engagement' ||
-      template.category === 'General';
+      template.category === 'General' ||
+      template.category === 'Firm intake and finance';
 
-    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
+    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
       throw AppError.badRequest(
         `Template '${template.templateCode}' (${template.templateName}) is designated for '${template.practiceArea?.name || template.practiceAreaId}' matters and cannot be applied to matter '${matter.matterNumber}' (${matter.practiceArea?.name || matter.practiceAreaId}).`,
         'INCOMPATIBLE_PRACTICE_AREA'
@@ -343,10 +345,12 @@ export class DraftService {
       template.isSystemDefault ||
       template.templateCode === '001' ||
       template.templateCode === 'UT-ENG-RET-001' ||
+      ['CAT-001', 'CAT-002', 'CAT-003', 'CAT-010'].includes(template.templateCode) ||
       template.category === 'Engagement' ||
-      template.category === 'General';
+      template.category === 'General' ||
+      template.category === 'Firm intake and finance';
 
-    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
+    if (!isGlobalTemplate && matter.practiceAreaId && template.practiceAreaId && template.practiceAreaId !== matter.practiceAreaId) {
       throw AppError.badRequest(
         `Template '${template.templateCode}' (${template.templateName}) is designated for '${template.practiceArea?.name || template.practiceAreaId}' matters and cannot be applied to matter '${matter.matterNumber}' (${matter.practiceArea?.name || matter.practiceAreaId}).`,
         'INCOMPATIBLE_PRACTICE_AREA'
@@ -397,7 +401,10 @@ export class DraftService {
 
     // 7. Save Draft Metadata in Database
     const title = input.title || `${template.templateName} - ${matter.title}`;
-    const status = resolved.isValid ? 'Draft' : 'Under Review';
+    const status = input.initialStatus || (resolved.isValid ? 'Draft' : 'Under Review');
+    const initialFlags = input.missingFieldsFlags !== undefined
+      ? input.missingFieldsFlags
+      : (resolved.missingFields as any);
 
     let draft: any;
     let createAttempts = 0;
@@ -415,7 +422,7 @@ export class DraftService {
             status,
             docxStorageKey: draftStorageKey,
             pdfStorageKey: null,
-            missingFieldsFlags: resolved.missingFields as any,
+            missingFieldsFlags: initialFlags,
             generatedByUserId: currentUser.id,
             hasManualEdits: false,
             isStale: false,

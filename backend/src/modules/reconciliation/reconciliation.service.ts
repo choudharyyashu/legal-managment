@@ -465,6 +465,7 @@ export class ReconciliationService {
         reconciliationPeriod: input.reconciliationPeriod,
         statementOpeningBalance: input.statementOpeningBalance,
         statementEndingBalance: input.statementEndingBalance,
+        bookAdjustments: 0,
       },
       input.clearedItemIds
     );

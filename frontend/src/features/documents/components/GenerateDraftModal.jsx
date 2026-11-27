@@ -94,8 +94,11 @@ export function GenerateDraftModal({ isOpen, onClose, onGenerated, matters = [] 
         t.isSystemDefault === true ||
         t.practiceAreaId === 'ALL' ||
         t.category === 'Engagement' ||
+        t.category === 'General' ||
+        t.category === 'Firm intake and finance' ||
         t.templateCode === '001' ||
-        t.templateCode === 'UT-ENG-RET-001';
+        t.templateCode === 'UT-ENG-RET-001' ||
+        ['CAT-001', 'CAT-002', 'CAT-003', 'CAT-010'].includes(t.templateCode);
       if (isGlobal) return true;
       if (t.practiceAreaId && t.practiceAreaId === currentPracticeAreaId) return true;
       return false;

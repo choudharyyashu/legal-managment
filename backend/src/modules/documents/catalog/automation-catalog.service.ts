@@ -61,6 +61,8 @@ export class AutomationCatalogService {
     const candidates = [
       path.resolve(process.cwd(), 'src', 'modules', 'documents', 'catalog', 'document-automation-catalog.json'),
       path.resolve(process.cwd(), 'dist', 'modules', 'documents', 'catalog', 'document-automation-catalog.json'),
+      path.resolve(process.cwd(), 'backend', 'src', 'modules', 'documents', 'catalog', 'document-automation-catalog.json'),
+      path.resolve(process.cwd(), 'backend', 'dist', 'modules', 'documents', 'catalog', 'document-automation-catalog.json'),
     ];
 
     for (const filePath of candidates) {
