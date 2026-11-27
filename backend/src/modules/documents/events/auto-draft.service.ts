@@ -367,7 +367,7 @@ export class AutoDraftService {
 
       // Find template for Document 096
       const template = await this.findTemplate(
-        ['UT-PI-REP-096', 'TPL-PI-096', 'UT-PI-096', '096'],
+        ['CAT-096', 'UT-PI-REP-096', 'TPL-PI-096', 'UT-PI-096', '096'],
         'Representation'
       );
 
@@ -507,7 +507,7 @@ export class AutoDraftService {
       // Document 113: Medical Records Request Letter
       if (payload.requestRecords !== false) {
         const template113 = await this.findTemplate(
-          ['UT-PI-MED-113', 'TPL-PI-113', 'UT-PI-113', '113'],
+          ['CAT-113', 'UT-PI-MED-113', 'TPL-PI-113', 'UT-PI-113', '113'],
           'Records Request'
         );
 
@@ -574,7 +574,7 @@ export class AutoDraftService {
       // Document 112: Medical Authorization Letter
       if (payload.requestAuthorization !== false) {
         const template112 = await this.findTemplate(
-          ['UT-PI-MED-112', 'TPL-PI-112', 'UT-PI-112', '112'],
+          ['CAT-112', 'UT-PI-MED-112', 'TPL-PI-112', 'UT-PI-112', '112'],
           'Authorization'
         );
 
@@ -672,7 +672,7 @@ export class AutoDraftService {
 
       // Find template for Document 116 (Incomplete medical records follow-up)
       const template116 = await this.findTemplate(
-        ['UT-PI-DEF-116', 'TPL-PI-116', 'UT-PI-116', '116'],
+        ['CAT-116', 'UT-PI-DEF-116', 'TPL-PI-116', 'UT-PI-116', '116'],
         'Incomplete'
       );
 
