@@ -65,7 +65,7 @@ export function ImmigrationEvidenceChecklist({ evidenceItems = [], onUpdateEvide
         </Button>
       </div>
 
-      <div className="border border-[#D9D6CF] rounded-lg overflow-hidden bg-white">
+      <div className="border border-[#D9D6CF] rounded-lg overflow-x-auto bg-white">
         <table className="w-full text-xs text-left">
           <thead className="bg-[#F5F0E5] text-[#06244B] font-bold">
             <tr>
