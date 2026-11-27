@@ -359,8 +359,9 @@ export function ExternalIntegrations() {
     }
   };
 
-  // Save Credentials Notification (Server-Side Storage Rule)
-  const handleSaveConfig = (e) => {
+  // Save Credentials (Secure Server-Side Persistence & Live Handshake)
+  const [isSaving, setIsSaving] = useState(false);
+  const handleSaveConfig = async (e) => {
     e?.preventDefault();
     if (!selectedIntegration) return;
 
@@ -374,12 +375,31 @@ export function ExternalIntegrations() {
       return;
     }
 
-    addToast(
-      `${selectedIntegration.name} configuration noted. Sensitive production keys must be provisioned in the backend environment.`,
-      'info'
-    );
-    handleCloseModal();
-    loadStatuses();
+    setIsSaving(true);
+    try {
+      // 1. Save credentials to secure server storage
+      const saveRes = await integrationService.saveConfig(selectedIntegration.id, modalForm);
+      
+      // 2. Perform live connection test
+      const testRes = await integrationService.testConnection(selectedIntegration.id, modalForm);
+      setTestResult(testRes);
+
+      if (testRes?.success) {
+        addToast(`${selectedIntegration.name} configuration saved & verified! Connection active.`, 'success');
+      } else {
+        addToast(
+          saveRes?.message || `${selectedIntegration.name} credentials saved. Live status updated.`,
+          'info'
+        );
+      }
+
+      await loadStatuses();
+      handleCloseModal();
+    } catch (err) {
+      addToast(err?.response?.data?.message || err?.message || 'Failed to save integration configuration.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Disconnect & Clear
@@ -555,9 +575,10 @@ export function ExternalIntegrations() {
                   type="button"
                   variant="primary"
                   onClick={handleSaveConfig}
+                  disabled={isSaving || isTesting}
                 >
                   <Check className="w-4 h-4 mr-1.5" />
-                  Save &amp; Connect
+                  {isSaving ? 'Saving & Verifying...' : 'Save & Connect'}
                 </Button>
               </div>
             </div>

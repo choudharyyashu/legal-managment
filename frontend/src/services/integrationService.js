@@ -11,6 +11,11 @@ export const integrationService = {
     return res?.data?.data || res?.data;
   },
 
+  async saveConfig(providerId, credentials = {}) {
+    const res = await apiClient.post(`/integrations/${providerId}/config`, credentials);
+    return res?.data?.data || res?.data;
+  },
+
   async disconnect(providerId) {
     const res = await apiClient.post(`/integrations/${providerId}/disconnect`);
     return res?.data?.data || res?.data;
