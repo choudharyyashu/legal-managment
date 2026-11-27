@@ -14,6 +14,26 @@ export interface DomainEventContext {
   userAgent?: string;
 }
 
+export function buildDomainEventContext(context: {
+  userId: string;
+  userRole: string;
+  email?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}): DomainEventContext {
+  return {
+    user: {
+      id: context.userId,
+      userCode: '',
+      email: context.email || '',
+      role: context.userRole,
+      permissions: [],
+    },
+    ipAddress: context.ipAddress,
+    userAgent: context.userAgent,
+  };
+}
+
 export type DomainEventHandler<T = any> = (
   payload: T,
   context: DomainEventContext
@@ -27,13 +47,14 @@ class DocumentEventBusImpl {
     this.emitter.on('error', (err) => {
       console.error('[DocumentEventBus] Unhandled bus error:', err);
     });
-    this.emitter.setMaxListeners(50);
+    // Raise max listeners to support all 300 catalog automation event subscriptions
+    this.emitter.setMaxListeners(500);
   }
 
   /**
-   * Register a subscriber for a domain event.
+   * Register a subscriber for a domain event or catalog event key.
    */
-  subscribe<T = any>(event: DocumentEventType, handler: DomainEventHandler<T>): void {
+  subscribe<T = any>(event: DocumentEventType | string, handler: DomainEventHandler<T>): void {
     this.emitter.on(event, async (payload: T, context: DomainEventContext) => {
       try {
         await handler(payload, context);
@@ -48,7 +69,7 @@ class DocumentEventBusImpl {
    * Execution is non-blocking to protect the primary matter/record transaction.
    */
   emitAsync<T = any>(
-    event: DocumentEventType,
+    event: DocumentEventType | string,
     payload: T,
     context: DomainEventContext
   ): void {

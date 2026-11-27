@@ -704,7 +704,7 @@ model DocumentVersion {
   documentId       String   @map("document_id") @db.VarChar(36)
   versionLabel     String   @map("version_label") @db.VarChar(20)
   fileName         String   @map("file_name") @db.VarChar(255)
-  fileType         String   @map("file_type") @db.VarChar(50)
+  fileType         String   @map("file_type") @db.VarChar(120)
   fileSizeBytes    BigInt   @map("file_size_bytes")
   s3StorageKey     String   @map("s3_storage_key") @db.VarChar(500)
   sha256Checksum   String   @map("sha256_checksum") @db.VarChar(64)

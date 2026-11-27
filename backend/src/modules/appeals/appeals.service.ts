@@ -7,6 +7,7 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
 
 export class AppealsService {
   static async getAppealsCase(matterId: string) {
@@ -99,6 +100,8 @@ export class AppealsService {
       resourceId: updated.id,
       details: { matterId, status: updated.status, docket: updated.appellateDocketNumber },
     });
+
+    DocumentEventBus.emitAsync('catalog.appeal_matter_opened', { matterId }, { user: currentUser });
 
     return updated;
   }

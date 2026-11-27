@@ -10,6 +10,7 @@ import {
   TrustLedgerListQuery,
   TrustTransactionListQuery,
 } from './trust.types.js';
+import { DocumentEventBus, buildDomainEventContext } from '../documents/events/event-bus.js';
 
 export class TrustService {
   private static async generateLedgerCode(client: any = prisma): Promise<string> {
@@ -331,6 +332,15 @@ export class TrustService {
       userAgent: context.userAgent,
     });
 
+    DocumentEventBus.emitAsync(
+      'catalog.trust_receipt_confirmed',
+      {
+        matterId: updatedLedger.matterId,
+        customOverrides: { depositAmount: Number(transaction.amount), trustBalance: newBalance },
+      },
+      buildDomainEventContext(context)
+    );
+
     const formattedTx: TrustTransactionResponse = {
       id: transaction.id,
       trustSubLedgerId: transaction.trustSubLedgerId,
@@ -373,6 +383,19 @@ export class TrustService {
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
     });
+
+    const disbursementEvent = String(input.purpose || '').toLowerCase().includes('refund')
+      ? 'catalog.refund_condition_approved'
+      : 'catalog.authorized_statement_event';
+
+    DocumentEventBus.emitAsync(
+      disbursementEvent,
+      {
+        matterId: updatedLedger.matterId,
+        customOverrides: { disbursementAmount: Number(transaction.amount), trustBalance: newBalance, purpose: input.purpose },
+      },
+      buildDomainEventContext(context)
+    );
 
     const formattedTx: TrustTransactionResponse = {
       id: transaction.id,

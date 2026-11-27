@@ -7,6 +7,7 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
 
 export class BankruptcyService {
   /**
@@ -125,6 +126,8 @@ export class BankruptcyService {
       details: { matterId, chapter: updated.chapter, status: updated.status },
     });
 
+    DocumentEventBus.emitAsync('catalog.bankruptcy_matter_opened', { matterId }, { user: currentUser });
+
     return updated;
   }
 
@@ -168,6 +171,12 @@ export class BankruptcyService {
       resourceId: creditor.id,
       details: { creditorName: creditor.creditorName, claimAmount: Number(creditor.claimAmount) },
     });
+
+    DocumentEventBus.emitAsync(
+      'catalog.creditor_data_imported_or_entered',
+      { matterId, customOverrides: { creditorName: creditor.creditorName, claimAmount: Number(creditor.claimAmount) } },
+      { user: currentUser }
+    );
 
     return creditor;
   }
