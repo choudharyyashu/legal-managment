@@ -144,7 +144,7 @@ export function PINavigationHeader({
 
       {/* 9 Dedicated Navigation Tabs */}
       <div className="bg-white rounded-xl border border-[#EAECF0] shadow-sm p-1.5">
-        <nav className="flex flex-wrap items-center gap-1">
+        <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar sm:flex-wrap pb-1 sm:pb-0">
           {PI_NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

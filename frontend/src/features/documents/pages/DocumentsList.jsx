@@ -531,7 +531,7 @@ export function DocumentsList() {
       />
 
       {/* View Mode Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#EAECF0] pb-2 text-xs">
+      <div className="flex items-center gap-2 border-b border-[#EAECF0] pb-2 text-xs overflow-x-auto no-scrollbar sm:flex-wrap">
         <button
           type="button"
           onClick={() => setViewMode('documents')}
@@ -1043,7 +1043,7 @@ export function DocumentsList() {
                 <div className="text-slate-500 text-[11px]">
                   Page <span className="font-semibold text-slate-800">{automationPage}</span> of <span className="font-semibold text-slate-800">{automationPagination.totalPages}</span> ({automationPagination.filteredCount} entries)
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
                   <Button
                     size="xs"
                     variant="outline"
