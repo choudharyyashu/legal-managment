@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
--- Host: zephyr.proxy.rlwy.net:18623
--- Generation Time: Nov 26, 2026 at 06:34 AM
--- Server version: 8.4.13
--- PHP Version: 8.2.12
+-- Host: 127.0.0.1
+-- Generation Time: Nov 27, 2026 at 03:57 AM
+-- Server version: 10.11.16-MariaDB
+-- PHP Version: 8.5.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `railway`
+-- Database: `legal-db`
 --
 
 -- --------------------------------------------------------
@@ -28,21 +28,21 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `appeals_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `appellate_court` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Utah Court of Appeals',
-  `appellate_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `lower_court_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `lower_court_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `appellate_court` varchar(150) NOT NULL DEFAULT 'Utah Court of Appeals',
+  `appellate_docket_number` varchar(100) DEFAULT NULL,
+  `lower_court_name` varchar(150) DEFAULT NULL,
+  `lower_court_docket_number` varchar(100) DEFAULT NULL,
   `notice_of_appeal_date` date DEFAULT NULL,
   `record_due_deadline` date DEFAULT NULL,
   `opening_brief_deadline` date DEFAULT NULL,
   `reply_brief_deadline` date DEFAULT NULL,
   `oral_argument_date` datetime(3) DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Notice Filed',
-  `appellant_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Appellant',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `status` varchar(50) NOT NULL DEFAULT 'Notice Filed',
+  `appellant_role` varchar(50) NOT NULL DEFAULT 'Appellant',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -53,18 +53,18 @@ CREATE TABLE `appeals_cases` (
 --
 
 CREATE TABLE `audit_logs` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `resource_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `resource_id` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `details` json NOT NULL,
-  `ip_address` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_agent` text COLLATE utf8mb4_unicode_ci,
-  `timestamp` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-) ;
+  `id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `resource_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `resource_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`details`)),
+  `ip_address` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `timestamp` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `audit_logs`
@@ -73,84 +73,172 @@ CREATE TABLE `audit_logs` (
 INSERT INTO `audit_logs` (`id`, `user_id`, `user_name`, `user_role`, `action`, `resource_type`, `resource_id`, `details`, `ip_address`, `user_agent`, `timestamp`) VALUES
 ('00c06b10-0025-49a6-9017-ac47b1ba9560', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:50:40.617'),
 ('024537b1-877b-454a-975b-c1ad7778e144', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 10:41:37.748'),
+('03f921c5-696f-4924-91cf-f736f10d7908', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '02f99652-d8fd-447b-ba33-dfb85c9eb309', '{\"taskCode\":\"TSK-26-0010\",\"title\":\"Review Document Draft: Eviction Closure Letter - Full Satisfaction ($3250.00)\",\"matterNumber\":\"MAT-LT-DEMO-FULL\"}', NULL, NULL, '2026-11-27 02:39:58.587'),
+('043c7321-add1-431d-82b4-e4a0a6e60bd2', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '225c5c34-0ff2-4a68-94c9-619c920468f5', '{\"event\":\"pi.accident.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0008\",\"templateCode\":\"CAT-096\"}', NULL, NULL, '2026-11-27 02:42:00.258'),
 ('05a091f6-3e5c-4cdc-bd47-ddfc3b7a4a6d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.14', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 06:49:04.712'),
+('0664d40b-1cd6-4e83-8cdf-b41226cc4e3b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '92548c44-5608-4177-b010-5536091971e2', '{\"taskCode\":\"TSK-26-0014\",\"title\":\"Review Document Draft: Medical Records Request - Salt Lake Orthopedic Clinic\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.480'),
 ('0732dc5b-a1c2-4554-9a6e-ba59bff90217', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.8', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:25:32.527'),
 ('08c008ca-69a0-4ab5-805d-785234d0cd89', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:14:19.514'),
 ('096e6bda-6049-40b9-920b-f27be3c8dcd6', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:43:20.333'),
+('09cfb42b-9b34-41ae-aa32-06278713e965', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '362f47aa-b924-4e47-8e75-ff000ba51906', '{\"taskCode\":\"TSK-26-0012\",\"title\":\"Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.352'),
 ('0ab02859-5399-48dd-9bf4-7d8c9d8fe0ed', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 10:25:16.513'),
 ('0ca0099b-e8fc-41dc-89c2-2fec8d035dd1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.16', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:10:26.735'),
 ('0d692ea9-c629-4f05-b324-5b5a76d8d9b8', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:07:54.280'),
+('0e50fd64-7556-4d8b-837e-fdeb01e0ab5f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '615789b1-5063-49eb-822e-6e8c964cdc82', '{\"draftCode\":\"DFT-26-0009\",\"templateCode\":\"CAT-010\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.892'),
+('0f98e244-60f7-4751-9b0f-c336a4e640ad', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'efd2fc29-0192-40f4-a5eb-10e363ce7d2a', '{\"taskCode\":\"TSK-26-0015\",\"title\":\"Review Document Draft: Medical Authorization - Salt Lake Orthopedic Clinic\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.532'),
+('101deb60-c93b-416d-81a3-ac958df57c92', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'cc725afd-4a7b-429f-9c3a-58025f992660', '{\"draftCode\":\"DFT-26-0010\",\"templateCode\":\"CAT-113\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.940'),
 ('1023b4b1-9c18-4227-a247-0bfd9b5f661a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_CREATED', 'DOCUMENT', '62021eb8-345e-4522-9f4e-29df81aa37de', '{\"title\": \"yj\", \"documentCode\": \"DOC-26-0001\", \"matterNumber\": \"26-FAM-0101\"}', '::ffff:100.64.0.13', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 07:29:56.365'),
 ('174d6717-3c7c-444f-ada4-4b311376868b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 10:39:38.551'),
 ('181187d0-a1f9-401e-bd5e-d2270fefd68d', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-19 05:31:28.496'),
 ('1940289a-2430-440d-87a7-e8c00c53e92c', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.17', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:32:53.345'),
+('19f79257-8b2f-4d42-8a42-a17c206f1145', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'f2dd6eec-b71e-4e31-afb1-2fd4f969c3b6', '{\"taskCode\":\"TSK-26-0006\",\"title\":\"Review Document Draft: Conflict Search Report (FLAGGED) - Synthetic Demo Client (Do Not Delete)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:37:44.338'),
 ('1a693a30-3ca2-480b-b539-df741f2b7758', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-18 05:41:30.896'),
 ('1b3e2b85-f546-4878-bea1-1f9e68adedb2', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0', '2026-11-25 10:13:00.095'),
 ('1d471bd3-e171-439d-92d8-6d701c1541d9', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 11:44:10.862'),
+('1d6bba81-ffa4-4843-86af-b68674d9e2d1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'bf78533c-1b09-41ae-82ab-f20152f9b21b', '{\"draftCode\":\"DFT-26-0006\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-FULL\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.646'),
+('1d8ea180-78eb-4acf-804b-4382c1ec9bfc', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '98d878c8-54c0-4a87-8f0c-b8077b7ca66b', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"d3434952-984b-4bca-8dcc-7187c55414bd\",\"isFullSatisfaction\":true,\"outstandingBalance\":0,\"draftCode\":\"DFT-26-0005\"}', NULL, NULL, '2026-11-27 02:37:44.391'),
 ('1e313fbb-191b-4df9-b8ac-c0b11c3a7098', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0', '2026-11-17 06:08:52.816'),
+('20554e43-51e8-433a-a5ac-c02846de77bd', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '70687aef-eba2-4da1-8d9b-a26de496403f', '{\"draftCode\":\"DFT-26-0006\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-FULL\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.569'),
+('21abc4fc-2f8e-4925-935e-cc14e2ba0df4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'f7cce4e9-1fef-4715-9446-1c0b6a106b71', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"d3434952-984b-4bca-8dcc-7187c55414bd\",\"isFullSatisfaction\":true,\"outstandingBalance\":0,\"draftCode\":\"DFT-26-0002\"}', NULL, NULL, '2026-11-27 01:41:29.876'),
 ('2362fb77-2963-4ab6-b8be-f0a9e07f1d44', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.7', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:05:11.514'),
 ('2660cc83-7704-4ec0-8330-f5c70c069724', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.16', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', '2026-11-17 06:31:00.059'),
 ('26fb6207-b98b-4fe2-9fb9-f4efb16e458e', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-25 08:47:13.560'),
 ('2715589d-707d-4e34-a590-dcafa3ac416e', 'eca5d99f-a1cd-43f8-82f2-830acd1a5ddc', 'David Sterling, Esq.', 'supervisor', 'USER_LOGIN_SUCCESS', 'AUTH', 'eca5d99f-a1cd-43f8-82f2-830acd1a5ddc', '{\"role\": \"supervisor\", \"email\": \"d.sterling@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:43:49.665'),
+('271a614f-c061-42fb-9bc5-f00c722f353c', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'f7cce4e9-1fef-4715-9446-1c0b6a106b71', '{\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 01:41:29.853'),
 ('27cd52cc-650d-4b5d-b074-4fd473bfcb15', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-25 08:40:02.864'),
+('27fed966-4651-4e9b-b310-7db3b5c47843', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '6d9a8b33-226d-410b-b3fd-4777925569f8', '{\"event\":\"intake.conflict_search.completed\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"hasUnresolved\":true,\"draftCode\":\"DFT-26-0004\"}', NULL, NULL, '2026-11-27 02:37:44.343'),
+('291687c2-5339-45d3-b633-3b436b7f2e42', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '98d878c8-54c0-4a87-8f0c-b8077b7ca66b', '{\"draftCode\":\"DFT-26-0005\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.386'),
 ('2eef9b0c-fd81-40c7-99c3-eafe71f74f11', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 09:24:42.000'),
 ('323605bb-e4d8-480f-8678-1277675a326c', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', '{\"title\": \"tttt\", \"taskCode\": \"TSK-26-0001\", \"matterNumber\": \"26-FAM-0101\"}', '::ffff:100.64.0.18', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:04:21.057'),
+('35863dc5-11e5-43c5-b6fa-c2819a23b6f6', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'bf78533c-1b09-41ae-82ab-f20152f9b21b', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"6e406b0e-0209-4cbd-83a2-b61b98d39759\",\"isFullSatisfaction\":true,\"outstandingBalance\":0,\"draftCode\":\"DFT-26-0006\"}', NULL, NULL, '2026-11-27 02:43:54.652'),
+('393d66ee-cc54-4fa7-8771-bcd126043d6b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '70687aef-eba2-4da1-8d9b-a26de496403f', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"6e406b0e-0209-4cbd-83a2-b61b98d39759\",\"isFullSatisfaction\":true,\"outstandingBalance\":0,\"draftCode\":\"DFT-26-0006\"}', NULL, NULL, '2026-11-27 02:39:58.591'),
 ('3ba58a56-c2e9-4379-9f6e-65519beaa7fd', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'MATTER_CREATED', 'MATTER', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', '{\"title\": \"david john v. thomas\", \"clientName\": \"david john\", \"billingType\": \"Hourly\", \"matterNumber\": \"26-FAM-0101\", \"practiceArea\": \"Family Law\", \"isEthicalWallEnabled\": false}', '::ffff:100.64.0.2', 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 CrKey/1.54.250320', '2026-11-16 11:18:48.703'),
 ('3cd21a4a-e2ec-41bc-88c5-ed5299383e87', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-26 05:32:43.149'),
+('3f708375-24cd-447c-9586-f9cecb75c8b3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '7d16acef-9666-41ae-8033-14cc1e8e4cbf', '{\"draftCode\":\"DFT-26-0013\",\"templateCode\":\"CAT-130\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:55.108'),
+('3f9c30a4-2cbd-46e3-8248-0a2a29312a73', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '615789b1-5063-49eb-822e-6e8c964cdc82', '{\"event\":\"matter.created_from_intake\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0009\"}', NULL, NULL, '2026-11-27 02:43:54.899'),
 ('40cb22e2-1dba-49e0-bed9-d0bc74e23979', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TEMPLATE_STATUS_CHANGED', 'DOCUMENT_TEMPLATE', '47a69abb-1d3b-4d63-998b-49a7a632aa69', '{\"isActive\": false, \"templateCode\": \"112\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-25 09:08:11.919'),
+('418672c8-ccfa-4e75-9af2-a865e2f337cc', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'eaa0f2c2-c573-4878-a4b6-ef2110249a18', '{\"event\":\"intake.prospect.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"subtype\":\"General Legal\",\"draftCode\":\"DFT-26-0003\"}', NULL, NULL, '2026-11-27 02:37:44.211'),
+('428b9614-8843-48f6-a0fe-71714b528e42', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'fd7a8a35-e308-40fb-86be-7dfbaf3af771', '{\"event\":\"intake.prospect.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"subtype\":\"General Legal\",\"draftCode\":\"DFT-26-0003\"}', NULL, NULL, '2026-11-27 02:43:54.481'),
 ('448f9486-1b58-4f59-bdb7-ecae14203835', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_STATUS_UPDATED', 'TASK', 'f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', '{\"status\": \"Completed\", \"taskCode\": \"TSK-26-0001\"}', '::ffff:100.64.0.21', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 07:44:12.678'),
+('44c4aa56-ce2c-447a-8adc-0d8fdbfde6e4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '24bb79aa-71f4-4803-ad17-068c51e8f293', '{\"draftCode\":\"DFT-26-0008\",\"templateCode\":\"CAT-140\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.711'),
+('46d233e9-1bbf-484d-a62b-656869ae369d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'ef5e85c8-7920-444e-a1eb-f2bd0292c811', '{\"draftCode\":\"DFT-26-0006\",\"templateCode\":\"CAT-096\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.465'),
+('48017133-fb65-4b41-8b5b-41608f99921d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'dc3f6ead-87f9-42ad-8d55-a4ca07b6848f', '{\"taskCode\":\"TSK-26-0011\",\"title\":\"Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:39:58.726'),
 ('49796e26-c581-4bf9-b90d-ef28610e1ec1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:10:26.469'),
 ('4ae44107-f1fb-47ab-9512-95c9c8676fa1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.20', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 05:44:10.533'),
 ('4ce874ca-6456-434b-9b90-7dde540535db', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:08:58.462'),
 ('4d36e8d9-0384-4115-a62f-26a394a5f7e7', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:46:20.333'),
+('4e8a1e64-0090-4158-a00b-5dd77c198600', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_AUTO_DRAFT_TRIGGERED', 'DOCUMENT_DRAFT', '7202a32d-f186-41a6-8164-376a32bd3224', '{\"event\":\"pi.lien_payoff.recorded\",\"templateCode\":\"CAT-140\",\"lienholder\":\"Intermountain Healthcare Billing Recovery\",\"agreedAmount\":9200}', NULL, NULL, '2026-11-27 01:41:30.002'),
 ('50114fd9-a2b2-4aa4-83c6-0c893c9405bb', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DELETED', 'DOCUMENT', '62021eb8-345e-4522-9f4e-29df81aa37de', '{\"title\": \"yj\", \"documentCode\": \"DOC-26-0001\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-26 05:31:56.351'),
+('54c8c140-2abb-463a-a4b2-9c57b98d8b0f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'f15c17a0-0ede-4104-95be-779b61987082', '{\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.271'),
 ('55e358b6-d6b8-4e5f-b8e5-33ad464135fb', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-19 05:31:14.027'),
+('57a5fe72-4adc-44f1-b33a-5802bd085cd7', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '76bd8a63-e728-4f1e-8e26-cada524b08b3', '{\"draftCode\":\"DFT-26-0011\",\"templateCode\":\"CAT-113\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.464'),
+('58dcab2a-6302-48dc-9042-ecd1ad38f94b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_AUTO_DRAFT_TRIGGERED', 'DOCUMENT_DRAFT', '3be31d1f-1975-49e6-8e73-3917566d3c17', '{\"event\":\"pi.lien_payoff.recorded\",\"templateCode\":\"CAT-140\",\"lienholder\":\"Intermountain Healthcare Billing Recovery\",\"agreedAmount\":9200}', NULL, NULL, '2026-11-27 02:42:00.356'),
 ('591cf4d6-00c4-4ba7-b4fe-1ff8c8bc3508', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:45:06.278'),
 ('5cd4b670-24d9-49dd-a9b2-28dd6617e65b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:28:43.684'),
 ('5d94fed4-015e-4dff-9383-93f9551765e4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9711', '2026-11-16 11:13:41.673'),
+('62aa33eb-8863-4a2e-b15e-75a1e8b1e33f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'b69adcb3-8489-4392-8851-e52d0124ad88', '{\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-096\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.637'),
+('639f13df-7813-4c75-9479-45e071b7f305', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'dc1d4138-ba23-433f-be68-9392014694d3', '{\"draftCode\":\"DFT-26-0004\",\"templateCode\":\"CAT-002\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.061'),
 ('6525d2e5-8fe4-471a-b2a1-1be6b074eb1c', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'CLIENT_CREATED', 'CLIENT', 'b23414a1-b309-44c9-8097-bb3fc368222d', '{\"name\": \"david john\", \"status\": \"Active\", \"clientType\": \"Organization\", \"clientNumber\": \"CLI-1001\", \"assignedAttorneyId\": \"66c97d44-096b-4d34-8bd1-5691ba855e23\"}', '::ffff:100.64.0.9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:15:26.293'),
 ('6669e25c-4fda-4e6b-8d6d-1db6b169a56f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.11', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:05:32.524'),
+('67f0195b-2e2e-4fed-afac-7fb86cf98e2a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '7202a32d-f186-41a6-8164-376a32bd3224', '{\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-140\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 01:41:29.977'),
+('685431b1-2c6c-482f-a2a5-ba66bcefd12a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'dc1d4138-ba23-433f-be68-9392014694d3', '{\"event\":\"intake.prospect.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"subtype\":\"General Legal\",\"draftCode\":\"DFT-26-0004\"}', NULL, NULL, '2026-11-27 02:42:00.068'),
+('6a1f98ae-cf99-4a65-b21f-c2f1c23b82fd', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'ed141013-316e-427a-8d22-ba885beec1f5', '{\"event\":\"intake.conflict_search.completed\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"hasUnresolved\":true,\"draftCode\":\"DFT-26-0004\"}', NULL, NULL, '2026-11-27 02:43:54.548'),
 ('6ab917d2-ab92-42d1-95be-36bc53aff811', 'eca5d99f-a1cd-43f8-82f2-830acd1a5ddc', 'David Sterling, Esq.', 'supervisor', 'USER_LOGIN_SUCCESS', 'AUTH', 'eca5d99f-a1cd-43f8-82f2-830acd1a5ddc', '{\"role\": \"supervisor\", \"email\": \"d.sterling@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-19 05:31:40.866'),
 ('6b7abece-aafd-4d20-a018-1453c3a2255e', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:30:29.596'),
 ('6c197683-35e6-4ce0-9ec0-22d07c9400ff', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 07:21:34.646'),
 ('6c2833f3-302c-4c63-bdbb-a744a267ae75', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:53:02.399'),
+('6cedcdac-2c2b-4709-86ed-a2fc86c3673d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '4b76947a-1881-425e-b5c8-279ff5451251', '{\"taskCode\":\"TSK-26-0017\",\"title\":\"Review Document Draft: Settlement Demand Letter - [Pkg: dmp-demo-99]\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.711'),
 ('6e100f18-4c22-4ff7-9ecc-5cbd659e3524', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_STATUS_UPDATED', 'TASK', 'f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', '{\"status\": \"In Progress\", \"taskCode\": \"TSK-26-0001\"}', '::ffff:100.64.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:05:12.244'),
+('71d275e0-6253-49f6-8524-1877833c7d96', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'ac954e7f-d326-4b39-9213-8c2cb02bbcfb', '{\"event\":\"pi.demand.ready\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0014\",\"templateCode\":\"CAT-130\",\"demandPackageId\":\"dmp-demo-99\"}', NULL, NULL, '2026-11-27 02:42:00.716'),
+('74e6ec21-03a9-4284-8d5f-9ec5621bb81b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '10fd719e-f963-4b0a-b3c3-8b05c69c27e8', '{\"event\":\"intake.conflict_search.completed\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"hasUnresolved\":true,\"draftCode\":\"DFT-26-0004\"}', NULL, NULL, '2026-11-27 02:39:58.382'),
+('76b04e8a-c1f2-4376-a698-76a40b59e3b4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'f15c17a0-0ede-4104-95be-779b61987082', '{\"event\":\"intake.consultation.booked\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\"}', NULL, NULL, '2026-11-27 02:39:58.278'),
+('774204b1-cecd-4170-828c-fa4299575f23', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_AUTO_DRAFT_TRIGGERED', 'DOCUMENT_DRAFT', '24bb79aa-71f4-4803-ad17-068c51e8f293', '{\"event\":\"pi.lien_payoff.recorded\",\"templateCode\":\"CAT-140\",\"lienholder\":\"Intermountain Healthcare Billing Recovery\",\"agreedAmount\":9200}', NULL, NULL, '2026-11-27 02:39:58.730'),
 ('77fd6702-e2a3-4cd7-b5e8-53139978b0b5', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.17', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 13:21:11.158'),
+('7a3f8f0f-7743-485e-be96-edf90ff98bcf', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_AUTO_DRAFT_TRIGGERED', 'DOCUMENT_DRAFT', 'fba06c1d-3a6f-475f-9bac-b54e14ddaf25', '{\"event\":\"pi.lien_payoff.recorded\",\"templateCode\":\"CAT-140\",\"lienholder\":\"Intermountain Healthcare Billing Recovery\",\"agreedAmount\":9200}', NULL, NULL, '2026-11-27 02:43:54.853'),
 ('7dac3aa9-b067-46db-9aa3-d95760ea9758', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.14', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:04:15.172'),
 ('7dc04860-b337-44cc-badb-1f60f761e4a1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.20', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:33:56.183'),
 ('7e2a9e9f-6fd1-499f-ae16-d850b9f336ce', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:16:00.064'),
+('7fff764e-bced-43f9-b7f2-2bf3bfdd975b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '5a02ade7-772d-4c41-bc61-71736e1ee681', '{\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-140\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.550'),
 ('8202c33b-a9b7-4a48-af2d-3b7d402af7be', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 13:12:04.540'),
 ('84d10d7e-c853-4154-9ee6-a89afb5c55e5', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.15', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:21:13.218'),
+('87313a78-b71a-4f49-9b0b-a4885ad03045', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '877454aa-df86-4958-b74b-fd2ee6e61900', '{\"draftCode\":\"DFT-26-0005\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.594'),
+('8e68bb25-3b0f-4aae-94da-897217446fd8', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '7d16acef-9666-41ae-8033-14cc1e8e4cbf', '{\"event\":\"pi.demand.ready\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0013\",\"templateCode\":\"CAT-130\",\"demandPackageId\":\"dmp-demo-99\"}', NULL, NULL, '2026-11-27 02:43:55.148'),
+('90282f81-a59b-45d5-921e-8c47341cb56a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '04c54c0b-fe85-4120-88eb-6ce2dd05a9a1', '{\"taskCode\":\"TSK-26-0009\",\"title\":\"Review Document Draft: Eviction Closure Letter - Partial Payment (Remaining Balance: $2000.00)\",\"matterNumber\":\"MAT-LT-DEMO-99\"}', NULL, NULL, '2026-11-27 02:39:58.463'),
+('92c3d1ed-2510-42ce-bd6f-ecbb1f9f58c3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '2f951569-e274-4dd5-9646-6a565edbb562', '{\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.177'),
 ('9318823c-8d1c-4668-84fe-d4f3f47a47dd', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'USER_DEACTIVATED', 'USER', 'af3744b3-df06-4041-bc27-b8d16a8903d7', '{\"newStatus\": \"Inactive\", \"targetEmail\": \"t.bludworth.1794562768462@utahslawyers.com\", \"previousStatus\": \"Active\", \"targetUserCode\": \"USR-003\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:58:51.157'),
+('93e34c1a-9891-4d83-a5a8-5a15164892ef', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '4888bd99-0b1e-4b51-9aa4-3c5e360101eb', '{\"draftCode\":\"DFT-26-0012\",\"templateCode\":\"CAT-116\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:55.023'),
+('947e5dfc-766e-4750-8992-689703548325', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'd50dfe15-b4ec-46ec-be43-4178295c14ea', '{\"event\":\"pi.accident.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-096\"}', NULL, NULL, '2026-11-27 02:43:54.726'),
+('9491c914-d781-4229-b5fd-c0538e9680e3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '4bd49193-5144-4846-bfa8-daae1d0631bf', '{\"taskCode\":\"TSK-26-0008\",\"title\":\"Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:37:44.563'),
 ('95a4ba5a-1a13-4676-9271-9f211d2d6b22', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.5', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-24 19:55:20.506'),
+('9687071b-49e6-4235-8156-abe445a5a263', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '54150508-a6e0-47ab-baf5-15c1411541e2', '{\"taskCode\":\"TSK-26-0004\",\"title\":\"Review Document Draft: Consultation confirmation - Synthetic Demo Client (Do Not Delete) (undefined)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:37:44.119'),
 ('96a02e6d-2717-43e8-9314-d5b1f7604e12', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 13:17:58.184'),
 ('97be3700-739c-4c22-9084-4bd75e750cc0', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'INTAKE_CREATED', 'INTAKE', 'a599c7c8-3ef7-4960-a38d-32eecf00fc08', '{\"intakeNumber\": \"INT-26-0001\", \"prospectiveClient\": \"david john\"}', '::ffff:100.64.0.18', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:14:47.338'),
 ('9c74e79e-fb26-4a9a-a98a-46edea5a7c64', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.13', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 07:29:13.965'),
 ('9c800aaa-3b5f-436f-85a8-6c40f6249a8f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'MATTER_UPDATED', 'MATTER', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', '{\"changes\": {\"judge\": \"Hon. Elizabeth A. Hruby-Mills\", \"title\": \"david john v. thomas\", \"budget\": 30000, \"status\": \"Active\", \"courtName\": \"abc\", \"hourlyRate\": 4500, \"billingType\": \"Hourly\", \"description\": \"divorce.......\", \"flatFeeAmount\": null, \"nextCourtDate\": \"2026-11-26T00:00:00.000Z\", \"practiceAreaId\": \"pa-fam\", \"isEthicalWallEnabled\": false, \"statuteOfLimitations\": \"2026-11-24\", \"contingencyPercentage\": null, \"responsibleAttorneyId\": \"8640f71a-0142-42f4-a4c0-732537dcd9b7\", \"ethicalWallExcludedRole\": \"Paralegal Staff\"}, \"matterNumber\": \"26-FAM-0101\"}', '::ffff:100.64.0.11', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:37:21.232'),
 ('9ceef514-d493-4e84-b6e9-ac29b30d1ab9', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'INTAKE_CONFLICT_REVIEWED', 'INTAKE', 'a599c7c8-3ef7-4960-a38d-32eecf00fc08', '{\"notes\": \"Zero adverse party or prior representation conflicts identified across active rosters, closed files, and corporate affiliates for query \\\"thomas\\\". Cleared under Utah RPC 1.7.\", \"conflictStatus\": \"Cleared\"}', '::ffff:100.64.0.3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:15:14.652'),
+('9da2db0a-48c6-40d5-a53e-8eb6deee7a0f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '6d9a8b33-226d-410b-b3fd-4777925569f8', '{\"draftCode\":\"DFT-26-0004\",\"templateCode\":\"CAT-003\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.314'),
 ('a052414a-cc3b-4577-9291-ffdec34f20a7', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-26 04:57:38.875'),
+('a20e70ae-3715-4dba-aa7e-a89fefcab718', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '3be31d1f-1975-49e6-8e73-3917566d3c17', '{\"draftCode\":\"DFT-26-0009\",\"templateCode\":\"CAT-140\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.334'),
+('a3169f93-426e-4b24-b850-9f0e138e10c9', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '4f040eb1-537a-4e06-8d70-12fe724a271f', '{\"event\":\"intake.consultation.booked\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\"}', NULL, NULL, '2026-11-27 02:43:54.423'),
 ('a74e9e51-17d5-4c75-9be5-2c368fe3b002', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_STATUS_UPDATED', 'TASK', 'f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', '{\"status\": \"Completed\", \"taskCode\": \"TSK-26-0001\"}', '::ffff:100.64.0.18', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 07:43:56.512'),
 ('a9d8a2da-546c-4608-b61f-fed122dd6687', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.3', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:52:48.041'),
+('acb1a45a-a9b8-4e72-8dc8-27a2defdb132', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'ac954e7f-d326-4b39-9213-8c2cb02bbcfb', '{\"draftCode\":\"DFT-26-0014\",\"templateCode\":\"CAT-130\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.661'),
+('acd4e7d6-1cff-424f-a8fc-e90890dd74fe', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'fd7a8a35-e308-40fb-86be-7dfbaf3af771', '{\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-002\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.476'),
 ('ae8fe8a7-a4a0-496f-abdf-719c5e5586dc', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.17', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-19 11:12:14.171'),
 ('afa26da2-9f43-46d7-b7d1-57543c36a013', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:23:46.825'),
+('b09a846d-da43-4e75-8456-ed3ba847ff92', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'd44aa4d3-5df7-4c0a-ba1c-183d04465486', '{\"taskCode\":\"TSK-26-0007\",\"title\":\"Review Document Draft: Representation Letter - State Farm Mutual Automobile Insurance\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:37:44.481'),
 ('b2c288e0-d4e0-4785-8db4-b5933f70f7b2', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.2', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 13:20:36.714'),
+('b3c37ca4-547e-4f0c-b7f0-0e444665b090', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '817382f0-9535-4790-a78e-143d161179c4', '{\"taskCode\":\"TSK-26-0003\",\"title\":\"Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 01:41:29.995');
+INSERT INTO `audit_logs` (`id`, `user_id`, `user_name`, `user_role`, `action`, `resource_type`, `resource_id`, `details`, `ip_address`, `user_agent`, `timestamp`) VALUES
+('b4a7ed94-78cb-4f30-a772-50ffcd7b515f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '2f951569-e274-4dd5-9646-6a565edbb562', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"d3434952-984b-4bca-8dcc-7187c55414bd\",\"isFullSatisfaction\":false,\"outstandingBalance\":2000,\"draftCode\":\"DFT-26-0007\"}', NULL, NULL, '2026-11-27 02:42:00.187'),
+('b53a3d9f-51d0-4857-b5e3-1023813532a3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '10fd719e-f963-4b0a-b3c3-8b05c69c27e8', '{\"draftCode\":\"DFT-26-0004\",\"templateCode\":\"CAT-003\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.371'),
+('b70c77cf-c1f4-4f57-aa6b-c9ead096a693', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'dbbfa135-145d-4b78-a6e4-4c69b9c07e52', '{\"taskCode\":\"TSK-26-0016\",\"title\":\"Review Document Draft: Incomplete Records Follow-up - Salt Lake Orthopedic Clinic (Second notice regarding missin)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.616'),
+('b89ba02d-4c6a-4e86-bd21-e9fec7985d68', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '56c0267d-c388-46d9-89ea-70ab662d7be5', '{\"event\":\"matter.created_from_intake\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0010\"}', NULL, NULL, '2026-11-27 02:42:00.417'),
+('b96e8579-8263-4521-b62d-ac213eb40b1b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'eaa0f2c2-c573-4878-a4b6-ef2110249a18', '{\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-002\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.191'),
 ('ba55fdf7-239e-48f0-910c-284ae494ce68', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-19 06:34:35.209'),
 ('bb8c0328-ab56-43f0-a8c3-6cd99a597da3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.12', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:24:30.224'),
 ('bc37c4d3-4584-465d-bf16-01c24b227839', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.16', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:23:50.532'),
+('bc9102f3-c0f4-48cb-8988-d1e7a22f293f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'b2aed689-1dab-4b20-9508-6618a12fdf74', '{\"taskCode\":\"TSK-26-0005\",\"title\":\"Review Document Draft: Prospective Client Questionnaire - General Legal (Marcus Sterling)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:37:44.207'),
+('bd08415b-f16e-4cd3-8f62-6d1944a9cab9', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'ef5e85c8-7920-444e-a1eb-f2bd0292c811', '{\"event\":\"pi.accident.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0006\",\"templateCode\":\"CAT-096\"}', NULL, NULL, '2026-11-27 02:37:44.485'),
 ('bea03879-b949-4f74-a01a-aac72c5a789f', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'USER_DEACTIVATED', 'USER', 'b4144e13-e1b8-4c10-bc62-3ca0966380e0', '{\"newStatus\": \"Inactive\", \"targetEmail\": \"r.adams@utahslawyers.com\", \"previousStatus\": \"Active\", \"targetUserCode\": \"USR-007\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:59:04.797'),
+('c03fc96d-a625-4cab-a8d4-6c238a835fa5', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'd50dfe15-b4ec-46ec-be43-4178295c14ea', '{\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-096\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.718'),
 ('c99dc503-6e02-44fe-9328-b21b8680af4a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:08:25.185'),
 ('ccf7f548-cefc-4c31-87eb-cefc860237a4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9711', '2026-11-16 10:22:09.556'),
+('ce84b733-3da1-478a-9949-0ba73d882cc4', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'e3b46c87-43dc-47fd-9449-db9210308aff', '{\"draftCode\":\"DFT-26-0005\",\"templateCode\":\"CAT-003\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.117'),
+('cfad1c79-8d42-4638-9228-e1f2ee7ad187', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '877454aa-df86-4958-b74b-fd2ee6e61900', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"d3434952-984b-4bca-8dcc-7187c55414bd\",\"isFullSatisfaction\":false,\"outstandingBalance\":2000,\"draftCode\":\"DFT-26-0005\"}', NULL, NULL, '2026-11-27 02:43:54.606'),
+('cfcf2e9f-e165-4061-8988-2d6af148dfb1', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', 'abac9879-18eb-4a0c-adf9-6ba7d16e7d64', '{\"taskCode\":\"TSK-26-0002\",\"title\":\"Review Document Draft: Eviction Closure Letter - Full Satisfaction ($0.00)\",\"matterNumber\":\"MAT-LT-DEMO-99\"}', NULL, NULL, '2026-11-27 01:41:29.872'),
+('d074fc80-f829-4720-a122-191fd8ed615b', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'e3b46c87-43dc-47fd-9449-db9210308aff', '{\"event\":\"intake.conflict_search.completed\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"hasUnresolved\":true,\"draftCode\":\"DFT-26-0005\"}', NULL, NULL, '2026-11-27 02:42:00.128'),
 ('d1b66e91-2e7a-4007-aaaf-6e6a0227ac5d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'IOLTA_DEPOSIT_RECORDED', 'TRUST_ACCOUNTING', 'ca6def6e-f315-4c45-be85-4970f65a5afb', '{\"amount\": 1000, \"ledgerCode\": \"TRU-26-0001\", \"newBalance\": 1000, \"sourceReference\": \"Wire Transfer / Client Retainer\"}', '::ffff:100.64.0.6', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:29:13.979'),
 ('d4c24f31-a0cc-4947-a181-3e5d3e1eb8d8', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.9', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 06:23:19.319'),
+('d553fb91-2051-4f06-af2f-280da54fef08', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'fba06c1d-3a6f-475f-9bac-b54e14ddaf25', '{\"draftCode\":\"DFT-26-0008\",\"templateCode\":\"CAT-140\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.815'),
+('d78d582c-3234-4664-814b-ae9009da77b3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '76ba2e7c-792b-4d1d-89ed-8068967266cd', '{\"event\":\"evictions.closure.reviewed\",\"matterId\":\"d3434952-984b-4bca-8dcc-7187c55414bd\",\"isFullSatisfaction\":false,\"outstandingBalance\":2000,\"draftCode\":\"DFT-26-0005\"}', NULL, NULL, '2026-11-27 02:39:58.468'),
 ('d81aaf70-9a4e-4105-b625-1fc2deacf4de', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'bf9322fc-da39-47bc-828e-a972610c9f05', '{\"draftCode\": \"DFT-26-0001\", \"isComplete\": true, \"matterNumber\": \"26-FAM-0101\", \"templateCode\": \"001\", \"missingFieldsCount\": 0}', '::ffff:100.64.0.20', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:02:37.276'),
 ('d91fdf8c-67ff-4649-a36b-766df6bb30c3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_VERSION_UPLOADED', 'DOCUMENT', '62021eb8-345e-4522-9f4e-29df81aa37de', '{\"sha256\": \"26df269a364e96fdc072d4728ced32ca656c0b9c4204857086df7ecd933b51c1\", \"fileName\": \"ui-flow.pdf\", \"documentCode\": \"DOC-26-0001\", \"versionLabel\": \"v1.0\"}', '::ffff:100.64.0.12', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 07:30:04.414'),
+('d9a0e290-088f-4bc4-ad0e-44eaf63cfd3a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '848cd960-d62a-46f0-8b35-39749fe56ba9', '{\"draftCode\":\"DFT-26-0013\",\"templateCode\":\"CAT-116\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.602'),
+('dbcf401b-bec9-48e3-b328-e76cc17a750a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '18dba650-1fa6-42e1-bf03-297afece7ca0', '{\"taskCode\":\"TSK-26-0013\",\"title\":\"Review Document Draft: Welcome letter and next steps - Demo Auto Collision Matter\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:42:00.413'),
+('dc98ff5a-a6d6-4b7d-99da-96297e481a76', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '56c0267d-c388-46d9-89ea-70ab662d7be5', '{\"draftCode\":\"DFT-26-0010\",\"templateCode\":\"CAT-010\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.398'),
+('dd3abc5b-94a6-4b85-bdb4-4975e4fd3ce3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'c046576e-0485-41c2-93fd-455cee5e7f42', '{\"draftCode\":\"DFT-26-0012\",\"templateCode\":\"CAT-112\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.518'),
+('dde9cd98-cae8-4df2-a560-a32fae367787', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'b6099570-5d42-4f1e-a66e-35689c4bc8b3', '{\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:37:44.101'),
+('df306a61-041f-40ae-bcb2-31005f6ed66e', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'cb725485-51d6-4af2-9d66-025540769ba8', '{\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-002\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.321'),
 ('e27d02ce-c136-44e8-a2bd-de4fe07d555a', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.12', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 05:05:02.307'),
+('e3a5f182-012d-473c-9890-f136abecf044', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '76ba2e7c-792b-4d1d-89ed-8068967266cd', '{\"draftCode\":\"DFT-26-0005\",\"templateCode\":\"CAT-300\",\"matterNumber\":\"MAT-LT-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:39:58.424'),
 ('e4ac5415-bc16-4d3e-a68e-15c46396b563', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.21', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-20 06:04:03.513'),
 ('e6e4e2a2-2d40-42e9-b97c-6c654c3e7489', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'e.heugly@utahslawyers.com', 'super_admin', 'USER_DEACTIVATED', 'USER', 'b4144e13-e1b8-4c10-bc62-3ca0966380e0', '{\"newStatus\": \"Inactive\", \"targetEmail\": \"r.adams@utahslawyers.com\", \"previousStatus\": \"Active\", \"targetUserCode\": \"USR-007\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 11:59:06.075'),
+('e872dd51-2b85-4ba4-b866-d4555e337784', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '3d372a1a-348f-4331-b0e4-1f245fcf6ba2', '{\"draftCode\":\"DFT-26-0011\",\"templateCode\":\"CAT-112\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.979'),
 ('e8ad198c-d645-4de3-b592-93ad46e18c7e', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.21', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-17 05:29:05.093'),
+('eaf935c7-ffa5-4933-a2a4-8730c6871d14', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TASK_CREATED', 'TASK', '18185051-7d11-4922-9192-8945f60f42c6', '{\"taskCode\":\"TSK-26-0018\",\"title\":\"Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)\",\"matterNumber\":\"MAT-PI-DEMO-99\"}', NULL, NULL, '2026-11-27 02:43:54.847'),
 ('ec1c0628-494f-4b6d-a3b6-78aa8dd8061e', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.4', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-25 13:21:29.271'),
+('ec84c17d-7a84-48c3-b7be-0472506ef1ed', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '225c5c34-0ff2-4a68-94c9-619c920468f5', '{\"draftCode\":\"DFT-26-0008\",\"templateCode\":\"CAT-096\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:42:00.242'),
+('ec98e47d-a0aa-429a-91a8-a8b9a929fd33', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'b6099570-5d42-4f1e-a66e-35689c4bc8b3', '{\"event\":\"intake.consultation.booked\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\"}', NULL, NULL, '2026-11-27 02:37:44.123'),
+('eeac9e56-a07c-4a9f-8d0b-3db06ac856b3', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'b69adcb3-8489-4392-8851-e52d0124ad88', '{\"event\":\"pi.accident.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"draftCode\":\"DFT-26-0007\",\"templateCode\":\"CAT-096\"}', NULL, NULL, '2026-11-27 02:39:58.642'),
+('eec9e8f9-efcc-42d6-a217-931b1a9ccd29', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '4f040eb1-537a-4e06-8d70-12fe724a271f', '{\"draftCode\":\"DFT-26-0002\",\"templateCode\":\"CAT-001\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.412'),
+('f016d9b8-514c-4fce-a9f2-dc0e1a386ea7', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', 'ed141013-316e-427a-8d22-ba885beec1f5', '{\"draftCode\":\"DFT-26-0004\",\"templateCode\":\"CAT-003\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:43:54.527'),
+('f404a0f1-0d42-4f65-af84-52803b0a7b5d', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', '385ad45b-56cb-46d8-86e9-be48590cc143', '{\"event\":\"intake.consultation.booked\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-001\"}', NULL, NULL, '2026-11-27 02:41:59.969'),
+('f4a359ae-9812-4b2e-a12f-3768e30d0fd6', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'SYSTEM', 'CREATE', 'document_drafts', 'cb725485-51d6-4af2-9d66-025540769ba8', '{\"event\":\"intake.prospect.saved\",\"matterId\":\"c4d3ae27-4efa-4620-af1d-33eae1d8828e\",\"intakeId\":\"e9aa88b7-7083-4094-8164-0df8cb5735e3\",\"subtype\":\"General Legal\",\"draftCode\":\"DFT-26-0003\"}', NULL, NULL, '2026-11-27 02:39:58.327'),
+('f558dda2-91e4-4696-9150-18018d1ddff6', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_AUTO_DRAFT_TRIGGERED', 'DOCUMENT_DRAFT', '5a02ade7-772d-4c41-bc61-71736e1ee681', '{\"event\":\"pi.lien_payoff.recorded\",\"templateCode\":\"CAT-140\",\"lienholder\":\"Intermountain Healthcare Billing Recovery\",\"agreedAmount\":9200}', NULL, NULL, '2026-11-27 02:37:44.567'),
 ('f632b1a5-94ff-4de2-bcee-d5b9fba687ca', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'TEMPLATE_STATUS_CHANGED', 'DOCUMENT_TEMPLATE', '47a69abb-1d3b-4d63-998b-49a7a632aa69', '{\"isActive\": false, \"templateCode\": \"112\"}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36', '2026-11-25 09:08:16.120'),
 ('f88c6014-da3c-43a4-af31-0f10f4847507', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Thomas Bludworth, Esq.', 'attorney', 'USER_LOGIN_SUCCESS', 'AUTH', '8640f71a-0142-42f4-a4c0-732537dcd9b7', '{\"role\": \"attorney\", \"email\": \"t.bludworth@utahslawyers.com\", \"rememberMe\": false}', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:07:09.940'),
+('fdea1e59-ad52-4963-a41a-e4f81f29bdf9', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'SYSTEM', 'super_admin', 'DOCUMENT_DRAFT_GENERATED', 'DOCUMENT_DRAFT', '385ad45b-56cb-46d8-86e9-be48590cc143', '{\"draftCode\":\"DFT-26-0003\",\"templateCode\":\"CAT-001\",\"matterNumber\":\"MAT-PI-DEMO-99\",\"isComplete\":true,\"missingFieldsCount\":0}', NULL, NULL, '2026-11-27 02:41:59.962'),
 ('ff4bc5dc-9ea9-4165-82cd-9d5b2384f216', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Eleanor Heugly, Esq.', 'super_admin', 'USER_LOGIN_SUCCESS', 'AUTH', '66c97d44-096b-4d34-8bd1-5691ba855e23', '{\"role\": \"super_admin\", \"email\": \"e.heugly@utahslawyers.com\", \"rememberMe\": false}', '::ffff:100.64.0.12', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36', '2026-11-16 12:15:20.797');
 
 -- --------------------------------------------------------
@@ -160,29 +248,29 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `user_name`, `user_role`, `action`, `
 --
 
 CREATE TABLE `bankruptcy_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `chapter` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `case_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `court_district` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT 'District of Utah',
-  `court_division` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Salt Lake City',
-  `assigned_judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `trustee_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `debtor_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Individual',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `chapter` varchar(20) NOT NULL,
+  `case_number` varchar(50) DEFAULT NULL,
+  `court_district` varchar(150) DEFAULT 'District of Utah',
+  `court_division` varchar(100) DEFAULT 'Salt Lake City',
+  `assigned_judge` varchar(150) DEFAULT NULL,
+  `trustee_name` varchar(150) DEFAULT NULL,
+  `debtor_type` varchar(50) NOT NULL DEFAULT 'Individual',
   `filing_date` date DEFAULT NULL,
   `meeting_341_date` datetime(3) DEFAULT NULL,
   `confirmation_date` date DEFAULT NULL,
   `discharge_date` date DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pre-Filing',
-  `household_size` int DEFAULT '1',
+  `status` varchar(50) NOT NULL DEFAULT 'Pre-Filing',
+  `household_size` int(11) DEFAULT 1,
   `monthly_gross_income` decimal(12,2) DEFAULT NULL,
-  `means_test_status` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `total_secured_debt` decimal(12,2) DEFAULT '0.00',
-  `total_unsecured_debt` decimal(12,2) DEFAULT '0.00',
-  `total_priority_debt` decimal(12,2) DEFAULT '0.00',
-  `total_assets` decimal(12,2) DEFAULT '0.00',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `means_test_status` varchar(100) DEFAULT NULL,
+  `total_secured_debt` decimal(12,2) DEFAULT 0.00,
+  `total_unsecured_debt` decimal(12,2) DEFAULT 0.00,
+  `total_priority_debt` decimal(12,2) DEFAULT 0.00,
+  `total_assets` decimal(12,2) DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -193,20 +281,20 @@ CREATE TABLE `bankruptcy_cases` (
 --
 
 CREATE TABLE `bankruptcy_creditors` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `bankruptcy_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `creditor_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `claim_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `bankruptcy_case_id` varchar(36) NOT NULL,
+  `creditor_name` varchar(200) NOT NULL,
+  `claim_type` varchar(50) NOT NULL,
+  `account_number` varchar(100) DEFAULT NULL,
   `claim_amount` decimal(12,2) NOT NULL,
-  `collateral_description` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `collateral_description` varchar(255) DEFAULT NULL,
   `collateral_value` decimal(12,2) DEFAULT NULL,
-  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `state` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `zip` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_notice_only` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `address` varchar(255) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(10) DEFAULT NULL,
+  `zip` varchar(20) DEFAULT NULL,
+  `is_notice_only` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -217,14 +305,14 @@ CREATE TABLE `bankruptcy_creditors` (
 --
 
 CREATE TABLE `bankruptcy_schedules` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `bankruptcy_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `schedule_code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `bankruptcy_case_id` varchar(36) NOT NULL,
+  `schedule_code` varchar(10) NOT NULL,
+  `description` text NOT NULL,
   `value_amount` decimal(12,2) NOT NULL,
-  `exempt_amount` decimal(12,2) DEFAULT '0.00',
-  `statutory_exemption_law` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `exempt_amount` decimal(12,2) DEFAULT 0.00,
+  `statutory_exemption_law` varchar(150) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -235,17 +323,17 @@ CREATE TABLE `bankruptcy_schedules` (
 --
 
 CREATE TABLE `calendar_events` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `event_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `event_type` varchar(50) NOT NULL,
   `start_time` datetime(3) NOT NULL,
   `end_time` datetime(3) NOT NULL,
-  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_court_appearance` tinyint(1) NOT NULL DEFAULT '0',
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `location` varchar(255) DEFAULT NULL,
+  `judge` varchar(150) DEFAULT NULL,
+  `is_court_appearance` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -255,10 +343,10 @@ CREATE TABLE `calendar_events` (
 --
 
 CREATE TABLE `chart_of_accounts` (
-  `account_number` int NOT NULL,
-  `account_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1'
+  `account_number` int(11) NOT NULL,
+  `account_name` varchar(100) NOT NULL,
+  `account_type` varchar(50) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -280,19 +368,19 @@ INSERT INTO `chart_of_accounts` (`account_number`, `account_name`, `account_type
 --
 
 CREATE TABLE `clients` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `primary_contact` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `address` text COLLATE utf8mb4_unicode_ci,
-  `assigned_attorney_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `portal_access_enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `client_number` varchar(50) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `client_type` varchar(50) NOT NULL,
+  `primary_contact` varchar(255) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) NOT NULL,
+  `address` text DEFAULT NULL,
+  `assigned_attorney_id` varchar(36) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'Active',
+  `notes` text DEFAULT NULL,
+  `portal_access_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -301,7 +389,8 @@ CREATE TABLE `clients` (
 --
 
 INSERT INTO `clients` (`id`, `client_number`, `name`, `client_type`, `primary_contact`, `email`, `phone`, `address`, `assigned_attorney_id`, `status`, `notes`, `portal_access_enabled`, `created_at`, `updated_at`) VALUES
-('b23414a1-b309-44c9-8097-bb3fc368222d', 'CLI-1001', 'david john', 'Organization', 'david', 'davide@gmail.com', '2344565632', NULL, '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Active', 'Converted from Intake INT-26-0001. Adverse Parties screened: thomas', 0, '2026-11-16 11:15:26.266', '2026-11-16 11:15:26.266');
+('b23414a1-b309-44c9-8097-bb3fc368222d', 'CLI-1001', 'david john', 'Organization', 'david', 'davide@gmail.com', '2344565632', NULL, '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Active', 'Converted from Intake INT-26-0001. Adverse Parties screened: thomas', 0, '2026-11-16 11:15:26.266', '2026-11-16 11:15:26.266'),
+('d8cc66c3-2205-48a2-ad3c-c52479fd7464', 'CLI-DEMO-999', 'Synthetic Demo Client (Do Not Delete)', 'Individual', NULL, 'demo.client@synthetic-heugly.test', '801-555-0199', NULL, '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Active', NULL, 0, '2026-11-27 01:41:29.728', '2026-11-27 01:41:29.728');
 
 -- --------------------------------------------------------
 
@@ -310,21 +399,21 @@ INSERT INTO `clients` (`id`, `client_number`, `name`, `client_type`, `primary_co
 --
 
 CREATE TABLE `communications` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sender` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recipient` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `summary` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `direction` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'OUTBOUND',
-  `date` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `duration_minutes` int DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Filed',
-  `source_identifier` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_by_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `client_id` varchar(36) DEFAULT NULL,
+  `matter_id` varchar(36) DEFAULT NULL,
+  `type` varchar(50) NOT NULL,
+  `subject` varchar(255) NOT NULL,
+  `sender` varchar(255) NOT NULL,
+  `recipient` varchar(255) NOT NULL,
+  `summary` text NOT NULL,
+  `direction` varchar(20) NOT NULL DEFAULT 'OUTBOUND',
+  `date` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `duration_minutes` int(11) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Filed',
+  `source_identifier` varchar(255) DEFAULT NULL,
+  `created_by_id` varchar(36) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -335,13 +424,13 @@ CREATE TABLE `communications` (
 --
 
 CREATE TABLE `conflict_search_logs` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `intake_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `queried_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matched_entity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matched_record_id` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `searched_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `searched_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `intake_id` varchar(36) NOT NULL,
+  `queried_name` varchar(255) NOT NULL,
+  `matched_entity_type` varchar(50) NOT NULL,
+  `matched_record_id` varchar(100) NOT NULL,
+  `searched_by_user_id` varchar(36) NOT NULL,
+  `searched_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -351,15 +440,15 @@ CREATE TABLE `conflict_search_logs` (
 --
 
 CREATE TABLE `court_hearings` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `litigation_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `hearing_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `litigation_case_id` varchar(36) NOT NULL,
+  `hearing_type` varchar(100) NOT NULL,
   `hearing_date` datetime(3) NOT NULL,
-  `courtroom` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `judge_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Scheduled',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `courtroom` varchar(100) DEFAULT NULL,
+  `judge_name` varchar(150) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Scheduled',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -370,21 +459,21 @@ CREATE TABLE `court_hearings` (
 --
 
 CREATE TABLE `criminal_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `defendant_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `court_jurisdiction` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `case_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `presiding_judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `prosecuting_agency` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bail_amount` decimal(12,2) DEFAULT '0.00',
-  `custody_status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Released on Bail',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `defendant_name` varchar(200) NOT NULL,
+  `court_jurisdiction` varchar(150) DEFAULT NULL,
+  `case_docket_number` varchar(100) DEFAULT NULL,
+  `presiding_judge` varchar(150) DEFAULT NULL,
+  `prosecuting_agency` varchar(150) DEFAULT NULL,
+  `bail_amount` decimal(12,2) DEFAULT 0.00,
+  `custody_status` varchar(50) NOT NULL DEFAULT 'Released on Bail',
   `arraignment_date` datetime(3) DEFAULT NULL,
   `preliminary_hearing_date` datetime(3) DEFAULT NULL,
   `trial_date` datetime(3) DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Arraignment Scheduled',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `status` varchar(50) NOT NULL DEFAULT 'Arraignment Scheduled',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -395,15 +484,15 @@ CREATE TABLE `criminal_cases` (
 --
 
 CREATE TABLE `criminal_charges` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `criminal_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `count_number` int NOT NULL,
-  `statute_code` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `charge_title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `severity_class` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `plea` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Not Guilty',
-  `disposition` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `criminal_case_id` varchar(36) NOT NULL,
+  `count_number` int(11) NOT NULL,
+  `statute_code` varchar(100) NOT NULL,
+  `charge_title` varchar(255) NOT NULL,
+  `severity_class` varchar(50) NOT NULL,
+  `plea` varchar(50) DEFAULT 'Not Guilty',
+  `disposition` varchar(100) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -413,18 +502,18 @@ CREATE TABLE `criminal_charges` (
 --
 
 CREATE TABLE `discovery_requests` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `litigation_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `propounding_party` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `responding_party` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `litigation_case_id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `category` varchar(50) NOT NULL,
+  `propounding_party` varchar(150) NOT NULL,
+  `responding_party` varchar(150) NOT NULL,
   `served_date` date DEFAULT NULL,
   `due_date` date NOT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending',
+  `status` varchar(50) NOT NULL DEFAULT 'Pending',
   `completed_date` date DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -435,19 +524,19 @@ CREATE TABLE `discovery_requests` (
 --
 
 CREATE TABLE `documents` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `document_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `current_version` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'v1.0',
-  `is_privileged` tinyint(1) NOT NULL DEFAULT '0',
-  `privilege_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ocr_content` longtext COLLATE utf8mb4_unicode_ci,
-  `bates_number_start` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bates_number_end` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `document_code` varchar(50) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `client_id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `category` varchar(50) NOT NULL,
+  `current_version` varchar(20) NOT NULL DEFAULT 'v1.0',
+  `is_privileged` tinyint(1) NOT NULL DEFAULT 0,
+  `privilege_type` varchar(100) DEFAULT NULL,
+  `ocr_content` longtext DEFAULT NULL,
+  `bates_number_start` varchar(50) DEFAULT NULL,
+  `bates_number_end` varchar(50) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -458,33 +547,45 @@ CREATE TABLE `documents` (
 --
 
 CREATE TABLE `document_drafts` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `draft_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_version_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
-  `docx_storage_key` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `pdf_storage_key` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `missing_fields_flags` json NOT NULL,
-  `generated_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `reviewed_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `draft_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `matter_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `client_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `template_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `template_version_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
+  `docx_storage_key` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pdf_storage_key` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `missing_fields_flags` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`missing_fields_flags`)),
+  `generated_by_user_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reviewed_by_user_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `reviewed_at` datetime(3) DEFAULT NULL,
-  `has_manual_edits` tinyint(1) NOT NULL DEFAULT '0',
-  `is_stale` tinyint(1) NOT NULL DEFAULT '0',
-  `final_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `has_manual_edits` tinyint(1) NOT NULL DEFAULT 0,
+  `is_stale` tinyint(1) NOT NULL DEFAULT 0,
+  `final_document_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `document_drafts`
 --
 
 INSERT INTO `document_drafts` (`id`, `draft_code`, `matter_id`, `client_id`, `template_id`, `template_version_id`, `title`, `status`, `docx_storage_key`, `pdf_storage_key`, `missing_fields_flags`, `generated_by_user_id`, `reviewed_by_user_id`, `reviewed_at`, `has_manual_edits`, `is_stale`, `final_document_id`, `created_at`, `updated_at`) VALUES
-('bf9322fc-da39-47bc-828e-a972610c9f05', 'DFT-26-0001', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', 'b23414a1-b309-44c9-8097-bb3fc368222d', '283a2dd2-2e77-4466-9919-dc0a1eb6226e', 'c4ec8be5-740c-4049-8d6c-d5e7b3c66983', 'Master Client Engagement & Retainer Agreement (Template 001) - david john v. thomas', 'Draft', 'drafts/fdefc7e3-861c-4838-a38a-f580b6c59e8b/DFT-26-0001.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-16 12:02:37.223', '2026-11-16 12:02:37.223');
+('3d372a1a-348f-4331-b0e4-1f245fcf6ba2', 'DFT-26-0011', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '7c042e87-f677-46a2-976b-9922914b8964', '0527cd62-fdb7-4653-b0db-0199b267563c', 'Medical Authorization - Salt Lake Orthopedic Clinic', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0011.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.972', '2026-11-27 02:43:54.972'),
+('4888bd99-0b1e-4b51-9aa4-3c5e360101eb', 'DFT-26-0012', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '09c6585a-8b08-423e-95e2-96304290553a', 'ace0b629-cae7-4260-93af-3643d8d3dd58', 'Incomplete Records Follow-up - Salt Lake Orthopedic Clinic (Second notice regarding missin)', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0012.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:55.019', '2026-11-27 02:43:55.019'),
+('4f040eb1-537a-4e06-8d70-12fe724a271f', 'DFT-26-0002', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '2d18751d-7e43-4152-92b0-4bcbc42f2e14', 'ffd84a63-15dd-4736-ac53-3cdf07c061d1', 'Consultation confirmation - Synthetic Demo Client (Do Not Delete) (undefined)', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0002.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.399', '2026-11-27 02:43:54.399'),
+('615789b1-5063-49eb-822e-6e8c964cdc82', 'DFT-26-0009', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '0820e407-4b30-4921-bccf-282400263ca9', '02f61270-49a4-46bb-87ec-b6a95478b939', 'Welcome letter and next steps - Demo Auto Collision Matter', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0009.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.888', '2026-11-27 02:43:54.888'),
+('7d16acef-9666-41ae-8033-14cc1e8e4cbf', 'DFT-26-0013', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', 'c9f42ba9-75a6-4060-86db-fed7c849b7a8', 'c2303872-a179-4c73-93f2-941c4abcbc6d', 'Settlement Demand Letter - [Pkg: dmp-demo-99]', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0013.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:55.101', '2026-11-27 02:43:55.101'),
+('877454aa-df86-4958-b74b-fd2ee6e61900', 'DFT-26-0005', 'd3434952-984b-4bca-8dcc-7187c55414bd', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '03c12606-60df-4522-9ce8-798b0751f27e', 'c77fdadd-a9dd-4297-a2c5-a67b52493e36', 'Eviction Closure Letter - Partial Payment (Remaining Balance: $2000.00)', 'Under Review', 'drafts/d3434952-984b-4bca-8dcc-7187c55414bd/DFT-26-0005.docx', NULL, '[{\"type\":\"FINANCIAL_SAFEGUARD\",\"balanceStatus\":\"UNSATISFIED_BALANCE\",\"remainingBalance\":2000,\"details\":\"Partial payment of $1250.00 received against judgment $3250.00. Full satisfaction withheld. Remaining balance: $2000.00.\"}]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.589', '2026-11-27 02:43:54.599'),
+('bf78533c-1b09-41ae-82ab-f20152f9b21b', 'DFT-26-0006', '6e406b0e-0209-4cbd-83a2-b61b98d39759', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '03c12606-60df-4522-9ce8-798b0751f27e', 'c77fdadd-a9dd-4297-a2c5-a67b52493e36', 'Eviction Closure Letter - Full Satisfaction ($3250.00)', 'Draft', 'drafts/6e406b0e-0209-4cbd-83a2-b61b98d39759/DFT-26-0006.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.640', '2026-11-27 02:43:54.640'),
+('bf9322fc-da39-47bc-828e-a972610c9f05', 'DFT-26-0001', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', 'b23414a1-b309-44c9-8097-bb3fc368222d', '283a2dd2-2e77-4466-9919-dc0a1eb6226e', 'c4ec8be5-740c-4049-8d6c-d5e7b3c66983', 'Master Client Engagement & Retainer Agreement (Template 001) - david john v. thomas', 'Draft', 'drafts/fdefc7e3-861c-4838-a38a-f580b6c59e8b/DFT-26-0001.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-16 12:02:37.223', '2026-11-16 12:02:37.223'),
+('cc725afd-4a7b-429f-9c3a-58025f992660', 'DFT-26-0010', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '16211e5c-a798-431d-8540-e97cc280996e', '57a5bfb2-dd4c-4b48-84be-e2d51eb69b99', 'Medical Records Request - Salt Lake Orthopedic Clinic', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0010.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.935', '2026-11-27 02:43:54.935'),
+('d50dfe15-b4ec-46ec-be43-4178295c14ea', 'DFT-26-0007', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '889c3da1-d927-44a4-98b6-00f7f8cee384', 'd220f2ef-879d-4a4c-baa4-9701c3f16d60', 'Representation Letter - State Farm Mutual Automobile Insurance', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0007.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.694', '2026-11-27 02:43:54.694'),
+('ed141013-316e-427a-8d22-ba885beec1f5', 'DFT-26-0004', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '278b93ff-c452-4e2e-b5f2-7f91bccc83ac', '8beb6f2e-6342-4443-b215-aaa6e92c6614', 'Conflict Search Report (FLAGGED) - Synthetic Demo Client (Do Not Delete)', 'Under Review', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0004.docx', NULL, '[{\"type\":\"CONFLICT_ALERT\",\"status\":\"FLAGGED_CONFLICT\",\"details\":\"Unresolved conflict or pending attorney review. Auto-clearance prohibited under Utah RPC 1.7.\"}]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.519', '2026-11-27 02:43:54.538'),
+('fba06c1d-3a6f-475f-9bac-b54e14ddaf25', 'DFT-26-0008', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', '977beebc-485b-4fee-90bb-7aed3b66a9a3', '1a8791a0-7c79-45e1-a55a-0300de688341', 'Lien Payoff Confirmation Request — Intermountain Healthcare Billing Recovery', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0008.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.808', '2026-11-27 02:43:54.808'),
+('fd7a8a35-e308-40fb-86be-7dfbaf3af771', 'DFT-26-0003', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', 'cdc1fc7f-6b0d-48c7-87bc-f24fedb78e14', 'f0166dee-f985-4d9b-b2de-6cfe1f8ad7d3', 'Prospective Client Questionnaire - General Legal (Marcus Sterling)', 'Draft', 'drafts/c4d3ae27-4efa-4620-af1d-33eae1d8828e/DFT-26-0003.docx', NULL, '[]', '66c97d44-096b-4d34-8bd1-5691ba855e23', NULL, NULL, 0, 0, NULL, '2026-11-27 02:43:54.469', '2026-11-27 02:43:54.469');
 
 -- --------------------------------------------------------
 
@@ -493,16 +594,16 @@ INSERT INTO `document_drafts` (`id`, `draft_code`, `matter_id`, `client_id`, `te
 --
 
 CREATE TABLE `document_field_mappings` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_version_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `placeholder_tag` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source_entity` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source_field` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_required` tinyint(1) NOT NULL DEFAULT '1',
-  `default_value` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `formatting_rule` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `conditional_expression` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `template_version_id` varchar(36) NOT NULL,
+  `placeholder_tag` varchar(150) NOT NULL,
+  `source_entity` varchar(50) NOT NULL,
+  `source_field` varchar(100) NOT NULL,
+  `is_required` tinyint(1) NOT NULL DEFAULT 1,
+  `default_value` varchar(255) DEFAULT NULL,
+  `formatting_rule` varchar(50) DEFAULT NULL,
+  `conditional_expression` varchar(255) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1862,18 +1963,18 @@ INSERT INTO `document_field_mappings` (`id`, `template_version_id`, `placeholder
 --
 
 CREATE TABLE `document_templates` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `practice_area_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `output_format` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DOCX',
-  `current_version` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'v1.0',
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `is_system_default` tinyint(1) NOT NULL DEFAULT '0',
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `template_code` varchar(50) NOT NULL,
+  `template_name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `practice_area_id` varchar(50) NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `output_format` varchar(20) NOT NULL DEFAULT 'DOCX',
+  `current_version` varchar(20) NOT NULL DEFAULT 'v1.0',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `is_system_default` tinyint(1) NOT NULL DEFAULT 0,
+  `created_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2197,17 +2298,17 @@ INSERT INTO `document_templates` (`id`, `template_code`, `template_name`, `descr
 --
 
 CREATE TABLE `document_versions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `document_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `version_label` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `file_size_bytes` bigint NOT NULL,
-  `s3_storage_key` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sha256_checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `uploaded_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `revision_notes` text COLLATE utf8mb4_unicode_ci,
-  `uploaded_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `document_id` varchar(36) NOT NULL,
+  `version_label` varchar(20) NOT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_type` varchar(50) NOT NULL,
+  `file_size_bytes` bigint(20) NOT NULL,
+  `s3_storage_key` varchar(500) NOT NULL,
+  `sha256_checksum` varchar(64) NOT NULL,
+  `uploaded_by_user_id` varchar(36) NOT NULL,
+  `revision_notes` text DEFAULT NULL,
+  `uploaded_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2217,23 +2318,23 @@ CREATE TABLE `document_versions` (
 --
 
 CREATE TABLE `evictions_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `property_address` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `unit_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `tenant_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `landlord_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `property_address` varchar(255) NOT NULL,
+  `unit_number` varchar(50) DEFAULT NULL,
+  `tenant_name` varchar(200) NOT NULL,
+  `landlord_name` varchar(200) NOT NULL,
   `lease_start_date` date DEFAULT NULL,
   `monthly_rent` decimal(10,2) NOT NULL,
-  `outstanding_balance` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `notice_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `outstanding_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `notice_type` varchar(100) DEFAULT NULL,
   `notice_served_date` date DEFAULT NULL,
   `summons_issued_date` date DEFAULT NULL,
   `occupancy_hearing_date` datetime(3) DEFAULT NULL,
   `writ_of_restitution_date` date DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Notice Phase',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `status` varchar(50) NOT NULL DEFAULT 'Notice Phase',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2244,18 +2345,18 @@ CREATE TABLE `evictions_cases` (
 --
 
 CREATE TABLE `expenses` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expense_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `incurred_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `expense_code` varchar(50) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `incurred_by_user_id` varchar(36) NOT NULL,
   `date` date NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(100) NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `vendor_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `receipt_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_billable` tinyint(1) NOT NULL DEFAULT '1',
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Unbilled',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `vendor_name` varchar(255) DEFAULT NULL,
+  `receipt_document_id` varchar(36) DEFAULT NULL,
+  `is_billable` tinyint(1) NOT NULL DEFAULT 1,
+  `status` varchar(30) NOT NULL DEFAULT 'Unbilled',
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2265,20 +2366,20 @@ CREATE TABLE `expenses` (
 --
 
 CREATE TABLE `family_law_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `case_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `court_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `case_type` varchar(100) NOT NULL,
+  `court_docket_number` varchar(100) DEFAULT NULL,
   `marriage_date` date DEFAULT NULL,
   `separation_date` date DEFAULT NULL,
-  `has_minor_children` tinyint(1) NOT NULL DEFAULT '0',
-  `custody_arrangement` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `monthly_child_support` decimal(10,2) DEFAULT '0.00',
-  `monthly_alimony` decimal(10,2) DEFAULT '0.00',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Filing Pending',
+  `has_minor_children` tinyint(1) NOT NULL DEFAULT 0,
+  `custody_arrangement` varchar(150) DEFAULT NULL,
+  `monthly_child_support` decimal(10,2) DEFAULT 0.00,
+  `monthly_alimony` decimal(10,2) DEFAULT 0.00,
+  `status` varchar(50) NOT NULL DEFAULT 'Filing Pending',
   `mediation_date` datetime(3) DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2289,16 +2390,16 @@ CREATE TABLE `family_law_cases` (
 --
 
 CREATE TABLE `family_law_orders` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `family_law_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `order_title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `order_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `family_law_case_id` varchar(36) NOT NULL,
+  `order_title` varchar(200) NOT NULL,
+  `order_type` varchar(100) NOT NULL,
   `entry_date` date DEFAULT NULL,
   `effective_date` date DEFAULT NULL,
-  `signed_by_judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `summary_terms` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `signed_by_judge` varchar(150) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `summary_terms` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2308,12 +2409,12 @@ CREATE TABLE `family_law_orders` (
 --
 
 CREATE TABLE `general_ledger_entries` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `journal_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_number` int NOT NULL,
-  `debit` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `credit` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `id` varchar(36) NOT NULL,
+  `journal_id` varchar(36) NOT NULL,
+  `account_number` int(11) NOT NULL,
+  `debit` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `credit` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `matter_id` varchar(36) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2323,12 +2424,12 @@ CREATE TABLE `general_ledger_entries` (
 --
 
 CREATE TABLE `general_ledger_journals` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `journal_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `journal_number` varchar(50) NOT NULL,
   `transaction_date` date NOT NULL,
-  `memo` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `memo` text NOT NULL,
+  `created_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2338,22 +2439,22 @@ CREATE TABLE `general_ledger_journals` (
 --
 
 CREATE TABLE `immigration_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `visa_category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `alien_registration_num` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `uscis_online_account_num` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `beneficiary_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `visa_category` varchar(100) DEFAULT NULL,
+  `alien_registration_num` varchar(50) DEFAULT NULL,
+  `uscis_online_account_num` varchar(50) DEFAULT NULL,
+  `beneficiary_name` varchar(200) DEFAULT NULL,
   `beneficiary_dob` date DEFAULT NULL,
-  `country_of_citizenship` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `country_of_birth` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `current_immigration_status` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `class_of_admission` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `i94_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country_of_citizenship` varchar(100) DEFAULT NULL,
+  `country_of_birth` varchar(100) DEFAULT NULL,
+  `current_immigration_status` varchar(100) DEFAULT NULL,
+  `class_of_admission` varchar(50) DEFAULT NULL,
+  `i94_number` varchar(50) DEFAULT NULL,
   `priority_date` date DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Preparation',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `status` varchar(50) NOT NULL DEFAULT 'Preparation',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2364,16 +2465,16 @@ CREATE TABLE `immigration_cases` (
 --
 
 CREATE TABLE `immigration_parties` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `immigration_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `relationship_role` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `citizenship` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_signer` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `immigration_case_id` varchar(36) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `relationship_role` varchar(100) NOT NULL,
+  `citizenship` varchar(100) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `is_signer` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2384,26 +2485,26 @@ CREATE TABLE `immigration_parties` (
 --
 
 CREATE TABLE `intakes` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `intake_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `prospective_client` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `contact_person` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `practice_area_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adverse_parties` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_summary` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `dispute_amount` decimal(12,2) DEFAULT '0.00',
-  `jurisdiction_venue` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `conflict_status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Not Started',
-  `reviewed_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `intake_number` varchar(50) NOT NULL,
+  `prospective_client` varchar(255) NOT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(50) NOT NULL,
+  `practice_area_id` varchar(50) DEFAULT NULL,
+  `adverse_parties` text NOT NULL,
+  `matter_summary` text NOT NULL,
+  `dispute_amount` decimal(12,2) DEFAULT 0.00,
+  `jurisdiction_venue` varchar(255) DEFAULT NULL,
+  `conflict_status` varchar(50) NOT NULL DEFAULT 'Not Started',
+  `reviewed_by_user_id` varchar(36) DEFAULT NULL,
   `reviewed_at` datetime(3) DEFAULT NULL,
-  `conflict_notes` text COLLATE utf8mb4_unicode_ci,
-  `converted_to_client` tinyint(1) NOT NULL DEFAULT '0',
-  `converted_client_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `conflict_notes` text DEFAULT NULL,
+  `converted_to_client` tinyint(1) NOT NULL DEFAULT 0,
+  `converted_client_id` varchar(36) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL,
-  `converted_matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+  `converted_matter_id` varchar(36) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2411,7 +2512,8 @@ CREATE TABLE `intakes` (
 --
 
 INSERT INTO `intakes` (`id`, `intake_number`, `prospective_client`, `contact_person`, `email`, `phone`, `practice_area_id`, `adverse_parties`, `matter_summary`, `dispute_amount`, `jurisdiction_venue`, `conflict_status`, `reviewed_by_user_id`, `reviewed_at`, `conflict_notes`, `converted_to_client`, `converted_client_id`, `created_at`, `updated_at`, `converted_matter_id`) VALUES
-('a599c7c8-3ef7-4960-a38d-32eecf00fc08', 'INT-26-0001', 'david john', 'david', 'davide@gmail.com', '2344565632', 'pa-fam', 'thomas', 'divorce.......', 75000.00, 'Utah Third Judicial District Court (Salt Lake County)', 'Cleared', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-16 11:15:14.622', 'Zero adverse party or prior representation conflicts identified across active rosters, closed files, and corporate affiliates for query \"thomas\". Cleared under Utah RPC 1.7.', 0, NULL, '2026-11-16 11:14:47.268', '2026-11-16 11:15:14.623', NULL);
+('a599c7c8-3ef7-4960-a38d-32eecf00fc08', 'INT-26-0001', 'david john', 'david', 'davide@gmail.com', '2344565632', 'pa-fam', 'thomas', 'divorce.......', 75000.00, 'Utah Third Judicial District Court (Salt Lake County)', 'Cleared', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-16 11:15:14.622', 'Zero adverse party or prior representation conflicts identified across active rosters, closed files, and corporate affiliates for query \"thomas\". Cleared under Utah RPC 1.7.', 0, NULL, '2026-11-16 11:14:47.268', '2026-11-16 11:15:14.623', NULL),
+('e9aa88b7-7083-4094-8164-0df8cb5735e3', 'INT-DEMO-999', 'Eleanor Vance', 'Eleanor', 'eleanor.vance@synthetic.test', '801-555-0144', 'pa-civ', 'Vance Holdings, LLC', 'Consultation & intake demo', 0.00, NULL, 'Review Required', NULL, NULL, NULL, 0, NULL, '2026-11-27 02:37:43.989', '2026-11-27 02:37:43.989', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e');
 
 -- --------------------------------------------------------
 
@@ -2420,19 +2522,19 @@ INSERT INTO `intakes` (`id`, `intake_number`, `prospective_client`, `contact_per
 --
 
 CREATE TABLE `invoices` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `invoice_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `invoice_number` varchar(50) NOT NULL,
+  `client_id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
   `issue_date` date NOT NULL,
   `due_date` date NOT NULL,
   `total_amount` decimal(12,2) NOT NULL,
-  `paid_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `paid_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `balance_due` decimal(12,2) NOT NULL,
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
+  `status` varchar(30) NOT NULL DEFAULT 'Draft',
   `sent_at` datetime(3) DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2443,12 +2545,12 @@ CREATE TABLE `invoices` (
 --
 
 CREATE TABLE `invoice_line_items` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `invoice_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `time_entry_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `expense_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `invoice_id` varchar(36) NOT NULL,
+  `item_type` varchar(20) NOT NULL,
+  `time_entry_id` varchar(36) DEFAULT NULL,
+  `expense_id` varchar(36) DEFAULT NULL,
+  `description` text NOT NULL,
   `quantity` decimal(5,2) NOT NULL,
   `unit_rate` decimal(10,2) NOT NULL,
   `total_price` decimal(12,2) NOT NULL
@@ -2461,19 +2563,19 @@ CREATE TABLE `invoice_line_items` (
 --
 
 CREATE TABLE `litigation_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `court_jurisdiction` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `court_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `case_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `presiding_judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `jury_demand` tinyint(1) NOT NULL DEFAULT '0',
-  `litigation_stage` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pre-Filing',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `court_jurisdiction` varchar(150) DEFAULT NULL,
+  `court_name` varchar(255) DEFAULT NULL,
+  `case_docket_number` varchar(100) DEFAULT NULL,
+  `presiding_judge` varchar(150) DEFAULT NULL,
+  `jury_demand` tinyint(1) NOT NULL DEFAULT 0,
+  `litigation_stage` varchar(50) NOT NULL DEFAULT 'Pre-Filing',
   `filing_date` date DEFAULT NULL,
   `trial_date` date DEFAULT NULL,
   `discovery_cutoff_date` date DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2484,28 +2586,28 @@ CREATE TABLE `litigation_cases` (
 --
 
 CREATE TABLE `matters` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `practice_area_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `current_stage_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `responsible_attorney_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `billing_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_number` varchar(50) NOT NULL,
+  `client_id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `practice_area_id` varchar(50) NOT NULL,
+  `current_stage_id` varchar(50) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Active',
+  `responsible_attorney_id` varchar(36) NOT NULL,
+  `billing_type` varchar(50) NOT NULL,
   `hourly_rate` decimal(10,2) DEFAULT NULL,
   `flat_fee_amount` decimal(12,2) DEFAULT NULL,
   `contingency_percentage` decimal(5,2) DEFAULT NULL,
-  `budget` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `budget` decimal(12,2) NOT NULL DEFAULT 0.00,
   `open_date` date NOT NULL,
   `close_date` date DEFAULT NULL,
   `statute_of_limitations` date DEFAULT NULL,
   `next_court_date` datetime(3) DEFAULT NULL,
-  `court_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `judge` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `case_docket_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `court_name` varchar(255) DEFAULT NULL,
+  `judge` varchar(150) DEFAULT NULL,
+  `case_docket_number` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2514,6 +2616,9 @@ CREATE TABLE `matters` (
 --
 
 INSERT INTO `matters` (`id`, `matter_number`, `client_id`, `title`, `practice_area_id`, `current_stage_id`, `status`, `responsible_attorney_id`, `billing_type`, `hourly_rate`, `flat_fee_amount`, `contingency_percentage`, `budget`, `open_date`, `close_date`, `statute_of_limitations`, `next_court_date`, `court_name`, `judge`, `case_docket_number`, `description`, `created_at`, `updated_at`) VALUES
+('6e406b0e-0209-4cbd-83a2-b61b98d39759', 'MAT-LT-DEMO-FULL', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', 'Demo Apartment Eviction Matter (Full Paid)', 'pa-evict', NULL, 'Active', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Hourly', 350.00, NULL, NULL, 0.00, '2026-11-27', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-27 02:39:58.476', '2026-11-27 02:39:58.476'),
+('c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'MAT-PI-DEMO-99', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', 'Demo Auto Collision Matter', 'pa-pi', NULL, 'Active', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Contingency', NULL, NULL, 33.33, 0.00, '2026-11-27', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-27 01:41:29.745', '2026-11-27 01:41:29.745'),
+('d3434952-984b-4bca-8dcc-7187c55414bd', 'MAT-LT-DEMO-99', 'd8cc66c3-2205-48a2-ad3c-c52479fd7464', 'Demo Apartment Eviction Matter', 'pa-evict', NULL, 'Active', '66c97d44-096b-4d34-8bd1-5691ba855e23', 'Hourly', 350.00, NULL, NULL, 0.00, '2026-11-27', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-11-27 01:41:29.759', '2026-11-27 01:41:29.759'),
 ('fdefc7e3-861c-4838-a38a-f580b6c59e8b', '26-FAM-0101', 'b23414a1-b309-44c9-8097-bb3fc368222d', 'david john v. thomas', 'pa-fam', NULL, 'Active', '8640f71a-0142-42f4-a4c0-732537dcd9b7', 'Hourly', 4500.00, NULL, NULL, 30000.00, '2026-11-16', NULL, '2026-11-24', '2026-11-26 00:00:00.000', 'abc', 'Hon. Elizabeth A. Hruby-Mills', NULL, 'divorce.......', '2026-11-16 11:18:48.650', '2026-11-16 11:37:21.166');
 
 -- --------------------------------------------------------
@@ -2523,11 +2628,11 @@ INSERT INTO `matters` (`id`, `matter_number`, `client_id`, `title`, `practice_ar
 --
 
 CREATE TABLE `matter_staff_assignments` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assignment_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assigned_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `user_id` varchar(36) NOT NULL,
+  `assignment_role` varchar(50) NOT NULL,
+  `assigned_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2544,14 +2649,14 @@ INSERT INTO `matter_staff_assignments` (`id`, `matter_id`, `user_id`, `assignmen
 --
 
 CREATE TABLE `matter_stage_histories` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `from_stage_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `to_stage_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transitioned_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `verified_gatekeepers` json NOT NULL,
-  `transitioned_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
-) ;
+  `id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `matter_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `from_stage_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `to_stage_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `transitioned_by_user_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `verified_gatekeepers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`verified_gatekeepers`)),
+  `transitioned_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -2560,17 +2665,17 @@ CREATE TABLE `matter_stage_histories` (
 --
 
 CREATE TABLE `payment_records` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payment_reference` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `invoice_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `payment_reference` varchar(50) NOT NULL,
+  `invoice_id` varchar(36) NOT NULL,
+  `client_id` varchar(36) NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `payment_method` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `destination_account` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transaction_reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_method` varchar(50) NOT NULL,
+  `destination_account` varchar(50) NOT NULL,
+  `transaction_reference` varchar(100) DEFAULT NULL,
   `received_date` date NOT NULL,
-  `recorded_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `recorded_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2580,16 +2685,16 @@ CREATE TABLE `payment_records` (
 --
 
 CREATE TABLE `pi_damages_records` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `injury_category` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `anatomical_location` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `severity_grade` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `icd_code` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `future_treatment_projected` tinyint(1) NOT NULL DEFAULT '0',
-  `future_medical_estimated_cost` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `treatment_summary` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `injury_category` varchar(50) NOT NULL,
+  `anatomical_location` varchar(150) NOT NULL,
+  `severity_grade` varchar(50) NOT NULL,
+  `icd_code` varchar(30) DEFAULT NULL,
+  `future_treatment_projected` tinyint(1) NOT NULL DEFAULT 0,
+  `future_medical_estimated_cost` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `treatment_summary` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2600,25 +2705,25 @@ CREATE TABLE `pi_damages_records` (
 --
 
 CREATE TABLE `pi_demand_packages` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `insurance_policy_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `draft_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `approved_by_attorney_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `demand_title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `recipient_carrier` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `claim_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `insurance_policy_id` varchar(36) DEFAULT NULL,
+  `draft_document_id` varchar(36) DEFAULT NULL,
+  `approved_by_attorney_id` varchar(36) DEFAULT NULL,
+  `demand_title` varchar(255) NOT NULL,
+  `recipient_carrier` varchar(200) NOT NULL,
+  `claim_number` varchar(100) DEFAULT NULL,
   `demanded_amount` decimal(12,2) NOT NULL,
   `policy_limit_amount` decimal(12,2) DEFAULT NULL,
-  `is_policy_limit_demand` tinyint(1) NOT NULL DEFAULT '0',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DRAFTING',
+  `is_policy_limit_demand` tinyint(1) NOT NULL DEFAULT 0,
+  `status` varchar(50) NOT NULL DEFAULT 'DRAFTING',
   `sent_date` date DEFAULT NULL,
   `deadline_date` date NOT NULL,
   `response_received_date` date DEFAULT NULL,
-  `checklist_state` json DEFAULT NULL,
+  `checklist_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`checklist_state`)),
   `counter_offer_amount` decimal(12,2) DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2629,17 +2734,17 @@ CREATE TABLE `pi_demand_packages` (
 --
 
 CREATE TABLE `pi_diagnostic_studies` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `damages_record_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `imaging_report_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `study_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `body_region` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `damages_record_id` varchar(36) DEFAULT NULL,
+  `imaging_report_document_id` varchar(36) DEFAULT NULL,
+  `study_type` varchar(50) NOT NULL,
+  `body_region` varchar(100) NOT NULL,
   `study_date` date NOT NULL,
-  `facility_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `radiologist_impression` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_positive_finding` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `facility_name` varchar(200) NOT NULL,
+  `radiologist_impression` text NOT NULL,
+  `is_positive_finding` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2650,21 +2755,21 @@ CREATE TABLE `pi_diagnostic_studies` (
 --
 
 CREATE TABLE `pi_incidents` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
   `incident_date` date DEFAULT NULL,
-  `incident_time` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `incident_location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `accident_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `police_agency` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `report_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `investigating_officer` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `liability_assessment` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `incident_time` varchar(20) DEFAULT NULL,
+  `incident_location` varchar(255) DEFAULT NULL,
+  `accident_type` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `police_agency` varchar(150) DEFAULT NULL,
+  `report_number` varchar(100) DEFAULT NULL,
+  `investigating_officer` varchar(150) DEFAULT NULL,
+  `liability_assessment` varchar(50) DEFAULT NULL,
   `plaintiff_fault_percentage` decimal(5,2) DEFAULT NULL,
   `adverse_fault_percentage` decimal(5,2) DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2688,24 +2793,24 @@ INSERT INTO `pi_incidents` (`id`, `matter_id`, `incident_date`, `incident_time`,
 --
 
 CREATE TABLE `pi_incident_parties` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `incident_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `party_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `full_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `insurance_carrier` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `policy_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `claim_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `vehicle_make` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `vehicle_model` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `vehicle_year` int DEFAULT NULL,
-  `vehicle_plate` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `vehicle_state` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `citations_issued` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `admitted_fault` tinyint(1) NOT NULL DEFAULT '0',
+  `id` varchar(36) NOT NULL,
+  `incident_id` varchar(36) NOT NULL,
+  `party_type` varchar(50) NOT NULL,
+  `full_name` varchar(150) NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `insurance_carrier` varchar(150) DEFAULT NULL,
+  `policy_number` varchar(100) DEFAULT NULL,
+  `claim_number` varchar(100) DEFAULT NULL,
+  `vehicle_make` varchar(50) DEFAULT NULL,
+  `vehicle_model` varchar(50) DEFAULT NULL,
+  `vehicle_year` int(11) DEFAULT NULL,
+  `vehicle_plate` varchar(20) DEFAULT NULL,
+  `vehicle_state` varchar(10) DEFAULT NULL,
+  `citations_issued` varchar(255) DEFAULT NULL,
+  `admitted_fault` tinyint(1) NOT NULL DEFAULT 0,
   `fault_percentage` decimal(5,2) DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2716,21 +2821,21 @@ CREATE TABLE `pi_incident_parties` (
 --
 
 CREATE TABLE `pi_insurance_policies` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `incident_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `coverage_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `insurance_company` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `policy_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `claim_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adjuster_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adjuster_phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adjuster_email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `adjuster_fax` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `insured_name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `policy_limits` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `incident_id` varchar(36) DEFAULT NULL,
+  `coverage_type` varchar(50) NOT NULL,
+  `insurance_company` varchar(200) NOT NULL,
+  `policy_number` varchar(100) DEFAULT NULL,
+  `claim_number` varchar(100) DEFAULT NULL,
+  `adjuster_name` varchar(150) DEFAULT NULL,
+  `adjuster_phone` varchar(50) DEFAULT NULL,
+  `adjuster_email` varchar(150) DEFAULT NULL,
+  `adjuster_fax` varchar(50) DEFAULT NULL,
+  `insured_name` varchar(150) DEFAULT NULL,
+  `policy_limits` varchar(100) DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'Active',
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2741,23 +2846,23 @@ CREATE TABLE `pi_insurance_policies` (
 --
 
 CREATE TABLE `pi_liens` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `lienholder_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `provider_id` varchar(36) DEFAULT NULL,
+  `lienholder_name` varchar(200) NOT NULL,
+  `category` varchar(50) NOT NULL,
+  `account_reference` varchar(100) DEFAULT NULL,
   `asserted_amount` decimal(12,2) NOT NULL,
-  `verified_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `negotiated_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `verified_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `negotiated_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `common_fund_reduction_rate` decimal(5,2) DEFAULT NULL,
-  `procurement_cost_deduction` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `final_payoff_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ASSERTED',
-  `final_payoff_letter_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_erisa_qualified` tinyint(1) NOT NULL DEFAULT '0',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `procurement_cost_deduction` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `final_payoff_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `status` varchar(50) NOT NULL DEFAULT 'ASSERTED',
+  `final_payoff_letter_document_id` varchar(36) DEFAULT NULL,
+  `is_erisa_qualified` tinyint(1) NOT NULL DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2768,15 +2873,15 @@ CREATE TABLE `pi_liens` (
 --
 
 CREATE TABLE `pi_lien_negotiations` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `lien_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `conducted_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `lien_id` varchar(36) NOT NULL,
+  `conducted_by_user_id` varchar(36) NOT NULL,
   `negotiation_date` date NOT NULL,
   `offered_amount` decimal(12,2) NOT NULL,
   `response_amount` decimal(12,2) DEFAULT NULL,
-  `outcome` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `outcome` varchar(50) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2786,17 +2891,17 @@ CREATE TABLE `pi_lien_negotiations` (
 --
 
 CREATE TABLE `pi_medical_billing_summaries` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `account_number` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PRIMARY',
-  `service_category` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `total_billed` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `cached_balance_owed` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `billing_ledger_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `treatment_status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ACTIVE',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `provider_id` varchar(36) NOT NULL,
+  `account_number` varchar(100) NOT NULL DEFAULT 'PRIMARY',
+  `service_category` varchar(150) DEFAULT NULL,
+  `total_billed` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `cached_balance_owed` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `billing_ledger_document_id` varchar(36) DEFAULT NULL,
+  `treatment_status` varchar(50) NOT NULL DEFAULT 'ACTIVE',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2807,18 +2912,18 @@ CREATE TABLE `pi_medical_billing_summaries` (
 --
 
 CREATE TABLE `pi_medical_payment_records` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `billing_summary_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transaction_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payment_source` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `billing_summary_id` varchar(36) NOT NULL,
+  `transaction_type` varchar(50) NOT NULL,
+  `payment_source` varchar(50) NOT NULL,
   `amount` decimal(12,2) NOT NULL,
   `payment_date` date NOT NULL,
-  `check_or_reference_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `eob_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `reversal_of_record_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `reason_notes` text COLLATE utf8mb4_unicode_ci,
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `check_or_reference_number` varchar(50) DEFAULT NULL,
+  `eob_document_id` varchar(36) DEFAULT NULL,
+  `reversal_of_record_id` varchar(36) DEFAULT NULL,
+  `reason_notes` text DEFAULT NULL,
+  `created_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -2828,18 +2933,18 @@ CREATE TABLE `pi_medical_payment_records` (
 --
 
 CREATE TABLE `pi_medical_providers` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `facility_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `fax` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `provider_name` varchar(200) NOT NULL,
+  `provider_type` varchar(100) DEFAULT NULL,
+  `facility_address` varchar(255) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `fax` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
   `treatment_start_date` date DEFAULT NULL,
   `treatment_end_date` date DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2850,23 +2955,23 @@ CREATE TABLE `pi_medical_providers` (
 --
 
 CREATE TABLE `pi_medical_record_requests` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `provider_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `request_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Drafted',
-  `authorization_signed` tinyint(1) NOT NULL DEFAULT '0',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `provider_id` varchar(36) NOT NULL,
+  `request_code` varchar(50) NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'Drafted',
+  `authorization_signed` tinyint(1) NOT NULL DEFAULT 0,
   `authorization_date` date DEFAULT NULL,
-  `authorization_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `request_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `authorization_document_id` varchar(36) DEFAULT NULL,
+  `request_document_id` varchar(36) DEFAULT NULL,
   `request_sent_date` date DEFAULT NULL,
   `request_due_date` date DEFAULT NULL,
   `records_received_date` date DEFAULT NULL,
-  `is_complete` tinyint(1) NOT NULL DEFAULT '0',
-  `deficiency_notes` text COLLATE utf8mb4_unicode_ci,
-  `follow_up_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_complete` tinyint(1) NOT NULL DEFAULT 0,
+  `deficiency_notes` text DEFAULT NULL,
+  `follow_up_document_id` varchar(36) DEFAULT NULL,
   `follow_up_sent_date` date DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2877,12 +2982,12 @@ CREATE TABLE `pi_medical_record_requests` (
 --
 
 CREATE TABLE `pi_settlement_disbursements` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `settlement_title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `current_version_number` int NOT NULL DEFAULT '1',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DRAFT',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `settlement_title` varchar(255) NOT NULL,
+  `current_version_number` int(11) NOT NULL DEFAULT 1,
+  `status` varchar(50) NOT NULL DEFAULT 'DRAFT',
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -2893,27 +2998,27 @@ CREATE TABLE `pi_settlement_disbursements` (
 --
 
 CREATE TABLE `pi_settlement_disbursement_versions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `settlement_disbursement_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `version_number` int NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `settlement_disbursement_id` varchar(36) NOT NULL,
+  `version_number` int(11) NOT NULL,
   `gross_settlement_amount` decimal(12,2) NOT NULL,
   `contingency_fee_percentage` decimal(5,2) NOT NULL,
   `calculated_attorney_fee` decimal(12,2) NOT NULL,
   `total_litigation_costs` decimal(12,2) NOT NULL,
-  `total_client_advances` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `total_client_advances` decimal(12,2) NOT NULL DEFAULT 0.00,
   `total_medical_liens` decimal(12,2) NOT NULL,
-  `other_deductions` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `other_deductions` decimal(12,2) NOT NULL DEFAULT 0.00,
   `net_client_recovery` decimal(12,2) NOT NULL,
-  `version_status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'DRAFT',
-  `is_immutable` tinyint(1) NOT NULL DEFAULT '0',
-  `signed_closing_statement_doc_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `version_status` varchar(50) NOT NULL DEFAULT 'DRAFT',
+  `is_immutable` tinyint(1) NOT NULL DEFAULT 0,
+  `signed_closing_statement_doc_id` varchar(36) DEFAULT NULL,
   `client_approval_date` date DEFAULT NULL,
-  `client_approval_evidence` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `approved_by_attorney_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `client_approval_evidence` varchar(255) DEFAULT NULL,
+  `approved_by_attorney_id` varchar(36) DEFAULT NULL,
   `approved_at` datetime(3) DEFAULT NULL,
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `created_by_user_id` varchar(36) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2945,12 +3050,12 @@ DELIMITER ;
 --
 
 CREATE TABLE `pi_settlement_executions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `settlement_version_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trust_sub_ledger_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `idempotency_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `executed_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `executed_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `settlement_version_id` varchar(36) NOT NULL,
+  `trust_sub_ledger_id` varchar(36) NOT NULL,
+  `idempotency_key` varchar(100) NOT NULL,
+  `executed_by_user_id` varchar(36) NOT NULL,
+  `executed_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -2987,16 +3092,16 @@ DELIMITER ;
 --
 
 CREATE TABLE `pi_settlement_execution_lines` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `settlement_execution_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trust_sub_ledger_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trust_transaction_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `disbursement_role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `line_identifier` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `lien_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `settlement_execution_id` varchar(36) NOT NULL,
+  `trust_sub_ledger_id` varchar(36) NOT NULL,
+  `trust_transaction_id` varchar(36) NOT NULL,
+  `disbursement_role` varchar(50) NOT NULL,
+  `line_identifier` varchar(100) NOT NULL,
+  `lien_id` varchar(36) DEFAULT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `payee_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `payee_name` varchar(200) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3006,16 +3111,16 @@ CREATE TABLE `pi_settlement_execution_lines` (
 --
 
 CREATE TABLE `pi_vendors` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `vendor_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `category` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `contact_person` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `vendor_name` varchar(200) NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `contact_person` varchar(150) DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `email` varchar(150) DEFAULT NULL,
   `hourly_rate` decimal(10,2) DEFAULT NULL,
-  `tax_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `tax_id` varchar(50) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3026,20 +3131,20 @@ CREATE TABLE `pi_vendors` (
 --
 
 CREATE TABLE `pi_vendor_assignments` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `vendor_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `assigned_staff_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expense_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `service_scope` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ASSIGNED',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `vendor_id` varchar(36) NOT NULL,
+  `assigned_staff_id` varchar(36) NOT NULL,
+  `expense_id` varchar(36) DEFAULT NULL,
+  `service_scope` text NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'ASSIGNED',
   `assigned_date` date NOT NULL,
   `due_date` date DEFAULT NULL,
-  `authorized_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `invoiced_amount` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `report_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `authorized_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `invoiced_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `report_document_id` varchar(36) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3050,21 +3155,21 @@ CREATE TABLE `pi_vendor_assignments` (
 --
 
 CREATE TABLE `pi_wage_loss_records` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `verification_document_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `employer_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `job_title` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `pay_rate_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'HOURLY',
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `verification_document_id` varchar(36) DEFAULT NULL,
+  `employer_name` varchar(200) NOT NULL,
+  `job_title` varchar(150) NOT NULL,
+  `pay_rate_type` varchar(50) NOT NULL DEFAULT 'HOURLY',
   `base_pay_rate` decimal(10,2) NOT NULL,
   `hours_lost` decimal(8,2) DEFAULT NULL,
-  `days_lost` int DEFAULT NULL,
+  `days_lost` int(11) DEFAULT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
   `total_lost_wages` decimal(12,2) NOT NULL,
-  `is_verified_by_employer` tinyint(1) NOT NULL DEFAULT '0',
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `is_verified_by_employer` tinyint(1) NOT NULL DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3075,17 +3180,17 @@ CREATE TABLE `pi_wage_loss_records` (
 --
 
 CREATE TABLE `pleadings_records` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `litigation_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `pleading_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `filing_party` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `litigation_case_id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `pleading_type` varchar(100) NOT NULL,
+  `filing_party` varchar(150) NOT NULL,
   `filed_date` date DEFAULT NULL,
   `response_due_date` date DEFAULT NULL,
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
-  `ecf_docket_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `status` varchar(50) NOT NULL DEFAULT 'Draft',
+  `ecf_docket_number` varchar(50) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3096,11 +3201,11 @@ CREATE TABLE `pleadings_records` (
 --
 
 CREATE TABLE `practice_areas` (
-  `id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `brand_color` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1'
+  `id` varchar(50) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `brand_color` varchar(20) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -3125,14 +3230,14 @@ INSERT INTO `practice_areas` (`id`, `name`, `code`, `brand_color`, `is_active`) 
 --
 
 CREATE TABLE `probate_assets` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `probate_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `asset_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `probate_case_id` varchar(36) NOT NULL,
+  `asset_type` varchar(100) NOT NULL,
+  `description` text NOT NULL,
   `estimated_value` decimal(12,2) NOT NULL,
   `appraisal_value` decimal(12,2) DEFAULT NULL,
-  `is_disposed` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `is_disposed` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3142,14 +3247,14 @@ CREATE TABLE `probate_assets` (
 --
 
 CREATE TABLE `probate_beneficiaries` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `probate_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `relationship` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `probate_case_id` varchar(36) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `relationship` varchar(100) NOT NULL,
   `share_percent` decimal(5,2) DEFAULT NULL,
-  `specific_gift` text COLLATE utf8mb4_unicode_ci,
-  `is_notice_sent` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `specific_gift` text DEFAULT NULL,
+  `is_notice_sent` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3159,21 +3264,21 @@ CREATE TABLE `probate_beneficiaries` (
 --
 
 CREATE TABLE `probate_cases` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `decedent_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `decedent_name` varchar(200) NOT NULL,
   `date_of_death` date NOT NULL,
-  `county_jurisdiction` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Salt Lake County',
-  `court_case_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `probate_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Informal Probate',
-  `has_will` tinyint(1) NOT NULL DEFAULT '1',
-  `personal_rep_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `personal_rep_role` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'Executor',
-  `inventory_value` decimal(12,2) DEFAULT '0.00',
-  `status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Opened',
+  `county_jurisdiction` varchar(100) DEFAULT 'Salt Lake County',
+  `court_case_number` varchar(100) DEFAULT NULL,
+  `probate_type` varchar(100) NOT NULL DEFAULT 'Informal Probate',
+  `has_will` tinyint(1) NOT NULL DEFAULT 1,
+  `personal_rep_name` varchar(200) DEFAULT NULL,
+  `personal_rep_role` varchar(100) DEFAULT 'Executor',
+  `inventory_value` decimal(12,2) DEFAULT 0.00,
+  `status` varchar(50) NOT NULL DEFAULT 'Opened',
   `notice_deadline` date DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3184,10 +3289,10 @@ CREATE TABLE `probate_cases` (
 --
 
 CREATE TABLE `roles` (
-  `id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(50) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -3208,10 +3313,10 @@ INSERT INTO `roles` (`id`, `name`, `description`, `created_at`) VALUES
 --
 
 CREATE TABLE `role_permissions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `permission_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `granted_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `role_id` varchar(50) NOT NULL,
+  `permission_key` varchar(100) NOT NULL,
+  `granted_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -3420,20 +3525,20 @@ INSERT INTO `role_permissions` (`id`, `role_id`, `permission_key`, `granted_at`)
 --
 
 CREATE TABLE `suggested_billing_captures` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `source_identifier` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `source_type` varchar(50) NOT NULL,
+  `source_identifier` varchar(255) NOT NULL,
+  `matter_id` varchar(36) DEFAULT NULL,
   `date` date NOT NULL,
-  `actual_duration_seconds` int NOT NULL,
+  `actual_duration_seconds` int(11) NOT NULL,
   `suggested_hours` decimal(4,2) NOT NULL,
-  `match_confidence` int NOT NULL,
-  `activity_description` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `match_confidence` int(11) NOT NULL,
+  `activity_description` text NOT NULL,
   `detected_rate` decimal(10,2) DEFAULT NULL,
-  `is_converted` tinyint(1) NOT NULL DEFAULT '0',
-  `converted_time_entry_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `is_dismissed` tinyint(1) NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `is_converted` tinyint(1) NOT NULL DEFAULT 0,
+  `converted_time_entry_id` varchar(36) DEFAULT NULL,
+  `is_dismissed` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3443,20 +3548,20 @@ CREATE TABLE `suggested_billing_captures` (
 --
 
 CREATE TABLE `tasks` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `task_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `assigned_to_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `task_code` varchar(50) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `assigned_to_user_id` varchar(36) NOT NULL,
+  `created_by_user_id` varchar(36) NOT NULL,
   `due_date` date NOT NULL,
-  `priority` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Medium',
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Not Started',
+  `priority` varchar(20) NOT NULL DEFAULT 'Medium',
+  `status` varchar(30) NOT NULL DEFAULT 'Not Started',
   `completed_at` datetime(3) DEFAULT NULL,
-  `reminder_setting` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '1 day prior',
-  `urcp_rule_reference` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `reminder_setting` varchar(50) DEFAULT '1 day prior',
+  `urcp_rule_reference` varchar(50) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3465,7 +3570,24 @@ CREATE TABLE `tasks` (
 --
 
 INSERT INTO `tasks` (`id`, `task_code`, `matter_id`, `title`, `description`, `assigned_to_user_id`, `created_by_user_id`, `due_date`, `priority`, `status`, `completed_at`, `reminder_setting`, `urcp_rule_reference`, `created_at`, `updated_at`) VALUES
-('f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', 'TSK-26-0001', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', 'tttt', 'yrrtyutyurt', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-16', 'High', 'Completed', '2026-11-17 07:44:12.661', '1 day prior', NULL, '2026-11-16 12:04:21.021', '2026-11-17 07:44:12.662');
+('02f99652-d8fd-447b-ba33-dfb85c9eb309', 'TSK-26-0010', '6e406b0e-0209-4cbd-83a2-b61b98d39759', 'Review Document Draft: Eviction Closure Letter - Full Satisfaction ($3250.00)', 'Auto-generated draft \'DFT-26-0006\' (Eviction judgment payment and closure letter (CAT-300)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0006]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:39:58.582', '2026-11-27 02:39:58.582'),
+('04c54c0b-fe85-4120-88eb-6ce2dd05a9a1', 'TSK-26-0009', 'd3434952-984b-4bca-8dcc-7187c55414bd', 'Review Document Draft: Eviction Closure Letter - Partial Payment (Remaining Balance: $2000.00)', 'Auto-generated draft \'DFT-26-0005\' (Eviction judgment payment and closure letter (CAT-300)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0005]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:39:58.457', '2026-11-27 02:39:58.457'),
+('18185051-7d11-4922-9192-8945f60f42c6', 'TSK-26-0018', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)', 'Verify agreed settlement terms and payment instructions before sending to Intermountain Healthcare Billing Recovery.', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:43:54.833', '2026-11-27 02:43:54.833'),
+('18dba650-1fa6-42e1-bf03-297afece7ca0', 'TSK-26-0013', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Welcome letter and next steps - Demo Auto Collision Matter', 'Auto-generated draft \'DFT-26-0010\' (Welcome letter and next steps (CAT-010)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0010]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.408', '2026-11-27 02:42:00.408'),
+('362f47aa-b924-4e47-8e75-ff000ba51906', 'TSK-26-0012', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)', 'Verify agreed settlement terms and payment instructions before sending to Intermountain Healthcare Billing Recovery.', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.346', '2026-11-27 02:42:00.346'),
+('4b76947a-1881-425e-b5c8-279ff5451251', 'TSK-26-0017', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Settlement Demand Letter - [Pkg: dmp-demo-99]', 'Auto-generated draft \'DFT-26-0014\' (Settlement demand cover letter (CAT-130)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0014]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.704', '2026-11-27 02:42:00.704'),
+('4bd49193-5144-4846-bfa8-daae1d0631bf', 'TSK-26-0008', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)', 'Verify agreed settlement terms and payment instructions before sending to Intermountain Healthcare Billing Recovery.', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:37:44.558', '2026-11-27 02:37:44.558'),
+('54150508-a6e0-47ab-baf5-15c1411541e2', 'TSK-26-0004', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Consultation confirmation - Synthetic Demo Client (Do Not Delete) (undefined)', 'Auto-generated draft \'DFT-26-0002\' (Consultation confirmation (CAT-001)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0002]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:37:44.114', '2026-11-27 02:37:44.114'),
+('817382f0-9535-4790-a78e-143d161179c4', 'TSK-26-0003', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)', 'Verify agreed settlement terms and payment instructions before sending to Intermountain Healthcare Billing Recovery.', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 01:41:29.986', '2026-11-27 01:41:29.986'),
+('92548c44-5608-4177-b010-5536091971e2', 'TSK-26-0014', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Medical Records Request - Salt Lake Orthopedic Clinic', 'Auto-generated draft \'DFT-26-0011\' (Medical records request (CAT-113)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0011]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.475', '2026-11-27 02:42:00.475'),
+('abac9879-18eb-4a0c-adf9-6ba7d16e7d64', 'TSK-26-0002', 'd3434952-984b-4bca-8dcc-7187c55414bd', 'Review Document Draft: Eviction Closure Letter - Full Satisfaction ($0.00)', 'Auto-generated draft \'DFT-26-0002\' (Eviction judgment payment and closure letter (CAT-300)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0002]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 01:41:29.866', '2026-11-27 01:41:29.866'),
+('b2aed689-1dab-4b20-9508-6618a12fdf74', 'TSK-26-0005', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Prospective Client Questionnaire - General Legal (Marcus Sterling)', 'Auto-generated draft \'DFT-26-0003\' (Prospective client questionnaire (CAT-002)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0003]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:37:44.202', '2026-11-27 02:37:44.202'),
+('d44aa4d3-5df7-4c0a-ba1c-183d04465486', 'TSK-26-0007', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Representation Letter - State Farm Mutual Automobile Insurance', 'Auto-generated draft \'DFT-26-0006\' (Liability insurer letter of representation (CAT-096)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0006]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:37:44.476', '2026-11-27 02:37:44.476'),
+('dbbfa135-145d-4b78-a6e4-4c69b9c07e52', 'TSK-26-0016', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Incomplete Records Follow-up - Salt Lake Orthopedic Clinic (Second notice regarding missin)', 'Auto-generated draft \'DFT-26-0013\' (Incomplete medical records follow-up (CAT-116)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0013]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.612', '2026-11-27 02:42:00.612'),
+('dc3f6ead-87f9-42ad-8d55-a4ca07b6848f', 'TSK-26-0011', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Lien Payoff Confirmation: Intermountain Healthcare Billing Recovery ($9,200.00)', 'Verify agreed settlement terms and payment instructions before sending to Intermountain Healthcare Billing Recovery.', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:39:58.721', '2026-11-27 02:39:58.721'),
+('efd2fc29-0192-40f4-a5eb-10e363ce7d2a', 'TSK-26-0015', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Medical Authorization - Salt Lake Orthopedic Clinic', 'Auto-generated draft \'DFT-26-0012\' (Medical authorization packet (CAT-112)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0012]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:42:00.528', '2026-11-27 02:42:00.528'),
+('f1b9c35d-4f46-4bdb-84f1-f728ab414c7a', 'TSK-26-0001', 'fdefc7e3-861c-4838-a38a-f580b6c59e8b', 'tttt', 'yrrtyutyurt', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-16', 'High', 'Completed', '2026-11-17 07:44:12.661', '1 day prior', NULL, '2026-11-16 12:04:21.021', '2026-11-17 07:44:12.662'),
+('f2dd6eec-b71e-4e31-afb1-2fd4f969c3b6', 'TSK-26-0006', 'c4d3ae27-4efa-4620-af1d-33eae1d8828e', 'Review Document Draft: Conflict Search Report (FLAGGED) - Synthetic Demo Client (Do Not Delete)', 'Auto-generated draft \'DFT-26-0004\' (Compliance Review: Conflict search report (CAT-003)) requires attorney review and approval prior to transmission. [IDEMPOTENCY_KEY: DRAFT_REVIEW_DFT-26-0004]', '66c97d44-096b-4d34-8bd1-5691ba855e23', '66c97d44-096b-4d34-8bd1-5691ba855e23', '2026-11-29', 'High', 'Not Started', NULL, '1 day prior', NULL, '2026-11-27 02:37:44.333', '2026-11-27 02:37:44.333');
 
 -- --------------------------------------------------------
 
@@ -3474,15 +3596,15 @@ INSERT INTO `tasks` (`id`, `task_code`, `matter_id`, `title`, `description`, `as
 --
 
 CREATE TABLE `template_versions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `template_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `version_number` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `docx_storage_key` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sha256_checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
-  `change_summary` text COLLATE utf8mb4_unicode_ci,
-  `created_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `id` varchar(36) NOT NULL,
+  `template_id` varchar(36) NOT NULL,
+  `version_number` varchar(20) NOT NULL,
+  `docx_storage_key` varchar(500) NOT NULL,
+  `sha256_checksum` varchar(64) NOT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'Draft',
+  `change_summary` text DEFAULT NULL,
+  `created_by_user_id` varchar(36) NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -3805,19 +3927,19 @@ INSERT INTO `template_versions` (`id`, `template_id`, `version_number`, `docx_st
 --
 
 CREATE TABLE `three_way_reconciliations` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `reconciliation_month` varchar(7) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `reconciliation_month` varchar(7) NOT NULL,
   `bank_statement_balance` decimal(12,2) NOT NULL,
-  `deposits_in_transit` decimal(12,2) NOT NULL DEFAULT '0.00',
-  `outstanding_checks` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `deposits_in_transit` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `outstanding_checks` decimal(12,2) NOT NULL DEFAULT 0.00,
   `adjusted_bank_balance` decimal(12,2) NOT NULL,
   `gl_trust_liability_balance` decimal(12,2) NOT NULL,
   `client_subledgers_total_balance` decimal(12,2) NOT NULL,
   `reconciliation_variance` decimal(12,2) NOT NULL,
   `is_balanced` tinyint(1) NOT NULL,
-  `audited_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `audit_certificate_pdf_url` text COLLATE utf8mb4_unicode_ci,
-  `reconciled_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `audited_by_user_id` varchar(36) NOT NULL,
+  `audit_certificate_pdf_url` text DEFAULT NULL,
+  `reconciled_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3827,25 +3949,25 @@ CREATE TABLE `three_way_reconciliations` (
 --
 
 CREATE TABLE `time_entries` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `entry_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `entry_code` varchar(50) NOT NULL,
+  `matter_id` varchar(36) NOT NULL,
+  `user_id` varchar(36) NOT NULL,
   `date` date NOT NULL,
   `hours` decimal(5,2) NOT NULL,
   `rate` decimal(10,2) NOT NULL,
   `amount` decimal(12,2) NOT NULL,
-  `activity_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `activity_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `is_billable` tinyint(1) NOT NULL DEFAULT '1',
-  `status` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Submitted',
-  `approved_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activity_type` varchar(100) NOT NULL,
+  `activity_code` varchar(50) DEFAULT NULL,
+  `description` text NOT NULL,
+  `is_billable` tinyint(1) NOT NULL DEFAULT 1,
+  `status` varchar(30) NOT NULL DEFAULT 'Submitted',
+  `approved_by_user_id` varchar(36) DEFAULT NULL,
   `approved_at` datetime(3) DEFAULT NULL,
-  `rejection_comment` text COLLATE utf8mb4_unicode_ci,
-  `exported_to_cosmolex` tinyint(1) NOT NULL DEFAULT '0',
-  `export_batch_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `rejection_comment` text DEFAULT NULL,
+  `exported_to_cosmolex` tinyint(1) NOT NULL DEFAULT 0,
+  `export_batch_id` varchar(50) DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3856,14 +3978,14 @@ CREATE TABLE `time_entries` (
 --
 
 CREATE TABLE `trial_notebook_items` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `litigation_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `section` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `admissibility` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `order_index` int NOT NULL DEFAULT '0',
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `id` varchar(36) NOT NULL,
+  `litigation_case_id` varchar(36) NOT NULL,
+  `section` varchar(100) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `admissibility` varchar(50) DEFAULT NULL,
+  `order_index` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3874,15 +3996,15 @@ CREATE TABLE `trial_notebook_items` (
 --
 
 CREATE TABLE `trust_sub_ledgers` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ledger_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `client_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matter_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `balance` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ledger_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `client_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `matter_id` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `balance` decimal(12,2) NOT NULL DEFAULT 0.00,
   `last_audit_date` date NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
-) ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `trust_sub_ledgers`
@@ -3911,15 +4033,15 @@ DELIMITER ;
 --
 
 CREATE TABLE `trust_transactions` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `trust_sub_ledger_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `transaction_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `trust_sub_ledger_id` varchar(36) NOT NULL,
+  `transaction_type` varchar(50) NOT NULL,
   `amount` decimal(12,2) NOT NULL,
   `running_balance` decimal(12,2) NOT NULL,
-  `source_reference` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `authorized_by_user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `purpose` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  `source_reference` varchar(100) NOT NULL,
+  `authorized_by_user_id` varchar(36) NOT NULL,
+  `purpose` text NOT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -3949,21 +4071,21 @@ DELIMITER ;
 --
 
 CREATE TABLE `unmatched_communications` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sender_name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `sender_email` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `contact_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `preview` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `sender_name` varchar(200) NOT NULL,
+  `sender_email` varchar(200) DEFAULT NULL,
+  `contact_number` varchar(50) DEFAULT NULL,
+  `subject` varchar(255) NOT NULL,
+  `preview` text NOT NULL,
   `received_at` datetime(3) NOT NULL,
-  `suggested_client_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `suggested_matter_id` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `suggested_client_name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `suggested_matter_label` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `matching_status` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Unmatched',
-  `review_notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `suggested_client_id` varchar(36) DEFAULT NULL,
+  `suggested_matter_id` varchar(36) DEFAULT NULL,
+  `suggested_client_name` varchar(200) DEFAULT NULL,
+  `suggested_matter_label` varchar(255) DEFAULT NULL,
+  `matching_status` varchar(50) NOT NULL DEFAULT 'Unmatched',
+  `review_notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3974,20 +4096,20 @@ CREATE TABLE `unmatched_communications` (
 --
 
 CREATE TABLE `uscis_receipts` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `immigration_case_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `receipt_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `form_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `immigration_case_id` varchar(36) NOT NULL,
+  `receipt_number` varchar(50) NOT NULL,
+  `form_type` varchar(50) NOT NULL,
   `filing_date` date NOT NULL,
   `notice_date` date DEFAULT NULL,
-  `service_center` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `current_status` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Case Was Received',
+  `service_center` varchar(100) DEFAULT NULL,
+  `current_status` varchar(150) NOT NULL DEFAULT 'Case Was Received',
   `biometrics_date` datetime(3) DEFAULT NULL,
   `rfe_due_date` date DEFAULT NULL,
   `interview_date` datetime(3) DEFAULT NULL,
   `decision_date` date DEFAULT NULL,
-  `notes` text COLLATE utf8mb4_unicode_ci,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `notes` text DEFAULT NULL,
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -3998,22 +4120,22 @@ CREATE TABLE `uscis_receipts` (
 --
 
 CREATE TABLE `users` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `title` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `initials` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `billing_rate` decimal(10,2) NOT NULL DEFAULT '0.00',
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Active',
-  `mfa_enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `mfa_secret` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(36) NOT NULL,
+  `user_code` varchar(20) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `role` varchar(50) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `initials` varchar(10) NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `billing_rate` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `status` varchar(20) NOT NULL DEFAULT 'Active',
+  `mfa_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `mfa_secret` varchar(255) DEFAULT NULL,
   `last_login_at` datetime(3) DEFAULT NULL,
-  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `created_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated_at` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -4037,15 +4159,15 @@ INSERT INTO `users` (`id`, `user_code`, `name`, `email`, `password_hash`, `phone
 --
 
 CREATE TABLE `workflow_stages` (
-  `id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `practice_area_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `stage_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `stage_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `stage_order` int NOT NULL,
-  `required_fields` json NOT NULL,
-  `auto_tasks` json NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1'
-) ;
+  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `practice_area_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `stage_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `stage_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `stage_order` int(11) NOT NULL,
+  `required_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`required_fields`)),
+  `auto_tasks` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`auto_tasks`)),
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `workflow_stages`
@@ -4097,14 +4219,14 @@ INSERT INTO `workflow_stages` (`id`, `practice_area_id`, `stage_name`, `stage_co
 --
 
 CREATE TABLE `_prisma_migrations` (
-  `id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `checksum` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` varchar(36) NOT NULL,
+  `checksum` varchar(64) NOT NULL,
   `finished_at` datetime(3) DEFAULT NULL,
-  `migration_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `logs` text COLLATE utf8mb4_unicode_ci,
+  `migration_name` varchar(255) NOT NULL,
+  `logs` text DEFAULT NULL,
   `rolled_back_at` datetime(3) DEFAULT NULL,
-  `started_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `applied_steps_count` int UNSIGNED NOT NULL DEFAULT '0'
+  `started_at` datetime(3) NOT NULL DEFAULT current_timestamp(3),
+  `applied_steps_count` int(10) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -4772,7 +4894,7 @@ ALTER TABLE `bankruptcy_schedules`
 -- Constraints for table `calendar_events`
 --
 ALTER TABLE `calendar_events`
-  ADD CONSTRAINT `calendar_events_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `calendar_events_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `calendar_events_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -4793,7 +4915,7 @@ ALTER TABLE `communications`
 --
 ALTER TABLE `conflict_search_logs`
   ADD CONSTRAINT `conflict_search_logs_intake_id_fkey` FOREIGN KEY (`intake_id`) REFERENCES `intakes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `conflict_search_logs_searched_by_user_id_fkey` FOREIGN KEY (`searched_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `conflict_search_logs_searched_by_user_id_fkey` FOREIGN KEY (`searched_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `court_hearings`
@@ -4823,20 +4945,20 @@ ALTER TABLE `discovery_requests`
 -- Constraints for table `documents`
 --
 ALTER TABLE `documents`
-  ADD CONSTRAINT `documents_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `documents_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `documents_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document_drafts`
 --
 ALTER TABLE `document_drafts`
-  ADD CONSTRAINT `document_drafts_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `document_drafts_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `document_drafts_final_document_id_fkey` FOREIGN KEY (`final_document_id`) REFERENCES `documents` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `document_drafts_generated_by_user_id_fkey` FOREIGN KEY (`generated_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `document_drafts_generated_by_user_id_fkey` FOREIGN KEY (`generated_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `document_drafts_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `document_drafts_reviewed_by_user_id_fkey` FOREIGN KEY (`reviewed_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `document_drafts_template_id_fkey` FOREIGN KEY (`template_id`) REFERENCES `document_templates` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `document_drafts_template_version_id_fkey` FOREIGN KEY (`template_version_id`) REFERENCES `template_versions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `document_drafts_template_id_fkey` FOREIGN KEY (`template_id`) REFERENCES `document_templates` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `document_drafts_template_version_id_fkey` FOREIGN KEY (`template_version_id`) REFERENCES `template_versions` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document_field_mappings`
@@ -4848,15 +4970,15 @@ ALTER TABLE `document_field_mappings`
 -- Constraints for table `document_templates`
 --
 ALTER TABLE `document_templates`
-  ADD CONSTRAINT `document_templates_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `document_templates_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `document_templates_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `document_templates_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document_versions`
 --
 ALTER TABLE `document_versions`
   ADD CONSTRAINT `document_versions_document_id_fkey` FOREIGN KEY (`document_id`) REFERENCES `documents` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `document_versions_uploaded_by_user_id_fkey` FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `document_versions_uploaded_by_user_id_fkey` FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `evictions_cases`
@@ -4868,8 +4990,8 @@ ALTER TABLE `evictions_cases`
 -- Constraints for table `expenses`
 --
 ALTER TABLE `expenses`
-  ADD CONSTRAINT `expenses_incurred_by_user_id_fkey` FOREIGN KEY (`incurred_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `expenses_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `expenses_incurred_by_user_id_fkey` FOREIGN KEY (`incurred_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `expenses_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `family_law_cases`
@@ -4887,7 +5009,7 @@ ALTER TABLE `family_law_orders`
 -- Constraints for table `general_ledger_entries`
 --
 ALTER TABLE `general_ledger_entries`
-  ADD CONSTRAINT `general_ledger_entries_account_number_fkey` FOREIGN KEY (`account_number`) REFERENCES `chart_of_accounts` (`account_number`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `general_ledger_entries_account_number_fkey` FOREIGN KEY (`account_number`) REFERENCES `chart_of_accounts` (`account_number`) ON UPDATE CASCADE,
   ADD CONSTRAINT `general_ledger_entries_journal_id_fkey` FOREIGN KEY (`journal_id`) REFERENCES `general_ledger_journals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `general_ledger_entries_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -4895,7 +5017,7 @@ ALTER TABLE `general_ledger_entries`
 -- Constraints for table `general_ledger_journals`
 --
 ALTER TABLE `general_ledger_journals`
-  ADD CONSTRAINT `general_ledger_journals_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `general_ledger_journals_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `immigration_cases`
@@ -4922,8 +5044,8 @@ ALTER TABLE `intakes`
 -- Constraints for table `invoices`
 --
 ALTER TABLE `invoices`
-  ADD CONSTRAINT `invoices_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `invoices_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `invoices_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `invoices_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `invoice_line_items`
@@ -4943,10 +5065,10 @@ ALTER TABLE `litigation_cases`
 -- Constraints for table `matters`
 --
 ALTER TABLE `matters`
-  ADD CONSTRAINT `matters_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `matters_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `matters_current_stage_id_fkey` FOREIGN KEY (`current_stage_id`) REFERENCES `workflow_stages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `matters_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `matters_responsible_attorney_id_fkey` FOREIGN KEY (`responsible_attorney_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `matters_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `matters_responsible_attorney_id_fkey` FOREIGN KEY (`responsible_attorney_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `matter_staff_assignments`
@@ -4960,255 +5082,39 @@ ALTER TABLE `matter_staff_assignments`
 --
 ALTER TABLE `matter_stage_histories`
   ADD CONSTRAINT `matter_stage_histories_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `matter_stage_histories_to_stage_id_fkey` FOREIGN KEY (`to_stage_id`) REFERENCES `workflow_stages` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `matter_stage_histories_transitioned_by_user_id_fkey` FOREIGN KEY (`transitioned_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `matter_stage_histories_to_stage_id_fkey` FOREIGN KEY (`to_stage_id`) REFERENCES `workflow_stages` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `matter_stage_histories_transitioned_by_user_id_fkey` FOREIGN KEY (`transitioned_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `payment_records`
 --
 ALTER TABLE `payment_records`
-  ADD CONSTRAINT `payment_records_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `payment_records_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `payment_records_recorded_by_user_id_fkey` FOREIGN KEY (`recorded_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `payment_records_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `payment_records_invoice_id_fkey` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `payment_records_recorded_by_user_id_fkey` FOREIGN KEY (`recorded_by_user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pi_damages_records`
 --
 ALTER TABLE `pi_damages_records`
-  ADD CONSTRAINT `pi_damages_records_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `pi_damages_records_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pi_demand_packages`
 --
 ALTER TABLE `pi_demand_packages`
-  ADD CONSTRAINT `pi_demand_packages_approved_by_attorney_id_fkey` FOREIGN KEY (`approved_by_attorney_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_demand_packages_draft_document_id_fkey` FOREIGN KEY (`draft_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  ADD CONSTRAINT `pi_demand_packages_approved_by_attorney_id_fkey` FOREIGN KEY (`approved_by_attorney_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `pi_demand_packages_draft_document_id_fkey` FOREIGN KEY (`draft_document_id`) REFERENCES `documents` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `pi_demand_packages_insurance_policy_id_fkey` FOREIGN KEY (`insurance_policy_id`) REFERENCES `pi_insurance_policies` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_demand_packages_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+  ADD CONSTRAINT `pi_demand_packages_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pi_diagnostic_studies`
 --
 ALTER TABLE `pi_diagnostic_studies`
   ADD CONSTRAINT `pi_diagnostic_studies_damages_record_id_fkey` FOREIGN KEY (`damages_record_id`) REFERENCES `pi_damages_records` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_diagnostic_studies_imaging_report_document_id_fkey` FOREIGN KEY (`imaging_report_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_diagnostic_studies_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_incidents`
---
-ALTER TABLE `pi_incidents`
-  ADD CONSTRAINT `pi_incidents_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_incident_parties`
---
-ALTER TABLE `pi_incident_parties`
-  ADD CONSTRAINT `pi_incident_parties_incident_id_fkey` FOREIGN KEY (`incident_id`) REFERENCES `pi_incidents` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_insurance_policies`
---
-ALTER TABLE `pi_insurance_policies`
-  ADD CONSTRAINT `pi_insurance_policies_incident_id_fkey` FOREIGN KEY (`incident_id`) REFERENCES `pi_incidents` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_insurance_policies_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_liens`
---
-ALTER TABLE `pi_liens`
-  ADD CONSTRAINT `pi_liens_final_payoff_letter_document_id_fkey` FOREIGN KEY (`final_payoff_letter_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_liens_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_liens_provider_id_fkey` FOREIGN KEY (`provider_id`) REFERENCES `pi_medical_providers` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_lien_negotiations`
---
-ALTER TABLE `pi_lien_negotiations`
-  ADD CONSTRAINT `pi_lien_negotiations_conducted_by_user_id_fkey` FOREIGN KEY (`conducted_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_lien_negotiations_lien_id_fkey` FOREIGN KEY (`lien_id`) REFERENCES `pi_liens` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_medical_billing_summaries`
---
-ALTER TABLE `pi_medical_billing_summaries`
-  ADD CONSTRAINT `pi_medical_billing_summaries_billing_ledger_document_id_fkey` FOREIGN KEY (`billing_ledger_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_billing_summaries_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_billing_summaries_provider_id_matter_id_fkey` FOREIGN KEY (`provider_id`,`matter_id`) REFERENCES `pi_medical_providers` (`id`, `matter_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_medical_payment_records`
---
-ALTER TABLE `pi_medical_payment_records`
-  ADD CONSTRAINT `pi_medical_payment_records_billing_summary_id_fkey` FOREIGN KEY (`billing_summary_id`) REFERENCES `pi_medical_billing_summaries` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_payment_records_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_payment_records_eob_document_id_fkey` FOREIGN KEY (`eob_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_payment_records_reversal_of_record_id_fkey` FOREIGN KEY (`reversal_of_record_id`) REFERENCES `pi_medical_payment_records` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_medical_providers`
---
-ALTER TABLE `pi_medical_providers`
-  ADD CONSTRAINT `pi_medical_providers_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_medical_record_requests`
---
-ALTER TABLE `pi_medical_record_requests`
-  ADD CONSTRAINT `pi_medical_record_requests_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_medical_record_requests_provider_id_fkey` FOREIGN KEY (`provider_id`) REFERENCES `pi_medical_providers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_settlement_disbursements`
---
-ALTER TABLE `pi_settlement_disbursements`
-  ADD CONSTRAINT `pi_settlement_disbursements_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_settlement_disbursement_versions`
---
-ALTER TABLE `pi_settlement_disbursement_versions`
-  ADD CONSTRAINT `pi_settlement_disbursement_versions_approved_by_attorney_id_fkey` FOREIGN KEY (`approved_by_attorney_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_disbursement_versions_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_disbursement_versions_settlement_disbursement_fkey` FOREIGN KEY (`settlement_disbursement_id`) REFERENCES `pi_settlement_disbursements` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_disbursement_versions_signed_closing_statemen_fkey` FOREIGN KEY (`signed_closing_statement_doc_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_settlement_executions`
---
-ALTER TABLE `pi_settlement_executions`
-  ADD CONSTRAINT `pi_settlement_executions_executed_by_user_id_fkey` FOREIGN KEY (`executed_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_executions_settlement_version_id_fkey` FOREIGN KEY (`settlement_version_id`) REFERENCES `pi_settlement_disbursement_versions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_executions_trust_sub_ledger_id_fkey` FOREIGN KEY (`trust_sub_ledger_id`) REFERENCES `trust_sub_ledgers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_settlement_execution_lines`
---
-ALTER TABLE `pi_settlement_execution_lines`
-  ADD CONSTRAINT `pi_settlement_execution_lines_lien_id_fkey` FOREIGN KEY (`lien_id`) REFERENCES `pi_liens` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_execution_lines_settlement_execution_id_trust_fkey` FOREIGN KEY (`settlement_execution_id`,`trust_sub_ledger_id`) REFERENCES `pi_settlement_executions` (`id`, `trust_sub_ledger_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_settlement_execution_lines_trust_transaction_id_trust_su_fkey` FOREIGN KEY (`trust_transaction_id`,`trust_sub_ledger_id`) REFERENCES `trust_transactions` (`id`, `trust_sub_ledger_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_vendor_assignments`
---
-ALTER TABLE `pi_vendor_assignments`
-  ADD CONSTRAINT `pi_vendor_assignments_assigned_staff_id_fkey` FOREIGN KEY (`assigned_staff_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_vendor_assignments_expense_id_fkey` FOREIGN KEY (`expense_id`) REFERENCES `expenses` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_vendor_assignments_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_vendor_assignments_report_document_id_fkey` FOREIGN KEY (`report_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_vendor_assignments_vendor_id_fkey` FOREIGN KEY (`vendor_id`) REFERENCES `pi_vendors` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pi_wage_loss_records`
---
-ALTER TABLE `pi_wage_loss_records`
-  ADD CONSTRAINT `pi_wage_loss_records_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `pi_wage_loss_records_verification_document_id_fkey` FOREIGN KEY (`verification_document_id`) REFERENCES `documents` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `pleadings_records`
---
-ALTER TABLE `pleadings_records`
-  ADD CONSTRAINT `pleadings_records_litigation_case_id_fkey` FOREIGN KEY (`litigation_case_id`) REFERENCES `litigation_cases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `probate_assets`
---
-ALTER TABLE `probate_assets`
-  ADD CONSTRAINT `probate_assets_probate_case_id_fkey` FOREIGN KEY (`probate_case_id`) REFERENCES `probate_cases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `probate_beneficiaries`
---
-ALTER TABLE `probate_beneficiaries`
-  ADD CONSTRAINT `probate_beneficiaries_probate_case_id_fkey` FOREIGN KEY (`probate_case_id`) REFERENCES `probate_cases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `probate_cases`
---
-ALTER TABLE `probate_cases`
-  ADD CONSTRAINT `probate_cases_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `role_permissions`
---
-ALTER TABLE `role_permissions`
-  ADD CONSTRAINT `role_permissions_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `suggested_billing_captures`
---
-ALTER TABLE `suggested_billing_captures`
-  ADD CONSTRAINT `suggested_billing_captures_converted_time_entry_id_fkey` FOREIGN KEY (`converted_time_entry_id`) REFERENCES `time_entries` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `suggested_billing_captures_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
---
--- Constraints for table `tasks`
---
-ALTER TABLE `tasks`
-  ADD CONSTRAINT `tasks_assigned_to_user_id_fkey` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `tasks_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `tasks_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `template_versions`
---
-ALTER TABLE `template_versions`
-  ADD CONSTRAINT `template_versions_created_by_user_id_fkey` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `template_versions_template_id_fkey` FOREIGN KEY (`template_id`) REFERENCES `document_templates` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `three_way_reconciliations`
---
-ALTER TABLE `three_way_reconciliations`
-  ADD CONSTRAINT `three_way_reconciliations_audited_by_user_id_fkey` FOREIGN KEY (`audited_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `time_entries`
---
-ALTER TABLE `time_entries`
-  ADD CONSTRAINT `time_entries_approved_by_user_id_fkey` FOREIGN KEY (`approved_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `time_entries_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `time_entries_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `trial_notebook_items`
---
-ALTER TABLE `trial_notebook_items`
-  ADD CONSTRAINT `trial_notebook_items_litigation_case_id_fkey` FOREIGN KEY (`litigation_case_id`) REFERENCES `litigation_cases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `trust_sub_ledgers`
---
-ALTER TABLE `trust_sub_ledgers`
-  ADD CONSTRAINT `trust_sub_ledgers_client_id_fkey` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `trust_sub_ledgers_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `trust_transactions`
---
-ALTER TABLE `trust_transactions`
-  ADD CONSTRAINT `trust_transactions_authorized_by_user_id_fkey` FOREIGN KEY (`authorized_by_user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-  ADD CONSTRAINT `trust_transactions_trust_sub_ledger_id_fkey` FOREIGN KEY (`trust_sub_ledger_id`) REFERENCES `trust_sub_ledgers` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `uscis_receipts`
---
-ALTER TABLE `uscis_receipts`
-  ADD CONSTRAINT `uscis_receipts_immigration_case_id_fkey` FOREIGN KEY (`immigration_case_id`) REFERENCES `immigration_cases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_role_fkey` FOREIGN KEY (`role`) REFERENCES `roles` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
---
--- Constraints for table `workflow_stages`
---
-ALTER TABLE `workflow_stages`
-  ADD CONSTRAINT `workflow_stages_practice_area_id_fkey` FOREIGN KEY (`practice_area_id`) REFERENCES `practice_areas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `pi_diagnostic_studies_imaging_report_document_id_fkey` FOREIGN KEY (`imaging_report_document_id`) REFERENCES `documents` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `pi_diagnostic_studies_matter_id_fkey` FOREIGN KEY (`matter_id`) REFERENCES `matters` (`id`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
