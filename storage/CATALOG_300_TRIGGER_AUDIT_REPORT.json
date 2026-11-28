@@ -1,10 +1,10 @@
 {
-  "executionTimestamp": "2026-11-28T16:26:01.326Z",
+  "executionTimestamp": "2026-11-28T16:33:07.580Z",
   "totalTemplates": 300,
   "verifiedCount": 300,
   "partialCount": 0,
   "failedCount": 0,
-  "durationMs": 1838,
+  "durationMs": 4699,
   "categoryBreakdown": {
     "Engagement": {
       "total": 30,
@@ -79,7 +79,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-001\\template_CAT-001_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 52
+      "renderTimeMs": 78
     },
     {
       "catalogId": "CAT-002",
@@ -92,7 +92,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-002\\template_CAT-002_v1.0.docx",
       "fileSizeBytes": 1693,
       "tagsFoundCount": 11,
-      "renderTimeMs": 16
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-003",
@@ -105,7 +105,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-003\\template_CAT-003_v1.0.docx",
       "fileSizeBytes": 1684,
       "tagsFoundCount": 11,
-      "renderTimeMs": 9
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-004",
@@ -118,7 +118,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-004\\template_CAT-004_v1.0.docx",
       "fileSizeBytes": 1692,
       "tagsFoundCount": 11,
-      "renderTimeMs": 9
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-005",
@@ -144,7 +144,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-006\\template_CAT-006_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-007",
@@ -157,7 +157,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-007\\template_CAT-007_v1.0.docx",
       "fileSizeBytes": 1708,
       "tagsFoundCount": 11,
-      "renderTimeMs": 10
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-008",
@@ -170,7 +170,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-008\\template_CAT-008_v1.0.docx",
       "fileSizeBytes": 1696,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-009",
@@ -183,7 +183,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-009\\template_CAT-009_v1.0.docx",
       "fileSizeBytes": 1697,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-010",
@@ -196,7 +196,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-010\\template_CAT-010_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-011",
@@ -209,7 +209,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-011\\template_CAT-011_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-012",
@@ -222,7 +222,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-012\\template_CAT-012_v1.0.docx",
       "fileSizeBytes": 1703,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-013",
@@ -235,7 +235,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-013\\template_CAT-013_v1.0.docx",
       "fileSizeBytes": 1698,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 13
     },
     {
       "catalogId": "CAT-014",
@@ -248,7 +248,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-014\\template_CAT-014_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-015",
@@ -261,7 +261,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-015\\template_CAT-015_v1.0.docx",
       "fileSizeBytes": 1700,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-016",
@@ -274,7 +274,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-016\\template_CAT-016_v1.0.docx",
       "fileSizeBytes": 1699,
       "tagsFoundCount": 11,
-      "renderTimeMs": 12
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-017",
@@ -287,7 +287,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-017\\template_CAT-017_v1.0.docx",
       "fileSizeBytes": 1697,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-018",
@@ -300,7 +300,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-018\\template_CAT-018_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-019",
@@ -313,7 +313,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-019\\template_CAT-019_v1.0.docx",
       "fileSizeBytes": 1694,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-020",
@@ -326,7 +326,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-020\\template_CAT-020_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 12,
-      "renderTimeMs": 7
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-021",
@@ -339,7 +339,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-021\\template_CAT-021_v1.0.docx",
       "fileSizeBytes": 1692,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-022",
@@ -352,7 +352,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-022\\template_CAT-022_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-023",
@@ -365,7 +365,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-023\\template_CAT-023_v1.0.docx",
       "fileSizeBytes": 1688,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-024",
@@ -378,7 +378,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-024\\template_CAT-024_v1.0.docx",
       "fileSizeBytes": 1696,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-025",
@@ -391,7 +391,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-025\\template_CAT-025_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-026",
@@ -404,7 +404,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-026\\template_CAT-026_v1.0.docx",
       "fileSizeBytes": 1700,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-027",
@@ -417,7 +417,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-027\\template_CAT-027_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-028",
@@ -430,7 +430,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-028\\template_CAT-028_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-029",
@@ -443,7 +443,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-029\\template_CAT-029_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-030",
@@ -456,7 +456,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-030\\template_CAT-030_v1.0.docx",
       "fileSizeBytes": 1700,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-031",
@@ -469,7 +469,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-031\\template_CAT-031_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-032",
@@ -482,7 +482,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-032\\template_CAT-032_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-033",
@@ -508,7 +508,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-034\\template_CAT-034_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-035",
@@ -521,7 +521,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-035\\template_CAT-035_v1.0.docx",
       "fileSizeBytes": 1709,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-036",
@@ -534,7 +534,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-036\\template_CAT-036_v1.0.docx",
       "fileSizeBytes": 1693,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-037",
@@ -547,7 +547,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-037\\template_CAT-037_v1.0.docx",
       "fileSizeBytes": 1702,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-038",
@@ -560,7 +560,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-038\\template_CAT-038_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-039",
@@ -573,7 +573,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-039\\template_CAT-039_v1.0.docx",
       "fileSizeBytes": 1738,
       "tagsFoundCount": 12,
-      "renderTimeMs": 7
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-040",
@@ -586,7 +586,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-040\\template_CAT-040_v1.0.docx",
       "fileSizeBytes": 1720,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 13
     },
     {
       "catalogId": "CAT-041",
@@ -599,7 +599,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-041\\template_CAT-041_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-042",
@@ -612,7 +612,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-042\\template_CAT-042_v1.0.docx",
       "fileSizeBytes": 1706,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-043",
@@ -625,7 +625,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-043\\template_CAT-043_v1.0.docx",
       "fileSizeBytes": 1698,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-044",
@@ -638,7 +638,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-044\\template_CAT-044_v1.0.docx",
       "fileSizeBytes": 1719,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-045",
@@ -651,7 +651,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-045\\template_CAT-045_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-046",
@@ -664,7 +664,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-046\\template_CAT-046_v1.0.docx",
       "fileSizeBytes": 1692,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-047",
@@ -677,7 +677,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-047\\template_CAT-047_v1.0.docx",
       "fileSizeBytes": 1704,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-048",
@@ -690,7 +690,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-048\\template_CAT-048_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 12,
-      "renderTimeMs": 9
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-049",
@@ -703,7 +703,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-049\\template_CAT-049_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-050",
@@ -716,7 +716,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-050\\template_CAT-050_v1.0.docx",
       "fileSizeBytes": 1698,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-051",
@@ -729,7 +729,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-051\\template_CAT-051_v1.0.docx",
       "fileSizeBytes": 1698,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-052",
@@ -742,7 +742,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-052\\template_CAT-052_v1.0.docx",
       "fileSizeBytes": 1719,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-053",
@@ -755,7 +755,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-053\\template_CAT-053_v1.0.docx",
       "fileSizeBytes": 1708,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-054",
@@ -768,7 +768,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-054\\template_CAT-054_v1.0.docx",
       "fileSizeBytes": 1707,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-055",
@@ -781,7 +781,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-055\\template_CAT-055_v1.0.docx",
       "fileSizeBytes": 1719,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-056",
@@ -794,7 +794,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-056\\template_CAT-056_v1.0.docx",
       "fileSizeBytes": 1707,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-057",
@@ -807,7 +807,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-057\\template_CAT-057_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-058",
@@ -820,7 +820,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-058\\template_CAT-058_v1.0.docx",
       "fileSizeBytes": 1704,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-059",
@@ -833,7 +833,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-059\\template_CAT-059_v1.0.docx",
       "fileSizeBytes": 1704,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-060",
@@ -846,7 +846,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-060\\template_CAT-060_v1.0.docx",
       "fileSizeBytes": 1691,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-061",
@@ -859,7 +859,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-061\\template_CAT-061_v1.0.docx",
       "fileSizeBytes": 1709,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-062",
@@ -872,7 +872,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-062\\template_CAT-062_v1.0.docx",
       "fileSizeBytes": 1711,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-063",
@@ -885,7 +885,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-063\\template_CAT-063_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 11
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-064",
@@ -898,7 +898,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-064\\template_CAT-064_v1.0.docx",
       "fileSizeBytes": 1707,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-065",
@@ -911,7 +911,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-065\\template_CAT-065_v1.0.docx",
       "fileSizeBytes": 1710,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-066",
@@ -924,7 +924,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-066\\template_CAT-066_v1.0.docx",
       "fileSizeBytes": 1706,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-067",
@@ -937,7 +937,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-067\\template_CAT-067_v1.0.docx",
       "fileSizeBytes": 1715,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-068",
@@ -950,7 +950,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-068\\template_CAT-068_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-069",
@@ -963,7 +963,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-069\\template_CAT-069_v1.0.docx",
       "fileSizeBytes": 1707,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-070",
@@ -976,7 +976,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-070\\template_CAT-070_v1.0.docx",
       "fileSizeBytes": 1713,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-071",
@@ -989,7 +989,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-071\\template_CAT-071_v1.0.docx",
       "fileSizeBytes": 1700,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-072",
@@ -1002,7 +1002,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-072\\template_CAT-072_v1.0.docx",
       "fileSizeBytes": 1705,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-073",
@@ -1015,7 +1015,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-073\\template_CAT-073_v1.0.docx",
       "fileSizeBytes": 1708,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-074",
@@ -1028,7 +1028,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-074\\template_CAT-074_v1.0.docx",
       "fileSizeBytes": 1703,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-075",
@@ -1041,7 +1041,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-075\\template_CAT-075_v1.0.docx",
       "fileSizeBytes": 1711,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-076",
@@ -1054,7 +1054,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-076\\template_CAT-076_v1.0.docx",
       "fileSizeBytes": 1697,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-077",
@@ -1067,7 +1067,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-077\\template_CAT-077_v1.0.docx",
       "fileSizeBytes": 1713,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 22
     },
     {
       "catalogId": "CAT-078",
@@ -1080,7 +1080,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-078\\template_CAT-078_v1.0.docx",
       "fileSizeBytes": 1703,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-079",
@@ -1106,7 +1106,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-080\\template_CAT-080_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 11,
-      "renderTimeMs": 6
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-081",
@@ -1119,7 +1119,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-081\\template_CAT-081_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-082",
@@ -1132,7 +1132,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-082\\template_CAT-082_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-083",
@@ -1145,7 +1145,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-083\\template_CAT-083_v1.0.docx",
       "fileSizeBytes": 1708,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-084",
@@ -1158,7 +1158,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-084\\template_CAT-084_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-085",
@@ -1171,7 +1171,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-085\\template_CAT-085_v1.0.docx",
       "fileSizeBytes": 1695,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-086",
@@ -1184,7 +1184,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-086\\template_CAT-086_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 9
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-087",
@@ -1197,7 +1197,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-087\\template_CAT-087_v1.0.docx",
       "fileSizeBytes": 1698,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-088",
@@ -1210,7 +1210,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-088\\template_CAT-088_v1.0.docx",
       "fileSizeBytes": 1696,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-089",
@@ -1223,7 +1223,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-089\\template_CAT-089_v1.0.docx",
       "fileSizeBytes": 1740,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-090",
@@ -1236,7 +1236,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-090\\template_CAT-090_v1.0.docx",
       "fileSizeBytes": 1701,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-091",
@@ -1249,7 +1249,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-091\\template_CAT-091_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-092",
@@ -1262,7 +1262,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-092\\template_CAT-092_v1.0.docx",
       "fileSizeBytes": 1711,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-093",
@@ -1275,7 +1275,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-093\\template_CAT-093_v1.0.docx",
       "fileSizeBytes": 1722,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-094",
@@ -1288,7 +1288,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-094\\template_CAT-094_v1.0.docx",
       "fileSizeBytes": 1738,
       "tagsFoundCount": 12,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-095",
@@ -1301,7 +1301,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-095\\template_CAT-095_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-096",
@@ -1314,7 +1314,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-096\\template_CAT-096_v1.0.docx",
       "fileSizeBytes": 1785,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-097",
@@ -1327,7 +1327,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-097\\template_CAT-097_v1.0.docx",
       "fileSizeBytes": 1780,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-098",
@@ -1340,7 +1340,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-098\\template_CAT-098_v1.0.docx",
       "fileSizeBytes": 1789,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-099",
@@ -1353,7 +1353,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-099\\template_CAT-099_v1.0.docx",
       "fileSizeBytes": 1774,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-100",
@@ -1366,7 +1366,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-100\\template_CAT-100_v1.0.docx",
       "fileSizeBytes": 1767,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-101",
@@ -1379,7 +1379,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-101\\template_CAT-101_v1.0.docx",
       "fileSizeBytes": 1760,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-102",
@@ -1392,7 +1392,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-102\\template_CAT-102_v1.0.docx",
       "fileSizeBytes": 1785,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-103",
@@ -1405,7 +1405,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-103\\template_CAT-103_v1.0.docx",
       "fileSizeBytes": 1761,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-104",
@@ -1418,7 +1418,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-104\\template_CAT-104_v1.0.docx",
       "fileSizeBytes": 1759,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-105",
@@ -1431,7 +1431,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-105\\template_CAT-105_v1.0.docx",
       "fileSizeBytes": 1755,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-106",
@@ -1444,7 +1444,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-106\\template_CAT-106_v1.0.docx",
       "fileSizeBytes": 1766,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-107",
@@ -1457,7 +1457,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-107\\template_CAT-107_v1.0.docx",
       "fileSizeBytes": 1771,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-108",
@@ -1470,7 +1470,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-108\\template_CAT-108_v1.0.docx",
       "fileSizeBytes": 1762,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-109",
@@ -1483,7 +1483,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-109\\template_CAT-109_v1.0.docx",
       "fileSizeBytes": 1771,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-110",
@@ -1496,7 +1496,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-110\\template_CAT-110_v1.0.docx",
       "fileSizeBytes": 1758,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-111",
@@ -1509,7 +1509,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-111\\template_CAT-111_v1.0.docx",
       "fileSizeBytes": 1780,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-112",
@@ -1535,7 +1535,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-113\\template_CAT-113_v1.0.docx",
       "fileSizeBytes": 1772,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-114",
@@ -1548,7 +1548,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-114\\template_CAT-114_v1.0.docx",
       "fileSizeBytes": 1785,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 46
     },
     {
       "catalogId": "CAT-115",
@@ -1561,7 +1561,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-115\\template_CAT-115_v1.0.docx",
       "fileSizeBytes": 1761,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-116",
@@ -1574,7 +1574,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-116\\template_CAT-116_v1.0.docx",
       "fileSizeBytes": 1769,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-117",
@@ -1587,7 +1587,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-117\\template_CAT-117_v1.0.docx",
       "fileSizeBytes": 1770,
       "tagsFoundCount": 14,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-118",
@@ -1600,7 +1600,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-118\\template_CAT-118_v1.0.docx",
       "fileSizeBytes": 1769,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-119",
@@ -1613,7 +1613,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-119\\template_CAT-119_v1.0.docx",
       "fileSizeBytes": 1770,
       "tagsFoundCount": 14,
-      "renderTimeMs": 7
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-120",
@@ -1626,7 +1626,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-120\\template_CAT-120_v1.0.docx",
       "fileSizeBytes": 1770,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 7
     },
     {
       "catalogId": "CAT-121",
@@ -1639,7 +1639,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-121\\template_CAT-121_v1.0.docx",
       "fileSizeBytes": 1744,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-122",
@@ -1652,7 +1652,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-122\\template_CAT-122_v1.0.docx",
       "fileSizeBytes": 1769,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-123",
@@ -1665,7 +1665,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-123\\template_CAT-123_v1.0.docx",
       "fileSizeBytes": 1784,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-124",
@@ -1678,7 +1678,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-124\\template_CAT-124_v1.0.docx",
       "fileSizeBytes": 1757,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-125",
@@ -1691,7 +1691,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-125\\template_CAT-125_v1.0.docx",
       "fileSizeBytes": 1768,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-126",
@@ -1704,7 +1704,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-126\\template_CAT-126_v1.0.docx",
       "fileSizeBytes": 1781,
       "tagsFoundCount": 14,
-      "renderTimeMs": 4
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-127",
@@ -1717,7 +1717,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-127\\template_CAT-127_v1.0.docx",
       "fileSizeBytes": 1773,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-128",
@@ -1730,7 +1730,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-128\\template_CAT-128_v1.0.docx",
       "fileSizeBytes": 1779,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-129",
@@ -1743,7 +1743,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-129\\template_CAT-129_v1.0.docx",
       "fileSizeBytes": 1743,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-130",
@@ -1756,7 +1756,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-130\\template_CAT-130_v1.0.docx",
       "fileSizeBytes": 1768,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-131",
@@ -1769,7 +1769,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-131\\template_CAT-131_v1.0.docx",
       "fileSizeBytes": 1763,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-132",
@@ -1782,7 +1782,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-132\\template_CAT-132_v1.0.docx",
       "fileSizeBytes": 1751,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-133",
@@ -1795,7 +1795,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-133\\template_CAT-133_v1.0.docx",
       "fileSizeBytes": 1784,
       "tagsFoundCount": 14,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-134",
@@ -1808,7 +1808,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-134\\template_CAT-134_v1.0.docx",
       "fileSizeBytes": 1772,
       "tagsFoundCount": 14,
-      "renderTimeMs": 4
+      "renderTimeMs": 8
     },
     {
       "catalogId": "CAT-135",
@@ -1821,7 +1821,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-135\\template_CAT-135_v1.0.docx",
       "fileSizeBytes": 1760,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-136",
@@ -1834,7 +1834,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-136\\template_CAT-136_v1.0.docx",
       "fileSizeBytes": 1757,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-137",
@@ -1847,7 +1847,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-137\\template_CAT-137_v1.0.docx",
       "fileSizeBytes": 1770,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-138",
@@ -1860,7 +1860,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-138\\template_CAT-138_v1.0.docx",
       "fileSizeBytes": 1767,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-139",
@@ -1873,7 +1873,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-139\\template_CAT-139_v1.0.docx",
       "fileSizeBytes": 1756,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-140",
@@ -1886,7 +1886,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-140\\template_CAT-140_v1.0.docx",
       "fileSizeBytes": 1765,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-141",
@@ -1899,7 +1899,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-141\\template_CAT-141_v1.0.docx",
       "fileSizeBytes": 1771,
       "tagsFoundCount": 14,
-      "renderTimeMs": 7
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-142",
@@ -1912,7 +1912,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-142\\template_CAT-142_v1.0.docx",
       "fileSizeBytes": 1758,
       "tagsFoundCount": 13,
-      "renderTimeMs": 8
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-143",
@@ -1925,7 +1925,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-143\\template_CAT-143_v1.0.docx",
       "fileSizeBytes": 1756,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-144",
@@ -1938,7 +1938,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-144\\template_CAT-144_v1.0.docx",
       "fileSizeBytes": 1756,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-145",
@@ -1951,7 +1951,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-145\\template_CAT-145_v1.0.docx",
       "fileSizeBytes": 1756,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-146",
@@ -1964,7 +1964,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-146\\template_CAT-146_v1.0.docx",
       "fileSizeBytes": 1775,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-147",
@@ -1977,7 +1977,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-147\\template_CAT-147_v1.0.docx",
       "fileSizeBytes": 1769,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-148",
@@ -1990,7 +1990,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-148\\template_CAT-148_v1.0.docx",
       "fileSizeBytes": 1766,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-149",
@@ -2003,7 +2003,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-149\\template_CAT-149_v1.0.docx",
       "fileSizeBytes": 1767,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-150",
@@ -2016,7 +2016,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-150\\template_CAT-150_v1.0.docx",
       "fileSizeBytes": 1776,
       "tagsFoundCount": 13,
-      "renderTimeMs": 6
+      "renderTimeMs": 23
     },
     {
       "catalogId": "CAT-151",
@@ -2029,7 +2029,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-151\\template_CAT-151_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 13
     },
     {
       "catalogId": "CAT-152",
@@ -2042,7 +2042,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-152\\template_CAT-152_v1.0.docx",
       "fileSizeBytes": 1726,
       "tagsFoundCount": 12,
-      "renderTimeMs": 7
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-153",
@@ -2055,7 +2055,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-153\\template_CAT-153_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-154",
@@ -2068,7 +2068,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-154\\template_CAT-154_v1.0.docx",
       "fileSizeBytes": 1726,
       "tagsFoundCount": 12,
-      "renderTimeMs": 7
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-155",
@@ -2081,7 +2081,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-155\\template_CAT-155_v1.0.docx",
       "fileSizeBytes": 1725,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 7
     },
     {
       "catalogId": "CAT-156",
@@ -2094,7 +2094,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-156\\template_CAT-156_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-157",
@@ -2107,7 +2107,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-157\\template_CAT-157_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 7
     },
     {
       "catalogId": "CAT-158",
@@ -2120,7 +2120,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-158\\template_CAT-158_v1.0.docx",
       "fileSizeBytes": 1711,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-159",
@@ -2133,7 +2133,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-159\\template_CAT-159_v1.0.docx",
       "fileSizeBytes": 1743,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-160",
@@ -2146,7 +2146,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-160\\template_CAT-160_v1.0.docx",
       "fileSizeBytes": 1720,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 6
     },
     {
       "catalogId": "CAT-161",
@@ -2159,7 +2159,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-161\\template_CAT-161_v1.0.docx",
       "fileSizeBytes": 1734,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-162",
@@ -2172,7 +2172,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-162\\template_CAT-162_v1.0.docx",
       "fileSizeBytes": 1744,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 7
     },
     {
       "catalogId": "CAT-163",
@@ -2185,7 +2185,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-163\\template_CAT-163_v1.0.docx",
       "fileSizeBytes": 1741,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-164",
@@ -2198,7 +2198,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-164\\template_CAT-164_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-165",
@@ -2211,7 +2211,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-165\\template_CAT-165_v1.0.docx",
       "fileSizeBytes": 1709,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-166",
@@ -2224,7 +2224,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-166\\template_CAT-166_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-167",
@@ -2237,7 +2237,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-167\\template_CAT-167_v1.0.docx",
       "fileSizeBytes": 1722,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-168",
@@ -2250,7 +2250,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-168\\template_CAT-168_v1.0.docx",
       "fileSizeBytes": 1730,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-169",
@@ -2263,7 +2263,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-169\\template_CAT-169_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-170",
@@ -2276,7 +2276,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-170\\template_CAT-170_v1.0.docx",
       "fileSizeBytes": 1726,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-171",
@@ -2289,7 +2289,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-171\\template_CAT-171_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 13,
-      "renderTimeMs": 5
+      "renderTimeMs": 21
     },
     {
       "catalogId": "CAT-172",
@@ -2302,7 +2302,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-172\\template_CAT-172_v1.0.docx",
       "fileSizeBytes": 1743,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-173",
@@ -2315,7 +2315,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-173\\template_CAT-173_v1.0.docx",
       "fileSizeBytes": 1730,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-174",
@@ -2328,7 +2328,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-174\\template_CAT-174_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-175",
@@ -2341,7 +2341,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-175\\template_CAT-175_v1.0.docx",
       "fileSizeBytes": 1725,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-176",
@@ -2354,7 +2354,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-176\\template_CAT-176_v1.0.docx",
       "fileSizeBytes": 1725,
       "tagsFoundCount": 12,
-      "renderTimeMs": 9
+      "renderTimeMs": 23
     },
     {
       "catalogId": "CAT-177",
@@ -2367,7 +2367,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-177\\template_CAT-177_v1.0.docx",
       "fileSizeBytes": 1736,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-178",
@@ -2380,7 +2380,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-178\\template_CAT-178_v1.0.docx",
       "fileSizeBytes": 1708,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-179",
@@ -2393,7 +2393,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-179\\template_CAT-179_v1.0.docx",
       "fileSizeBytes": 1717,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-180",
@@ -2406,7 +2406,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-180\\template_CAT-180_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 23
     },
     {
       "catalogId": "CAT-181",
@@ -2419,7 +2419,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-181\\template_CAT-181_v1.0.docx",
       "fileSizeBytes": 1713,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-182",
@@ -2432,7 +2432,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-182\\template_CAT-182_v1.0.docx",
       "fileSizeBytes": 1719,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-183",
@@ -2445,7 +2445,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-183\\template_CAT-183_v1.0.docx",
       "fileSizeBytes": 1740,
       "tagsFoundCount": 13,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-184",
@@ -2458,7 +2458,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-184\\template_CAT-184_v1.0.docx",
       "fileSizeBytes": 1729,
       "tagsFoundCount": 12,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-185",
@@ -2471,7 +2471,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-185\\template_CAT-185_v1.0.docx",
       "fileSizeBytes": 1725,
       "tagsFoundCount": 12,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-186",
@@ -2484,7 +2484,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-186\\template_CAT-186_v1.0.docx",
       "fileSizeBytes": 1721,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-187",
@@ -2497,7 +2497,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-187\\template_CAT-187_v1.0.docx",
       "fileSizeBytes": 1712,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-188",
@@ -2510,7 +2510,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-188\\template_CAT-188_v1.0.docx",
       "fileSizeBytes": 1713,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 63
     },
     {
       "catalogId": "CAT-189",
@@ -2523,7 +2523,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-189\\template_CAT-189_v1.0.docx",
       "fileSizeBytes": 1733,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 29
     },
     {
       "catalogId": "CAT-190",
@@ -2536,7 +2536,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-190\\template_CAT-190_v1.0.docx",
       "fileSizeBytes": 1725,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-191",
@@ -2549,7 +2549,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-191\\template_CAT-191_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-192",
@@ -2562,7 +2562,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-192\\template_CAT-192_v1.0.docx",
       "fileSizeBytes": 1720,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-193",
@@ -2575,7 +2575,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-193\\template_CAT-193_v1.0.docx",
       "fileSizeBytes": 1741,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 22
     },
     {
       "catalogId": "CAT-194",
@@ -2588,7 +2588,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-194\\template_CAT-194_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-195",
@@ -2601,7 +2601,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-195\\template_CAT-195_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-196",
@@ -2614,7 +2614,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-196\\template_CAT-196_v1.0.docx",
       "fileSizeBytes": 1730,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-197",
@@ -2627,7 +2627,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-197\\template_CAT-197_v1.0.docx",
       "fileSizeBytes": 1740,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-198",
@@ -2640,7 +2640,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-198\\template_CAT-198_v1.0.docx",
       "fileSizeBytes": 1726,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-199",
@@ -2653,7 +2653,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-199\\template_CAT-199_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-200",
@@ -2666,7 +2666,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-200\\template_CAT-200_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-201",
@@ -2679,7 +2679,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-201\\template_CAT-201_v1.0.docx",
       "fileSizeBytes": 1724,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-202",
@@ -2692,7 +2692,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-202\\template_CAT-202_v1.0.docx",
       "fileSizeBytes": 1731,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-203",
@@ -2705,7 +2705,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-203\\template_CAT-203_v1.0.docx",
       "fileSizeBytes": 1731,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-204",
@@ -2718,7 +2718,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-204\\template_CAT-204_v1.0.docx",
       "fileSizeBytes": 1735,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 22
     },
     {
       "catalogId": "CAT-205",
@@ -2731,7 +2731,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-205\\template_CAT-205_v1.0.docx",
       "fileSizeBytes": 1729,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-206",
@@ -2744,7 +2744,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-206\\template_CAT-206_v1.0.docx",
       "fileSizeBytes": 1739,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-207",
@@ -2757,7 +2757,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-207\\template_CAT-207_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-208",
@@ -2770,7 +2770,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-208\\template_CAT-208_v1.0.docx",
       "fileSizeBytes": 1728,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 23
     },
     {
       "catalogId": "CAT-209",
@@ -2783,7 +2783,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-209\\template_CAT-209_v1.0.docx",
       "fileSizeBytes": 1734,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-210",
@@ -2796,7 +2796,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-210\\template_CAT-210_v1.0.docx",
       "fileSizeBytes": 1724,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-211",
@@ -2809,7 +2809,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-211\\template_CAT-211_v1.0.docx",
       "fileSizeBytes": 1739,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-212",
@@ -2822,7 +2822,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-212\\template_CAT-212_v1.0.docx",
       "fileSizeBytes": 1714,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-213",
@@ -2835,7 +2835,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-213\\template_CAT-213_v1.0.docx",
       "fileSizeBytes": 1717,
       "tagsFoundCount": 11,
-      "renderTimeMs": 13
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-214",
@@ -2848,7 +2848,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-214\\template_CAT-214_v1.0.docx",
       "fileSizeBytes": 1717,
       "tagsFoundCount": 11,
-      "renderTimeMs": 7
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-215",
@@ -2861,7 +2861,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-215\\template_CAT-215_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-216",
@@ -2874,7 +2874,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-216\\template_CAT-216_v1.0.docx",
       "fileSizeBytes": 1717,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-217",
@@ -2887,7 +2887,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-217\\template_CAT-217_v1.0.docx",
       "fileSizeBytes": 1726,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-218",
@@ -2900,7 +2900,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-218\\template_CAT-218_v1.0.docx",
       "fileSizeBytes": 1727,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-219",
@@ -2913,7 +2913,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-219\\template_CAT-219_v1.0.docx",
       "fileSizeBytes": 1733,
       "tagsFoundCount": 11,
-      "renderTimeMs": 5
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-220",
@@ -2926,7 +2926,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-220\\template_CAT-220_v1.0.docx",
       "fileSizeBytes": 1723,
       "tagsFoundCount": 11,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-221",
@@ -2939,7 +2939,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-221\\template_CAT-221_v1.0.docx",
       "fileSizeBytes": 1614,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-222",
@@ -2952,7 +2952,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-222\\template_CAT-222_v1.0.docx",
       "fileSizeBytes": 1621,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-223",
@@ -2965,7 +2965,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-223\\template_CAT-223_v1.0.docx",
       "fileSizeBytes": 1609,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-224",
@@ -2978,7 +2978,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-224\\template_CAT-224_v1.0.docx",
       "fileSizeBytes": 1624,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 24
     },
     {
       "catalogId": "CAT-225",
@@ -2991,7 +2991,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-225\\template_CAT-225_v1.0.docx",
       "fileSizeBytes": 1616,
       "tagsFoundCount": 6,
-      "renderTimeMs": 3
+      "renderTimeMs": 23
     },
     {
       "catalogId": "CAT-226",
@@ -3004,7 +3004,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-226\\template_CAT-226_v1.0.docx",
       "fileSizeBytes": 1616,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-227",
@@ -3017,7 +3017,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-227\\template_CAT-227_v1.0.docx",
       "fileSizeBytes": 1603,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-228",
@@ -3030,7 +3030,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-228\\template_CAT-228_v1.0.docx",
       "fileSizeBytes": 1610,
       "tagsFoundCount": 6,
-      "renderTimeMs": 3
+      "renderTimeMs": 53
     },
     {
       "catalogId": "CAT-229",
@@ -3043,7 +3043,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-229\\template_CAT-229_v1.0.docx",
       "fileSizeBytes": 1628,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-230",
@@ -3056,7 +3056,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-230\\template_CAT-230_v1.0.docx",
       "fileSizeBytes": 1603,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-231",
@@ -3069,7 +3069,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-231\\template_CAT-231_v1.0.docx",
       "fileSizeBytes": 1607,
       "tagsFoundCount": 6,
-      "renderTimeMs": 3
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-232",
@@ -3082,7 +3082,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-232\\template_CAT-232_v1.0.docx",
       "fileSizeBytes": 1614,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-233",
@@ -3095,7 +3095,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-233\\template_CAT-233_v1.0.docx",
       "fileSizeBytes": 1605,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-234",
@@ -3108,7 +3108,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-234\\template_CAT-234_v1.0.docx",
       "fileSizeBytes": 1636,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-235",
@@ -3121,7 +3121,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-235\\template_CAT-235_v1.0.docx",
       "fileSizeBytes": 1604,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 13
     },
     {
       "catalogId": "CAT-236",
@@ -3134,7 +3134,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-236\\template_CAT-236_v1.0.docx",
       "fileSizeBytes": 1613,
       "tagsFoundCount": 6,
-      "renderTimeMs": 3
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-237",
@@ -3147,7 +3147,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-237\\template_CAT-237_v1.0.docx",
       "fileSizeBytes": 1612,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-238",
@@ -3160,7 +3160,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-238\\template_CAT-238_v1.0.docx",
       "fileSizeBytes": 1614,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-239",
@@ -3173,7 +3173,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-239\\template_CAT-239_v1.0.docx",
       "fileSizeBytes": 1607,
       "tagsFoundCount": 6,
-      "renderTimeMs": 3
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-240",
@@ -3186,7 +3186,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-240\\template_CAT-240_v1.0.docx",
       "fileSizeBytes": 1614,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-241",
@@ -3199,7 +3199,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-241\\template_CAT-241_v1.0.docx",
       "fileSizeBytes": 1617,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-242",
@@ -3212,7 +3212,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-242\\template_CAT-242_v1.0.docx",
       "fileSizeBytes": 1621,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-243",
@@ -3225,7 +3225,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-243\\template_CAT-243_v1.0.docx",
       "fileSizeBytes": 1600,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-244",
@@ -3238,7 +3238,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-244\\template_CAT-244_v1.0.docx",
       "fileSizeBytes": 1631,
       "tagsFoundCount": 7,
-      "renderTimeMs": 5
+      "renderTimeMs": 19
     },
     {
       "catalogId": "CAT-245",
@@ -3251,7 +3251,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-245\\template_CAT-245_v1.0.docx",
       "fileSizeBytes": 1619,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-246",
@@ -3264,7 +3264,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-246\\template_CAT-246_v1.0.docx",
       "fileSizeBytes": 1593,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-247",
@@ -3277,7 +3277,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-247\\template_CAT-247_v1.0.docx",
       "fileSizeBytes": 1583,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-248",
@@ -3290,7 +3290,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-248\\template_CAT-248_v1.0.docx",
       "fileSizeBytes": 1590,
       "tagsFoundCount": 6,
-      "renderTimeMs": 6
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-249",
@@ -3303,7 +3303,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-249\\template_CAT-249_v1.0.docx",
       "fileSizeBytes": 1589,
       "tagsFoundCount": 6,
-      "renderTimeMs": 6
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-250",
@@ -3316,7 +3316,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-250\\template_CAT-250_v1.0.docx",
       "fileSizeBytes": 1581,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 22
     },
     {
       "catalogId": "CAT-251",
@@ -3329,7 +3329,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-251\\template_CAT-251_v1.0.docx",
       "fileSizeBytes": 1595,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-252",
@@ -3342,7 +3342,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-252\\template_CAT-252_v1.0.docx",
       "fileSizeBytes": 1623,
       "tagsFoundCount": 7,
-      "renderTimeMs": 3
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-253",
@@ -3355,7 +3355,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-253\\template_CAT-253_v1.0.docx",
       "fileSizeBytes": 1593,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-254",
@@ -3368,7 +3368,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-254\\template_CAT-254_v1.0.docx",
       "fileSizeBytes": 1586,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-255",
@@ -3381,7 +3381,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-255\\template_CAT-255_v1.0.docx",
       "fileSizeBytes": 1585,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 18
     },
     {
       "catalogId": "CAT-256",
@@ -3394,7 +3394,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-256\\template_CAT-256_v1.0.docx",
       "fileSizeBytes": 1588,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-257",
@@ -3407,7 +3407,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-257\\template_CAT-257_v1.0.docx",
       "fileSizeBytes": 1592,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 20
     },
     {
       "catalogId": "CAT-258",
@@ -3420,7 +3420,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-258\\template_CAT-258_v1.0.docx",
       "fileSizeBytes": 1585,
       "tagsFoundCount": 6,
-      "renderTimeMs": 9
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-259",
@@ -3433,7 +3433,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-259\\template_CAT-259_v1.0.docx",
       "fileSizeBytes": 1586,
       "tagsFoundCount": 6,
-      "renderTimeMs": 7
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-260",
@@ -3446,7 +3446,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-260\\template_CAT-260_v1.0.docx",
       "fileSizeBytes": 1602,
       "tagsFoundCount": 7,
-      "renderTimeMs": 8
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-261",
@@ -3459,7 +3459,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-261\\template_CAT-261_v1.0.docx",
       "fileSizeBytes": 1593,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-262",
@@ -3472,7 +3472,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-262\\template_CAT-262_v1.0.docx",
       "fileSizeBytes": 1609,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-263",
@@ -3485,7 +3485,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-263\\template_CAT-263_v1.0.docx",
       "fileSizeBytes": 1591,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-264",
@@ -3498,7 +3498,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-264\\template_CAT-264_v1.0.docx",
       "fileSizeBytes": 1588,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-265",
@@ -3511,7 +3511,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-265\\template_CAT-265_v1.0.docx",
       "fileSizeBytes": 1595,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-266",
@@ -3524,7 +3524,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-266\\template_CAT-266_v1.0.docx",
       "fileSizeBytes": 1602,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-267",
@@ -3537,7 +3537,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-267\\template_CAT-267_v1.0.docx",
       "fileSizeBytes": 1600,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-268",
@@ -3550,7 +3550,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-268\\template_CAT-268_v1.0.docx",
       "fileSizeBytes": 1582,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-269",
@@ -3563,7 +3563,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-269\\template_CAT-269_v1.0.docx",
       "fileSizeBytes": 1599,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-270",
@@ -3576,7 +3576,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-270\\template_CAT-270_v1.0.docx",
       "fileSizeBytes": 1597,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 15
     },
     {
       "catalogId": "CAT-271",
@@ -3589,7 +3589,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-271\\template_CAT-271_v1.0.docx",
       "fileSizeBytes": 1606,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-272",
@@ -3602,7 +3602,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-272\\template_CAT-272_v1.0.docx",
       "fileSizeBytes": 1594,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 14
     },
     {
       "catalogId": "CAT-273",
@@ -3615,7 +3615,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-273\\template_CAT-273_v1.0.docx",
       "fileSizeBytes": 1593,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 48
     },
     {
       "catalogId": "CAT-274",
@@ -3628,7 +3628,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-274\\template_CAT-274_v1.0.docx",
       "fileSizeBytes": 1608,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 26
     },
     {
       "catalogId": "CAT-275",
@@ -3641,7 +3641,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-275\\template_CAT-275_v1.0.docx",
       "fileSizeBytes": 1590,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 17
     },
     {
       "catalogId": "CAT-276",
@@ -3654,7 +3654,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-276\\template_CAT-276_v1.0.docx",
       "fileSizeBytes": 1600,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-277",
@@ -3667,7 +3667,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-277\\template_CAT-277_v1.0.docx",
       "fileSizeBytes": 1599,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 16
     },
     {
       "catalogId": "CAT-278",
@@ -3680,7 +3680,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-278\\template_CAT-278_v1.0.docx",
       "fileSizeBytes": 1612,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-279",
@@ -3693,7 +3693,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-279\\template_CAT-279_v1.0.docx",
       "fileSizeBytes": 1611,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-280",
@@ -3706,7 +3706,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-280\\template_CAT-280_v1.0.docx",
       "fileSizeBytes": 1609,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-281",
@@ -3719,7 +3719,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-281\\template_CAT-281_v1.0.docx",
       "fileSizeBytes": 1598,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-282",
@@ -3732,7 +3732,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-282\\template_CAT-282_v1.0.docx",
       "fileSizeBytes": 1595,
       "tagsFoundCount": 7,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-283",
@@ -3745,7 +3745,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-283\\template_CAT-283_v1.0.docx",
       "fileSizeBytes": 1601,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-284",
@@ -3758,7 +3758,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-284\\template_CAT-284_v1.0.docx",
       "fileSizeBytes": 1587,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-285",
@@ -3771,7 +3771,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-285\\template_CAT-285_v1.0.docx",
       "fileSizeBytes": 1590,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-286",
@@ -3784,7 +3784,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-286\\template_CAT-286_v1.0.docx",
       "fileSizeBytes": 1583,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 9
     },
     {
       "catalogId": "CAT-287",
@@ -3797,7 +3797,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-287\\template_CAT-287_v1.0.docx",
       "fileSizeBytes": 1584,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-288",
@@ -3810,7 +3810,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-288\\template_CAT-288_v1.0.docx",
       "fileSizeBytes": 1587,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-289",
@@ -3823,7 +3823,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-289\\template_CAT-289_v1.0.docx",
       "fileSizeBytes": 1583,
       "tagsFoundCount": 6,
-      "renderTimeMs": 5
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-290",
@@ -3836,7 +3836,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-290\\template_CAT-290_v1.0.docx",
       "fileSizeBytes": 1593,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 13
     },
     {
       "catalogId": "CAT-291",
@@ -3849,7 +3849,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-291\\template_CAT-291_v1.0.docx",
       "fileSizeBytes": 1604,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 12
     },
     {
       "catalogId": "CAT-292",
@@ -3862,7 +3862,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-292\\template_CAT-292_v1.0.docx",
       "fileSizeBytes": 1606,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-293",
@@ -3875,7 +3875,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-293\\template_CAT-293_v1.0.docx",
       "fileSizeBytes": 1604,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-294",
@@ -3888,7 +3888,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-294\\template_CAT-294_v1.0.docx",
       "fileSizeBytes": 1602,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-295",
@@ -3901,7 +3901,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-295\\template_CAT-295_v1.0.docx",
       "fileSizeBytes": 1617,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-296",
@@ -3914,7 +3914,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-296\\template_CAT-296_v1.0.docx",
       "fileSizeBytes": 1595,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-297",
@@ -3927,7 +3927,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-297\\template_CAT-297_v1.0.docx",
       "fileSizeBytes": 1611,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-298",
@@ -3940,7 +3940,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-298\\template_CAT-298_v1.0.docx",
       "fileSizeBytes": 1603,
       "tagsFoundCount": 6,
-      "renderTimeMs": 4
+      "renderTimeMs": 10
     },
     {
       "catalogId": "CAT-299",
@@ -3953,7 +3953,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-299\\template_CAT-299_v1.0.docx",
       "fileSizeBytes": 1600,
       "tagsFoundCount": 6,
-      "renderTimeMs": 6
+      "renderTimeMs": 11
     },
     {
       "catalogId": "CAT-300",
@@ -3966,7 +3966,7 @@
       "templatePath": "D:\\Kiaan\\legal-pro\\storage\\templates\\CAT-300\\template_CAT-300_v1.0.docx",
       "fileSizeBytes": 1609,
       "tagsFoundCount": 6,
-      "renderTimeMs": 12
+      "renderTimeMs": 9
     }
   ]
 }
