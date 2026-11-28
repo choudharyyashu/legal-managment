@@ -189,6 +189,24 @@ export class DraftEngine {
         paragraphLoop: true,
         linebreaks: true,
         nullGetter: () => '',
+        parser: (tag: string) => {
+          return {
+            get: (scope: any) => {
+              if (tag === '.') return scope;
+              if (scope && scope[tag] !== undefined) return scope[tag];
+              if (tag.includes('.')) {
+                const parts = tag.split('.');
+                let curr = scope;
+                for (const p of parts) {
+                  if (curr === null || curr === undefined) return '';
+                  curr = curr[p];
+                }
+                if (curr !== undefined) return curr;
+              }
+              return '';
+            },
+          };
+        },
       });
     } catch (err: any) {
       throw AppError.badRequest(

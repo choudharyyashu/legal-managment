@@ -38,6 +38,7 @@ import { integrationsRouter } from './modules/integrations/integrations.routes.j
 import { brandingRouter } from './modules/settings/branding.routes.js';
 import { notificationRouter } from './modules/notifications/notification.routes.js';
 import { workflowRouter } from './modules/workflows/workflow.routes.js';
+import portalRouter from './modules/portal/portal.routes.js';
 import { notFoundHandler } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -204,6 +205,8 @@ app.use('/api/v1/notifications', notificationRouter);
 app.use('/notifications', notificationRouter);
 app.use('/api/v1/workflows', workflowRouter);
 app.use('/workflows', workflowRouter);
+app.use('/api/v1/portal', portalRouter);
+app.use('/portal', portalRouter);
 
 // 404 Catch-All for unmatched API routes
 app.use(notFoundHandler);

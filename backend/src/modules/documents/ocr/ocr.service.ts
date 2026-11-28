@@ -187,4 +187,85 @@ export class OcrService {
       warnings,
     };
   }
+
+  /**
+   * Classifies extracted document text into functional legal document categories.
+   */
+  static classifyDocument(text: string): {
+    category: 'PLEADING' | 'MEDICAL_RECORD' | 'POLICE_ACCIDENT_REPORT' | 'DEPOSITION_TRANSCRIPT' | 'CONTRACT_ENGAGEMENT' | 'GENERAL_CORRESPONDENCE';
+    confidence: number;
+    matchedKeywords: string[];
+  } {
+    const upper = (text || '').toUpperCase();
+    const checks = [
+      {
+        category: 'DEPOSITION_TRANSCRIPT' as const,
+        keywords: ['DEPOSITION OF', 'CERTIFIED SHORTHAND', 'EXAMINATION BY', 'QUESTIONS AND ANSWERS', 'REPORTED BY'],
+      },
+      {
+        category: 'PLEADING' as const,
+        keywords: ['PLAINTIFF', 'DEFENDANT', 'DISTRICT COURT', 'CIVIL NO.', 'COMPLAINT AND', 'MOTION FOR', 'SUMMONS'],
+      },
+      {
+        category: 'POLICE_ACCIDENT_REPORT' as const,
+        keywords: ['POLICE DEPARTMENT', 'TRAFFIC ACCIDENT', 'INVESTIGATING OFFICER', 'VEHICLE 1', 'CRASH DIAGRAM'],
+      },
+      {
+        category: 'MEDICAL_RECORD' as const,
+        keywords: ['CHIEF COMPLAINT', 'PHYSICAL EXAMINATION', 'DIAGNOSIS', 'PROGNOSIS', 'TREATMENT PLAN', 'CLINIC', 'PATIENT:'],
+      },
+      {
+        category: 'CONTRACT_ENGAGEMENT' as const,
+        keywords: ['RETAINER AGREEMENT', 'SCOPE OF REPRESENTATION', 'LEGAL FEES', 'IN WITNESS WHEREOF', 'TERMS OF ENGAGEMENT'],
+      },
+    ];
+
+    let bestMatch = {
+      category: 'GENERAL_CORRESPONDENCE' as 'PLEADING' | 'MEDICAL_RECORD' | 'POLICE_ACCIDENT_REPORT' | 'DEPOSITION_TRANSCRIPT' | 'CONTRACT_ENGAGEMENT' | 'GENERAL_CORRESPONDENCE',
+      confidence: 0.6,
+      matchedKeywords: [] as string[],
+    };
+
+    let highestScore = 0;
+    for (const check of checks) {
+      const matched = check.keywords.filter((kw) => upper.includes(kw));
+      if (matched.length > highestScore) {
+        highestScore = matched.length;
+        bestMatch = {
+          category: check.category,
+          confidence: matched.length >= 2 ? 0.95 : 0.75,
+          matchedKeywords: matched,
+        };
+      }
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * Generates source-linked chronological entries preserving paragraph and line references.
+   */
+  static extractChronologyWithSourceReferences(
+    text: string,
+    documentTitle: string
+  ): Array<{ date: string; sourceDocument: string; paragraphIndex: number; excerpt: string }> {
+    const paragraphs = (text || '').split(/\r?\n\r?\n/).map((p) => p.trim()).filter(Boolean);
+    const dateRegex = /\b(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}|\d{4}-\d{2}-\d{2})\b/i;
+
+    const chronology: Array<{ date: string; sourceDocument: string; paragraphIndex: number; excerpt: string }> = [];
+
+    paragraphs.forEach((para, idx) => {
+      const match = para.match(dateRegex);
+      if (match) {
+        chronology.push({
+          date: match[0],
+          sourceDocument: documentTitle,
+          paragraphIndex: idx + 1,
+          excerpt: para.length > 200 ? `${para.substring(0, 197)}...` : para,
+        });
+      }
+    });
+
+    return chronology;
+  }
 }

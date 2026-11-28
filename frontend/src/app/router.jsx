@@ -18,6 +18,8 @@ import { IntakeList } from '../features/intake/pages/IntakeList';
 import { DocumentsList } from '../features/documents/pages/DocumentsList';
 import { CommunicationsList } from '../features/communications/pages/CommunicationsList';
 import { ClientPortalPreview } from '../features/clients/pages/ClientPortalPreview';
+import { ClientLogin } from '../features/portal/ClientLogin';
+import { ClientPortalDashboard } from '../features/portal/ClientPortalDashboard';
 
 // Phase 2 Specialty Practice: Immigration (Docketwise Model)
 import { ImmigrationCasesList } from '../features/immigration/pages/ImmigrationCasesList';
@@ -116,6 +118,19 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
+  },
+  // Separate Public Client Portal Standalone Routes
+  {
+    path: '/portal/login',
+    element: <ClientLogin />,
+  },
+  {
+    path: '/portal/dashboard',
+    element: <ClientPortalDashboard />,
+  },
+  {
+    path: '/portal',
+    element: <Navigate to="/portal/login" replace />,
   },
   // Authenticated Application Shell
   {

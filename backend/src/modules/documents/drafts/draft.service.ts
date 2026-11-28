@@ -400,6 +400,21 @@ export class DraftService {
     const storedDraft = await StorageService.writeFile(`drafts/${matter.id}/${draftCode}.docx`, generatedBuffer);
     const draftStorageKey = storedDraft.storageKey;
 
+    // 6b. Automatically Generate and Store Companion PDF via PDFKit
+    let pdfStorageKey: string | null = null;
+    try {
+      const pdfBuffer = await DraftEngine.convertDocxToPdf(generatedBuffer, draftCode, {
+        title: input.title || `${template.templateName} - ${matter.title}`,
+        draftCode,
+        matterNumber: matter.matterNumber,
+        clientName: matter.client?.name,
+      });
+      const storedPdf = await StorageService.writeFile(`drafts/${matter.id}/${draftCode}.pdf`, pdfBuffer);
+      pdfStorageKey = storedPdf.storageKey;
+    } catch (pdfErr) {
+      console.warn(`[DraftService] Companion PDF auto-generation warning for ${draftCode}:`, pdfErr);
+    }
+
     // 7. Save Draft Metadata in Database
     const title = input.title || `${template.templateName} - ${matter.title}`;
     const status = input.initialStatus || (resolved.isValid ? 'Draft' : 'Under Review');
@@ -422,7 +437,7 @@ export class DraftService {
             title,
             status,
             docxStorageKey: draftStorageKey,
-            pdfStorageKey: null,
+            pdfStorageKey,
             missingFieldsFlags: initialFlags,
             generatedByUserId: currentUser.id,
             hasManualEdits: false,
