@@ -7,8 +7,9 @@ import {
 } from './workflow.types.js';
 import {
   StageQueryInput,
+  UpdateStageInput,
+  CreateStageInput,
   UpdateStageChecklistInput,
-  AddChecklistItemInput,
   AddAutomationRuleInput,
   ToggleMatterChecklistInput,
 } from './workflow.validation.js';
@@ -89,12 +90,101 @@ export class WorkflowService {
   }
 
   /**
+   * Updates full stage properties (checklist, autoTasks, stageName, stageCode, stageOrder, isActive) in MySQL.
+   */
+  static async updateStage(
+    stageId: string,
+    input: UpdateStageInput,
+    _context: { userId: string; userRole: string }
+  ): Promise<WorkflowStageResponse> {
+    const existing = await prisma.workflowStage.findUnique({ where: { id: stageId } });
+    if (!existing) {
+      throw AppError.notFound(`Workflow stage '${stageId}' not found.`);
+    }
+
+    const dataToUpdate: any = {};
+    if (input.stageName !== undefined) dataToUpdate.stageName = input.stageName;
+    if (input.stageCode !== undefined) dataToUpdate.stageCode = input.stageCode;
+    if (input.stageOrder !== undefined) dataToUpdate.stageOrder = input.stageOrder;
+    if (input.requiredFields !== undefined) dataToUpdate.requiredFields = input.requiredFields;
+    if (input.autoTasks !== undefined) dataToUpdate.autoTasks = input.autoTasks;
+    if (input.isActive !== undefined) dataToUpdate.isActive = input.isActive;
+
+    const updated = await prisma.workflowStage.update({
+      where: { id: stageId },
+      data: dataToUpdate,
+      include: {
+        practiceArea: { select: { id: true, name: true, code: true, brandColor: true } },
+      },
+    });
+
+    return {
+      id: updated.id,
+      practiceAreaId: updated.practiceAreaId,
+      practiceAreaName: updated.practiceArea?.name || 'General Practice',
+      practiceAreaCode: updated.practiceArea?.code || 'GEN',
+      brandColor: updated.practiceArea?.brandColor || '#06244B',
+      stageName: updated.stageName,
+      stageCode: updated.stageCode,
+      stageOrder: updated.stageOrder,
+      requiredFields: Array.isArray(updated.requiredFields) ? (updated.requiredFields as string[]) : [],
+      autoTasks: Array.isArray(updated.autoTasks) ? (updated.autoTasks as any as WorkflowAutoTask[]) : [],
+      isActive: updated.isActive,
+    };
+  }
+
+  /**
+   * Creates a new workflow stage for a practice area.
+   */
+  static async createStage(
+    input: CreateStageInput,
+    _context: { userId: string; userRole: string }
+  ): Promise<WorkflowStageResponse> {
+    const pa = await prisma.practiceArea.findUnique({ where: { id: input.practiceAreaId } });
+    if (!pa) {
+      throw AppError.notFound(`Practice Area '${input.practiceAreaId}' not found.`);
+    }
+
+    const newId = `ws-${pa.code.toLowerCase()}-${Date.now().toString().slice(-4)}`;
+
+    const created = await prisma.workflowStage.create({
+      data: {
+        id: newId,
+        practiceAreaId: input.practiceAreaId,
+        stageName: input.stageName,
+        stageCode: input.stageCode,
+        stageOrder: input.stageOrder,
+        requiredFields: input.requiredFields as any,
+        autoTasks: input.autoTasks as any,
+        isActive: true,
+      },
+      include: {
+        practiceArea: { select: { id: true, name: true, code: true, brandColor: true } },
+      },
+    });
+
+    return {
+      id: created.id,
+      practiceAreaId: created.practiceAreaId,
+      practiceAreaName: created.practiceArea?.name || 'General Practice',
+      practiceAreaCode: created.practiceArea?.code || 'GEN',
+      brandColor: created.practiceArea?.brandColor || '#06244B',
+      stageName: created.stageName,
+      stageCode: created.stageCode,
+      stageOrder: created.stageOrder,
+      requiredFields: Array.isArray(created.requiredFields) ? (created.requiredFields as string[]) : [],
+      autoTasks: Array.isArray(created.autoTasks) ? (created.autoTasks as any as WorkflowAutoTask[]) : [],
+      isActive: created.isActive,
+    };
+  }
+
+  /**
    * Updates master checklist items (requiredFields) on a workflow stage permanently in MySQL.
    */
   static async updateStageChecklist(
     stageId: string,
     input: UpdateStageChecklistInput,
-    context: { userId: string; userRole: string }
+    _context: { userId: string; userRole: string }
   ): Promise<WorkflowStageResponse> {
     const existing = await prisma.workflowStage.findUnique({ where: { id: stageId } });
     if (!existing) {
@@ -132,7 +222,7 @@ export class WorkflowService {
   static async addAutomationRule(
     stageId: string,
     input: AddAutomationRuleInput,
-    context: { userId: string; userRole: string }
+    _context: { userId: string; userRole: string }
   ): Promise<WorkflowStageResponse> {
     const stage = await prisma.workflowStage.findUnique({ where: { id: stageId } });
     if (!stage) {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Layers,
   Plus,
@@ -13,13 +13,21 @@ import {
   GitMerge,
   BellRing,
   History,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 import { PageHeader } from '../../../components/shared/PageHeader';
 import { Button } from '../../../components/ui/Button';
 import { Tabs } from '../../../components/ui/Tabs';
 import { useToast } from '../../../components/ui/Toast';
-import { PRACTICE_AREA_WORKFLOWS } from '../../../data/practiceAreaWorkflows';
+import { useAuth } from '../../../context/AuthContext';
+import {
+  PRACTICE_AREA_WORKFLOWS,
+  PRACTICE_AREA_NAME_TO_ID,
+  PRACTICE_AREA_ID_TO_NAME,
+} from '../../../data/practiceAreaWorkflows';
 import { buildInitialWorkflowEnhancements } from '../../../data/mockWorkflowEnhancements';
+import { workflowService } from '../../../services/workflowService';
 import {
   ConditionalBranchesPanel,
   ParallelTasksPanel,
@@ -29,11 +37,22 @@ import {
 
 export function WorkflowManager() {
   const { addToast } = useToast();
+  const { currentUser, rolePermissions } = useAuth();
+
+  // Check if current user has administrative permission to manage templates (templates:manage or super_admin)
+  const canManageWorkflows = useMemo(() => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'super_admin') return true;
+    const userPerms = rolePermissions?.[currentUser.role] || [];
+    return userPerms.includes('templates:manage') || userPerms.includes('admin:manage');
+  }, [currentUser, rolePermissions]);
 
   const practiceAreaNames = Object.keys(PRACTICE_AREA_WORKFLOWS);
   const [selectedPracticeArea, setSelectedPracticeArea] = useState(practiceAreaNames[0]);
   const [workflows, setWorkflows] = useState(PRACTICE_AREA_WORKFLOWS);
   const [activeTab, setActiveTab] = useState('stages');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [enhancementsByArea, setEnhancementsByArea] = useState(() =>
     buildInitialWorkflowEnhancements(practiceAreaNames)
   );
@@ -41,7 +60,7 @@ export function WorkflowManager() {
   const currentStages = workflows[selectedPracticeArea] || [];
   const [selectedStageId, setSelectedStageId] = useState(currentStages[0]?.id || '');
 
-  const activeStage = currentStages.find(s => s.id === selectedStageId) || currentStages[0];
+  const activeStage = currentStages.find((s) => s.id === selectedStageId) || currentStages[0];
 
   // State for adding a new required field
   const [newRequiredField, setNewRequiredField] = useState('');
@@ -50,6 +69,44 @@ export function WorkflowManager() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskRole, setNewTaskRole] = useState('Attorney');
   const [newTaskDays, setNewTaskDays] = useState(7);
+
+  // Load stages from backend database for selected practice area
+  const loadStagesForArea = useCallback(async (areaName) => {
+    const paId = PRACTICE_AREA_NAME_TO_ID[areaName];
+    if (!paId) return;
+
+    try {
+      setIsLoading(true);
+      const dbStages = await workflowService.getStages({ practiceAreaId: paId });
+      if (Array.isArray(dbStages) && dbStages.length > 0) {
+        const mappedStages = dbStages.map((s) => ({
+          id: s.id,
+          name: s.stageName,
+          code: s.stageCode,
+          stageOrder: s.stageOrder,
+          requiredFields: Array.isArray(s.requiredFields) ? s.requiredFields : [],
+          autoTasks: Array.isArray(s.autoTasks) ? s.autoTasks : [],
+        }));
+
+        setWorkflows((prev) => ({
+          ...prev,
+          [areaName]: mappedStages,
+        }));
+
+        if (!mappedStages.some((st) => st.id === selectedStageId)) {
+          setSelectedStageId(mappedStages[0]?.id || '');
+        }
+      }
+    } catch (err) {
+      console.warn(`Could not load workflow stages for ${areaName} from backend:`, err?.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedStageId]);
+
+  useEffect(() => {
+    loadStagesForArea(selectedPracticeArea);
+  }, [selectedPracticeArea, loadStagesForArea]);
 
   const handleSelectPracticeArea = (name) => {
     setSelectedPracticeArea(name);
@@ -61,14 +118,14 @@ export function WorkflowManager() {
 
   const handleAddRequiredField = (e) => {
     e.preventDefault();
-    if (!newRequiredField.trim()) return;
+    if (!newRequiredField.trim() || !activeStage) return;
 
-    setWorkflows(prev => {
-      const updatedStages = (prev[selectedPracticeArea] || []).map(st => {
+    setWorkflows((prev) => {
+      const updatedStages = (prev[selectedPracticeArea] || []).map((st) => {
         if (st.id === activeStage.id) {
           return {
             ...st,
-            requiredFields: [...(st.requiredFields || []), newRequiredField.trim()]
+            requiredFields: [...(st.requiredFields || []), newRequiredField.trim()],
           };
         }
         return st;
@@ -77,14 +134,15 @@ export function WorkflowManager() {
     });
 
     setNewRequiredField('');
-    addToast(`Gatekeeper requirement added to stage "${activeStage.name}".`, 'success');
+    addToast(`Gatekeeper requirement added to stage "${activeStage.name}". Click Save to persist.`, 'info');
   };
 
   const handleRemoveRequiredField = (fieldIndex) => {
-    setWorkflows(prev => {
-      const updatedStages = (prev[selectedPracticeArea] || []).map(st => {
+    if (!activeStage) return;
+    setWorkflows((prev) => {
+      const updatedStages = (prev[selectedPracticeArea] || []).map((st) => {
         if (st.id === activeStage.id) {
-          const filtered = [...st.requiredFields];
+          const filtered = [...(st.requiredFields || [])];
           filtered.splice(fieldIndex, 1);
           return { ...st, requiredFields: filtered };
         }
@@ -92,15 +150,15 @@ export function WorkflowManager() {
       });
       return { ...prev, [selectedPracticeArea]: updatedStages };
     });
-    addToast('Requirement removed.', 'info');
+    addToast('Requirement removed locally. Click Save to persist.', 'info');
   };
 
   const handleAddAutoTask = (e) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || !activeStage) return;
 
-    setWorkflows(prev => {
-      const updatedStages = (prev[selectedPracticeArea] || []).map(st => {
+    setWorkflows((prev) => {
+      const updatedStages = (prev[selectedPracticeArea] || []).map((st) => {
         if (st.id === activeStage.id) {
           return {
             ...st,
@@ -110,9 +168,9 @@ export function WorkflowManager() {
                 title: newTaskTitle.trim(),
                 role: newTaskRole,
                 dueDays: Number(newTaskDays),
-                priority: 'High'
-              }
-            ]
+                priority: 'High',
+              },
+            ],
           };
         }
         return st;
@@ -121,14 +179,15 @@ export function WorkflowManager() {
     });
 
     setNewTaskTitle('');
-    addToast(`Automated trigger task added to stage "${activeStage.name}".`, 'success');
+    addToast(`Automated trigger task added to stage "${activeStage.name}". Click Save to persist.`, 'info');
   };
 
   const handleRemoveAutoTask = (taskIndex) => {
-    setWorkflows(prev => {
-      const updatedStages = (prev[selectedPracticeArea] || []).map(st => {
+    if (!activeStage) return;
+    setWorkflows((prev) => {
+      const updatedStages = (prev[selectedPracticeArea] || []).map((st) => {
         if (st.id === activeStage.id) {
-          const filtered = [...st.autoTasks];
+          const filtered = [...(st.autoTasks || [])];
           filtered.splice(taskIndex, 1);
           return { ...st, autoTasks: filtered };
         }
@@ -136,7 +195,7 @@ export function WorkflowManager() {
       });
       return { ...prev, [selectedPracticeArea]: updatedStages };
     });
-    addToast('Automated task rule removed.', 'info');
+    addToast('Automated task rule removed locally. Click Save to persist.', 'info');
   };
 
   const currentEnhancements = useMemo(
@@ -235,7 +294,10 @@ export function WorkflowManager() {
         },
       };
     });
-    addToast(`Escalation rule status updated to ${nextStatus}.`, nextStatus === 'Escalated' ? 'warning' : 'success');
+    addToast(
+      `Escalation rule status updated to ${nextStatus}.`,
+      nextStatus === 'Escalated' ? 'warning' : 'success'
+    );
   };
 
   const handleAddEscalation = (newRule) => {
@@ -271,16 +333,52 @@ export function WorkflowManager() {
     });
     const restored = currentEnhancements.versions.find((v) => v.id === versionId);
     addToast(
-      `Workflow schema restored to ${restored?.versionNumber || 'selected version'} (Demo UI).`,
+      `Workflow schema restored to ${restored?.versionNumber || 'selected version'}.`,
       'success'
     );
   };
 
-  const handleSaveAll = () => {
-    addToast(
-      `Firm administrative workflow schema for "${selectedPracticeArea}" successfully saved to database!`,
-      'success'
-    );
+  // Real persistence to database via workflowService
+  const handleSaveAll = async () => {
+    if (!canManageWorkflows) {
+      addToast('Access Denied: Only administrators can modify firm workflow schemas.', 'error');
+      return;
+    }
+
+    const stagesToSave = workflows[selectedPracticeArea] || [];
+    if (stagesToSave.length === 0) return;
+
+    try {
+      setIsSaving(true);
+      let savedCount = 0;
+
+      for (const stage of stagesToSave) {
+        if (stage.id) {
+          await workflowService.updateStage(stage.id, {
+            stageName: stage.name,
+            stageCode: stage.code,
+            stageOrder: stage.stageOrder,
+            requiredFields: stage.requiredFields || [],
+            autoTasks: stage.autoTasks || [],
+          });
+          savedCount++;
+        }
+      }
+
+      addToast(
+        `Saved ${savedCount} workflow stages for "${selectedPracticeArea}" to local database!`,
+        'success'
+      );
+      await loadStagesForArea(selectedPracticeArea);
+    } catch (err) {
+      console.error('Save workflow error:', err);
+      addToast(
+        `Failed to save workflow stages: ${err?.response?.data?.message || err?.message || 'Server error'}`,
+        'error'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleResetDefault = () => {
@@ -296,13 +394,22 @@ export function WorkflowManager() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
           <span>
-            <strong>Configurable Matter Workflows (Filevine Architecture):</strong> Firm administrators can modify matter stages, gatekeeper conditions, and automatic task assignments across all 9 practice areas without developer code changes.
+            <strong>Configurable Matter Workflows (Filevine Architecture):</strong> Firm administrators can modify matter stages, gatekeeper conditions, and automatic task assignments across all 9 practice areas with direct database persistence.
           </span>
         </div>
         <span className="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px]">
           FIRM ADMIN CONFIG
         </span>
       </div>
+
+      {!canManageWorkflows && (
+        <div className="bg-amber-50 border border-amber-300 p-3 rounded-lg flex items-center gap-2 text-xs text-amber-900">
+          <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+          <span>
+            <strong>Read-Only Mode:</strong> Your role ({currentUser?.role || 'user'}) has view-only access. Only firm administrators and template managers can alter procedural workflows.
+          </span>
+        </div>
+      )}
 
       <PageHeader
         title="Matter Workflow &amp; Stage Configurator"
@@ -319,25 +426,27 @@ export function WorkflowManager() {
               size="sm"
               icon={RotateCcw}
               onClick={handleResetDefault}
+              disabled={isSaving || !canManageWorkflows}
             >
               Reset to Defaults
             </Button>
             <Button
               variant="primary"
               size="sm"
-              icon={Save}
+              icon={isSaving ? RefreshCw : Save}
               onClick={handleSaveAll}
+              disabled={isSaving || !canManageWorkflows}
             >
-              Save Workflow Changes
+              {isSaving ? 'Saving to Database...' : 'Save Workflow Changes'}
             </Button>
           </div>
         }
       />
 
-      {/* Practice Area Selector Pills */}
+      {/* Practice Area Selector Pills (All 9 Canonical Practice Areas) */}
       <div className="bg-white p-4 rounded-lg border border-[#D9D6CF] shadow-sm space-y-2">
         <label className="text-xs font-bold text-[#667085] uppercase block">
-          Select Practice Group Workflow to Configure
+          Select Practice Group Workflow to Configure (9 Practice Areas)
         </label>
         <div className="flex flex-wrap gap-2">
           {practiceAreaNames.map((name) => {
@@ -382,7 +491,8 @@ export function WorkflowManager() {
               <Layers className="w-4 h-4 text-[#A4432B]" />
               Sequential Stages ({currentStages.length})
             </h3>
-            <span className="text-[11px] text-[#667085]">Step-by-step pipeline</span>
+            {isLoading && <span className="text-[11px] text-blue-600 animate-pulse">Syncing...</span>}
+            {!isLoading && <span className="text-[11px] text-[#667085]">Step-by-step pipeline</span>}
           </div>
 
           <div className="space-y-2">
@@ -390,7 +500,7 @@ export function WorkflowManager() {
               const isActive = (activeStage?.id === st.id);
               return (
                 <div
-                  key={st.id}
+                  key={st.id || idx}
                   onClick={() => setSelectedStageId(st.id)}
                   className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
                     isActive
@@ -430,7 +540,7 @@ export function WorkflowManager() {
                   {activeStage.name}
                 </h2>
                 <p className="text-xs text-[#667085]">
-                  Practice Area: <strong>{selectedPracticeArea}</strong>
+                  Practice Area: <strong>{selectedPracticeArea}</strong> • Stage Code: <strong>{activeStage.code}</strong>
                 </p>
               </div>
               <span className="text-xs font-semibold px-3 py-1 bg-emerald-50 text-emerald-800 rounded border border-emerald-200">
@@ -457,30 +567,34 @@ export function WorkflowManager() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span className="font-medium text-[#202A35]">{req}</span>
                     </div>
-                    <button
-                      onClick={() => handleRemoveRequiredField(i)}
-                      className="text-slate-400 hover:text-rose-600 transition-colors"
-                      title="Remove condition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canManageWorkflows && (
+                      <button
+                        onClick={() => handleRemoveRequiredField(i)}
+                        className="text-slate-400 hover:text-rose-600 transition-colors"
+                        title="Remove condition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Add New Gatekeeper Field */}
-              <form onSubmit={handleAddRequiredField} className="pt-2 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add required gatekeeper condition (e.g. Expert Deposition Completed, Deed Recorded)..."
-                  value={newRequiredField}
-                  onChange={(e) => setNewRequiredField(e.target.value)}
-                  className="flex-1 text-xs p-2.5 rounded border border-[#D9D6CF]"
-                />
-                <Button size="sm" variant="outline" type="submit" icon={Plus}>
-                  Add Gatekeeper
-                </Button>
-              </form>
+              {canManageWorkflows && (
+                <form onSubmit={handleAddRequiredField} className="pt-2 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Add required gatekeeper condition (e.g. Expert Deposition Completed, Deed Recorded)..."
+                    value={newRequiredField}
+                    onChange={(e) => setNewRequiredField(e.target.value)}
+                    className="flex-1 text-xs p-2.5 rounded border border-[#D9D6CF]"
+                  />
+                  <Button size="sm" variant="outline" type="submit" icon={Plus}>
+                    Add Gatekeeper
+                  </Button>
+                </form>
+              )}
             </div>
 
             {/* Automated Task Trigger Rules */}
@@ -505,13 +619,15 @@ export function WorkflowManager() {
                           Assigned to: <strong>{t.role}</strong> • Due: <strong>{t.dueDays} days</strong> after stage entry • Priority: {t.priority}
                         </span>
                       </div>
-                      <button
-                        onClick={() => handleRemoveAutoTask(i)}
-                        className="text-slate-400 hover:text-rose-600 transition-colors"
-                        title="Remove task rule"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canManageWorkflows && (
+                        <button
+                          onClick={() => handleRemoveAutoTask(i)}
+                          className="text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Remove task rule"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -522,38 +638,40 @@ export function WorkflowManager() {
               </div>
 
               {/* Add New Auto-Task Rule */}
-              <form onSubmit={handleAddAutoTask} className="pt-2 flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  placeholder="Task title (e.g. Draft Trial Brief, Subpoena 911 Tapes)..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="flex-1 text-xs p-2.5 rounded border border-[#D9D6CF]"
-                />
-                <select
-                  value={newTaskRole}
-                  onChange={(e) => setNewTaskRole(e.target.value)}
-                  className="text-xs p-2.5 rounded border border-[#D9D6CF] bg-white font-semibold"
-                >
-                  <option value="Attorney">Assign to Attorney</option>
-                  <option value="Paralegal">Assign to Paralegal</option>
-                  <option value="Billing">Assign to Billing</option>
-                </select>
-                <div className="flex items-center gap-1">
+              {canManageWorkflows && (
+                <form onSubmit={handleAddAutoTask} className="pt-2 flex flex-col sm:flex-row gap-2">
                   <input
-                    type="number"
-                    min="1"
-                    max="365"
-                    value={newTaskDays}
-                    onChange={(e) => setNewTaskDays(e.target.value)}
-                    className="w-16 text-xs p-2.5 rounded border border-[#D9D6CF]"
+                    type="text"
+                    placeholder="Task title (e.g. Draft Trial Brief, Subpoena 911 Tapes)..."
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    className="flex-1 text-xs p-2.5 rounded border border-[#D9D6CF]"
                   />
-                  <span className="text-[11px] text-[#667085]">days</span>
-                </div>
-                <Button size="sm" variant="outline" type="submit" icon={Plus}>
-                  Add Rule
-                </Button>
-              </form>
+                  <select
+                    value={newTaskRole}
+                    onChange={(e) => setNewTaskRole(e.target.value)}
+                    className="text-xs p-2.5 rounded border border-[#D9D6CF] bg-white font-semibold"
+                  >
+                    <option value="Attorney">Assign to Attorney</option>
+                    <option value="Paralegal">Assign to Paralegal</option>
+                    <option value="Billing">Assign to Billing</option>
+                  </select>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={newTaskDays}
+                      onChange={(e) => setNewTaskDays(e.target.value)}
+                      className="w-16 text-xs p-2.5 rounded border border-[#D9D6CF]"
+                    />
+                    <span className="text-[11px] text-[#667085]">days</span>
+                  </div>
+                  <Button size="sm" variant="outline" type="submit" icon={Plus}>
+                    Add Rule
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         )}
@@ -602,4 +720,3 @@ export function WorkflowManager() {
     </div>
   );
 }
-

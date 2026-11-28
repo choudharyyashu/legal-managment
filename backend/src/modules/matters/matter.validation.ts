@@ -35,6 +35,7 @@ export const createMatterSchema = z.object({
   description: z.string().trim().optional().nullable(),
   isEthicalWallEnabled: z.boolean().default(false),
   ethicalWallExcludedRole: z.string().trim().max(100).optional().nullable(),
+  currentStageId: z.string().optional().nullable(),
 }).refine(
   (data) => {
     if (data.billingType === 'Hourly' && (data.hourlyRate === undefined || data.hourlyRate === null)) {

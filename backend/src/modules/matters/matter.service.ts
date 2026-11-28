@@ -463,12 +463,26 @@ export class MatterService {
         const matterNumber = await this.generateMatterNumber(practiceArea.code);
 
         newMatter = await prisma.$transaction(async (tx) => {
+          // Resolve initial workflow stage for the practice area if not explicitly supplied
+          let initialStageId = input.currentStageId || null;
+          if (!initialStageId) {
+            const firstStage = await tx.workflowStage.findFirst({
+              where: { practiceAreaId: practiceArea.id, isActive: true },
+              orderBy: { stageOrder: 'asc' },
+              select: { id: true },
+            });
+            if (firstStage) {
+              initialStageId = firstStage.id;
+            }
+          }
+
           const m = await tx.matter.create({
             data: {
               matterNumber,
               clientId: client.id,
               title: input.title.trim(),
               practiceAreaId: practiceArea.id,
+              currentStageId: initialStageId,
               status: input.status,
               responsibleAttorneyId: attorney.id,
               billingType: input.billingType,
@@ -485,6 +499,18 @@ export class MatterService {
               description: serializedDescription,
             },
           });
+
+          // If an initial stage is assigned, record initial stage history entry
+          if (initialStageId) {
+            await tx.matterStageHistory.create({
+              data: {
+                matterId: m.id,
+                toStageId: initialStageId,
+                transitionedByUserId: creatorContext.userId,
+                verifiedGatekeepers: [] as any,
+              },
+            });
+          }
 
           // Insert staff assignments
           for (const sid of staffIdsToAssign) {

@@ -27,6 +27,40 @@ export class WorkflowController {
     }
   }
 
+  static async createStage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stage = await WorkflowService.createStage(req.body, {
+        userId: req.user!.id,
+        userRole: req.user!.role,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: `Workflow stage '${stage.stageName}' created successfully.`,
+        data: stage,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async updateStage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const stage = await WorkflowService.updateStage(req.params.id, req.body, {
+        userId: req.user!.id,
+        userRole: req.user!.role,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Workflow stage '${stage.stageName}' updated successfully.`,
+        data: stage,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async updateStageChecklist(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const stage = await WorkflowService.updateStageChecklist(req.params.id, req.body, {
@@ -82,7 +116,7 @@ export class WorkflowController {
 
       res.status(200).json({
         success: true,
-        message: 'Matter checklist progress recorded in database.',
+        message: 'Matter checklist progress updated.',
         data: progress,
       });
     } catch (err) {

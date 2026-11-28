@@ -11,6 +11,16 @@ export const workflowService = {
     return res?.data;
   },
 
+  async createStage(stageData) {
+    const res = await apiClient.post('/workflows/stages', stageData);
+    return res?.data;
+  },
+
+  async updateStage(stageId, stageData) {
+    const res = await apiClient.put(`/workflows/stages/${stageId}`, stageData);
+    return res?.data;
+  },
+
   async updateStageChecklist(stageId, requiredFields) {
     const res = await apiClient.put(`/workflows/stages/${stageId}/checklist`, { requiredFields });
     return res?.data;

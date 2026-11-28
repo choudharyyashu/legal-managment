@@ -209,33 +209,90 @@ const WORKFLOW_STAGES = [
     autoTasks: [{ title: 'Attend Trial / Conduct Final Settlement Execution', priority: 'Urgent', dueDays: 7, role: 'attorney' }],
   },
 
-  // 5. Probate (pa-prob)
+  // 5. Probate (pa-prob) - Client's Complete 7-Stage Process
   {
     id: 'ws-prob-1',
     practiceAreaId: 'pa-prob',
-    stageName: 'Petition for Probate & Heirs Notice',
+    stageName: 'Appointment of Fiduciary',
     stageCode: 'PROB-1',
     stageOrder: 1,
-    requiredFields: ['Death Certificate Logged', 'Original Will Deposited'],
-    autoTasks: [{ title: 'Publish Notice to Creditors in Salt Lake Tribune', priority: 'High', dueDays: 10, role: 'paralegal' }],
+    requiredFields: ['Death Certificate Logged', 'Original Will Deposited with Clerk', 'Petition for Formal/Informal Appointment Filed', 'Letters Testamentary / Administration Issued'],
+    autoTasks: [
+      { title: 'Verify death certificate certified copy and deposit original will', priority: 'High', dueDays: 3, role: 'paralegal' },
+      { title: 'Obtain certified Letters Testamentary and secure estate fiduciary bond', priority: 'Urgent', dueDays: 7, role: 'attorney' }
+    ],
   },
   {
     id: 'ws-prob-2',
     practiceAreaId: 'pa-prob',
-    stageName: 'Letters Testamentary & Inventory',
+    stageName: 'Statutory Notices to Heirs & Creditors',
     stageCode: 'PROB-2',
     stageOrder: 2,
-    requiredFields: ['Letters Testamentary Issued', 'Estate Bank Account Opened'],
-    autoTasks: [{ title: 'Compile Formal Estate Inventory and Asset Appraisal', priority: 'High', dueDays: 60, role: 'paralegal' }],
+    requiredFields: ['Notice of Appointment Delivered to Known Heirs', 'Notice to Creditors Published in Legal Newspaper', 'Proof of Publication Filed with Court'],
+    autoTasks: [
+      { title: 'Publish Notice to Creditors in Salt Lake Tribune / local county paper', priority: 'High', dueDays: 10, role: 'paralegal' },
+      { title: 'Serve formal notice on Utah Department of Health & Human Services (Medicaid estate recovery)', priority: 'High', dueDays: 14, role: 'paralegal' }
+    ],
   },
   {
     id: 'ws-prob-3',
     practiceAreaId: 'pa-prob',
-    stageName: 'Creditor Audit & Final Distribution',
+    stageName: 'Creditor Claims Evaluation',
     stageCode: 'PROB-3',
     stageOrder: 3,
-    requiredFields: ['Statutory 90-Day Creditor Notice Expired', 'Estate Tax Clearance Received'],
-    autoTasks: [{ title: 'File Final Accounting & Petition for Complete Settlement', priority: 'High', dueDays: 20, role: 'attorney' }],
+    requiredFields: ['Statutory Creditor Claims Window Monitored (90-Day Cutoff)', 'Creditor Claims Register Reconciled', 'Disallowance Notices Served on Invalid Claims'],
+    autoTasks: [
+      { title: 'Track statutory 90-day creditor limitation cutoff', priority: 'High', dueDays: 90, role: 'paralegal' },
+      { title: 'Review contested claims and draft Notice of Allowance/Disallowance', priority: 'High', dueDays: 14, role: 'attorney' }
+    ],
+  },
+  {
+    id: 'ws-prob-4',
+    practiceAreaId: 'pa-prob',
+    stageName: 'Estate Inventory & Appraisal',
+    stageCode: 'PROB-4',
+    stageOrder: 4,
+    requiredFields: ['Estate Bank Account Opened with EIN', 'Real Estate & Financial Asset Valuations Secured', 'Formal Estate Inventory Filed with Court or Delivered to Heirs'],
+    autoTasks: [
+      { title: 'Obtain IRS Estate Employer Identification Number (EIN)', priority: 'High', dueDays: 5, role: 'paralegal' },
+      { title: 'Order appraisals for estate real property and unique personalty', priority: 'Medium', dueDays: 30, role: 'paralegal' }
+    ],
+  },
+  {
+    id: 'ws-prob-5',
+    practiceAreaId: 'pa-prob',
+    stageName: 'Estate Accounting & Tax Clearance',
+    stageCode: 'PROB-5',
+    stageOrder: 5,
+    requiredFields: ['Fiduciary Final Income Tax Returns (Form 1041) Filed', 'State & Federal Tax Clearances Obtained', 'Detailed Final Accounting Prepared and Verified'],
+    autoTasks: [
+      { title: 'Coordinate with estate CPA for final decedent and fiduciary tax returns', priority: 'High', dueDays: 45, role: 'attorney' },
+      { title: 'Audit estate trust/escrow transactions and prepare final reconciliation ledger', priority: 'High', dueDays: 15, role: 'billing' }
+    ],
+  },
+  {
+    id: 'ws-prob-6',
+    practiceAreaId: 'pa-prob',
+    stageName: 'Distribution to Beneficiaries',
+    stageCode: 'PROB-6',
+    stageOrder: 6,
+    requiredFields: ['Proposed Distribution Schedule Approved by Beneficiaries', 'Personal Representative Deeds & Conveyances Executed', 'Beneficiary Receipts and Release Agreements Signed'],
+    autoTasks: [
+      { title: 'Draft and circulate Receipts and Releases to all heirs/devisees', priority: 'High', dueDays: 10, role: 'attorney' },
+      { title: 'Execute deeds conveying real property from estate to beneficiaries', priority: 'High', dueDays: 7, role: 'paralegal' }
+    ],
+  },
+  {
+    id: 'ws-prob-7',
+    practiceAreaId: 'pa-prob',
+    stageName: 'Closing & Discharge of Fiduciary',
+    stageCode: 'PROB-7',
+    stageOrder: 7,
+    requiredFields: ['All Distribution Receipts Filed with Court', 'Petition for Final Settlement & Order of Discharge Filed', 'Formal Order of Discharge Entered and Case Closed'],
+    autoTasks: [
+      { title: 'File Petition for Complete Settlement and Final Decree of Discharge', priority: 'Urgent', dueDays: 10, role: 'attorney' },
+      { title: 'Archive original probate vault records and transmit closing letter to PR', priority: 'Medium', dueDays: 5, role: 'paralegal' }
+    ],
   },
 
   // 6. Family Law (pa-fam)
