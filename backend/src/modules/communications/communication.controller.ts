@@ -1,6 +1,6 @@
 /**
  * HEUGLY & BLUDWORTH Legal Practice Management SaaS
- * Communications Controller
+ * Communications Controller - Enhanced for Priority 3
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -52,6 +52,27 @@ export class CommunicationController {
       const user = (req as any).user;
       const data = await CommunicationService.matchCommunication(id, req.body, user);
       res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async ingestCommunication(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const user = (req as any).user;
+      const data = await CommunicationService.ingestCommunication(req.body, user);
+      res.status(200).json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async reviewAndRecordBilling(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const user = (req as any).user;
+      const data = await CommunicationService.reviewAndRecordBilling(id, req.body, user);
+      res.status(200).json({ success: true, data });
     } catch (err) {
       next(err);
     }
