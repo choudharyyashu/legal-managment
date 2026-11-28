@@ -24,6 +24,12 @@ integrationsRouter.post(
 );
 
 integrationsRouter.post(
+  '/:id/config',
+  requireAnyPermission(['integrations:manage', 'settings:manage', 'system:admin']),
+  IntegrationsController.saveConfig
+);
+
+integrationsRouter.post(
   '/:id/disconnect',
   requireAnyPermission(['integrations:manage', 'settings:manage', 'system:admin']),
   IntegrationsController.disconnect

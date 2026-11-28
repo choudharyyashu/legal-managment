@@ -27,10 +27,22 @@ export class IntegrationsController {
     }
   }
 
+  static async saveConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const providerId = req.params.id as IntegrationProviderId;
+      const user = (req as any).user;
+      const data = await IntegrationsService.saveConfiguration(providerId, req.body, user);
+      res.json({ success: true, data });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async disconnect(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const providerId = req.params.id as IntegrationProviderId;
-      const data = await IntegrationsService.disconnect(providerId);
+      const user = (req as any).user;
+      const data = await IntegrationsService.disconnect(providerId, user);
       res.json({ success: true, data });
     } catch (err) {
       next(err);

@@ -7,6 +7,7 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
 
 export class CriminalService {
   static async getCriminalCase(matterId: string) {
@@ -102,6 +103,8 @@ export class CriminalService {
       resourceId: updated.id,
       details: { matterId, status: updated.status },
     });
+
+    DocumentEventBus.emitAsync('catalog.criminal_matter_opened', { matterId }, { user: currentUser });
 
     return updated;
   }

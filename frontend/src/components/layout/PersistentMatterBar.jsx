@@ -162,7 +162,7 @@ export function PersistentMatterBar() {
             </button>
 
             {isSwitcherOpen && (
-              <div className="absolute right-0 mt-1 w-80 sm:w-96 bg-white border border-[#D0D5DD] rounded-xl shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="absolute right-0 mt-1 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-white border border-[#D0D5DD] rounded-xl shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-1 duration-150">
                 <div className="p-2.5 bg-[#F8F9FA] border-b border-[#EAECF0]">
                   <input
                     type="text"
@@ -291,7 +291,7 @@ export function PersistentMatterBar() {
               </button>
 
               {isSwitcherOpen && (
-                <div className="absolute right-0 mt-1 w-80 sm:w-96 bg-white border border-[#D0D5DD] rounded-xl shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="absolute right-0 mt-1 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-white border border-[#D0D5DD] rounded-xl shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-1 duration-150">
                   <div className="p-2.5 bg-[#F8F9FA] border-b border-[#EAECF0]">
                     <input
                       type="text"

@@ -7,6 +7,7 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import { createAuditLog } from '../../utils/auditLogger.js';
 import { AuthenticatedUser } from '../auth/auth.types.js';
+import { DocumentEventBus } from '../documents/events/event-bus.js';
 
 export class LitigationService {
   /**
@@ -116,6 +117,8 @@ export class LitigationService {
       resourceId: updated.id,
       details: { matterId, stage: updated.litigationStage },
     });
+
+    DocumentEventBus.emitAsync('catalog.litigation_matter_opened', { matterId }, { user: currentUser });
 
     return updated;
   }

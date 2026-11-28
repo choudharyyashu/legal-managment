@@ -13,6 +13,7 @@ import { TaskService } from '../../tasks/task.service.js';
 import { DocumentService } from '../document.service.js';
 import { StorageService } from '../storage/storage.service.js';
 import { OcrService } from '../ocr/ocr.service.js';
+import { AutomationCatalogService } from '../catalog/automation-catalog.service.js';
 import {
   ValidateDraftInput,
   GenerateDraftInput,
@@ -631,6 +632,78 @@ export class DraftService {
     return this.formatDraft(draft);
   }
 
+  /**
+   * Reads a draft's DOCX binary from storage, or transparently regenerates it
+   * from the matter + template version if the file is missing (e.g. ephemeral cloud disk).
+   */
+  private static async ensureDraftDocxBuffer(
+    draft: any,
+    currentUser: AuthenticatedUser
+  ): Promise<Buffer> {
+    if (draft.docxStorageKey && StorageService.exists(draft.docxStorageKey)) {
+      try {
+        return await StorageService.readFile(draft.docxStorageKey);
+      } catch {
+        // Fall through to on-the-fly regeneration if read fails
+      }
+    }
+
+    const dbDraft = await prisma.documentDraft.findUnique({
+      where: { id: draft.id },
+      include: {
+        template: true,
+        templateVersion: { include: { fieldMappings: true } },
+      },
+    });
+
+    if (!dbDraft?.templateVersion) {
+      throw AppError.notFound('Draft physical document file could not be read from disk.', 'FILE_NOT_FOUND');
+    }
+
+    let templateBuffer: Buffer | null = null;
+    if (dbDraft.templateVersion.docxStorageKey && StorageService.exists(dbDraft.templateVersion.docxStorageKey)) {
+      try {
+        templateBuffer = await StorageService.readFile(dbDraft.templateVersion.docxStorageKey);
+      } catch {
+        templateBuffer = null;
+      }
+    }
+
+    if (!templateBuffer) {
+      const code = dbDraft.template?.templateCode;
+      const catalog = AutomationCatalogService.loadCatalog();
+      const catItem = catalog.items.find(
+        (i) => i.templateCode === code || i.catalogId === code
+      );
+      if (catItem) {
+        templateBuffer = AutomationCatalogService.buildCatalogTemplateDocx(catItem);
+        if (dbDraft.templateVersion.docxStorageKey) {
+          await StorageService.writeFile(dbDraft.templateVersion.docxStorageKey, templateBuffer).catch(() => {});
+        }
+      }
+    }
+
+    if (!templateBuffer) {
+      throw AppError.notFound('Draft physical document file could not be read from disk.', 'FILE_NOT_FOUND');
+    }
+
+    const matter = await MatterService.getMatterByIdOrNumber(dbDraft.matterId, currentUser);
+    const resolved = DraftDataResolver.resolve(matter, dbDraft.templateVersion as any);
+    const regeneratedBuffer = DraftEngine.generateDocx(templateBuffer, resolved.resolvedData);
+
+    const targetKey = dbDraft.docxStorageKey || `drafts/${dbDraft.matterId}/${dbDraft.draftCode}.docx`;
+    const stored = await StorageService.writeFile(targetKey, regeneratedBuffer);
+    if (!dbDraft.docxStorageKey) {
+      await prisma.documentDraft.update({
+        where: { id: dbDraft.id },
+        data: { docxStorageKey: stored.storageKey },
+      }).catch(() => {});
+      draft.docxStorageKey = stored.storageKey;
+    }
+
+    return regeneratedBuffer;
+  }
+
   static async downloadDraft(
     draftId: string,
     format: 'docx' | 'pdf',
@@ -642,33 +715,27 @@ export class DraftService {
     let storageKey = isPdf ? draft.pdfStorageKey : draft.docxStorageKey;
 
     let buffer: Buffer;
-    if (isPdf && (!storageKey || !StorageService.exists(storageKey))) {
-      // Automatically convert DOCX draft to PDF on demand if not yet cached
-      if (!draft.docxStorageKey) {
-        throw AppError.notFound('Draft DOCX file is missing from storage for PDF conversion.', 'FILE_NOT_FOUND');
-      }
-      const docxBuffer = await StorageService.readFile(draft.docxStorageKey);
-      buffer = await DraftEngine.convertDocxToPdf(docxBuffer, draft.draftCode, {
-        title: draft.title,
-        draftCode: draft.draftCode,
-        matterNumber: draft.matterNumber || undefined,
-        clientName: draft.clientName || undefined,
-      });
-      const storedPdf = await StorageService.writeFile(`drafts/${draft.matterId}/${draft.draftCode}.pdf`, buffer);
-      storageKey = storedPdf.storageKey;
-      await prisma.documentDraft.update({
-        where: { id: draft.id },
-        data: { pdfStorageKey: storageKey },
-      }).catch(() => {});
-    } else {
-      if (!storageKey) {
-        throw AppError.notFound('Draft document file is missing from storage.', 'FILE_NOT_FOUND');
-      }
-      try {
+    if (isPdf) {
+      if (storageKey && StorageService.exists(storageKey)) {
         buffer = await StorageService.readFile(storageKey);
-      } catch {
-        throw AppError.notFound('Draft physical document file could not be read from disk.', 'FILE_NOT_FOUND');
+      } else {
+        // Automatically convert DOCX draft to PDF on demand (regenerating DOCX if needed)
+        const docxBuffer = await this.ensureDraftDocxBuffer(draft, currentUser);
+        buffer = await DraftEngine.convertDocxToPdf(docxBuffer, draft.draftCode, {
+          title: draft.title,
+          draftCode: draft.draftCode,
+          matterNumber: draft.matterNumber || undefined,
+          clientName: draft.clientName || undefined,
+        });
+        const storedPdf = await StorageService.writeFile(`drafts/${draft.matterId}/${draft.draftCode}.pdf`, buffer);
+        storageKey = storedPdf.storageKey;
+        await prisma.documentDraft.update({
+          where: { id: draft.id },
+          data: { pdfStorageKey: storageKey },
+        }).catch(() => {});
       }
+    } else {
+      buffer = await this.ensureDraftDocxBuffer(draft, currentUser);
     }
 
     const ext = isPdf ? 'pdf' : 'docx';
@@ -884,7 +951,7 @@ export class DraftService {
       throw AppError.badRequest(`Draft '${draft.draftCode}' is marked stale due to underlying matter data changes. Regenerate before approval.`, 'DRAFT_STALE');
     }
 
-    // 4. File existence, checksum calculation, and OCR text extraction
+    // 4. File existence (with on-the-fly regeneration fallback), checksum calculation, and OCR text extraction
     let fileSizeBytes = BigInt(0);
     let sha256Checksum = 'pending-checksum';
     let docxFileName = `${draft.draftCode}.docx`;
@@ -892,17 +959,15 @@ export class DraftService {
 
     if (draft.docxStorageKey) {
       docxFileName = path.basename(draft.docxStorageKey);
-      try {
-        if (StorageService.exists(draft.docxStorageKey)) {
-          const fileBuffer = await StorageService.readFile(draft.docxStorageKey);
-          fileSizeBytes = BigInt(fileBuffer.length);
-          sha256Checksum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-          const ocr = await OcrService.extract(fileBuffer, docxFileName, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-          if (ocr.text) extractedOcrText = ocr.text;
-        }
-      } catch {
-        sha256Checksum = crypto.createHash('sha256').update(Buffer.from(draft.id)).digest('hex');
-      }
+    }
+    try {
+      const fileBuffer = await this.ensureDraftDocxBuffer(draft, currentUser);
+      fileSizeBytes = BigInt(fileBuffer.length);
+      sha256Checksum = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+      const ocr = await OcrService.extract(fileBuffer, docxFileName, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      if (ocr.text) extractedOcrText = ocr.text;
+    } catch {
+      sha256Checksum = crypto.createHash('sha256').update(Buffer.from(draft.id)).digest('hex');
     }
 
     // 5. Generate permanent Document code

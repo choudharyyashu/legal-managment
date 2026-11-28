@@ -4,18 +4,21 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { DOCUMENT_EVENT, DocumentEventType } from './event.types.js';
+import { DOCUMENT_EVENT } from './event.types.js';
 import { AutoDraftService } from './auto-draft.service.js';
 import { AutomationCatalogService } from '../catalog/automation-catalog.service.js';
+import { CatalogEventRegistry } from './catalog-event-registry.js';
 import { AppError } from '../../../errors/AppError.js';
 
 export class DocumentEventController {
   /**
    * Returns supported domain events and their automatic document generation triggers
-   * (4 core PI events + full 300-document automation catalog summary).
+   * (specialized domain events + all 300 catalog automation event mappings).
    */
   static getEventCatalog(req: Request, res: Response): void {
     const catalogSummary = AutomationCatalogService.getSummary();
+    const catalogDefinitions = CatalogEventRegistry.getAllCatalogEventDefinitions();
+
     res.json({
       success: true,
       data: {
@@ -48,7 +51,17 @@ export class DocumentEventController {
             targetDocumentTitle: 'Personal Injury Settlement Demand Letter',
             idempotencyScope: 'One per demand package',
           },
+          ...catalogDefinitions.map((def) => ({
+            event: def.eventKey,
+            trigger: def.trigger,
+            handlerType: def.isSpecializedHandler ? 'specialized' : 'catalog-dispatcher',
+            targetDocumentCode: def.items.map((i) => i.catalogId).join(', '),
+            targetDocumentTitle: def.items.map((i) => i.title).join(', '),
+            practiceAreas: [...new Set(def.items.map((i) => i.practiceArea))],
+            idempotencyScope: 'One active draft per matter + catalog item',
+          })),
         ],
+        totalRegisteredEvents: catalogDefinitions.length,
         catalogSummary,
       },
     });
@@ -106,63 +119,72 @@ export class DocumentEventController {
           );
           break;
 
-        default: {
-          // Check if event matches any of the 300-document catalog triggers or catalog IDs
-          const catalog = AutomationCatalogService.loadCatalog();
-          const evLower = String(event).toLowerCase().trim();
-          const matchingItems = catalog.items.filter(
-            (i) =>
-              i.trigger.toLowerCase() === evLower ||
-              i.catalogId.toLowerCase() === evLower ||
-              i.templateCode.toLowerCase() === evLower
+        case DOCUMENT_EVENT.PI_LIEN_PAYOFF_RECORDED:
+          result = await AutoDraftService.handleLienPayoffRecorded(
+            { matterId, ...payload },
+            user,
+            context
           );
+          break;
 
-          if (matchingItems.length === 0) {
+        case DOCUMENT_EVENT.INTAKE_CONSULTATION_BOOKED:
+          result = await AutoDraftService.handleConsultationBooked(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.INTAKE_CONSULTATION_RESCHEDULED:
+          result = await AutoDraftService.handleConsultationRescheduled(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.INTAKE_PROSPECT_SAVED:
+          result = await AutoDraftService.handleProspectSaved(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.INTAKE_CONFLICT_SEARCH_COMPLETED:
+          result = await AutoDraftService.handleConflictSearchCompleted(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.MATTER_CREATED_FROM_INTAKE:
+          result = await AutoDraftService.handleMatterCreatedFromIntake(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        case DOCUMENT_EVENT.EVICTION_CLOSURE_REVIEWED:
+          result = await AutoDraftService.handleEvictionClosureReviewed(
+            { matterId, ...payload },
+            user,
+            context
+          );
+          break;
+
+        default: {
+          result = await AutoDraftService.handleCatalogEvent(
+            event,
+            { matterId, ...(payload || {}) },
+            user,
+            context
+          );
+          if (!result.success && result.errors.some((e) => e.includes('No catalog automation matched'))) {
             throw AppError.badRequest(`Unknown document trigger event: '${event}'`);
           }
-
-          const draftsCreated: any[] = [];
-          const skipped: any[] = [];
-          const errors: string[] = [];
-
-          for (const item of matchingItems.slice(0, 10)) {
-            try {
-              const triggered = await AutomationCatalogService.triggerAutomation(
-                item.catalogId,
-                matterId,
-                user,
-                payload?.customOverrides || payload || {},
-                context
-              );
-              if (triggered.isDuplicate) {
-                skipped.push({
-                  templateCode: item.templateCode,
-                  reason: `Draft '${triggered.draft.draftCode}' already exists for ${item.catalogId}.`,
-                });
-              } else {
-                draftsCreated.push({
-                  id: triggered.draft.id,
-                  draftCode: triggered.draft.draftCode,
-                  templateCode: item.templateCode,
-                  templateName: item.title,
-                  title: triggered.draft.title,
-                  missingFieldsCount: triggered.draft.missingFieldsFlags?.length || 0,
-                  filePath: triggered.draft.docxStorageKey || '',
-                });
-              }
-            } catch (e: any) {
-              errors.push(`${item.catalogId}: ${e?.message || 'Trigger failed'}`);
-            }
-          }
-
-          result = {
-            success: errors.length === 0,
-            event: event as DocumentEventType,
-            matterId,
-            draftsCreated,
-            skipped,
-            errors,
-          };
           break;
         }
       }

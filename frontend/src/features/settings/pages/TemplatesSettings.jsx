@@ -670,7 +670,7 @@ export function TemplatesSettings() {
                 </Button>
               </div>
 
-              <div className="border border-slate-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+              <div className="border border-slate-200 rounded-lg overflow-x-auto max-h-64 overflow-y-auto">
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-slate-50 border-b font-semibold">
                     <tr>
