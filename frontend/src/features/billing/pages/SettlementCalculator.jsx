@@ -57,24 +57,47 @@ export function SettlementCalculator() {
   useEffect(() => {
     if (!selectedMatter?.id) return;
     let cancelled = false;
-    piService.getSettlements(selectedMatter.id)
-      .then((res) => {
+
+    // Use signed fee arrangement from matter if present (e.g. 30%, 33.33%, 40%)
+    const signedFee = selectedMatter.contingencyPercentage !== null && selectedMatter.contingencyPercentage !== undefined
+      ? Number(selectedMatter.contingencyPercentage)
+      : 33.33;
+    setFeeSelection(String(signedFee));
+
+    // Parallel fetch: latest saved settlement draft + real posted liens + real posted expenses
+    Promise.all([
+      piService.getSettlements(selectedMatter.id).catch(() => []),
+      piService.getLiens(selectedMatter.id).catch(() => []),
+    ])
+      .then(([res, dbLiens]) => {
         if (cancelled) return;
         const latest = Array.isArray(res) ? res[0]?.versions?.[0] : null;
-        if (!latest) return;
-        const savedGross = Number(latest.grossSettlementAmount ?? 0);
-        const savedPct = Number(latest.contingencyFeePercentage ?? 33.33);
-        const isExact = Boolean(latest.notes?.includes('1/3 (Exact)')) || latest.feeBasis === 'EXACT_ONE_THIRD';
-        if (savedGross > 0) setGrossSettlement(savedGross);
-        setFeeSelection(isExact ? 'exact_one_third' : String(savedPct));
-        const savedCosts = Number(latest.totalLitigationCosts ?? 0);
-        const savedLiens = Number(latest.totalMedicalLiens ?? 0);
-        if (savedCosts > 0) setCosts([{ id: 'saved-cost', label: 'Itemized Case Costs', amount: savedCosts }]);
-        if (savedLiens > 0) setLiens([{ id: 'saved-lien', holder: 'Healthcare Liens', originalAmount: savedLiens, negotiatedAmount: savedLiens }]);
+
+        if (latest) {
+          const savedGross = Number(latest.grossSettlementAmount ?? 0);
+          const savedPct = Number(latest.contingencyFeePercentage ?? signedFee);
+          const isExact = Boolean(latest.notes?.includes('1/3 (Exact)')) || latest.feeBasis === 'EXACT_ONE_THIRD';
+          if (savedGross > 0) setGrossSettlement(savedGross);
+          setFeeSelection(isExact ? 'exact_one_third' : String(savedPct));
+          const savedCosts = Number(latest.totalLitigationCosts ?? 0);
+          const savedLiens = Number(latest.totalMedicalLiens ?? 0);
+          if (savedCosts > 0) setCosts([{ id: 'saved-cost', label: 'Itemized Case Costs', amount: savedCosts }]);
+          if (savedLiens > 0) setLiens([{ id: 'saved-lien', holder: 'Healthcare Liens', originalAmount: savedLiens, negotiatedAmount: savedLiens }]);
+        } else if (Array.isArray(dbLiens) && dbLiens.length > 0) {
+          // If no settlement draft exists yet, pull verified/approved liens from database
+          const mappedLiens = dbLiens.map((l) => ({
+            id: l.id,
+            holder: l.lienholderName || 'Medical Provider',
+            originalAmount: Number(l.assertedAmount || 0),
+            negotiatedAmount: Number(l.finalPayoffAmount || l.negotiatedAmount || l.assertedAmount || 0),
+            status: l.status,
+          }));
+          setLiens(mappedLiens);
+        }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [selectedMatter?.id]);
+  }, [selectedMatter?.id, selectedMatter?.contingencyPercentage]);
 
   // Math (integer-cent precision, distinguishing 33.33% from exact 1/3)
   const {
@@ -343,19 +366,33 @@ export function SettlementCalculator() {
                 <label className="block text-xs font-semibold text-[#202A35] uppercase mb-1">
                   Contingency Fee Arrangement
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    value={feeSelection}
-                    onChange={(e) => setFeeSelection(e.target.value)}
-                    className="w-full text-xs font-semibold p-2.5 rounded border border-[#D9D6CF] focus:outline-none focus:border-[#06244B] bg-slate-50"
-                  >
-                    <option value="33.33">33.33% (Standard Pre-Trial Settlement)</option>
-                    <option value="exact_one_third">1/3 Exact (One-Third Pre-Trial)</option>
-                    <option value="40">40.00% (Post-Complaint / Trial Setting)</option>
-                    <option value="25">25.00% (Minor Settlement / Early Compromise)</option>
-                    <option value="50">50.00% (Appellate Review)</option>
-                  </select>
-                </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      value={feeSelection === 'exact_one_third' ? '33.33' : feeSelection}
+                      onChange={(e) => setFeeSelection(e.target.value)}
+                      placeholder="e.g. 30"
+                      className="w-24 text-xs font-bold p-2.5 rounded border border-[#D9D6CF] focus:outline-none focus:border-[#06244B] bg-slate-50"
+                    />
+                    <select
+                      value={['25', '30', '33.33', 'exact_one_third', '40', '50'].includes(feeSelection) ? feeSelection : 'custom'}
+                      onChange={(e) => {
+                        if (e.target.value !== 'custom') setFeeSelection(e.target.value);
+                      }}
+                      className="flex-1 text-xs font-semibold p-2.5 rounded border border-[#D9D6CF] focus:outline-none focus:border-[#06244B] bg-slate-50"
+                    >
+                      <option value="custom">Custom Fee Agreement %</option>
+                      <option value="30">30.00% (Signed Client Agreement)</option>
+                      <option value="33.33">33.33% (Standard Pre-Trial Settlement)</option>
+                      <option value="exact_one_third">1/3 Exact (One-Third Pre-Trial)</option>
+                      <option value="40">40.00% (Post-Complaint / Trial Setting)</option>
+                      <option value="25">25.00% (Minor Settlement / Early Compromise)</option>
+                      <option value="50">50.00% (Appellate Review)</option>
+                    </select>
+                  </div>
               </div>
             </div>
           </div>

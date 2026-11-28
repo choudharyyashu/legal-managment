@@ -74,13 +74,17 @@ export function SettlementCalculator() {
     }
   };
 
-  // Sync when case changes & reload latest saved settlement calculation if present
+  // Sync when case changes & reload latest saved settlement calculation or matter liens
   useEffect(() => {
     let cancelled = false;
     const selected = cases.find(c => c.id === activeCaseId);
+    const signedFee = selected?.contingencyPercentage !== null && selected?.contingencyPercentage !== undefined
+      ? Number(selected.contingencyPercentage)
+      : 33.33;
+
     if (selected) {
       setGrossRecovery(Number(selected.budget) || 0);
-      setFeeRate(Number(selected.contingencyPercentage) || 33.33);
+      setFeeRate(signedFee);
       setFeeRateOption('standard');
     }
 
@@ -88,35 +92,49 @@ export function SettlementCalculator() {
       return () => { cancelled = true; };
     }
 
-    piService.getSettlements(activeCaseId)
-      .then((settlements) => {
+    Promise.all([
+      piService.getSettlements(activeCaseId).catch(() => []),
+      piService.getLiens(activeCaseId).catch(() => []),
+    ])
+      .then(([settlements, dbLiens]) => {
         if (cancelled) return;
         const latestVersion = Array.isArray(settlements) ? settlements[0]?.versions?.[0] : null;
-        if (!latestVersion) return;
 
-        const savedGross = Number(latestVersion.grossSettlementAmount ?? 0);
-        const savedPct = Number(latestVersion.contingencyFeePercentage ?? 33.33);
-        const savedFee = Number(latestVersion.calculatedAttorneyFee ?? 0);
-        const exactThirdFee = Math.round((Math.round(savedGross * 100)) / 3) / 100;
-        const pctFee = Math.round(Math.round(savedGross * 100) * savedPct / 100) / 100;
-        const isExact =
-          Boolean(latestVersion.notes?.includes('1/3 (Exact)')) ||
-          (savedGross > 0 &&
-            Math.abs(savedPct - 33.33) < 0.005 &&
-            Math.abs(savedFee - exactThirdFee) < 0.005 &&
-            Math.abs(savedFee - pctFee) >= 0.01);
+        if (latestVersion) {
+          const savedGross = Number(latestVersion.grossSettlementAmount ?? 0);
+          const savedPct = Number(latestVersion.contingencyFeePercentage ?? signedFee);
+          const savedFee = Number(latestVersion.calculatedAttorneyFee ?? 0);
+          const exactThirdFee = Math.round((Math.round(savedGross * 100)) / 3) / 100;
+          const pctFee = Math.round(Math.round(savedGross * 100) * savedPct / 100) / 100;
+          const isExact =
+            Boolean(latestVersion.notes?.includes('1/3 (Exact)')) ||
+            (savedGross > 0 &&
+              Math.abs(savedPct - 33.33) < 0.005 &&
+              Math.abs(savedFee - exactThirdFee) < 0.005 &&
+              Math.abs(savedFee - pctFee) >= 0.01);
 
-        setGrossRecovery(savedGross);
-        setFeeRate(savedPct);
-        setFeeRateOption(isExact ? 'exact' : 'standard');
+          setGrossRecovery(savedGross);
+          setFeeRate(savedPct);
+          setFeeRateOption(isExact ? 'exact' : 'standard');
 
-        const savedCosts = Number(latestVersion.totalLitigationCosts ?? 0);
-        const savedLiens = Number(latestVersion.totalMedicalLiens ?? 0);
-        const savedOther = Number(latestVersion.otherDeductions ?? 0) + Number(latestVersion.totalClientAdvances ?? 0);
+          const savedCosts = Number(latestVersion.totalLitigationCosts ?? 0);
+          const savedLiens = Number(latestVersion.totalMedicalLiens ?? 0);
+          const savedOther = Number(latestVersion.otherDeductions ?? 0) + Number(latestVersion.totalClientAdvances ?? 0);
 
-        setCaseExpenses(savedCosts > 0 ? [{ description: 'Saved Litigation Costs', amount: savedCosts }] : []);
-        setMedicalLiens(savedLiens > 0 ? [{ holder: 'Saved Medical Liens', amount: savedLiens }] : []);
-        setOtherDeductions(savedOther > 0 ? [{ description: 'Saved Other Deductions', amount: savedOther }] : []);
+          setCaseExpenses(savedCosts > 0 ? [{ description: 'Saved Litigation Costs', amount: savedCosts }] : []);
+          setMedicalLiens(savedLiens > 0 ? [{ holder: 'Saved Medical Liens', amount: savedLiens, negotiatedAmount: savedLiens }] : []);
+          setOtherDeductions(savedOther > 0 ? [{ description: 'Saved Other Deductions', amount: savedOther }] : []);
+        } else if (Array.isArray(dbLiens) && dbLiens.length > 0) {
+          const mappedLiens = dbLiens.map((l) => ({
+            id: l.id,
+            holder: l.lienholderName || 'Medical Provider',
+            originalAmount: Number(l.assertedAmount || 0),
+            negotiatedAmount: Number(l.finalPayoffAmount || l.negotiatedAmount || l.assertedAmount || 0),
+            amount: Number(l.finalPayoffAmount || l.negotiatedAmount || l.assertedAmount || 0),
+            status: l.status,
+          }));
+          setMedicalLiens(mappedLiens);
+        }
       })
       .catch(() => {
         // Keep matter defaults if settlements could not be fetched

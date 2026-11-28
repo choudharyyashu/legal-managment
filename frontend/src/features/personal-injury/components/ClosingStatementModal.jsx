@@ -4,12 +4,20 @@ import { Button } from '../../../components/ui/Button';
 import { Printer, Download, CheckCircle2 } from 'lucide-react';
 import { formatCurrency } from '../../../utils/formatCurrency';
 
-export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
-  if (!settlementModel) return null;
+export function ClosingStatementModal({
+  isOpen,
+  onClose,
+  settlementModel = null,
+  settlement = null,
+  settlementData = null,
+}) {
+  const model = settlementModel || settlement || settlementData;
+  if (!model) return null;
 
   const {
     matterTitle,
     clientName,
+    attorneyName,
     grossRecovery = 0,
     contingencyFeePercentage = 33.33,
     feeRateLabel,
@@ -22,7 +30,7 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
     totalOtherDeductions = 0,
     netClientProceeds = 0,
     statementDate = new Date().toISOString().split('T')[0],
-  } = settlementModel;
+  } = model;
 
   return (
     <Modal
@@ -170,7 +178,7 @@ export function ClosingStatementModal({ isOpen, onClose, settlementModel }) {
               </div>
 
               <div className="border-t border-slate-400 pt-1.5 space-y-1">
-                <p className="font-bold text-slate-900">{settlement.attorneyName || 'Managing Attorney'}</p>
+                <p className="font-bold text-slate-900">{attorneyName || model?.attorneyName || 'Managing Attorney'}</p>
                 <p className="text-[10px] text-slate-500">Supervising Counsel • Date: {statementDate}</p>
               </div>
             </div>

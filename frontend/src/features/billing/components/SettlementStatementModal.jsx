@@ -381,11 +381,25 @@ export function SettlementStatementModal({
               <div>
                 <span className="font-bold text-[#06244B] block">2. Attorney Contingency Fee ({feeRateDisplay})</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <select
-                    value={feeSelection}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={feeSelection === 'exact_one_third' ? '33.33' : feeSelection}
                     onChange={(e) => setFeeSelection(e.target.value)}
+                    placeholder="30"
+                    className="w-20 text-[11px] bg-slate-50 border border-[#D9D6CF] rounded px-1.5 py-0.5 text-[#06244B] font-bold"
+                  />
+                  <select
+                    value={['25', '30', '33.33', 'exact_one_third', '40', '50'].includes(feeSelection) ? feeSelection : 'custom'}
+                    onChange={(e) => {
+                      if (e.target.value !== 'custom') setFeeSelection(e.target.value);
+                    }}
                     className="text-[11px] bg-slate-50 border border-[#D9D6CF] rounded px-1.5 py-0.5 text-[#06244B] font-medium"
                   >
+                    <option value="custom">Custom Retainer %</option>
+                    <option value="30">30.00% Signed Agreement</option>
                     <option value="exact_one_third">1/3 (Exact Contingency)</option>
                     <option value="33.33">33.33% Standard</option>
                     <option value="40">40.00% Litigation / Trial</option>
