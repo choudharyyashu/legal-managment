@@ -373,8 +373,8 @@ export function TimeProvider({ children }) {
       entriesCount: selectedEntries.length,
       totalHours: Number(totalHours.toFixed(1)),
       totalAmount: Number(totalAmount.toFixed(2)),
-      status: 'Synchronized',
-      syncReference: `CX-API-${Math.floor(10000 + Math.random() * 90000)}-SYNC`,
+      status: 'Staged (Awaiting Server Credentials)',
+      syncReference: 'STAGED_LOCAL_MANIFEST',
     };
 
     setTimeEntries((prev) =>

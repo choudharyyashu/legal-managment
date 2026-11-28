@@ -149,7 +149,7 @@ export function CosmoLexSettings() {
     <div className="space-y-6">
       <PageHeader
         title="CosmoLex Integration &amp; Export Bridge"
-        subtitle="Optional downstream general ledger batch export bridge. Native double-entry accounting operates independently inside LegalPro (Utah RPC 1.15)."
+        subtitle="CosmoLex is the firm's authoritative financial system of record. LegalPro stages approved operational billing entries for authorized batch reconciliation."
         breadcrumbs={[{ label: 'Billing & Accounting', to: '/billing' }, { label: 'CosmoLex Export' }]}
         actions={
           <Button
@@ -164,6 +164,17 @@ export function CosmoLexSettings() {
           </Button>
         }
       />
+
+      {/* System of Record Boundary Notice */}
+      <div className="p-4 bg-[#F5F0E5] border border-[#D9D6CF] rounded-lg text-xs space-y-1">
+        <div className="flex items-center gap-2 text-[#06244B] font-bold text-sm">
+          <Database className="w-4 h-4 text-[#A4432B]" />
+          <span>System-of-Record Boundary Policy: CosmoLex Financial Authority</span>
+        </div>
+        <p className="text-[#202A35] leading-relaxed text-[11px]">
+          Per firm governance, <strong>CosmoLex serves as the authoritative accounting ledger of record</strong>. LegalPro maintains front-office matter management, timekeeping, and trust sub-ledgers. No transactions are automatically overwritten, and batch transmissions require explicit authorization.
+        </p>
+      </div>
 
       {/* Integration Status Card */}
       <div className="bg-white p-6 rounded border border-[#D9D6CF] shadow-subtle">
@@ -180,10 +191,10 @@ export function CosmoLexSettings() {
                 <StatusBadge status={connectionStatus} />
               </div>
               <p className="text-xs text-[#667085] mt-1">
-                Firm Gateway Status: <strong>{tenantInfo}</strong> • Protocol: <strong>REST API Bridge</strong>
+                Firm Gateway Status: <strong>{tenantInfo}</strong> • Protocol: <strong>REST API Bridge / Batch Staging</strong>
               </p>
               <p className="text-[11px] text-[#A4432B] font-semibold mt-1">
-                CosmoLex is optional. Full standalone General Ledger, Trust Sub-Ledgers, and Utah RPC 1.15 Compliance are maintained natively.
+                Financial System of Record: CosmoLex. Local entries remain staged until transmitted.
               </p>
             </div>
           </div>

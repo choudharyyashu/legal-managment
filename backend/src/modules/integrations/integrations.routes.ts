@@ -17,6 +17,18 @@ integrationsRouter.get(
   IntegrationsController.getStatuses
 );
 
+integrationsRouter.get(
+  '/cosmolex/status',
+  requireAnyPermission(['integrations:view', 'cosmolex:view', 'billing:overview_view', 'system:admin']),
+  IntegrationsController.getCosmolexStatus
+);
+
+integrationsRouter.post(
+  '/cosmolex/export-batch',
+  requireAnyPermission(['cosmolex:export', 'invoices:manage', 'system:admin']),
+  IntegrationsController.stageCosmolexBatch
+);
+
 integrationsRouter.post(
   '/:id/test',
   requireAnyPermission(['integrations:manage', 'cosmolex:export', 'settings:manage', 'system:admin']),
